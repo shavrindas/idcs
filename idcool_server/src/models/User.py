@@ -1,6 +1,6 @@
 # models/User.py
 from sqlalchemy import Column, Integer, String, Enum
-from config.db import Base
+from idcool_server.src.config.db import Base
 import enum
 
 class UserRole(str, enum.Enum):
