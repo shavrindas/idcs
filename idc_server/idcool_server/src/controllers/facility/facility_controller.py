@@ -1,0 +1,88 @@
+# ===============================================================
+# 경로 : src/controllers/facility/facility_controller.py
+# 명세 : 시설 관련 API 엔드포인트 정의
+# ===============================================================
+from pydantic import BaseModel
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from config.db import get_db
+from src.models.User import User, UserRole
+from src.models.Facility import Facility, FacilityUser 
+
+router = APIRouter(prefix="/facilities", tags=["Facilities"])
+
+class RegisterFacilityRequest(BaseModel):
+    access_code: str
+
+@router.get("/{user_id}", status_code=status.HTTP_200_OK)
+async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
+    """메인 색인 페이지 Box #2 및 시설 등록 페이지 Box #3용 시설 목록 조회"""
+    # 1. 유저 권한 확인
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 2. 권한별 시설 목록 반환
+    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        # 관리자/개발자: 모든 활성 시설 조회
+        facilities_result = await db.execute(select(Facility).where(Facility.is_active == True))
+        facilities = facilities_result.scalars().all()
+    else:
+        # 일반 유저: 매핑 테이블(facility_users)에 등록된 시설만 조회 (JOIN 대체 로직)
+        mapping_result = await db.execute(select(FacilityUser.facility_id).where(FacilityUser.user_id == user_id))
+        facility_ids = mapping_result.scalars().all()
+        
+        if not facility_ids:
+            return {"facilities": []}
+            
+        facilities_result = await db.execute(select(Facility).where(Facility.id.in_(facility_ids), Facility.is_active == True))
+        facilities = facilities_result.scalars().all()
+
+    return {
+        "facilities": [
+            {"id": f.id, "name": f.name, "access_code": f.access_code} 
+            for f in facilities
+        ]
+    }
+
+@router.post("/{user_id}/register", status_code=status.HTTP_200_OK)
+async def register_facility(user_id: int, req: RegisterFacilityRequest, db: AsyncSession = Depends(get_db)):
+    """Box #2: 시설 접근 코드로 시설 등록"""
+    # 1. 접근 코드로 시설 찾기
+    fac_result = await db.execute(select(Facility).where(Facility.access_code == req.access_code, Facility.is_active == True))
+    facility = fac_result.scalars().first()
+    
+    if not facility:
+        raise HTTPException(status_code=404, detail="유효하지 않거나 비활성화된 접근 코드입니다.")
+
+    # 2. 중복 등록 확인
+    mapping_result = await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility.id, FacilityUser.user_id == user_id)
+    )
+    if mapping_result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 등록된 시설입니다.")
+
+    # 3. 매핑 추가
+    new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
+    await db.commit()
+
+    return {"message": "시설이 성공적으로 등록되었습니다.", "facility_name": facility.name}
+
+@router.delete("/{user_id}/unlink/{facility_id}", status_code=status.HTTP_200_OK)
+async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
+    """Box #3: 시설 연동 해제"""
+    mapping_result = await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == user_id)
+    )
+    mapping = mapping_result.scalars().first()
+    
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")
+
+    await db.delete(mapping)
+    await db.commit()
+    return {"message": "시설 연동이 해제되었습니다."}

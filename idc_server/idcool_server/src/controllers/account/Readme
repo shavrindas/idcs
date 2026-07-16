@@ -1,0 +1,44 @@
+
+1. 계정은 다음 3가지의 방법으로 생성 될 수 있다. 일반 생성, 구글 연동 생성, 애플 연동 생성
+2. 일반 생성된 계정도 이후에 구글과 애플에 연동 가능하게 하라
+3. 계정 삭제시 연동 정보도 삭제해야한다.
+4. 계정 생성에서 user_role 은 항상 'USER' 로 생성되며, 추후 관리자 권한 부여는 DB 자체에서 수정되며 서버나 앱에서 일어나지 않는다. 
+
+서버 fastapi
+
+데이터베이스 postgresql
+
+-- 권한 관리를 위한 ENUM 타입 생성
+CREATE TYPE user_role AS ENUM ('USER', 'ADMIN', 'DEVELOPER');
+
+-- 유저 테이블 생성
+CREATE TABLE user_table (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,                         -- 일반/소셜 공통 고유 이메일
+    password VARCHAR(255),                                      -- 소셜 가입 시 NULL 허용
+    name VARCHAR(100) NOT NULL,
+    role user_role NOT NULL DEFAULT 'USER',
+    phone_number VARCHAR(20),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 외부 제공자 테이블 생성
+CREATE TABLE external_providers (
+    external_provider_id SERIAL PRIMARY KEY,
+    account_id INT NOT NULL,
+    provider VARCHAR(50) NOT NULL CHECK (provider IN ('google', 'apple')), -- 제공자 제한
+    provider_id VARCHAR(255) NOT NULL,                           -- 구글/애플이 주는 고유 ID (sub 값 등)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_user_account FOREIGN KEY (account_id) 
+        REFERENCES user_table(id) ON DELETE CASCADE,
+
+    CONSTRAINT uq_provider_user UNIQUE (provider, provider_id),
+    CONSTRAINT uq_account_provider UNIQUE (account_id, provider)
+);
+
+
+  할 것(스코프) : 
+  1. model 파일 수정 
+  2. auth_controller.py에 사용할 fastapi 범위(유저의 계정 생성, 로그인에 한정)

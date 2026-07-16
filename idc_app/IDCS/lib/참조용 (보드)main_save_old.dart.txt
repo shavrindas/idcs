@@ -1,0 +1,114 @@
+// ===============================================================
+// 경로 : lib/main.dart
+// 명세 : 권한 주입 간소화 및 라우팅 (실제 통신 연동용)
+// ===============================================================
+import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'board_main.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+class AuthService {
+  // 테스트를 위해 이 값을 변경하며 진행합니다. (1: 관리자, 사용자는 아래 참조 )
+  // (1, 4), (1, 5), (1, 6),    -- 1시설에 a(4), b(5), c(6) 배분
+  // (2, 7), (2, 8), (2, 9),    -- 2시설에 d(7), e(8), f(9) 배분
+  // (3, 4), (3, 7), (3, 10);   -- 3시설에 a(4), d(7), g(10) 배분
+  static const int _mockUserId = 1;
+  static int getCurrentUserId() => _mockUserId;
+}
+
+class AppConfig {
+  // 안드로이드 에뮬레이터 로컬 루프백 주소
+  static const String baseUrl = 'http://10.0.2.2:8000/api';
+}
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'IDCool Systems Routing',
+      initialRoute: '/',
+      onGenerateRoute: RouteGenerator.generateRoute,
+
+      // ─── Quill v11 다국어 딜리게이트  ───
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'), // 기본 한국어 설정
+        Locale('en', 'US'), // 영어 설정
+      ],
+      // ──────────────────────────────────────────────────
+    );
+  }
+}
+
+class RouteGenerator {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/messenger':
+        return MaterialPageRoute(builder: (_) => const MessengerScreen());
+      case '/board':
+        return MaterialPageRoute(builder: (_) => const FacilityListPage());
+      default:
+        return MaterialPageRoute(builder: (_) => const NotFoundScreen());
+    }
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = AuthService.getCurrentUserId();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('홈 화면'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(child: Text('User ID: $userId', style: const TextStyle(fontWeight: FontWeight.bold))),
+          )
+        ],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/messenger'),
+              child: const Text('메신저 이동'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/board'),
+              child: const Text('보드(게시판) 진입'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MessengerScreen extends StatelessWidget {
+  const MessengerScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('메신저')), body: const Center(child: Text('메신저 개발 중')));
+}
+
+class NotFoundScreen extends StatelessWidget {
+  const NotFoundScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Not Found')), body: const Center(child: Text('페이지를 찾을 수 없습니다.')));
+}

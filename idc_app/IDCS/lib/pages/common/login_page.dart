@@ -1,0 +1,164 @@
+// ===============================================================
+// 경로 : lib/pages/common/login_page.dart
+// 명세 : 로그인 페이지
+// ===============================================================
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:idcs/components/common/opening/open_nav.dart';
+import 'package:idcs/components/common/login/login_components.dart';
+import 'package:idcs/main.dart';
+import 'package:idcs/services/common/login/auth_api_service.dart';
+import 'package:idcs/services/common/social_auth_service.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // 로그인 상태 유지 여부를 상위에서 관리
+  bool _keepLogin = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // API 연동: 일반 로그인 처리
+  Future<void> _handleGeneralLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이메일과 비밀번호를 모두 입력해주세요.')),
+      );
+      return;
+    }
+
+    try {
+      final result = await AuthApiService.loginGeneral(
+        email: email,
+        password: password,
+        keepLogin: _keepLogin,
+      );
+
+      // 1. AuthService에 발급받은 user_id 저장 (이 시점에 isLoggedIn이 true가 됨)
+      final userId = result['user_id'];
+      AuthService.setUserId(userId);
+
+      // [비동기 컨텍스트 방어 로직] 화면이 파괴되지 않았는지 확인
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'])),
+      );
+
+      // 2. 메인 색인 페이지로 라우팅 (이제 리다이렉트에 걸리지 않고 정상 이동!)
+      context.go('/main_index/$userId');
+
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  // API 연동: 소셜 로그인 처리
+  Future<void> _handleSocialLogin(String provider) async {
+    try {
+      Map<String, String>? socialData;
+
+      if (provider == 'google') {
+        socialData = await SocialAuthService.signInWithGoogle();
+      } else if (provider == 'apple') {
+        socialData = await SocialAuthService.signInWithApple();
+      }
+
+      if (socialData == null) {
+        return; // 로그인 취소
+      }
+
+      // 백엔드로 소셜 로그인 API 호출
+      final result = await AuthApiService.loginSocial(
+        provider: socialData['provider']!,
+        providerId: socialData['provider_id']!,
+        keepLogin: _keepLogin,
+      );
+
+      final userId = result['user_id'];
+      AuthService.setUserId(userId);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'])),
+      );
+
+      context.go('/main_index/$userId');
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('로그인 페이지')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StandardLoginBox(
+              emailController: _emailController,
+              passwordController: _passwordController,
+              onLoginPressed: _handleGeneralLogin,
+            ),
+            const SizedBox(height: 16),
+            SocialLoginBox(
+              onSocialLoginPressed: _handleSocialLogin,
+            ),
+            const SizedBox(height: 16),
+            KeepLoginStateBox(
+              isChecked: _keepLogin,
+              onChanged: (bool? value) {
+                setState(() {
+                  _keepLogin = value ?? false;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '계정 생성 페이지로 이동',
+              onPressed: () => context.push('/signup'),
+            ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '아이디 찾기 페이지로 이동',
+              onPressed: () => context.push('/find_id'),
+            ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '비밀번호 찾기 페이지로 이동',
+              onPressed: () => context.push('/find_pw'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

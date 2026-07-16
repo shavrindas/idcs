@@ -1,0 +1,625 @@
+// ===============================================================
+// 경로 : lib/board_main.dart
+// 명세 : [A/bp] 보드 메인 모듈 (API 연동 유지 + Quill v11 패치 반영)
+// ===============================================================
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'main.dart'; 
+
+// ===============================================================
+// ─── 데이터 모델 구조체 ───
+// ===============================================================
+class FacilityModel {
+  final int id;
+  final String name;
+  FacilityModel({required this.id, required this.name});
+  factory FacilityModel.fromJson(Map<String, dynamic> json) => FacilityModel(id: json['facility_id'], name: json['facility_name']);
+}
+
+class PostModel {
+  final int postId;
+  final int facilityId;
+  final int creatorId;
+  final String title;
+  final String content; 
+  final String facilityName;
+  final String creatorName;
+
+  PostModel({
+    required this.postId, required this.facilityId, required this.creatorId,
+    required this.title, required this.content, required this.facilityName, required this.creatorName,
+  });
+
+  factory PostModel.fromJson(Map<String, dynamic> json) {
+    return PostModel(
+      postId: json['post_id'], facilityId: json['facility_id'], creatorId: json['creator_id'],
+      title: json['title'], content: json['content'],
+      facilityName: json['facility_name'] ?? '', creatorName: json['creator_name'] ?? '알 수 없음',
+    );
+  }
+}
+
+// ===============================================================
+// ─── 이미지 업로드 서비스 ───
+// ===============================================================
+class ImageUploadResponse {
+  final int imageId;
+  final String imageUrl;
+  ImageUploadResponse(this.imageId, this.imageUrl);
+}
+
+class EditorImageService {
+  static Future<ImageUploadResponse?> uploadImage(String filePath) async {
+    try {
+      final url = Uri.parse('${AppConfig.baseUrl}/board/image/upload');
+      var request = http.MultipartRequest('POST', url);
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        final resStr = await response.stream.bytesToString();
+        final decoded = jsonDecode(resStr);
+        return ImageUploadResponse(decoded['image_id'], decoded['image_url']);
+      }
+    } catch (e) {
+      debugPrint('이미지 업로드 실패: $e');
+    }
+    return null;
+  }
+}
+
+// ===============================================================
+// ─── [A/bp-01] 시설 리스트 페이지 ───
+// ===============================================================
+class FacilityListPage extends StatefulWidget {
+  const FacilityListPage({super.key});
+  @override
+  State<FacilityListPage> createState() => _FacilityListPageState();
+}
+
+class _FacilityListPageState extends State<FacilityListPage> {
+  bool _isLoading = true;
+  String _userRole = '';
+  List<FacilityModel> _facilities = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchContext();
+  }
+
+  Future<void> _fetchContext() async {
+    final userId = AuthService.getCurrentUserId();
+    final url = Uri.parse('${AppConfig.baseUrl}/test-auth/my-context/$userId');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        setState(() {
+          _userRole = decoded['user']['role'];
+          _facilities = (decoded['accessible_facilities'] as List).map((f) => FacilityModel.fromJson(f)).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) { setState(() => _isLoading = false); }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final isAdmin = _userRole == 'ADMIN' || _userRole == 'DEVELOPER';
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('시설 및 보드 선택'), backgroundColor: Colors.blueGrey.shade50),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          if (isAdmin) ...[
+            Card(
+              color: Colors.blue.shade50, elevation: 2,
+              child: ListTile(
+                leading: const Icon(Icons.analytics, color: Colors.blue),
+                title: const Text('📊 통합 조회 보드', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const IntegratedBoardPage())),
+              ),
+            ),
+            const Divider(),
+          ],
+          ..._facilities.map((facility) => Card(
+            child: ListTile(
+              leading: const Icon(Icons.business, color: Colors.teal),
+              title: Text(facility.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FacilityBoardPage(facility: facility))),
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+}
+
+// ===============================================================
+// ─── 페이징 공통 로직 ───
+// ===============================================================
+abstract class PagedBoardState<T extends StatefulWidget> extends State<T> {
+  final ScrollController _scrollController = ScrollController();
+  final List<PostModel> _posts = [];
+  int _currentPage = 1;
+  final int _limit = 30;
+  bool _isLoading = false;
+  bool _hasMore = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPage();
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 && !_isLoading && _hasMore) _fetchPage();
+    });
+  }
+
+  Future<void> _fetchPage() async {
+    setState(() => _isLoading = true);
+    try {
+      List<PostModel> newPosts = await fetchApiData(_currentPage, _limit);
+      setState(() {
+        _currentPage++;
+        _isLoading = false;
+        if (newPosts.length < _limit) _hasMore = false;
+        _posts.addAll(newPosts);
+      });
+    } catch (e) { setState(() => _isLoading = false); }
+  }
+
+  Future<List<PostModel>> fetchApiData(int page, int limit);
+
+  Widget buildList() {
+    if (_posts.isEmpty && _isLoading) return const Center(child: CircularProgressIndicator());
+    if (_posts.isEmpty && !_isLoading) return const Center(child: Text('등록된 포스트가 없습니다.'));
+    return ListView.builder(
+      controller: _scrollController, itemCount: _posts.length + (_hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == _posts.length) return const Padding(padding: EdgeInsets.all(16.0), child: Center(child: CircularProgressIndicator()));
+        final post = _posts[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: ListTile(
+            title: Text(post.title), subtitle: Text('[${post.facilityName}] - ${post.creatorName}'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailPage(postId: post.postId))),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class IntegratedBoardPage extends StatefulWidget { const IntegratedBoardPage({super.key}); @override State<IntegratedBoardPage> createState() => _IntegratedBoardPageState(); }
+class _IntegratedBoardPageState extends PagedBoardState<IntegratedBoardPage> {
+  @override Future<List<PostModel>> fetchApiData(int page, int limit) async {
+    final userId = AuthService.getCurrentUserId();
+    final res = await http.get(Uri.parse('${AppConfig.baseUrl}/board/integrated?user_id=$userId&page=$page&limit=$limit'));
+    if (res.statusCode == 200) return (jsonDecode(utf8.decode(res.bodyBytes))['data'] as List).map((p) => PostModel.fromJson(p)).toList();
+    return [];
+  }
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('통합 조회 보드 (All)')), body: buildList());
+}
+
+class FacilityBoardPage extends StatefulWidget {
+  final FacilityModel facility; const FacilityBoardPage({super.key, required this.facility});
+  @override State<FacilityBoardPage> createState() => _FacilityBoardPageState();
+}
+class _FacilityBoardPageState extends PagedBoardState<FacilityBoardPage> {
+  @override Future<List<PostModel>> fetchApiData(int page, int limit) async {
+    final userId = AuthService.getCurrentUserId();
+    final res = await http.get(Uri.parse('${AppConfig.baseUrl}/board/facility/${widget.facility.id}?user_id=$userId&page=$page&limit=$limit'));
+    if (res.statusCode == 200) return (jsonDecode(utf8.decode(res.bodyBytes))['data'] as List).map((p) => PostModel.fromJson(p)).toList();
+    return [];
+  }
+  @override Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('${widget.facility.name} 보드')), body: buildList(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostCreatePage(facility: widget.facility))).then((_) {
+          setState(() { _posts.clear(); _currentPage = 1; _hasMore = true; }); _fetchPage();
+        }),
+        label: const Text('포스트 작성'), icon: const Icon(Icons.edit),
+      ),
+    );
+  }
+}
+
+// ===============================================================
+// ─── [A/bp-04] 시설 포스트 조회 페이지
+// ===============================================================
+class PostDetailPage extends StatefulWidget {
+  final int postId;
+  const PostDetailPage({super.key, required this.postId});
+  @override State<PostDetailPage> createState() => _PostDetailPageState();
+}
+
+class _PostDetailPageState extends State<PostDetailPage> {
+  PostModel? _post;
+  List<dynamic> _comments = [];
+  bool _isLoading = true;
+  String _userRole = 'USER';
+
+  quill.QuillController? _quillController;
+  final TextEditingController _commentController = TextEditingController();
+
+  @override void initState() { super.initState(); _fetchPostDetail(); }
+
+  Future<void> _fetchPostDetail() async {
+    final userId = AuthService.getCurrentUserId();
+    final contextRes = await http.get(Uri.parse('${AppConfig.baseUrl}/test-auth/my-context/$userId'));
+    if (contextRes.statusCode == 200) _userRole = jsonDecode(utf8.decode(contextRes.bodyBytes))['user']['role'];
+
+    final response = await http.get(Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}?user_id=$userId'));
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      setState(() {
+        _post = PostModel.fromJson(decoded['data']);
+        _comments = decoded['comments'] ?? [];
+        _initQuillController(_post!.content);
+        _isLoading = false;
+      });
+    } else { setState(() => _isLoading = false); }
+  }
+
+  void _initQuillController(String contentStr) {
+    try {
+      final doc = quill.Document.fromJson(jsonDecode(contentStr));
+      _quillController = quill.QuillController(
+        document: doc,
+        selection: const TextSelection.collapsed(offset: 0),
+        readOnly: true, // v11 대응: 컨트롤러 레벨 잠금
+      );
+    } catch (e) {
+      final doc = quill.Document()..insert(0, contentStr);
+      _quillController = quill.QuillController(
+        document: doc,
+        selection: const TextSelection.collapsed(offset: 0),
+        readOnly: true, // v11 대응: 컨트롤러 레벨 잠금
+      );
+    }
+  }
+
+  Future<void> _deletePost() async {
+    final userId = AuthService.getCurrentUserId();
+    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}?user_id=$userId'));
+    if (response.statusCode == 200) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('게시글이 삭제되었습니다.')));
+      }
+    }
+  }
+
+  Future<void> _addComment() async {
+    if (_commentController.text.trim().isEmpty) return;
+    final userId = AuthService.getCurrentUserId();
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}/comment?user_id=$userId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"content": _commentController.text}),
+    );
+    if (response.statusCode == 200) {
+      _commentController.clear();
+      _fetchPostDetail();
+    }
+  }
+
+  Future<void> _deleteComment(int commentId) async {
+    final userId = AuthService.getCurrentUserId();
+    final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/board/comment/$commentId?user_id=$userId'));
+    if (response.statusCode == 200) {
+      _fetchPostDetail();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_post == null) return const Scaffold(body: Center(child: Text('포스트를 불러올 수 없습니다.')));
+
+    final userId = AuthService.getCurrentUserId();
+    final bool isCreator = _post!.creatorId == userId;
+    final bool isAdmin = _userRole == 'ADMIN' || _userRole == 'DEVELOPER';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('포스트 조회'),
+        actions: [
+          if (isCreator) IconButton(
+            icon: const Icon(Icons.edit_note, size: 28),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PostEditPage(post: _post!))).then((_) => _fetchPostDetail())
+          ),
+          if (isCreator || isAdmin) IconButton(
+            icon: const Icon(Icons.delete, color: Colors.redAccent),
+            onPressed: _deletePost,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('[${_post!.facilityName}]', style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+            Text(_post!.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text('작성자: ${_post!.creatorName}', style: const TextStyle(color: Colors.grey)),
+            const Divider(height: 24),
+
+            if (_quillController != null)
+              Container(
+                height: 150, width: double.infinity, padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade300)),
+                // v11 대응: QuillEditor 적용 (readOnly는 Controller에 위임됨)
+                child: quill.QuillEditor(
+                  controller: _quillController!,
+                  focusNode: FocusNode(),
+                  scrollController: ScrollController(),
+                  config: const quill.QuillEditorConfig(
+                    showCursor: false,
+                    autoFocus: false,
+                  ),
+                ),
+              ),
+
+            const Divider(height: 40),
+
+            const Text('댓글', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ListView.builder(
+              shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+              itemCount: _comments.length,
+              itemBuilder: (context, index) {
+                final comment = _comments[index];
+                final bool isCommentCreator = comment['creator_id'] == userId;
+
+                return ListTile(
+                  dense: true, leading: const Icon(Icons.account_circle),
+                  title: Text(comment['content']), subtitle: Text(comment['creator_name']),
+                  trailing: (isCommentCreator || isAdmin) ? IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    onPressed: () => _deleteComment(comment['comment_id']),
+                  ) : null,
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: TextField(
+                  controller: _commentController,
+                  decoration: const InputDecoration(hintText: '댓글 작성...', border: OutlineInputBorder(), isDense: true)
+                )),
+                const SizedBox(width: 8),
+                ElevatedButton(onPressed: _addComment, child: const Text('등록'))
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ===============================================================
+// ─── [A/bp-04/01] 시설 포스트 생성 페이지
+// ===============================================================
+class PostCreatePage extends StatefulWidget {
+  final FacilityModel facility;
+  const PostCreatePage({super.key, required this.facility});
+  @override State<PostCreatePage> createState() => _PostCreatePageState();
+}
+
+class _PostCreatePageState extends State<PostCreatePage> {
+  final TextEditingController _titleController = TextEditingController();
+  final quill.QuillController _quillController = quill.QuillController(
+    document: quill.Document(),
+    selection: const TextSelection.collapsed(offset: 0),
+    readOnly: false // 명시적 작성 가능 상태 부여
+  );
+  
+  final List<int> _uploadedImageIds = []; 
+
+  Future<void> _savePost() async {
+    if (_titleController.text.trim().isEmpty) return;
+    
+    final String contentJson = jsonEncode(_quillController.document.toDelta().toJson());
+    final userId = AuthService.getCurrentUserId();
+    
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/board/post?user_id=$userId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "board_id": widget.facility.id, 
+        "title": _titleController.text,
+        "content": contentJson,
+        "image_ids": _uploadedImageIds // 이미지 연동 ID 리스트 전송
+      }),
+    );
+
+    if (response.statusCode == 200 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('게시글이 저장되었습니다.')));
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    String dummyPath = "/path/to/picked/image.jpg"; 
+    final res = await EditorImageService.uploadImage(dummyPath);
+    if (res != null) {
+      _uploadedImageIds.add(res.imageId);
+      final index = _quillController.selection.baseOffset;
+      final length = _quillController.selection.extentOffset - index;
+      _quillController.replaceText(index, length, quill.BlockEmbed.image(res.imageUrl), null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('새 포스트 작성 (${widget.facility.name})'),
+        actions: [IconButton(icon: const Icon(Icons.check), onPressed: _savePost)],
+      ),
+      // v11 패치: SingleChildScrollView로 감싸서 레이아웃 에러 해결
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(controller: _titleController, decoration: const InputDecoration(labelText: '제목', border: OutlineInputBorder())),
+            ),
+            // v11 패치: QuillSimpleToolbar 적용
+            quill.QuillSimpleToolbar(
+              controller: _quillController,
+              config: const quill.QuillSimpleToolbarConfig(),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _pickAndUploadImage, 
+                  icon: const Icon(Icons.image), label: const Text('이미지 첨부')
+                ),
+              ),
+            ),
+            // v11 패치: Expanded 제거 및 고정 높이 부여
+            Container(
+              height: 400,
+              padding: const EdgeInsets.all(16),
+              color: Colors.white,
+              child: quill.QuillEditor(
+                controller: _quillController,
+                focusNode: FocusNode(),
+                scrollController: ScrollController(),
+                config: const quill.QuillEditorConfig(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ===============================================================
+// ─── [A/bp-04/02] 시설 포스트 수정 페이지
+// ===============================================================
+class PostEditPage extends StatefulWidget {
+  final PostModel post;
+  const PostEditPage({super.key, required this.post});
+  @override State<PostEditPage> createState() => _PostEditPageState();
+}
+
+class _PostEditPageState extends State<PostEditPage> {
+  late TextEditingController _titleController;
+  late quill.QuillController _quillController;
+  final List<int> _newImageIds = []; 
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.post.title);
+    
+    try {
+      final doc = quill.Document.fromJson(jsonDecode(widget.post.content));
+      _quillController = quill.QuillController(
+        document: doc, 
+        selection: const TextSelection.collapsed(offset: 0),
+        readOnly: false // 수정 모드
+      );
+    } catch (e) {
+      final doc = quill.Document()..insert(0, widget.post.content);
+      _quillController = quill.QuillController(
+        document: doc, 
+        selection: const TextSelection.collapsed(offset: 0),
+        readOnly: false // 수정 모드
+      );
+    }
+  }
+
+  Future<void> _updatePost() async {
+    if (_titleController.text.trim().isEmpty) return;
+    final String contentJson = jsonEncode(_quillController.document.toDelta().toJson());
+    
+    final userId = AuthService.getCurrentUserId();
+    final response = await http.put(
+      Uri.parse('${AppConfig.baseUrl}/board/post/${widget.post.postId}?user_id=$userId'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "title": _titleController.text,
+        "content": contentJson,
+        "image_ids": _newImageIds 
+      }),
+    );
+
+    if (response.statusCode == 200 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('수정되었습니다.')));
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    String dummyPath = "/path/to/picked/image.jpg"; 
+    final res = await EditorImageService.uploadImage(dummyPath);
+    if (res != null) {
+      _newImageIds.add(res.imageId);
+      final index = _quillController.selection.baseOffset;
+      final length = _quillController.selection.extentOffset - index;
+      _quillController.replaceText(index, length, quill.BlockEmbed.image(res.imageUrl), null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('포스트 수정'),
+        actions: [IconButton(icon: const Icon(Icons.check), onPressed: _updatePost)],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(controller: _titleController, decoration: const InputDecoration(labelText: '제목', border: OutlineInputBorder())),
+            ),
+            quill.QuillSimpleToolbar(
+              controller: _quillController,
+              config: const quill.QuillSimpleToolbarConfig(),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: _pickAndUploadImage, 
+                  icon: const Icon(Icons.image), label: const Text('새 이미지 첨부')
+                ),
+              ),
+            ),
+            Container(
+              height: 400,
+              padding: const EdgeInsets.all(16),
+              color: Colors.white,
+              child: quill.QuillEditor(
+                controller: _quillController,
+                focusNode: FocusNode(),
+                scrollController: ScrollController(),
+                config: const quill.QuillEditorConfig(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
