@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  idcool-redis:
+    image: redis:alpine
+    container_name: idcool-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - idcool-net
+    restart: unless-stopped
+
+networks:
+  idcool-net:
+    external: true
+    name: idcool-network

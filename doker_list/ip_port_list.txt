@@ -1,0 +1,24 @@
+# ===================================================
+# IDCOOL 실시간 대용량 아키텍처 포트 목록 (IP & Port List)
+# ===================================================
+
+[1] 외부 게이트웨이 및 데이터베이스
+- Nginx (Web / Load Balancer) : Host 80  -> Container 80
+- Nginx (SSL / HTTPS Secure)  : Host 443 -> Container 443
+- TimescaleDB (PostgreSQL)    : Host 5432 -> Container 5432
+- Redis Buffer (In-Memory)    : Host 6379 -> Container 6379
+
+[2] FastAPI 백엔드 서버 로컬 매핑 대역 (Port Range: 8080 ~ 8089)
+- idcool-backend-1  : 127.0.0.1:8080
+- idcool-backend-2  : 127.0.0.1:8081
+- idcool-backend-3  : 127.0.0.1:8082
+- idcool-backend-4  : 127.0.0.1:8083
+- idcool-backend-5  : 127.0.0.1:8084
+- idcool-backend-6  : 127.0.0.1:8085
+- idcool-backend-7  : 127.0.0.1:8086
+- idcool-backend-8  : 127.0.0.1:8087
+- idcool-backend-9  : 127.0.0.1:8088
+- idcool-backend-10 : 127.0.0.1:8089
+
+# Note: 도커 컴포즈 내부망(idcool-network) 통신 시, 
+# 모든 백엔드 컨테이너의 기본 수신 포트는 8080(TCP)으로 고정됩니다.

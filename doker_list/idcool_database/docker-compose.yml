@@ -13,7 +13,8 @@ services:
       - idcool_data:/var/lib/postgresql/data
     ports:
       # - "5432:5432" 나중에 서버 컴퓨터에서는 5432로 바꾸던가 
-      - "5433:5432"
+      # 이미 서버에서는 5432 포트가 사용중
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -24,3 +25,9 @@ services:
 volumes:
   idcool_data:
     driver: local
+
+networks:
+  idcool-net:
+    external: true
+    name: idcool-network
+

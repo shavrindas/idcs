@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  idcool-nginx:
+    image: nginx:alpine
+    container_name: idcool-nginx
+    ports:
+      - "80:80"   # HTTP 기본 포트 오픈
+      - "443:443" # 추후 SSL(HTTPS) 적용 시 사용
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - idcool-net
+    restart: unless-stopped
+
+networks:
+  idcool-net:
+    external: true
+    name: idcool-network

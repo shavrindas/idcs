@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  idcool-backend:
+    build:
+      context: ./backend # FastAPI 코드가 담긴 폴더 경로
+      dockerfile: Dockerfile
+    # container_name은 기재하지 않음 (10개 스케일링을 위함)
+    environment:
+      - REDIS_HOST=idcool-redis
+      - REDIS_PORT=6379
+      
+      # 기존 DB 컨테이너 이름(idcool-database-v01)을 호스트명으로 직접 사용합니다
+      - DB_HOST=idcool-database-v01
+      - DB_PORT=5432 # 도커 내부망 통신이므로 포트 포워딩 포트가 아닌 내부 기본 포트를 씁니다[cite: 1]
+      - DB_USER=dev # init-db.sql에서 정의된 권한 계정[cite: 2]
+      - DB_PASSWORD=devkey1 # init-db.sql에서 정의된 패스워드[cite: 2]
+      - DB_NAME=idcool_database_v01 # 기존 DB명[cite: 1]
+    networks:
+      - idcool-net
+    restart: unless-stopped
+
+networks:
+  idcool-net:
+    external: true
+    name: idcool-network
