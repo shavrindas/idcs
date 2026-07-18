@@ -1,3 +1,6 @@
 /.venv
 /.__pycache__
 __init__.py
+/migrations
+프로젝트 관리.md
+alembic.ini

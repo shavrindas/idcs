@@ -5,7 +5,7 @@
 import enum
 from sqlalchemy import Column, Integer, String, Enum, DateTime, func, ForeignKey
 from sqlalchemy.orm import relationship
-from config.db import Base
+from idcool_server.config.db import Base
 # ===============================================================
 
 class UserRole(str, enum.Enum):

@@ -1,0 +1,4859 @@
+==================================================
+ PROJECT CODEBASE INTEGRATION
+ Mode: INCLUDE
+==================================================
+
+--- FILE_PATH: app.py ---
+# ===============================================================
+# 경로 : src/app.py
+# 명세 : FastAPI 서버 초기화 및 라우터 등록
+# ===============================================================
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+from config.db import engine
+from src.models.User import User, ExternalProvider
+from src.models.Facility import Facility, FacilityRoom, FacilityUser
+import os
+
+# ===============================================================
+# FastAPI 서버 초기화
+# ===============================================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: 시작 시 실행 로직
+    print("LOG[STARTUP] : IDCool Server is starting up...")
+    yield
+    # Shutdown: 종료 시 실행 로직
+    print("LOG[SHUTDOWN] : Shutting down IDCool Server...")
+    await engine.dispose()
+    
+app = FastAPI(
+    title="IDCool Systems API",
+    description="IDCool Systems 서버 백엔드 API",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# ===============================================================
+# ─── 이미지 업로드 디렉토리 설정 ───
+# ===============================================================
+
+# 이미지가 저장될 디렉토리 생성 보장
+os.makedirs("uploads", exist_ok=True)
+
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+# 정적 파일 제공
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+# ===============================================================
+# ─── 루트 엔드포인트 ───
+# ===============================================================
+@app.get("/")
+async def root():
+    # 작동 확인용 
+    return {"message": "IDCool Systems API", "status": "running"}
+
+
+# ===============================================================
+# ─── 라우터 ───
+# ===============================================================
+
+# 디버그 라우터 
+from src.app_debug_list import router as debug_router
+app.include_router(debug_router)
+
+# 권한 및 시설 정보 주입 라우터
+from src.controllers.free_later_controller import router as free_later_router
+app.include_router(free_later_router)
+
+# 계정 관련 라우터
+from src.controllers.account.auth_controller import router as auth_router
+app.include_router(auth_router, prefix="/api")
+
+# 시설 관련 라우터
+from src.controllers.facility.facility_controller import router as facility_router
+app.include_router(facility_router, prefix="/api")
+
+# 보드 라우터
+# from src.controllers.board.board_controller import router as board_router
+# app.include_router(board_router)
+
+
+
+--- FILE_PATH: app_debug_list.py ---
+# ===============================================================
+# 경로 : src/app_debug_list.py
+# 명세 : 디버그용 라우터 모듈
+# ===============================================================
+from fastapi import APIRouter, Depends
+from config.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+# ===============================================================
+
+router = APIRouter()
+
+# ===============================================================
+# ─── DB 연결 테스트용 라우트 추가 ───
+# ===============================================================
+
+@router.get("/db-test")
+async def test_db_connection(db: AsyncSession = Depends(get_db)):
+    try:
+        # PostgreSQL 서버의 현재 시간을 구하는 쿼리 실행
+        result = await db.execute(text("SELECT NOW();"))
+        db_time = result.scalar()
+        return {
+            "status": "success",
+            "message": "211.55.127.239 DB에 성공적으로 연결되었습니다.",
+            "db_current_time": db_time
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": "DB 연결 실패",
+            "details": str(e)
+        }
+
+
+
+
+--- FILE_PATH: __init__.py ---
+
+
+--- FILE_PATH: controllers\free_later_controller.py ---
+# ===============================================================
+# 경로 : src/controllers/free_later_controller.py
+# 명세 : 클라이언트 테스트를 위한 임시 권한 및 시설 정보 주입 컨트롤러 (향후 삭제 및 기능 이전 요구)
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from config.db import get_db
+
+router = APIRouter(prefix="/api/test-auth", tags=["Test Auth"])
+
+
+
+@router.get("/my-context/{user_id}")
+async def get_my_context(user_id: int, db: AsyncSession = Depends(get_db)):
+    # 1. 유저 정보 조회
+    user_query = text("SELECT id, email, name, role FROM user_table WHERE id = :user_id")
+    user_result = await db.execute(user_query, {"user_id": user_id})
+    user = user_result.fetchone()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 2. 시설 정보 조회 로직
+    # 관리자(ADMIN, DEVELOPER)는 모든 시설에 접근 가능
+    if user.role in ['ADMIN', 'DEVELOPER']:
+        facility_query = text("SELECT id, name FROM facilities_table WHERE is_active = TRUE")
+        facility_result = await db.execute(facility_query)
+    else:
+        # 일반 유저(USER)는 facility_users 매핑 테이블에 존재하는 시설만 접근 가능
+        facility_query = text("""
+            SELECT f.id, f.name 
+            FROM facilities_table f
+            JOIN facility_users fu ON f.id = fu.facility_id
+            WHERE fu.user_id = :user_id AND f.is_active = TRUE
+        """)
+        facility_result = await db.execute(facility_query, {"user_id": user_id})
+        
+    facilities = [{"facility_id": row.id, "facility_name": row.name} for row in facility_result.fetchall()]
+
+    return {
+        "status": "success",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role
+        },
+        "accessible_facilities": facilities,
+        # 임시로 클라이언트가 기본으로 선택할 첫 번째 시설 ID 반환 (없으면 None)
+        "default_facility_id": facilities[0]["facility_id"] if facilities else None
+    }
+
+--- FILE_PATH: controllers\test_controller.py ---
+# controllers/test_controller.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+# 수정: 앞에 src. 을 붙입니다.
+from idcool_server.config.db import get_db
+
+router = APIRouter()
+
+@router.get("/db-test")
+def test_db_connection(db: Session = Depends(get_db)):
+    try:
+        # 간단한 SQL 실행으로 연결 확인
+        result = db.execute(text("SELECT 1")).scalar()
+        
+        # 실제 user_table 데이터 개수 확인 (테이블 존재 여부 확인용)
+        user_count = db.execute(text("SELECT COUNT(*) FROM user_table")).scalar()
+        
+        return {
+            "status": "success",
+            "db_connection": "connected",
+            "test_query_result": result,
+            "user_table_count": user_count
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+--- FILE_PATH: controllers\__init__.py ---
+from pydantic import BaseModel
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from config.db import get_db
+# 모델 임포트 (경로는 실제 프로젝트에 맞게 수정)
+from src.models.User import User, UserRole
+from src.models.Facility import Facility, FacilityUser 
+
+router = APIRouter(prefix="/facilities", tags=["Facilities"])
+
+class RegisterFacilityRequest(BaseModel):
+    access_code: str
+
+@router.get("/{user_id}", status_code=status.HTTP_200_OK)
+async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
+    """메인 색인 페이지 Box #2 및 시설 등록 페이지 Box #3용 시설 목록 조회"""
+    # 1. 유저 권한 확인
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 2. 권한별 시설 목록 반환
+    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        # 관리자/개발자: 모든 활성 시설 조회
+        facilities_result = await db.execute(select(Facility).where(Facility.is_active == True))
+        facilities = facilities_result.scalars().all()
+    else:
+        # 일반 유저: 매핑 테이블(facility_users)에 등록된 시설만 조회 (JOIN 대체 로직)
+        mapping_result = await db.execute(select(FacilityUser.facility_id).where(FacilityUser.user_id == user_id))
+        facility_ids = mapping_result.scalars().all()
+        
+        if not facility_ids:
+            return {"facilities": []}
+            
+        facilities_result = await db.execute(select(Facility).where(Facility.id.in_(facility_ids), Facility.is_active == True))
+        facilities = facilities_result.scalars().all()
+
+    return {
+        "facilities": [
+            {"id": f.id, "name": f.name, "access_code": f.access_code} 
+            for f in facilities
+        ]
+    }
+
+@router.post("/{user_id}/register", status_code=status.HTTP_200_OK)
+async def register_facility(user_id: int, req: RegisterFacilityRequest, db: AsyncSession = Depends(get_db)):
+    """Box #2: 시설 접근 코드로 시설 등록"""
+    # 1. 접근 코드로 시설 찾기
+    fac_result = await db.execute(select(Facility).where(Facility.access_code == req.access_code, Facility.is_active == True))
+    facility = fac_result.scalars().first()
+    
+    if not facility:
+        raise HTTPException(status_code=404, detail="유효하지 않거나 비활성화된 접근 코드입니다.")
+
+    # 2. 중복 등록 확인
+    mapping_result = await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility.id, FacilityUser.user_id == user_id)
+    )
+    if mapping_result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 등록된 시설입니다.")
+
+    # 3. 매핑 추가
+    new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
+    await db.commit()
+
+    return {"message": "시설이 성공적으로 등록되었습니다.", "facility_name": facility.name}
+
+@router.delete("/{user_id}/unlink/{facility_id}", status_code=status.HTTP_200_OK)
+async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
+    """Box #3: 시설 연동 해제"""
+    mapping_result = await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == user_id)
+    )
+    mapping = mapping_result.scalars().first()
+    
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")
+
+    await db.delete(mapping)
+    await db.commit()
+    return {"message": "시설 연동이 해제되었습니다."}
+
+--- FILE_PATH: controllers\account\auth_controller.py ---
+# ===============================================================
+# 경로 : src/controllers/account/auth_controller.py
+# 명세 : 유저 계정 생성 및 소셜 연동, 로그인 API
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from src.models.User import User, ExternalProvider, UserRole
+from config.db import get_db
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from src.models.User import User, ExternalProvider
+
+from pydantic import BaseModel
+import jwt
+import hashlib
+import random
+from datetime import datetime, timedelta, timezone
+
+
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"]
+)
+
+
+# ---------------------------------------------------------------
+
+# TODO: 실제 환경에서는 환경변수(.env)로 분리해야 합니다.
+SECRET_KEY = "idcool_secret_key_v1" 
+ALGORITHM = "HS256"
+
+# ---------------------------------------------------------------
+# Pydantic Schemas (요청 모델)
+# ---------------------------------------------------------------
+
+class LoginGeneralRequest(BaseModel):
+    email: EmailStr
+    password: str
+    keep_login: bool = False  # Box #3 (로그인 상태 유지) 연동
+
+class LoginSocialRequest(BaseModel):
+    provider: str
+    provider_id: str
+    keep_login: bool = False  # Box #3 (로그인 상태 유지) 연동
+
+class FindIdRequest(BaseModel):
+    name: str
+    phone_number: str
+
+class FindPwRequest(BaseModel):
+    name: str
+    email: EmailStr
+    phone_number: str
+
+class WithdrawRequest(BaseModel):
+    user_id: int
+
+class CheckAccountRequest(BaseModel):
+    email: EmailStr
+
+class PasswordRequestCode(BaseModel):
+    email: EmailStr
+
+class PasswordVerifyCode(BaseModel):
+    token: str
+    code: str
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str
+
+class UpdateNameRequest(BaseModel):
+    name: str
+
+class UpdatePhoneRequest(BaseModel):
+    phone_number: str
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+# ---------------------------------------------------------------
+# Pydantic Schemas (요청/응답 모델)
+# ---------------------------------------------------------------
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    phone_number: Optional[str] = None
+
+class SocialUserCreate(BaseModel):
+    email: EmailStr
+    name: str
+    provider: str # "google" 또는 "apple"
+    provider_id: str
+    phone_number: Optional[str] = None
+
+class LinkSocialProvider(BaseModel):
+    email: EmailStr # 실제 환경에서는 JWT 토큰에서 추출한 user_id를 사용하는 것이 안전합니다.
+    provider: str
+    provider_id: str
+
+# ---------------------------------------------------------------
+# API Endpoints
+# ---------------------------------------------------------------
+
+@router.post("/signup/general", status_code=status.HTTP_201_CREATED)
+async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+    """Box #1: 일반 계정 생성 (비동기 처리)"""
+    
+    # 1. 이메일 중복 체크
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    existing_user = result.scalars().first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
+
+    # TODO: 실제 구현 시 password는 반드시 해싱 처리해야 합니다.
+    hashed_password = user_in.password 
+
+    # 2. 유저 생성 (권한은 USER 고정)
+    new_user = User(
+        email=user_in.email,
+        password=hashed_password,
+        name=user_in.name, # 프런트의 '아이디(필수)'에 해당
+        phone_number=user_in.phone_number,
+        role=UserRole.USER 
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    
+    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id}
+
+
+@router.post("/signup/social", status_code=status.HTTP_201_CREATED)
+async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depends(get_db)):
+    """Box #2: 구글/애플 연동 계정 생성 (비동기 처리)"""
+    
+    if user_in.provider not in ["google", "apple"]:
+        raise HTTPException(status_code=400, detail="지원하지 않는 소셜 제공자입니다.")
+
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    existing_user = result.scalars().first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
+
+    # 1. 유저 생성 (비밀번호 NULL)
+    new_user = User(
+        email=user_in.email,
+        password=None, 
+        name=user_in.name,
+        phone_number=user_in.phone_number,
+        role=UserRole.USER
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    # 2. 소셜 연동 정보 추가
+    new_provider = ExternalProvider(
+        account_id=new_user.id,
+        provider=user_in.provider,
+        provider_id=user_in.provider_id
+    )
+    db.add(new_provider)
+    await db.commit()
+
+    return {"message": f"{user_in.provider} 연동 계정이 생성되었습니다.", "user_id": new_user.id}
+
+
+@router.post("/link-social", status_code=status.HTTP_200_OK)
+async def link_social_to_general(link_in: LinkSocialProvider, db: AsyncSession = Depends(get_db)):
+    """기존 계정에 소셜 연동 추가 (비동기 처리)"""
+    if link_in.provider not in ["google", "apple"]:
+        raise HTTPException(status_code=400, detail="지원하지 않는 소셜 제공자입니다.")
+
+    result = await db.execute(select(User).where(User.email == link_in.email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    existing_provider_result = await db.execute(
+        select(ExternalProvider).where(
+            ExternalProvider.account_id == user.id,
+            ExternalProvider.provider == link_in.provider
+        )
+    )
+    if existing_provider_result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 해당 소셜 계정이 연동되어 있습니다.")
+
+    new_provider = ExternalProvider(
+        account_id=user.id,
+        provider=link_in.provider,
+        provider_id=link_in.provider_id
+    )
+    db.add(new_provider)
+    await db.commit()
+
+    return {"message": f"계정에 {link_in.provider} 연동이 완료되었습니다."}
+
+
+
+
+@router.post("/login/general", status_code=status.HTTP_200_OK)
+async def login_general(req: LoginGeneralRequest, db: AsyncSession = Depends(get_db)):
+    """Box #1: 일반 로그인 처리 (Box #3 로그인 유지 여부 포함)"""
+    
+    # 1. 유저 조회 (비동기 처리)
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="가입되지 않은 이메일입니다.")
+    
+    # 2. 비밀번호 검증 (실제로는 pwd_context.verify 등을 사용해야 함)
+    if user.password != req.password: # TODO: 해시 비교 로직으로 변경
+        raise HTTPException(status_code=401, detail="비밀번호가 일치하지 않습니다.")
+
+    # 3. 로그인 상태 유지 여부에 따른 토큰 만료 시간 설정
+    token_expiry = "30days" if req.keep_login else "1day"
+
+    # TODO: JWT 토큰 생성 및 반환
+    return {
+        "message": "로그인 성공",
+        "access_token": "dummy_token_here",
+        "user_id": user.id,
+        "role": user.role,
+        "expiry_policy": token_expiry
+    }
+
+
+@router.post("/login/social", status_code=status.HTTP_200_OK)
+async def login_social(req: LoginSocialRequest, db: AsyncSession = Depends(get_db)):
+    """Box #2: 소셜 로그인 처리"""
+    
+    # 1. 외부 프로바이더 연동 정보 조회
+    result = await db.execute(
+        select(ExternalProvider).where(
+            ExternalProvider.provider == req.provider,
+            ExternalProvider.provider_id == req.provider_id
+        )
+    )
+    provider_info = result.scalars().first()
+
+    if not provider_info:
+        # 연동 정보가 없으면 프런트에서 회원가입(Box #4) 페이지로 리다이렉트 하도록 유도
+        raise HTTPException(status_code=404, detail="연동된 소셜 계정이 없습니다. 회원가입을 진행해주세요.")
+
+    # 2. 유저 정보 획득
+    user_result = await db.execute(select(User).where(User.id == provider_info.account_id))
+    user = user_result.scalars().first()
+
+    token_expiry = "30days" if req.keep_login else "1day"
+
+    return {
+        "message": f"{req.provider} 소셜 로그인 성공",
+        "access_token": "dummy_social_token_here",
+        "user_id": user.id,
+        "expiry_policy": token_expiry
+    }
+
+
+@router.post("/find-id", status_code=status.HTTP_200_OK)
+async def find_id(req: FindIdRequest, db: AsyncSession = Depends(get_db)):
+    """Box #5: 아이디(이메일) 찾기"""
+    
+    result = await db.execute(
+        select(User).where(
+            User.name == req.name,
+            User.phone_number == req.phone_number
+        )
+    )
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="일치하는 계정 정보가 없습니다.")
+
+    # 보안을 위해 이메일 일부 마스킹 처리 (예: test***@gmail.com)
+    email_parts = user.email.split("@")
+    masked_id = email_parts[0][:3] + "***" if len(email_parts[0]) > 3 else email_parts[0][:1] + "***"
+    masked_email = f"{masked_id}@{email_parts[1]}"
+
+    return {"message": "아이디 찾기 성공", "email": masked_email}
+
+
+@router.post("/find-pw", status_code=status.HTTP_200_OK)
+async def find_pw(req: FindPwRequest, db: AsyncSession = Depends(get_db)):
+    """Box #6: 비밀번호 찾기 (임시 비밀번호 발급 방식 예시)"""
+    
+    result = await db.execute(
+        select(User).where(
+            User.name == req.name,
+            User.email == req.email,
+            User.phone_number == req.phone_number
+        )
+    )
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="입력하신 정보와 일치하는 계정이 없습니다.")
+
+    # TODO: 난수로 임시 비밀번호 생성 -> 해싱 후 DB 업데이트 -> 이메일 또는 SMS로 발송
+    temp_password = "temp1234!" 
+    
+    return {"message": "입력하신 이메일/연락처로 임시 비밀번호가 발송되었습니다. (테스트 환경이므로 실제 발송은 생략)"}
+
+
+
+
+@router.delete("/withdraw", status_code=status.HTTP_200_OK)
+async def withdraw_account(req: WithdrawRequest, db: AsyncSession = Depends(get_db)):
+    """
+    [통합 계정 탈퇴 API] 일반, 구글, 애플 공통
+    
+    TODO (추후 세션 적용 시):
+    1. 보안: 현재는 req body로 user_id를 받지만, 실제 배포 시에는 Depends(get_current_user)를 통해 검증된 JWT에서 추출해야 합니다.
+    2. 애플 완전 탈퇴(Revoke): 애플 정책상 앱 내 탈퇴 시 백엔드에서 Apple Auth Server의 'Revoke Token API'를 호출하여 토큰을 만료시켜야 합니다.
+       (참고: httpx 등으로 https://appleid.apple.com/auth/revoke 호출 로직이 이곳에 추가되어야 함)
+    """
+    result = await db.execute(select(User).where(User.id == req.user_id))
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # DB에 CASCADE가 설정되어 있으므로, user_table에서 삭제 시 
+    # 연동된 external_providers 및 facility_users의 정보도 자동(연쇄) 삭제됩니다.
+    await db.delete(user)
+    await db.commit()
+
+    return {"message": "계정이 성공적으로 탈퇴 처리되었습니다."}
+
+
+# Pydantic Schemas 상단에 추가
+class CheckAccountRequest(BaseModel):
+    email: EmailStr
+
+# 라우터 영역에 추가
+@router.post("/check-account", status_code=status.HTTP_200_OK)
+async def check_account_existence(req: CheckAccountRequest, db: AsyncSession = Depends(get_db)):
+    """Box #1 (아이디 찾기 페이지): 이메일로 가입 여부 및 소셜 연동 상태 확인"""
+    
+    # 1. 유저 조회
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+
+    if not user:
+        return {"exists": False, "message": "해당 이메일로 가입된 계정이 없습니다."}
+
+    # 2. 소셜 연동 여부 확인
+    providers_result = await db.execute(
+        select(ExternalProvider).where(ExternalProvider.account_id == user.id)
+    )
+    providers = providers_result.scalars().all()
+
+    if providers:
+        provider_names = ", ".join([p.provider for p in providers])
+        return {
+            "exists": True, 
+            "message": f"해당 이메일은 {provider_names} 소셜 계정으로 연동되어 있습니다."
+        }
+    else:
+        return {
+            "exists": True, 
+            "message": "해당 이메일은 일반 계정으로 가입되어 있습니다."
+        }
+
+
+
+# --- 헬퍼 함수 ---
+def hash_code(code: str) -> str:
+    """인증 코드를 해싱합니다."""
+    return hashlib.sha256(code.encode()).hexdigest()
+
+
+
+@router.post("/password/request-code", status_code=status.HTTP_200_OK)
+async def request_password_code(req: PasswordRequestCode, db: AsyncSession = Depends(get_db)):
+    """Box #1: 이메일 확인 및 인증 코드 발송 (JWT 발급)"""
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="가입된 이메일이 없습니다.")
+
+    # 1. 6자리 난수 코드 생성
+    code = str(random.randint(100000, 999999))
+    hashed_code = hash_code(code)
+
+    # 2. JWT 생성 (만료시간 5분, 해싱된 코드 포함)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=5)
+    payload = {
+        "sub": user.email, 
+        "code_hash": hashed_code, 
+        "exp": expire
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    # TODO: 실제 서비스에서는 이메일/SMS 전송 API를 호출하여 `code`를 발송해야 합니다.
+    print(f"LOG[DEV] - {user.email} 복구 코드: {code}")
+
+    # 프런트엔드 테스트를 위해 dev_code를 반환합니다. (실 배포 시 제거)
+    return {
+        "message": "이메일로 복구 코드가 발송되었습니다.", 
+        "token": token,
+        "dev_code": code 
+    }
+
+@router.post("/password/verify-code", status_code=status.HTTP_200_OK)
+async def verify_password_code(req: PasswordVerifyCode):
+    """Box #2: 입력 코드 확인 및 재설정 토큰 발급"""
+    try:
+        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        code_hash = payload.get("code_hash")
+
+        # 클라이언트가 보낸 코드를 해싱하여 토큰의 해시값과 비교
+        if hash_code(req.code) != code_hash:
+            raise HTTPException(status_code=400, detail="코드가 일치하지 않습니다.")
+
+        # 인증 성공 시, 비밀번호 변경 전용 새 JWT 발급 (만료시간 10분)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=10)
+        reset_token = jwt.encode(
+            {"sub": email, "action": "reset_pw", "exp": expire}, 
+            SECRET_KEY, 
+            algorithm=ALGORITHM
+        )
+
+        return {"message": "코드 인증이 완료되었습니다.", "reset_token": reset_token}
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="인증 시간이 초과되었습니다. 코드를 다시 요청해주세요.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="유효하지 않은 토큰입니다.")
+
+@router.post("/password/reset", status_code=status.HTTP_200_OK)
+async def reset_password(req: PasswordReset, db: AsyncSession = Depends(get_db)):
+    """Box #3: 새 비밀번호 적용"""
+    try:
+        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        action = payload.get("action")
+
+        if action != "reset_pw":
+            raise HTTPException(status_code=400, detail="잘못된 요청입니다.")
+
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalars().first()
+        if not user:
+            raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+        # TODO: 실제 구현 시 반드시 해싱 함수(pwd_context.hash)를 적용해야 합니다.
+        user.password = req.new_password
+        await db.commit()
+
+        return {"message": "비밀번호가 성공적으로 변경되었습니다."}
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="재설정 시간이 초과되었습니다. 처음부터 다시 진행해주세요.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="유효하지 않은 토큰입니다.")
+    
+
+
+# 로그인 후 용으로 분리된 구역
+
+@router.get("/{user_id}/role", status_code=status.HTTP_200_OK)
+async def get_user_role(user_id: int, db: AsyncSession = Depends(get_db)):
+    """특정 유저의 권한(Role) 조회"""
+    
+    result = await db.execute(select(User.role).where(User.id == user_id))
+    user_role = result.scalars().first()
+
+    if not user_role:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # user_role은 Enum 타입이므로 .value 또는 .name으로 문자열 변환하여 반환
+    return {"role": user_role.value}
+
+
+@router.get("/{user_id}/profile", status_code=status.HTTP_200_OK)
+async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
+    """계정 수정 페이지 초기 로드용 정보 조회"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    providers_result = await db.execute(
+        select(ExternalProvider.provider).where(ExternalProvider.account_id == user_id)
+    )
+    linked_providers = providers_result.scalars().all()
+
+    return {
+        "name": user.name,
+        "phone_number": user.phone_number or "",
+        "linked_providers": linked_providers # 예: ['google', 'apple']
+    }
+
+@router.put("/{user_id}/name", status_code=status.HTTP_200_OK)
+async def update_user_name(user_id: int, req: UpdateNameRequest, db: AsyncSession = Depends(get_db)):
+    """Box #2: 이름(username) 수정"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    user.name = req.name
+    await db.commit()
+    return {"message": "아이디(이름)가 성공적으로 변경되었습니다."}
+
+@router.put("/{user_id}/phone", status_code=status.HTTP_200_OK)
+async def update_user_phone(user_id: int, req: UpdatePhoneRequest, db: AsyncSession = Depends(get_db)):
+    """Box #3: 전화번호 등록 및 수정"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    user.phone_number = req.phone_number
+    await db.commit()
+    return {"message": "전화번호가 성공적으로 변경되었습니다."}
+
+@router.put("/{user_id}/password", status_code=status.HTTP_200_OK)
+async def update_user_password(user_id: int, req: UpdatePasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Box #4: 비밀번호 수정"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    # TODO: 실제로는 해시된 비밀번호를 비교(verify)해야 합니다.
+    if user.password != req.current_password:
+        raise HTTPException(status_code=400, detail="현재 비밀번호가 일치하지 않습니다.")
+    
+    # TODO: req.new_password를 해싱하여 저장해야 합니다.
+    user.password = req.new_password
+    await db.commit()
+    return {"message": "비밀번호가 성공적으로 변경되었습니다."}
+
+--- FILE_PATH: controllers\board\board_controller.py ---
+# ===============================================================
+# 경로 : src/controllers/board/board_controller.py
+# 명세 : 보드(게시판) 관련 API 컨트롤러 (현재 스코프: 리스트 조회)
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File
+from pydantic import BaseModel
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from idcool_server.config.db import get_db
+# ===============================================================
+
+router = APIRouter(prefix="/api/board", tags=["Board"])
+
+# --- Pydantic Schemas ---
+class PostCreateReq(BaseModel):
+    board_id: int
+    title: str
+    content: str
+    image_ids: List[int] = []  # URL 배열 대신, 사전 업로드된 이미지 ID 배열을 받음
+
+class PostUpdateReq(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    image_ids: Optional[List[int]] = None
+
+class CommentCreateReq(BaseModel):
+    content: str
+
+
+# ===============================================================
+# [S/bp-02] 통합 조회 보드 포스트 리스트 (페이징 30)
+# ===============================================================
+@router.get("/integrated")
+async def get_integrated_posts(
+    user_id: int, 
+    page: int = Query(1, ge=1), 
+    limit: int = Query(30, le=100), 
+    db: AsyncSession = Depends(get_db)
+):
+    user_query = text("SELECT role FROM user_table WHERE id = :user_id")
+    user_res = await db.execute(user_query, {"user_id": user_id})
+    user = user_res.fetchone()
+
+    if not user or user.role not in ['ADMIN', 'DEVELOPER']:
+        raise HTTPException(status_code=403, detail="통합 조회 보드에 접근할 권한이 없습니다.")
+
+    offset = (page - 1) * limit
+    
+    # COUNT 쿼리 (클라이언트에서 전체 페이지 계산을 위함)
+    count_query = text("SELECT COUNT(*) FROM posts")
+    total_count = (await db.execute(count_query)).scalar()
+
+    query = text("""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, {"limit": limit, "offset": offset})
+    posts = result.fetchall()
+
+    return {
+        "status": "success",
+        "data": [dict(row._mapping) for row in posts],
+        "meta": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
+
+# ===============================================================
+# [S/bp-03] 시설 조회 보드 포스트 리스트 (페이징 30)
+# ===============================================================
+@router.get("/facility/{facility_id}")
+async def get_facility_posts(
+    facility_id: int, 
+    user_id: int, 
+    page: int = Query(1, ge=1), 
+    limit: int = Query(30, le=100), 
+    db: AsyncSession = Depends(get_db)
+):
+    auth_query = text("""
+        SELECT 1 FROM user_table u
+        LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+        WHERE u.id = :user_id 
+          AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+    """)
+    auth_res = await db.execute(auth_query, {"user_id": user_id, "facility_id": facility_id})
+    if not auth_res.fetchone():
+        raise HTTPException(status_code=403, detail="해당 시설 보드에 접근할 권한이 없습니다.")
+
+    offset = (page - 1) * limit
+
+    count_query = text("SELECT COUNT(*) FROM posts p JOIN boards b ON p.board_id = b.board_id WHERE b.facility_id = :facility_id")
+    total_count = (await db.execute(count_query, {"facility_id": facility_id})).scalar()
+
+    query = text("""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        WHERE b.facility_id = :facility_id
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, {"facility_id": facility_id, "limit": limit, "offset": offset})
+    posts = result.fetchall()
+
+    return {
+        "status": "success",
+        "data": [dict(row._mapping) for row in posts],
+        "meta": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
+
+
+# ===============================================================
+# [S/bp-04] 단일 포스트 상세 조회 (댓글 포함)
+# ===============================================================
+@router.get("/post/{post_id}")
+async def get_post_detail(post_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    # 1. 포스트 기본 정보 조회 (p.images 제거)
+    post_query = text("""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at, p.updated_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        WHERE p.post_id = :post_id
+    """)
+    post = (await db.execute(post_query, {"post_id": post_id})).fetchone()
+
+    if not post:
+        raise HTTPException(status_code=404, detail="포스트를 찾을 수 없습니다.")
+
+    # 2. 권한 검증
+    auth_query = text("""
+        SELECT 1 FROM user_table u
+        LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+        WHERE u.id = :user_id AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+    """)
+    if not (await db.execute(auth_query, {"user_id": user_id, "facility_id": post.facility_id})).fetchone():
+        raise HTTPException(status_code=403, detail="조회 권한이 없습니다.")
+
+    # 3. 댓글 목록 같이 조회
+    comment_query = text("""
+        SELECT c.comment_id, c.content, c.creator_id, c.created_at, u.name as creator_name
+        FROM comments c
+        JOIN user_table u ON c.creator_id = u.id
+        WHERE c.post_id = :post_id
+        ORDER BY c.created_at ASC
+    """)
+    comments = (await db.execute(comment_query, {"post_id": post_id})).fetchall()
+
+    return {
+        "status": "success",
+        "data": dict(post._mapping),
+        "comments": [dict(c._mapping) for c in comments]
+    }
+
+
+# ===============================================================
+# [S/bp-09] 에디터용 이미지 사전 업로드 (Pre-upload) API 명세
+# ===============================================================
+@router.post("/image/upload")
+async def upload_post_image(
+    file: UploadFile = File(...), 
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    [명세 구현 예정 내용]
+    1. 용량 검증 (10MB 이하)
+    2. 이미지 메타데이터(Width, Height) 추출 및 Min Scale(200px) / Max Scale(1920px) 리사이징 로직 (Pillow 사용)
+    3. 스토리지 (로컬 or S3) 저장 로직 ([YYYY/MM/DD]/[UUID].[ext])
+    4. post_images 테이블에 post_id=NULL 로 INSERT 후 image_id 및 image_url 반환
+    """
+    # 더미 응답 (통합 전 프론트엔드 테스트용)
+    return {
+        "status": "success",
+        "image_id": 999, 
+        "image_url": "https://dummyimage.com/600x400/000/fff&text=Preview"
+    }
+
+
+# ===============================================================
+# [S/bp-05] 포스트 생성
+# ===============================================================
+@router.post("/post")
+async def create_post(user_id: int, req: PostCreateReq, db: AsyncSession = Depends(get_db)):
+    # 1. 포스트 삽입
+    query = text("""
+        INSERT INTO posts (board_id, creator_id, updater_id, title, content)
+        VALUES (:board_id, :user_id, :user_id, :title, :content)
+        RETURNING post_id
+    """)
+    result = await db.execute(query, {
+        "board_id": req.board_id, 
+        "user_id": user_id, 
+        "title": req.title, 
+        "content": req.content
+    })
+    new_post_id = result.scalar()
+
+    # 2. 선(Pre) 업로드된 이미지 ID 맵핑 (임시로 post_id=NULL 이었던 것을 업데이트)
+    if req.image_ids:
+        mapping_query = text("""
+            UPDATE post_images 
+            SET post_id = :post_id 
+            WHERE image_id = ANY(:image_ids)
+        """)
+        await db.execute(mapping_query, {"post_id": new_post_id, "image_ids": req.image_ids})
+        
+    await db.commit()
+    return {"status": "success", "post_id": new_post_id}
+
+# ===============================================================
+# [S/bp-06] 포스트 수정
+# ===============================================================
+@router.put("/post/{post_id}")
+async def update_post(post_id: int, user_id: int, req: PostUpdateReq, db: AsyncSession = Depends(get_db)):
+    # 1. 작성자 본인 확인
+    check_query = text("SELECT creator_id FROM posts WHERE post_id = :post_id")
+    post = (await db.execute(check_query, {"post_id": post_id})).fetchone()
+    if not post or post.creator_id != user_id:
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
+
+    # 2. 포스트 업데이트
+    update_query = text("""
+        UPDATE posts 
+        SET title = COALESCE(:title, title),
+            content = COALESCE(:content, content),
+            updater_id = :user_id
+        WHERE post_id = :post_id
+    """)
+    await db.execute(update_query, {
+        "title": req.title, 
+        "content": req.content, 
+        "user_id": user_id, 
+        "post_id": post_id
+    })
+
+    # 3. 추가된 이미지가 있다면 맵핑
+    if req.image_ids:
+        mapping_query = text("""
+            UPDATE post_images 
+            SET post_id = :post_id 
+            WHERE image_id = ANY(:image_ids)
+        """)
+        await db.execute(mapping_query, {"post_id": post_id, "image_ids": req.image_ids})
+
+    await db.commit()
+    return {"status": "success", "message": "포스트 수정 완료"}
+
+# ===============================================================
+# [S/bp-07] 포스트 삭제
+# ===============================================================
+@router.delete("/post/{post_id}")
+async def delete_post(post_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    check_query = text("""
+        SELECT p.creator_id, u.role 
+        FROM posts p JOIN user_table u ON u.id = :user_id 
+        WHERE p.post_id = :post_id
+    """)
+    post = (await db.execute(check_query, {"post_id": post_id, "user_id": user_id})).fetchone()
+    
+    # 작성자 본인이거나 관리자(ADMIN, DEVELOPER)인 경우 삭제 허용
+    if not post or (post.creator_id != user_id and post.role not in ['ADMIN', 'DEVELOPER']):
+        raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+    # ON DELETE CASCADE로 인해 comments, post_images 등도 자동 삭제됨
+    await db.execute(text("DELETE FROM posts WHERE post_id = :post_id"), {"post_id": post_id})
+    await db.commit()
+    return {"status": "success", "message": "포스트 삭제 완료"}
+
+# ===============================================================
+# [S/bp-08] 댓글 생성 및 삭제
+# ===============================================================
+@router.post("/post/{post_id}/comment")
+async def create_comment(post_id: int, user_id: int, req: CommentCreateReq, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        INSERT INTO comments (post_id, creator_id, content)
+        VALUES (:post_id, :user_id, :content)
+        RETURNING comment_id
+    """)
+    result = await db.execute(query, {"post_id": post_id, "user_id": user_id, "content": req.content})
+    await db.commit()
+    return {"status": "success", "comment_id": result.scalar()}
+
+@router.delete("/comment/{comment_id}")
+async def delete_comment(comment_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    check_query = text("""
+        SELECT c.creator_id, u.role 
+        FROM comments c JOIN user_table u ON u.id = :user_id 
+        WHERE c.comment_id = :comment_id
+    """)
+    comment = (await db.execute(check_query, {"comment_id": comment_id, "user_id": user_id})).fetchone()
+    
+    if not comment or (comment.creator_id != user_id and comment.role not in ['ADMIN', 'DEVELOPER']):
+        raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+    await db.execute(text("DELETE FROM comments WHERE comment_id = :comment_id"), {"comment_id": comment_id})
+    await db.commit()
+    return {"status": "success", "message": "댓글 삭제 완료"}
+
+--- FILE_PATH: controllers\facility\facility_controller.py ---
+# ===============================================================
+# 경로 : src/controllers/facility/facility_controller.py
+# 명세 : 시설 관련 API 엔드포인트 정의
+# ===============================================================
+from pydantic import BaseModel
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from config.db import get_db
+from src.models.User import User, UserRole
+from src.models.Facility import Facility, FacilityUser 
+
+router = APIRouter(prefix="/facilities", tags=["Facilities"])
+
+class RegisterFacilityRequest(BaseModel):
+    access_code: str
+
+@router.get("/{user_id}", status_code=status.HTTP_200_OK)
+async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
+    """메인 색인 페이지 Box #2 및 시설 등록 페이지 Box #3용 시설 목록 조회"""
+    # 1. 유저 권한 확인
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 2. 권한별 시설 목록 반환
+    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        # 관리자/개발자: 모든 활성 시설 조회
+        facilities_result = await db.execute(select(Facility).where(Facility.is_active == True))
+        facilities = facilities_result.scalars().all()
+    else:
+        # 일반 유저: 매핑 테이블(facility_users)에 등록된 시설만 조회 (JOIN 대체 로직)
+        mapping_result = await db.execute(select(FacilityUser.facility_id).where(FacilityUser.user_id == user_id))
+        facility_ids = mapping_result.scalars().all()
+        
+        if not facility_ids:
+            return {"facilities": []}
+            
+        facilities_result = await db.execute(select(Facility).where(Facility.id.in_(facility_ids), Facility.is_active == True))
+        facilities = facilities_result.scalars().all()
+
+    return {
+        "facilities": [
+            {"id": f.id, "name": f.name, "access_code": f.access_code} 
+            for f in facilities
+        ]
+    }
+
+@router.post("/{user_id}/register", status_code=status.HTTP_200_OK)
+async def register_facility(user_id: int, req: RegisterFacilityRequest, db: AsyncSession = Depends(get_db)):
+    """Box #2: 시설 접근 코드로 시설 등록"""
+    # 1. 접근 코드로 시설 찾기
+    fac_result = await db.execute(select(Facility).where(Facility.access_code == req.access_code, Facility.is_active == True))
+    facility = fac_result.scalars().first()
+    
+    if not facility:
+        raise HTTPException(status_code=404, detail="유효하지 않거나 비활성화된 접근 코드입니다.")
+
+    # 2. 중복 등록 확인
+    mapping_result = await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility.id, FacilityUser.user_id == user_id)
+    )
+    if mapping_result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 등록된 시설입니다.")
+
+    # 3. 매핑 추가
+    new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
+    await db.commit()
+
+    return {"message": "시설이 성공적으로 등록되었습니다.", "facility_name": facility.name}
+
+@router.delete("/{user_id}/unlink/{facility_id}", status_code=status.HTTP_200_OK)
+async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
+    """Box #3: 시설 연동 해제"""
+    mapping_result = await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == user_id)
+    )
+    mapping = mapping_result.scalars().first()
+    
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")
+
+    await db.delete(mapping)
+    await db.commit()
+    return {"message": "시설 연동이 해제되었습니다."}
+
+--- FILE_PATH: models\Board.py ---
+# ===============================================================
+# 경로 : src/models/Board.py
+# 명세 : 게시판(Board) 및 게시글(Post) 데이터 모델 정의
+# ===============================================================
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Numeric, func
+from idcool_server.config.db import Base
+# ===============================================================
+
+class Board(Base):
+    __tablename__ = "boards"
+
+    board_id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, nullable=False)
+    facility_name = Column(String(255))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    post_id = Column(Integer, primary_key=True, autoincrement=True)
+    board_id = Column(Integer, ForeignKey("boards.board_id", ondelete="CASCADE"), nullable=False)
+    creator_id = Column(Integer, nullable=False)  
+    updater_id = Column(Integer, nullable=False)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    
+    # [변경] images 배열 삭제
+    # images = Column(ARRAY(Text), default=[]) 
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class PostImage(Base):
+    __tablename__ = "post_images"
+    
+    image_id = Column(Integer, primary_key=True, autoincrement=True)
+    # 글 작성 중 선업로드 된 상태를 위해 nullable=True 설정
+    post_id = Column(Integer, ForeignKey("posts.post_id", ondelete="CASCADE"), nullable=True)
+    image_url = Column(String(512), nullable=False)
+    original_name = Column(String(255), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
+    aspect_ratio = Column(Numeric(4, 2), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+--- FILE_PATH: models\chatparticipants.py ---
+from pydantic import BaseModel
+from datetime import datetime
+from fastapi import HTTPException
+from idcool_server.config.db import get_db_connection  # 작성하신 db.py에서 가져옴
+import psycopg2.extras
+
+class chatparticipants(BaseModel):
+    participant_id: int
+    room_id: int
+    user_id: int
+    joined_at: datetime
+    last_read_message_id: int
+    unread_count: int
+
+def chatpartadd(user_id: int, room_id: int):
+    if not user_id or not room_id:
+        return None
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    INSERT INTO chatparticipants (user_id, room_id)
+                    VALUES (%s, %s)
+                    RETURNING *;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query, (user_id, room_id))
+                
+                # 5. RETURNING으로 반환된 단일 행 결과
+                result = cursor.fetchone()
+
+                if not result:
+                    return None
+                
+                res = chatparticipants(**dict(result))
+
+                return res
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+            
+
+def chatpartadds(user_ids: list[int], room_id: int):
+    if not user_ids or not room_id:
+        return None
+
+    data_to_insert = [(user_id, room_id) for user_id in user_ids]
+
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    INSERT INTO chatparticipants (user_id, room_id)
+                    VALUES %s;
+                """
+                
+                # 4. 쿼리 실행
+                psycopg2.extras.execute_values(cursor, query, data_to_insert)
+
+                return "Success"
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+
+--- FILE_PATH: models\chatrooms.py ---
+from pydantic import BaseModel
+from datetime import datetime
+from fastapi import HTTPException
+from idcool_server.config.db import get_db_connection  # 작성하신 db.py에서 가져옴
+import psycopg2.extras
+
+class chatrooms(BaseModel):
+    room_id: int
+    room_name: str
+    type: str
+    created_at: datetime
+
+def chatroomadd(room_name: str, room_type: str):
+    if not room_name or not room_type:
+        return None
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    INSERT INTO chatrooms (room_name, type)
+                    VALUES (%s, %s)
+                    RETURNING *;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query, (room_name, room_type))
+                
+                # 5. RETURNING으로 반환된 단일 행 결과
+                result = cursor.fetchone()
+
+                if not result:
+                    return None
+                
+                res = chatrooms(**dict(result))
+
+                return res
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+
+def chatrooms_get_by_user(user_id: int):
+    if not user_id:
+        return None
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT cr.* FROM chatrooms cr
+                    INNER JOIN chatparticipants cp ON cr.room_id = cp.room_id
+                    WHERE cp.user_id = %s;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query, (user_id,))
+                
+                #
+                rows = cursor.fetchall()
+
+                reslist = []
+
+                if not rows:
+                    return None
+                
+                for row in rows:
+                    reslist.append(
+                        chatrooms(
+                            room_id=row[0],
+                            room_name=row[1],
+                            type=row[2],
+                            created_at=row[3]
+                        )
+                    )
+
+                return reslist
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+
+--- FILE_PATH: models\Facility.py ---
+# ===============================================================
+# 경로 : src/models/Facility.py
+# 명세 : Facility 관련 데이터 모델 정의
+# ===============================================================
+import enum
+from sqlalchemy import (
+    Column, Integer, String, Boolean, Date, Enum, DateTime, func, ForeignKey, UniqueConstraint
+)
+from sqlalchemy.orm import relationship
+from config.db import Base
+# ===============================================================
+
+class RoomStatusType(str, enum.Enum):
+    OPERATING = "OPERATING"
+    MAINTENANCE = "MAINTENANCE"
+    NOT_OPERATING = "NOT_OPERATING"
+
+
+class FacilityUser(Base):
+    __tablename__ = "facility_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 유니크 제약 조건 (동일한 유저가 같은 시설에 중복 등록되는 것 방지)
+    __table_args__ = (
+        UniqueConstraint("facility_id", "user_id", name="uq_facility_user"),
+    )
+
+
+class Facility(Base):
+    __tablename__ = "facilities_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    access_code = Column(String(50), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 관계 정의 (메모리에 실제 로드되는 FacilityRoom과의 관계만 유지)
+    rooms = relationship("FacilityRoom", back_populates="facility", cascade="all, delete-orphan")
+
+
+class FacilityRoom(Base):
+    __tablename__ = "facilities_room_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    status = Column(Enum(RoomStatusType, name="room_status_type"), nullable=False, default=RoomStatusType.OPERATING)
+    operation_start_date = Column(Date, nullable=True)
+    operation_end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 관계 정의
+    facility = relationship("Facility", back_populates="rooms")
+
+--- FILE_PATH: models\facility_users.py ---
+from pydantic import BaseModel
+from datetime import datetime
+from idcool_server.config.db import get_db_connection  # 작성하신 db.py에서 가져옴
+import psycopg2.extras
+
+class facility_users(BaseModel):
+    id: int
+    facility_id: int
+    user_id: int
+    created_at: datetime
+
+def facility_users_get_by_user(user_id: int):
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT 
+                        fu.id,
+                        fu.user_id, 
+                        fu.facility_id,
+                        fu.created_at
+                    FROM facility_users fu
+                    INNER JOIN user_table u ON fu.user_id = u.id
+                    WHERE fu.user_id = %s 
+                    ORDER BY m.created_at DESC;
+                """
+
+                # 4. 쿼리 실행
+                cursor.execute(query, (user_id,))
+
+                # 5. RETURNING으로 반환된 단일 행 결과
+                rows = cursor.fetchall()
+
+                reslist = []
+
+                if not rows:
+                    return None
+                
+                for row in rows:
+                    reslist.append(
+                        facility_users(
+                            id=row[0],
+                            facility_id=row[1],
+                            user_id=row[2],
+                            created_at=row[3]
+                        )
+                    )
+
+                return reslist
+
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+
+--- FILE_PATH: models\messages.py ---
+from pydantic import BaseModel
+from datetime import datetime
+from idcool_server.config.db import get_db_connection  # 작성하신 db.py에서 가져옴
+import psycopg2.extras
+
+class messages(BaseModel):
+    message_id: int
+    room_id: int
+    user_id: int
+    message_type: str
+    content: str
+    created_at: datetime
+    parent_message_id: int | None = None
+    
+class message_with_user(BaseModel):
+    message_id: int
+    room_id: int
+    user_id: int
+    user_name: str
+    message_type: str
+    content: str
+    created_at: datetime
+    parent_message_id: int | None = None
+
+def messages_add(room_id: int, user_id: int, message_type: str, content: str, parent_message_id: int | None = None):
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    INSERT INTO messages (room_id, user_id, message_type, content, parent_message_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING *;
+                """
+
+                # 4. 쿼리 실행
+                cursor.execute(query, (room_id, user_id, message_type, content, parent_message_id))
+
+                # 5. RETURNING으로 반환된 단일 행 결과
+                result = cursor.fetchone()
+
+                if not result:
+                    return None
+
+                res = messages(**dict(result))
+
+                return res
+
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+
+def message_get_by_room(room_id: int):
+    with get_db_connection() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT 
+                        m.message_id AS message_id,
+                        m.room_id, 
+                        m.user_id, 
+                        u.name AS user_name, -- 💡 유저 테이블에서 이름 가져오기
+                        m.message_type, 
+                        m.content, 
+                        m.created_at, 
+                        m.parent_message_id
+                    FROM messages m
+                    INNER JOIN user_table u ON m.user_id = u.id
+                    WHERE m.room_id = %s 
+                    ORDER BY m.created_at DESC;
+                """
+
+                # 4. 쿼리 실행
+                cursor.execute(query, (room_id,))
+
+                # 5. RETURNING으로 반환된 단일 행 결과
+                rows = cursor.fetchall()
+
+                reslist = []
+
+                if not rows:
+                    return None
+                
+                for row in rows:
+                    reslist.append(
+                        message_with_user(
+                            message_id=row[0],
+                            room_id=row[1],
+                            user_id=row[2],
+                            user_name=row[3],
+                            message_type=row[4],
+                            content=row[5],
+                            created_at=row[6],
+                            parent_message_id=row[7]
+                        )
+                    )
+
+                return reslist
+
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return None
+
+--- FILE_PATH: models\User.py ---
+# ===============================================================
+# 경로 : src/models/User.py
+# 명세 : User 계정 및 권한(Role) 관련 데이터 모델 정의
+# ===============================================================
+import enum
+from sqlalchemy import Column, Integer, String, Enum, DateTime, func, ForeignKey
+from sqlalchemy.orm import relationship
+from config.db import Base
+# ===============================================================
+
+class UserRole(str, enum.Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+    DEVELOPER = "DEVELOPER"
+
+
+class User(Base):
+    __tablename__ = "user_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password = Column(String(255), nullable=True)
+    name = Column(String(100), nullable=False)
+    role = Column(Enum(UserRole, name="user_role"), nullable=False, default=UserRole.USER)
+    phone_number = Column(String(20), nullable=True)
+    
+    # 타임존을 포함하는 생성일, 수정일 (자동 갱신)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    external_providers = relationship("ExternalProvider", back_populates="user", cascade="all, delete-orphan")
+
+
+    # 역참조 맵핑 
+    facilities = relationship(
+        "Facility",
+        secondary="facility_users",
+        primaryjoin="User.id == facility_users.c.user_id",
+        secondaryjoin="Facility.id == facility_users.c.facility_id",
+        viewonly=True # 다대다 조회 목적
+    )
+
+
+class ExternalProvider(Base):
+    __tablename__ = "external_providers"
+
+    external_provider_id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+    provider = Column(String(50), nullable=False) # 'google' or 'apple' 제한
+    provider_id = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="external_providers")
+
+
+
+
+--- FILE_PATH: models\user_table.py ---
+from pydantic import BaseModel
+from datetime import datetime
+from idcool_server.config.db import get_db_connection
+import psycopg2.extras
+
+class user_table(BaseModel):
+    id: int
+    email: str
+    password: str
+    name: str
+    role: str
+    phone_number: str
+    created_at: datetime
+    updated_at: datetime
+
+def users_find_all():
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT * FROM user_table;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query)
+                
+                rows = cursor.fetchall()
+
+                reslist = []
+
+                if not rows:
+                    return None
+                
+                for row in rows:
+                    reslist.append(
+                        user_table(
+                            id=row[0],
+                            email=row[1],
+                            password=row[2],
+                            name=row[3],
+                            role=row[4],
+                            phone_number=row[5],
+                            created_at=row[6],
+                            updated_at=row[7]
+                        )
+                    )
+
+                return reslist
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return
+
+def user_find_by_name(name: str):
+    if not name:
+        return
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT * FROM user_table
+                    WHERE name = %s;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query, (name,))
+                
+                # 5. RETURNING으로 반환된 단일 행 결과
+                result = cursor.fetchone()
+
+                res = user_table(**dict(result))
+
+                return res
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return
+            
+def user_find_by_id(name: str):
+    if not name:
+        return
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT * FROM user_table
+                    WHERE id = %s;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query, (name,))
+                
+                # 5. RETURNING으로 반환된 단일 행 결과
+                result = cursor.fetchone()
+
+                res = user_table(**dict(result))
+
+                return res
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return
+
+def users_find_same_facility(facility_id: int):
+    if not facility_id:
+        return
+
+    # 1. 컨텍스트 매니저를 통해 커넥션 풀에서 연결을 빌려옴
+    with get_db_connection() as conn:
+        # 2. 커서(Cursor) 생성 (딕셔너리 형태로 결과를 받기 위해 DictCursor 사용 권장)
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            try:
+                # 3. RETURNING 구문을 포함한 INSERT 쿼리 작성
+                query = """
+                    SELECT us.* FROM user_table us
+                    INNER JOIN facility_users fu ON us.id = fu.user_id
+                    WHERE fu.facility_id = %s;
+                """
+                
+                # 4. 쿼리 실행
+                cursor.execute(query, (facility_id,))
+                
+                rows = cursor.fetchall()
+
+                reslist = []
+
+                if not rows:
+                    return None
+                
+                for row in rows:
+                    reslist.append(
+                        user_table(
+                            id=row[0],
+                            email=row[1],
+                            password=row[2],
+                            name=row[3],
+                            role=row[4],
+                            phone_number=row[5],
+                            created_at=row[6],
+                            updated_at=row[7]
+                        )
+                    )
+
+                return reslist
+                
+            except Exception as e:
+                # 에러 발생 시 get_db_connection 내부에서 자동으로 rollback 처리됩니다.
+                print(f"DB 작업 중 오류 발생: {e}")
+                return
+            
+
+
+
+--- FILE_PATH: models\__init__.py ---
+
+
+--- FILE_PATH: services\__init__.py ---
+
+
+--- FILE_PATH: utils\__init__.py ---
+
+
+--- FILE_PATH: main.dart ---
+// ===============================================================
+// 경로 : lib/main.dart
+// 명세 : 권한 주입 간소화 및 라우팅
+// ===============================================================
+import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'package:go_router/go_router.dart';
+
+
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:idcs/components/indices/settings_page.dart';
+import 'package:idcs/pages/common/find_pw_page.dart';
+import 'package:idcs/pages/common/login_page.dart';
+import 'package:idcs/pages/common/signup_page.dart';
+import 'package:idcs/pages/common/find_id_page.dart';
+import 'package:idcs/pages/facilitiy/facility_temp_nav_page.dart';
+import 'package:idcs/pages/indices/account_edit_page.dart';
+import 'package:idcs/pages/indices/main_alarm_page.dart';
+import 'package:idcs/pages/indices/main_index_page.dart';
+import 'package:idcs/pages/indices/facility_register_page.dart';
+
+import 'pages/common/opening_page.dart';
+
+
+
+
+
+// ===============================================================
+// AuthService
+// ===============================================================
+
+// class AuthService {
+//   // 테스트를 위해 이 값을 변경하며 진행합니다. (1: 관리자, 사용자는 아래 참조 )
+//   // (1, 4), (1, 5), (1, 6),    -- 1시설에 a(4), b(5), c(6) 배분
+//   // (2, 7), (2, 8), (2, 9),    -- 2시설에 d(7), e(8), f(9) 배분
+//   // (3, 4), (3, 7), (3, 10);   -- 3시설에 a(4), d(7), g(10) 배분
+//   static int _mockUserId = 1;
+//   static int getCurrentUserId() => _mockUserId;
+//   static void setUserId(int id) {_mockUserId = id;}
+// }
+
+class AuthService {
+  static int? _currentUserId; // null이면 비로그인 상태로 간주
+
+  // 로그인 상태 판별 (ID가 있으면 로그인된 것)
+  static bool get isLoggedIn => _currentUserId != null;
+
+  static int? getCurrentUserId() => _currentUserId;
+  static void setUserId(int? id) { _currentUserId = id; }
+}
+
+// ===============================================================
+// main
+// ===============================================================
+
+class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
+  static const String baseUrl = 'http://10.0.2.2:8000/api';
+}
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'IDCool Systems Routing',
+      // GoRouter 연결
+      routerConfig: appRouter,
+
+      // ─── Quill v11 다국어 딜리게이트  ───
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'), // 기본 한국어 설정
+        Locale('en', 'US'), // 영어 설정
+      ],
+      // ──────────────────────────────────────────────────
+    );
+  }
+}
+
+
+// ===============================================================
+// 라우터 설정
+// ===============================================================
+
+final GoRouter appRouter = GoRouter(
+  initialLocation: '/',
+  errorBuilder: (context, state) => const NotFoundScreen(),
+
+  // refreshListenable: authService, // 인증 상태 변화 감지 (AuthService 연결 필요)
+  redirect: (context, state) {
+    final bool loggedIn = AuthService.isLoggedIn;
+    final String path = state.matchedLocation;
+
+    // 비로그인 상태에서도 허용할 경로 리스트 (오프닝, 로그인, 가입, 아이디/비번 찾기)
+    final allowedPaths = ['/', '/login', '/signup', '/find_id', '/find_pw'];
+
+    // 로그인하지 않은 사용자가 허용되지 않은 경로로 접근하려고 할 때만 로그인 페이지로 리다이렉트
+    if (!loggedIn && !allowedPaths.contains(path)) {
+      return '/login';
+    }
+    return null;
+  },
+
+  routes: [
+    // [common]
+    GoRoute(path: '/', builder: (context, state) => const OpeningPage()),
+    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    GoRoute(path: '/signup', builder: (context, state) => const SignupPage()),
+    GoRoute(path: '/find_id', builder: (context, state) => const FindIdPage()),
+    GoRoute(path: '/find_pw', builder: (context, state) => const FindPwPage()),
+    // GoRoute(path: '/reset_pw', builder: (context, state) => const ResetPwPage()),
+
+    // [main_indices] - 유저 ID 기반
+    GoRoute(path: '/main_index/:userId', builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!)),
+    GoRoute(path: '/facility_register/:userId', builder: (context, state) => FacilityRegisterPage(userId: state.pathParameters['userId']!)),
+    GoRoute(path: '/main_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
+    // GoRoute(path: '/total_board/:userId', builder: (context, state) => TotalBoardPage(userId: state.pathParameters['userId']!)),
+    // main_indices/[settings]
+    GoRoute(path: '/settings/:userId', builder: (context, state) => SettingsPage(userId: state.pathParameters['userId']!)),
+    GoRoute(path: '/personal/:userId', builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!)),
+
+    // [facility] - 유저 ID & 시설 ID 기반
+    GoRoute(
+      path: '/facility_nav/:userId/:facilityId',
+      builder: (context, state) => FacilityTempNavPage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
+
+  ],
+);
+
+// // 1. 단순 이동
+// context.go('/login');
+//
+// // 2. 파라미터가 있는 이동 (main_index 등)
+// context.go('/main_index/1');
+//
+// // 3. 복합 파라미터 이동 (facility_board 등)
+// context.go('/facility_board/1/A01');
+
+
+
+
+
+class NotFoundScreen extends StatelessWidget {
+  const NotFoundScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Not Found')), body: const Center(child: Text('페이지를 찾을 수 없습니다.')));
+}
+
+--- FILE_PATH: components\common\find_id\find_id_components.dart ---
+// 경로: lib/components/common/find_id/find_id_components.dart
+import 'package:flutter/material.dart';
+
+/// Box #1: 아이디(이메일) 가입 여부 확인 박스
+class FindIdBox extends StatelessWidget {
+  final TextEditingController emailController;
+  final VoidCallback onSubmit;
+  final String resultMessage;
+  final bool isExpanded; // collapse 출력을 제어할 상태값
+
+  const FindIdBox({
+    super.key,
+    required this.emailController,
+    required this.onSubmit,
+    required this.resultMessage,
+    required this.isExpanded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(width: 80, child: Text('이메일 입력')),
+              Expanded(
+                child: TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: onSubmit,
+            child: const Text('버튼(submit) 연동 계정 확인하기'),
+          ),
+
+          // Collapse 영역: isExpanded가 true일 때만 노출
+          if (isExpanded) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.purpleAccent, width: 2), // 이미지의 보라색 테두리 반영
+              ),
+              child: Text(
+                resultMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\common\login\login_components.dart ---
+import 'package:flutter/material.dart';
+
+/// Box #1: 일반 로그인 박스
+class StandardLoginBox extends StatelessWidget {
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final VoidCallback onLoginPressed;
+
+  const StandardLoginBox({
+    super.key,
+    required this.emailController,
+    required this.passwordController,
+    required this.onLoginPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(width: 60, child: Text('이메일')),
+              Expanded(
+                child: TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const SizedBox(width: 60, child: Text('비밀번호')),
+              Expanded(
+                child: TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: onLoginPressed,
+            child: const Text('버튼(submit) 로그인'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #2: 소셜 로그인 박스
+class SocialLoginBox extends StatelessWidget {
+  final Function(String) onSocialLoginPressed;
+
+  const SocialLoginBox({super.key, required this.onSocialLoginPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ElevatedButton(
+            onPressed: () => onSocialLoginPressed('google'),
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(24),
+            ),
+            child: const Text('google'),
+          ),
+          ElevatedButton(
+            onPressed: () => onSocialLoginPressed('apple'),
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(24),
+            ),
+            child: const Text('apple'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #3: 로그인 상태 유지 체크박스 박스
+class KeepLoginStateBox extends StatelessWidget {
+  final bool isChecked;
+  final ValueChanged<bool?> onChanged;
+
+  const KeepLoginStateBox({
+    super.key,
+    required this.isChecked,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        children: [
+          Checkbox(
+            value: isChecked,
+            onChanged: onChanged,
+          ),
+          const Text('로그인 상태 유지하기'),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\common\opening\open_inj_static.dart ---
+import '../../../main.dart';
+import 'package:flutter/material.dart';
+
+/// Box #3, #4: 고정 ID 권한 주입 박스
+
+// 경로 : lib/components/common/opening/open_inj_static.dart
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // GoRouter 추가
+import '../../../main.dart';
+
+/// Box #3, #4: 고정 ID 권한 주입 박스
+class AuthInjectionBox extends StatelessWidget {
+  final String title;
+  final int userIdToInject;
+
+  const AuthInjectionBox({
+    super.key,
+    required this.title,
+    required this.userIdToInject,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+      ),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              // 1. 전역 로그인 상태(AuthService) 업데이트
+              AuthService.setUserId(userIdToInject);
+
+              // 2. GoRouter를 활용하여 메인 색인 페이지로 이동 (id 파라미터 전달)
+              context.go('/main_index/$userIdToInject');
+            },
+            child: const Text('버튼(이동)'),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(title),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\common\opening\open_inj_text.dart ---
+import '../../../main.dart';
+import 'package:flutter/material.dart';
+
+/// Box #5: 텍스트 박스 입력형 권한 주입 박스
+// 경로 : lib/components/common/opening/open_inj_text.dart
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // GoRouter 추가
+import '../../../main.dart';
+
+/// Box #5: 텍스트 박스 입력형 권한 주입 박스
+class CustomAuthInjectionBox extends StatefulWidget {
+  const CustomAuthInjectionBox({super.key});
+
+  @override
+  State<CustomAuthInjectionBox> createState() => CustomAuthInjectionBoxState();
+}
+
+class CustomAuthInjectionBoxState extends State<CustomAuthInjectionBox> {
+  final TextEditingController _idController = TextEditingController();
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+      ),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              final int? id = int.tryParse(_idController.text.trim());
+
+              if (id != null) {
+                // 1. 전역 로그인 상태(AuthService) 업데이트
+                AuthService.setUserId(id);
+
+                // 2. 입력받은 id를 파라미터로 하여 메인 색인 페이지로 이동
+                context.go('/main_index/$id');
+              } else {
+                // 숫자가 아니거나 비어있을 경우 경고창
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('유효한 유저 ID(숫자)를 입력해주세요.')),
+                );
+              }
+            },
+            child: const Text('버튼(이동)'),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextField(
+              controller: _idController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: '권한 주입 계정(user_입력)',
+                border: UnderlineInputBorder(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\common\opening\open_nav.dart ---
+import 'package:flutter/material.dart';
+
+/// Box #1, #2: 페이지 이동 박스
+class NavigationBox extends StatelessWidget {
+  final String title;
+  final VoidCallback onPressed;
+
+  const NavigationBox({required this.title, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // 컴포넌트 구분을 위한 가장 기본적인 검은색/회색 선만 적용
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+      ),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        children: [
+          ElevatedButton(
+            onPressed: onPressed,
+            child: const Text('버튼(이동)'),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(title),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\common\signup\signup_components.dart ---
+// 경로: lib/components/signup/signup_components.dart
+import 'package:flutter/material.dart';
+
+/// Box #1: 일반 계정 생성 박스
+class StandardSignupBox extends StatelessWidget {
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final VoidCallback onSignupPressed;
+
+  const StandardSignupBox({
+    super.key,
+    required this.emailController,
+    required this.passwordController,
+    required this.nameController,
+    required this.phoneController,
+    required this.onSignupPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildInputRow('이메일(필수)', emailController),
+          const SizedBox(height: 8),
+          _buildInputRow('비밀번호(필수)', passwordController, isObscure: true),
+          const SizedBox(height: 8),
+          _buildInputRow('아이디/이름(필수)', nameController),
+          const SizedBox(height: 8),
+          _buildInputRow('전화번호', phoneController),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: onSignupPressed,
+            child: const Text('버튼(submit) 계정 생성'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputRow(String label, TextEditingController controller, {bool isObscure = false}) {
+    return Row(
+      children: [
+        SizedBox(width: 100, child: Text(label, style: const TextStyle(fontSize: 13))),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            obscureText: isObscure,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Box #2: 외부 프로바이더 사용 계정 생성 박스
+class SocialSignupBox extends StatelessWidget {
+  final Function(String) onSocialSignupPressed;
+
+  const SocialSignupBox({super.key, required this.onSocialSignupPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ElevatedButton(
+            onPressed: () => onSocialSignupPressed('google'),
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(24),
+            ),
+            child: const Text('google'),
+          ),
+          ElevatedButton(
+            onPressed: () => onSocialSignupPressed('apple'),
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(24),
+            ),
+            child: const Text('apple'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Box #3: 애플 로그인 이메일 누락 시 방어 팝업(콜랩스 박스)
+class AppleEmailFallbackBox extends StatelessWidget {
+  final TextEditingController fallbackEmailController;
+  final VoidCallback onSubmit;
+  final VoidCallback onCancel;
+
+  const AppleEmailFallbackBox({
+    super.key,
+    required this.fallbackEmailController,
+    required this.onSubmit,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.orangeAccent), // 방어 코드/입력 요청 의미
+        color: Colors.orange.withOpacity(0.05),
+      ),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            '애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(width: 80, child: Text('이메일', style: TextStyle(fontSize: 13))),
+              Expanded(
+                child: TextField(
+                  controller: fallbackEmailController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    hintText: 'example@domain.com',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: onCancel, child: const Text('취소')),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: onSubmit,
+                child: const Text('입력 완료 및 계정 생성'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\indices\global_nav_box.dart ---
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:idcs/components/common/opening/open_nav.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+import 'package:idcs/main.dart'; // AuthService 접근용
+
+class GlobalNavigationBox extends StatefulWidget {
+  final String userId;
+  final bool isAdmin;
+  final VoidCallback onStateInitialize;
+
+  const GlobalNavigationBox({
+    super.key,
+    required this.userId,
+    required this.isAdmin,
+    required this.onStateInitialize,
+  });
+
+  @override
+  State<GlobalNavigationBox> createState() => _GlobalNavigationBoxState();
+}
+
+class _GlobalNavigationBoxState extends State<GlobalNavigationBox> {
+  String _userName = '로딩중...';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserInfo();
+  }
+
+  Future<void> _fetchUserInfo() async {
+    try {
+      final profile = await UserApiService.getUserProfile(widget.userId);
+      if (mounted) {
+        setState(() {
+          _userName = profile['name'] ?? '알 수 없음';
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _userName = '이름 조회 실패');
+    }
+  }
+
+  void _handleLogout() {
+    // 로그아웃 처리: 전역 상태 초기화 후 로그인 페이지로 이동
+    AuthService.setUserId(null);
+    context.go('/login');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // [추가] 계정 정보 및 로그아웃 영역
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  '로그인 정보 : ID ${widget.userId} / $_userName',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _handleLogout,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[800]),
+                child: const Text('로그아웃', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.grey, height: 24),
+
+          const Text(
+            '네비게이션',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
+          ),
+          const SizedBox(height: 12),
+
+          NavigationBox(
+              title: '계정 수정 페이지로 이동',
+              onPressed: () => context.push('/personal/${widget.userId}')
+          ),
+          const SizedBox(height: 8),
+          NavigationBox(
+              title: '설정 페이지로 이동',
+              onPressed: () => context.push('/settings/${widget.userId}')
+          ),
+          const SizedBox(height: 8),
+
+          if (!widget.isAdmin) ...[
+            NavigationBox(
+                title: '시설 등록 페이지로 이동',
+                onPressed: () => context.push('/facility_register/${widget.userId}')
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          NavigationBox(
+              title: '메인 색인 페이지로 이동',
+              onPressed: widget.onStateInitialize
+          ),
+          const SizedBox(height: 8),
+          NavigationBox(
+              title: '메인 알람 페이지로 이동',
+              onPressed: () => context.push('/main_alarm/${widget.userId}')
+          ),
+
+          if (widget.isAdmin) ...[
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.purpleAccent, width: 2),
+              ),
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  NavigationBox(
+                      title: '통합 소요 기록 페이지로 이동',
+                      onPressed: () => context.push('/total_board/${widget.userId}')
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'collapse 출력 : (대상 : 관리자 계정)',
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\indices\settings_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+
+class SettingsPage extends StatefulWidget {
+  final String userId;
+  const SettingsPage({super.key, required this.userId});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool _isAdmin = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    try {
+      final role = await UserApiService.getUserRole(widget.userId);
+      if (mounted) setState(() => _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER'));
+    } catch (e) {
+      // 에러 처리 생략
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('설정 페이지')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: GlobalNavigationBox(
+          userId: widget.userId,
+          isAdmin: _isAdmin,
+          onStateInitialize: () {}, // 설정 페이지 자체 초기화 로직 (필요시 구현)
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\indices\account_edit\account_edit_components.dart ---
+
+import 'package:flutter/material.dart';
+
+/// Box #2: 아이디(username) 수정 박스
+class UsernameEditBox extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onSubmit;
+
+  const UsernameEditBox({super.key, required this.controller, required this.onSubmit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(width: 120, child: Text('아이디(username)', style: TextStyle(color: Colors.amber))),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: onSubmit, child: const Text('버튼(submit) 계정 수정')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #3: 전화번호 수정 박스
+class PhoneEditBox extends StatelessWidget {
+  final TextEditingController controller;
+  final VoidCallback onSubmit;
+
+  const PhoneEditBox({super.key, required this.controller, required this.onSubmit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(width: 120, child: Text('전화번호', style: TextStyle(color: Colors.amber))),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: onSubmit, child: const Text('버튼(submit) 계정 수정')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #4: 비밀번호 수정 박스
+class PasswordEditBox extends StatelessWidget {
+  final TextEditingController currentPwController;
+  final TextEditingController newPwController;
+  final String collapseMessage;
+  final VoidCallback onSubmit;
+
+  const PasswordEditBox({
+    super.key,
+    required this.currentPwController,
+    required this.newPwController,
+    required this.collapseMessage,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(width: 120, child: Text('기존 비밀번호 입력', style: TextStyle(color: Colors.amber))),
+              Expanded(
+                child: TextField(
+                  controller: currentPwController,
+                  obscureText: true,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const SizedBox(width: 120, child: Text('새 비밀번호 입력', style: TextStyle(color: Colors.amber))),
+              Expanded(
+                child: TextField(
+                  controller: newPwController,
+                  obscureText: true,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Collapse 영역 (비밀번호 동일 여부 등 안내)
+          if (collapseMessage.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 2)),
+              child: Text(collapseMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black)),
+            ),
+          ElevatedButton(onPressed: onSubmit, child: const Text('버튼(submit) 비밀번호 다시 설정하기')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #5: 외부 프로바이더 연동 박스
+class SocialLinkBox extends StatelessWidget {
+  final List<dynamic> linkedProviders;
+  final Function(String) onLinkPressed;
+
+  const SocialLinkBox({
+    super.key,
+    required this.linkedProviders,
+    required this.onLinkPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => onLinkPressed('google'),
+                style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(24)),
+                child: const Text('google'),
+              ),
+              ElevatedButton(
+                onPressed: () => onLinkPressed('apple'),
+                style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(24)),
+                child: const Text('apple'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 연동된 계정이 있을 경우 Collapse 출력
+          if (linkedProviders.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 2)),
+              child: Text(
+                'collapse 출력 : (이미 [${linkedProviders.join('|')}]로 연동된 계정)',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\indices\facility_register\facility_register.dart ---
+import 'package:flutter/material.dart';
+
+/// Box #2: 시설 접근 코드 입력 및 등록 박스
+class FacilityInputBox extends StatelessWidget {
+  final TextEditingController codeController;
+  final VoidCallback onSubmit;
+  final String collapseMessage;
+
+  const FacilityInputBox({
+    super.key, required this.codeController, required this.onSubmit, required this.collapseMessage
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const SizedBox(width: 100, child: Text('시설 접근 코드', style: TextStyle(color: Colors.amber))),
+              Expanded(
+                child: TextField(
+                  controller: codeController,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: onSubmit, child: const Text('버튼(submit) 시설 등록')),
+          if (collapseMessage.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 2)),
+              child: Text(collapseMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black)),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #3: 등록된 시설 리스트 및 해제 박스
+class FacilityListEditBox extends StatelessWidget {
+  final List<dynamic> facilities;
+  final Function(int) onUnlink;
+
+  const FacilityListEditBox({super.key, required this.facilities, required this.onUnlink});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('시설 리스트', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          if (facilities.isEmpty)
+            const Text('등록된 시설이 없습니다.', style: TextStyle(color: Colors.grey)),
+          ...facilities.map((fac) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+                      child: Text(fac['name']),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => onUnlink(fac['id']),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red[900]),
+                    child: const Text('해제', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: components\indices\main_index\main_index_components.dart ---
+import 'package:flutter/material.dart';
+
+
+
+/// Box #2: 통합 시설 박스 (빈 박스로 임시 편성)
+class IntegratedFacilityBox extends StatelessWidget {
+  final List<dynamic> facilities;
+  final Function(int) onFacilityPressed;
+
+  const IntegratedFacilityBox({
+    super.key, required this.facilities, required this.onFacilityPressed
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('통합 시설 박스', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          if (facilities.isEmpty)
+            const Center(child: Text('조회할 수 있는 시설이 없습니다.', style: TextStyle(color: Colors.grey))),
+
+          // Grid 형태로 카드 배치
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2, // 2열 배치
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 2.5, // 카드 비율
+            ),
+            itemCount: facilities.length,
+            itemBuilder: (context, index) {
+              final fac = facilities[index];
+              // TODO: 알람 발생 여부는 추후 백엔드 데이터에 맞춰 실제 필드로 교체
+              final bool hasAlarm = index % 2 == 0; // 임시: 짝수 인덱스에만 알람 표시
+
+              return InkWell(
+                onTap: () => onFacilityPressed(fac['id']),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(child: Text(fac['name'], textAlign: TextAlign.center)),
+                      if (hasAlarm) // 알람 레드 닷
+                        Positioned(
+                          right: 8, top: 8,
+                          child: Container(
+                            width: 10, height: 10,
+                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\common\find_id_page.dart ---
+// 경로: lib/pages/common/find_id_page.dart
+import 'package:flutter/material.dart';
+import 'package:idcs/components/common/find_id/find_id_components.dart';
+import 'package:idcs/services/common/find_id/auth_api_service.dart';
+
+class FindIdPage extends StatefulWidget {
+  const FindIdPage({super.key});
+
+  @override
+  State<FindIdPage> createState() => _FindIdPageState();
+}
+
+class _FindIdPageState extends State<FindIdPage> {
+  final TextEditingController _emailController = TextEditingController();
+
+  bool _isExpanded = false;
+  String _resultMessage = '';
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleCheckAccount() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('확인할 이메일을 입력해주세요.')),
+      );
+      return;
+    }
+
+    try {
+      final result = await AuthApiService.checkAccountExistence(email);
+
+      setState(() {
+        _isExpanded = true;
+        _resultMessage = result['message'];
+      });
+
+    } catch (e) {
+      setState(() {
+        _isExpanded = true;
+        _resultMessage = '오류 발생: ${e.toString()}';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('아이디 찾기 페이지')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FindIdBox(
+              emailController: _emailController,
+              onSubmit: _handleCheckAccount,
+              resultMessage: _resultMessage,
+              isExpanded: _isExpanded,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\common\find_pw_page.dart ---
+// 경로: lib/pages/common/find_pw_page.dart
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:idcs/services/common/find_pw/auth_api_service.dart';
+
+class FindPwPage extends StatefulWidget {
+  const FindPwPage({super.key});
+
+  @override
+  State<FindPwPage> createState() => _FindPwPageState();
+}
+
+class _FindPwPageState extends State<FindPwPage> {
+  // 단계 제어 (1: 이메일, 2: 코드 입력, 3: 새 비밀번호 설정)
+  int _currentStep = 1;
+
+  // 상태 변수
+  String _jwtToken = '';       // Box 1에서 발급받은 코드 확인용 JWT
+  String _resetToken = '';     // Box 2에서 발급받은 비밀번호 변경용 JWT
+  String _box1Message = '';
+  String _box2Message = '';
+  String _box3Message = '';
+
+  // 컨트롤러
+  final _emailController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _pwController = TextEditingController();
+  final _pwConfirmController = TextEditingController();
+
+  // 타이머 관련
+  Timer? _timer;
+  int _remainingSeconds = 300; // 5분
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _emailController.dispose();
+    _codeController.dispose();
+    _pwController.dispose();
+    _pwConfirmController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _remainingSeconds = 300;
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _timer?.cancel();
+          _box2Message = '입력 시간이 초과되었습니다.';
+        }
+      });
+    });
+  }
+
+  String _formatTime(int seconds) {
+    final m = (seconds / 60).floor();
+    final s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  // Box #1 제출 로직
+  Future<void> _handleEmailSubmit() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+
+    try {
+      final res = await AuthApiService.requestPasswordCode(email);
+      setState(() {
+        _jwtToken = res['token'];
+        // 개발용 콘솔에만 찍히도록 백엔드에서 준 dev_code 표시 가능 (테스트용)
+        _box1Message = res['message'] + " (Test Code: ${res['dev_code']})";
+        _currentStep = 2; // Box 2 열기
+      });
+      _startTimer();
+    } catch (e) {
+      setState(() => _box1Message = e.toString());
+    }
+  }
+
+  // Box #2 제출 로직
+  Future<void> _handleCodeSubmit() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty || _remainingSeconds <= 0) return;
+
+    try {
+      final res = await AuthApiService.verifyPasswordCode(_jwtToken, code);
+      setState(() {
+        _resetToken = res['reset_token'];
+        _box2Message = '코드 인증 성공!';
+        _timer?.cancel();
+        _currentStep = 3; // Box 3 열기
+      });
+    } catch (e) {
+      setState(() => _box2Message = e.toString());
+    }
+  }
+
+  // Box #3 제출 로직
+  Future<void> _handlePasswordReset() async {
+    final pw1 = _pwController.text;
+    final pw2 = _pwConfirmController.text;
+
+    if (pw1.isEmpty || pw2.isEmpty) return;
+    if (pw1 != pw2) {
+      setState(() => _box3Message = '비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    try {
+      final res = await AuthApiService.resetPassword(_resetToken, pw1);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+      context.go('/login'); // 완료 시 로그인 페이지 이동
+    } catch (e) {
+      setState(() => _box3Message = e.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('비밀번호 찾기 페이지')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Box #1: 이메일 입력
+            _buildBoxContainer(
+              isActive: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildInputRow('이메일 입력', _emailController, isEnabled: _currentStep == 1),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _currentStep == 1 ? _handleEmailSubmit : null,
+                    child: const Text('버튼(submit) 연동 계정 확인하기'),
+                  ),
+                  if (_box1Message.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(_box1Message, style: const TextStyle(color: Colors.purple)),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Box #2: 코드 입력 (AnimatedSize로 Collapse 효과 부여)
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              child: _currentStep >= 2
+                  ? _buildBoxContainer(
+                isActive: _currentStep == 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildInputRow('코드 입력', _codeController, isEnabled: _currentStep == 2),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: _currentStep == 2 ? _handleCodeSubmit : null,
+                      child: const Text('버튼(submit) 입력 코드 확인'),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('남은 시간: ${_formatTime(_remainingSeconds)}',
+                        style: const TextStyle()),
+                    if (_box2Message.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(_box2Message, style: const TextStyle()),
+                      ),
+                  ],
+                ),
+              )
+                  : const SizedBox.shrink(), // 단계가 아니면 보이지 않음
+            ),
+            SizedBox(height: _currentStep >= 2 ? 16 : 0),
+
+            // Box #3: 새 비밀번호 입력
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              child: _currentStep >= 3
+                  ? _buildBoxContainer(
+                isActive: _currentStep == 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildInputRow('새 비밀번호', _pwController, isObscure: true),
+                    const SizedBox(height: 8),
+                    _buildInputRow('재입력', _pwConfirmController, isObscure: true),
+                    const SizedBox(height: 12),
+                    if (_box3Message.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Text(_box3Message, style: const TextStyle()),
+                      ),
+                    ElevatedButton(
+                      onPressed: _handlePasswordReset,
+                      child: const Text('버튼(submit) 비밀번호 다시 설정하기'),
+                    ),
+                  ],
+                ),
+              )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 공통 UI 빌더 헬퍼
+  Widget _buildBoxContainer({required Widget child, required bool isActive}) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(),
+      ),
+      padding: const EdgeInsets.all(12.0),
+      // 비활성 박스는 반투명 처리
+      child: Opacity(opacity: isActive ? 1.0 : 0.5, child: child),
+    );
+  }
+
+  Widget _buildInputRow(String label, TextEditingController controller, {bool isObscure = false, bool isEnabled = true}) {
+    return Row(
+      children: [
+        SizedBox(width: 80, child: Text(label, style: const TextStyle(fontSize: 13))),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            obscureText: isObscure,
+            enabled: isEnabled,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+--- FILE_PATH: pages\common\login_page.dart ---
+// ===============================================================
+// 경로 : lib/pages/common/login_page.dart
+// 명세 : 로그인 페이지
+// ===============================================================
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:idcs/components/common/opening/open_nav.dart';
+import 'package:idcs/components/common/login/login_components.dart';
+import 'package:idcs/main.dart';
+import 'package:idcs/services/common/login/auth_api_service.dart';
+import 'package:idcs/services/common/social_auth_service.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // 로그인 상태 유지 여부를 상위에서 관리
+  bool _keepLogin = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // API 연동: 일반 로그인 처리
+  Future<void> _handleGeneralLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이메일과 비밀번호를 모두 입력해주세요.')),
+      );
+      return;
+    }
+
+    try {
+      final result = await AuthApiService.loginGeneral(
+        email: email,
+        password: password,
+        keepLogin: _keepLogin,
+      );
+
+      // 1. AuthService에 발급받은 user_id 저장 (이 시점에 isLoggedIn이 true가 됨)
+      final userId = result['user_id'];
+      AuthService.setUserId(userId);
+
+      // [비동기 컨텍스트 방어 로직] 화면이 파괴되지 않았는지 확인
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'])),
+      );
+
+      // 2. 메인 색인 페이지로 라우팅 (이제 리다이렉트에 걸리지 않고 정상 이동!)
+      context.go('/main_index/$userId');
+
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  // API 연동: 소셜 로그인 처리
+  Future<void> _handleSocialLogin(String provider) async {
+    try {
+      Map<String, String>? socialData;
+
+      if (provider == 'google') {
+        socialData = await SocialAuthService.signInWithGoogle();
+      } else if (provider == 'apple') {
+        socialData = await SocialAuthService.signInWithApple();
+      }
+
+      if (socialData == null) {
+        return; // 로그인 취소
+      }
+
+      // 백엔드로 소셜 로그인 API 호출
+      final result = await AuthApiService.loginSocial(
+        provider: socialData['provider']!,
+        providerId: socialData['provider_id']!,
+        keepLogin: _keepLogin,
+      );
+
+      final userId = result['user_id'];
+      AuthService.setUserId(userId);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'])),
+      );
+
+      context.go('/main_index/$userId');
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('로그인 페이지')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StandardLoginBox(
+              emailController: _emailController,
+              passwordController: _passwordController,
+              onLoginPressed: _handleGeneralLogin,
+            ),
+            const SizedBox(height: 16),
+            SocialLoginBox(
+              onSocialLoginPressed: _handleSocialLogin,
+            ),
+            const SizedBox(height: 16),
+            KeepLoginStateBox(
+              isChecked: _keepLogin,
+              onChanged: (bool? value) {
+                setState(() {
+                  _keepLogin = value ?? false;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '계정 생성 페이지로 이동',
+              onPressed: () => context.push('/signup'),
+            ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '아이디 찾기 페이지로 이동',
+              onPressed: () => context.push('/find_id'),
+            ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '비밀번호 찾기 페이지로 이동',
+              onPressed: () => context.push('/find_pw'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\common\opening_page.dart ---
+// ===============================================================
+// 경로 : lib/pages/common/opening_page.dart
+// 명세 : 오프닝 페이지 (디자인 요소를 제외한 기본 컴포넌트 분할 상태)
+// ===============================================================
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../main.dart';
+
+import 'package:idcs/components/common/opening/open_nav.dart';
+import 'package:idcs/components/common/opening/open_inj_static.dart';
+import 'package:idcs/components/common/opening/open_inj_text.dart';
+
+class OpeningPage extends StatelessWidget {
+  const OpeningPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('오프닝 페이지'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Box #1: 로그인 페이지 이동
+            NavigationBox(
+              title: '로그인 페이지로 이동',
+              //onPressed: () => Navigator.pushNamed(context, '/login'),
+              onPressed: () => context.push('/login'),
+            ),
+            const SizedBox(height: 16),
+
+            // Box #2: 계정 생성 페이지 이동
+            NavigationBox(
+              title: '계정 생성 페이지로 이동',
+              // onPressed: () => Navigator.pushNamed(context, '/signup'),
+              onPressed: () => context.push('/signup'),
+            ),
+            const SizedBox(height: 16),
+
+            // Box #3: 권한 주입 (admin - ID 1)
+            AuthInjectionBox(
+              title: '권한 주입 계정(admin)',
+              userIdToInject: 1,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #4: 권한 주입 (user - ID 4)
+            AuthInjectionBox(
+              title: '권한 주입 계정(user_4)',
+              userIdToInject: 4,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #5: 권한 주입 (직접 입력)
+            const CustomAuthInjectionBox(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+--- FILE_PATH: pages\common\signup_page.dart ---
+// 경로: lib/pages/common/signup_page.dart
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:idcs/components/common/signup/signup_components.dart';
+import 'package:idcs/services/common/signup/auth_api_service.dart';
+import 'package:idcs/services/common/social_auth_service.dart';
+
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
+
+  @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+class _SignupPageState extends State<SignupPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  // --- Box 3 (애플 폴백) 관련 상태 변수 ---
+  bool _showAppleFallback = false;
+  String _pendingAppleProviderId = '';
+  String _pendingAppleName = '';
+  final TextEditingController _fallbackEmailController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  // API 연동: 일반 계정 생성 처리
+  Future<void> _handleGeneralSignup() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    if (email.isEmpty || password.isEmpty || name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('필수 항목을 모두 입력해주세요.')),
+      );
+      return;
+    }
+
+    try {
+      final result = await AuthApiService.signupGeneral(
+        email: email,
+        password: password,
+        name: name,
+        phoneNumber: phone,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'])),
+      );
+      // 가입 성공 시 로그인 페이지로 이동
+      context.go('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
+  // API 연동: 소셜 계정 생성 처리
+  Future<void> _handleSocialSignup(String provider) async {
+    try {
+      Map<String, String>? socialData;
+
+      if (provider == 'google') {
+        socialData = await SocialAuthService.signInWithGoogle();
+      } else if (provider == 'apple') {
+        socialData = await SocialAuthService.signInWithApple();
+      }
+
+      if (socialData == null) return;
+
+      // 이메일 누락 방어 로직 (Box 3 트리거)
+      if (socialData['email'] == null || socialData['email']!.isEmpty) {
+        if (provider == 'apple') {
+          setState(() {
+            _showAppleFallback = true; // Box 3 열기
+            _pendingAppleProviderId = socialData!['provider_id']!;
+            _pendingAppleName = socialData['name']!;
+          });
+          return; // 여기서 흐름을 멈추고 유저의 수동 입력을 기다립니다.
+        } else {
+          throw Exception('이메일 정보를 가져올 수 없습니다. 설정에서 이메일을 허용해주세요.');
+        }
+      }
+
+      // 정상적으로 이메일이 있는 경우 바로 통신
+      await _submitSocialSignup(
+        provider: socialData['provider']!,
+        providerId: socialData['provider_id']!,
+        email: socialData['email']!,
+        name: socialData['name']!,
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  // API 연동: 애플 폴백 박스(Box 3)에서 직접 입력 완료 시 실행
+  Future<void> _handleAppleFallbackSubmit() async {
+    final email = _fallbackEmailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('이메일을 입력해주세요.')),
+      );
+      return;
+    }
+
+    await _submitSocialSignup(
+      provider: 'apple',
+      providerId: _pendingAppleProviderId,
+      email: email,
+      name: _pendingAppleName,
+    );
+  }
+
+  // 중복되는 소셜 통신 로직 분리
+  Future<void> _submitSocialSignup({
+    required String provider,
+    required String providerId,
+    required String email,
+    required String name
+  }) async {
+    try {
+      final result = await AuthApiService.signupSocial(
+        provider: provider,
+        providerId: providerId,
+        email: email,
+        name: name,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      context.go('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('계정 생성 페이지')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            StandardSignupBox(
+              emailController: _emailController,
+              passwordController: _passwordController,
+              nameController: _nameController,
+              phoneController: _phoneController,
+              onSignupPressed: _handleGeneralSignup, // 기존 로직
+            ),
+            const SizedBox(height: 16),
+
+            SocialSignupBox(
+              onSocialSignupPressed: _handleSocialSignup,
+            ),
+
+            // Box #3: _showAppleFallback이 true일 때만 화면에 노출됨
+            if (_showAppleFallback) ...[
+              const SizedBox(height: 16),
+              AppleEmailFallbackBox(
+                fallbackEmailController: _fallbackEmailController,
+                onSubmit: _handleAppleFallbackSubmit,
+                onCancel: () {
+                  setState(() {
+                    _showAppleFallback = false; // 취소 시 다시 닫음
+                    _fallbackEmailController.clear();
+                  });
+                },
+              ),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\facilitiy\facility_temp_nav_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:idcs/components/common/opening/open_nav.dart';
+
+class FacilityTempNavPage extends StatelessWidget {
+  final String userId;
+  final String facilityId;
+
+  const FacilityTempNavPage({super.key, required this.userId, required this.facilityId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('시설 ID: $facilityId 라우팅')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('시설 내부 기능 테스트용 라우팅', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+            const SizedBox(height: 16),
+            NavigationBox(title: '시설 인덱스 관리 페이지', onPressed: () { /* TODO: route */ }),
+            const SizedBox(height: 8),
+            NavigationBox(title: '시설 알람 리스트 페이지', onPressed: () { /* TODO: route */ }),
+            const SizedBox(height: 8),
+            NavigationBox(title: '시설 소요기록 인덱스 페이지', onPressed: () { /* TODO: route */ }),
+            const SizedBox(height: 8),
+            NavigationBox(title: '시설 실시간 모니터링 페이지', onPressed: () { /* TODO: route */ }),
+            const SizedBox(height: 8),
+            NavigationBox(title: '시설 메신저 페이지', onPressed: () { /* TODO: route */ }),
+            const SizedBox(height: 8),
+            NavigationBox(title: '시설 통합 검색 페이지', onPressed: () { /* TODO: route */ }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\indices\account_edit_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+
+class PersonalPage extends StatefulWidget {
+  final String userId;
+
+  const PersonalPage({super.key, required this.userId});
+
+  @override
+  State<PersonalPage> createState() => _PersonalPageState();
+}
+
+class _PersonalPageState extends State<PersonalPage> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _currentPwController = TextEditingController();
+  final TextEditingController _newPwController = TextEditingController();
+
+  bool _isAdmin = false;
+  bool _isLoading = true;
+  List<dynamic> _linkedProviders = [];
+  String _pwCollapseMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _currentPwController.dispose();
+    _newPwController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() => _isLoading = true);
+    try {
+      // 권한 정보 및 기본 프로필 조회
+      final role = await UserApiService.getUserRole(widget.userId);
+      final profile = await UserApiService.getUserProfile(widget.userId);
+
+      if (mounted) {
+        setState(() {
+          _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
+          _nameController.text = profile['name'];
+          _phoneController.text = profile['phone_number'];
+          _linkedProviders = profile['linked_providers'] ?? [];
+        });
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleUpdateName() async {
+    try {
+      final msg = await UserApiService.updateName(widget.userId, _nameController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _handleUpdatePhone() async {
+    try {
+      final msg = await UserApiService.updatePhone(widget.userId, _phoneController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _handleUpdatePassword() async {
+    final currentPw = _currentPwController.text.trim();
+    final newPw = _newPwController.text.trim();
+
+    if (currentPw.isEmpty || newPw.isEmpty) {
+      setState(() => _pwCollapseMessage = '비밀번호를 모두 입력해주세요.');
+      return;
+    }
+    if (currentPw == newPw) {
+      setState(() => _pwCollapseMessage = '새 비밀번호가 기존 비밀번호와 동일합니다.');
+      return;
+    }
+
+    try {
+      final msg = await UserApiService.updatePassword(widget.userId, currentPw, newPw);
+      setState(() {
+        _pwCollapseMessage = '성공적으로 변경되었습니다.';
+        _currentPwController.clear();
+        _newPwController.clear();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      setState(() => _pwCollapseMessage = '오류: $e');
+    }
+  }
+
+  Future<void> _handleSocialLink(String provider) async {
+    if (_linkedProviders.contains(provider)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미 $provider 계정과 연동되어 있습니다.')));
+      return;
+    }
+    // TODO: 소셜 로그인 SDK 호출 후 연동 API(AuthApiService.linkSocial 등) 트리거 로직 작성
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$provider 연동은 백엔드 /link-social API로 연결해야 합니다.')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('계정 수정 페이지')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Box #1
+            GlobalNavigationBox(
+              userId: widget.userId,
+              isAdmin: _isAdmin,
+              onStateInitialize: _loadInitialData,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #2
+            UsernameEditBox(
+              controller: _nameController,
+              onSubmit: _handleUpdateName,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #3
+            PhoneEditBox(
+              controller: _phoneController,
+              onSubmit: _handleUpdatePhone,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #4
+            PasswordEditBox(
+              currentPwController: _currentPwController,
+              newPwController: _newPwController,
+              collapseMessage: _pwCollapseMessage,
+              onSubmit: _handleUpdatePassword,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #5
+            SocialLinkBox(
+              linkedProviders: _linkedProviders,
+              onLinkPressed: _handleSocialLink,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\indices\facility_register_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:idcs/components/indices/facility_register/facility_register.dart';
+import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
+
+class FacilityRegisterPage extends StatefulWidget {
+  final String userId;
+  const FacilityRegisterPage({super.key, required this.userId});
+
+  @override
+  State<FacilityRegisterPage> createState() => _FacilityRegisterPageState();
+}
+
+class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
+  final TextEditingController _codeController = TextEditingController();
+  bool _isAdmin = false;
+  bool _isLoading = true;
+  String _collapseMessage = '';
+  List<dynamic> _facilities = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final role = await UserApiService.getUserRole(widget.userId);
+      _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
+
+      // ADMIN은 애초에 이 페이지 접근할 필요 없지만 들어왔을 경우 방어
+      if (!_isAdmin) {
+        _facilities = await FacilityApiService.getFacilities(widget.userId);
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleRegister() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) return;
+
+    try {
+      final msg = await FacilityApiService.registerFacility(widget.userId, code);
+      setState(() {
+        _collapseMessage = msg;
+        _codeController.clear();
+      });
+      await _loadData(); // 목록 새로고침
+    } catch (e) {
+      setState(() => _collapseMessage = '등록 실패: $e');
+    }
+  }
+
+  Future<void> _handleUnlink(int facilityId) async {
+    try {
+      final msg = await FacilityApiService.unlinkFacility(widget.userId, facilityId);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      await _loadData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isAdmin) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('시설 등록 페이지')),
+        body: const Center(child: Text('관리자 및 개발자는 시설 등록이 필요하지 않습니다.')),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('시설 등록 페이지')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GlobalNavigationBox(
+              userId: widget.userId, isAdmin: _isAdmin, onStateInitialize: _loadData,
+            ),
+            const SizedBox(height: 16),
+            FacilityInputBox(
+              codeController: _codeController, onSubmit: _handleRegister, collapseMessage: _collapseMessage,
+            ),
+            const SizedBox(height: 16),
+            FacilityListEditBox(
+              facilities: _facilities, onUnlink: _handleUnlink,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\indices\main_alarm_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+
+class MainAlarmPage extends StatefulWidget {
+  final String userId;
+  const MainAlarmPage({super.key, required this.userId});
+
+  @override
+  State<MainAlarmPage> createState() => _MainAlarmPageState();
+}
+
+class _MainAlarmPageState extends State<MainAlarmPage> {
+  bool _isAdmin = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    try {
+      final role = await UserApiService.getUserRole(widget.userId);
+      if (mounted) setState(() => _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER'));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('메인 알람 페이지')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Box #1: 네비게이션
+            GlobalNavigationBox(
+              userId: widget.userId,
+              isAdmin: _isAdmin,
+              onStateInitialize: _loadRole,
+            ),
+            const SizedBox(height: 16),
+
+            // Box #2: 통합 알람 빈 박스
+            Container(
+              height: 300,
+              decoration: BoxDecoration(border: Border.all(color: Colors.redAccent)),
+              alignment: Alignment.center,
+              child: const Text('통합 알람 박스\n(추후 구현 예정)', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\indices\main_index_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:idcs/components/indices/main_index/main_index_components.dart';
+import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+
+class MainIndexPage extends StatefulWidget {
+  final String userId;
+
+  const MainIndexPage({super.key, required this.userId});
+
+  @override
+  State<MainIndexPage> createState() => _MainIndexPageState();
+}
+
+class _MainIndexPageState extends State<MainIndexPage> {
+  bool _isAdmin = false;
+  bool _isLoading = true;
+  List<dynamic> _facilities = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  // 1. 유저 데이터(권한 등)를 불러오는 초기화 함수
+  Future<void> _fetchUserData() async {
+    setState(() {
+      _isLoading = true; // 로딩 상태 활성화
+    });
+
+    try {
+      final role = await UserApiService.getUserRole(widget.userId);
+      final facilities = await FacilityApiService.getFacilities(widget.userId);
+      setState(() {
+        // ADMIN이거나 DEVELOPER인 경우 관리자 박스 노출
+        _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
+        _facilities = facilities;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('권한 조회 실패: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // 로딩 상태 해제
+        });
+      }
+    }
+  }
+
+  // 2. '메인 색인 페이지로 이동' 버튼 클릭 시 상태 초기화 트리거
+  void _initializeState() {
+    // 필요한 데이터들을 다시 불러오거나 상태를 초기값으로 리셋합니다.
+    _fetchUserData();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('메인 색인 페이지 상태가 초기화되었습니다.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('메인 색인 페이지')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator()) // 데이터 로딩 중 처리
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 분리된 공통 네비게이션 박스 적용
+            GlobalNavigationBox(
+              userId: widget.userId,
+              isAdmin: _isAdmin,
+              onStateInitialize: _initializeState, // 초기화 함수 주입
+            ),
+            const SizedBox(height: 16),
+
+            // Box #2: 통합 시설 박스 (현재 빈 박스)
+            IntegratedFacilityBox(
+              facilities: _facilities,
+              onFacilityPressed: (facilityId) {
+                // 터치 시 시설 라우팅용 nav 페이지로 이동
+                context.push('/facility_nav/${widget.userId}/$facilityId');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: pages\indices\settings_page.dart ---
+import 'package:flutter/material.dart';
+import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:idcs/services/common/user_api_service.dart';
+
+class SettingsPage extends StatefulWidget {
+  final String userId;
+  const SettingsPage({super.key, required this.userId});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  bool _isAdmin = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    try {
+      final role = await UserApiService.getUserRole(widget.userId);
+      if (mounted) setState(() => _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER'));
+    } catch (e) {
+      // 에러 처리 생략
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('설정 페이지')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: GlobalNavigationBox(
+          userId: widget.userId,
+          isAdmin: _isAdmin,
+          onStateInitialize: () {}, // 설정 페이지 자체 초기화 로직 (필요시 구현)
+        ),
+      ),
+    );
+  }
+}
+
+--- FILE_PATH: services\common\facility_api_service.dart ---
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../main.dart';
+
+class FacilityApiService {
+  static String get _baseUrl => '${AppConfig.baseUrl}/facilities';
+
+  // 시설 목록 조회 (권한에 따라 백엔드에서 알아서 필터링됨)
+  static Future<List<dynamic>> getFacilities(String userId) async {
+    final url = Uri.parse('$_baseUrl/$userId');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['facilities'] ?? [];
+    } else {
+      throw Exception('시설 목록을 불러오는데 실패했습니다.');
+    }
+  }
+
+  // 시설 등록
+  static Future<String> registerFacility(String userId, String accessCode) async {
+    final url = Uri.parse('$_baseUrl/$userId/register');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'access_code': accessCode}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw Exception(data['detail'] ?? '시설 등록에 실패했습니다.');
+  }
+
+  // 시설 연동 해제
+  static Future<String> unlinkFacility(String userId, int facilityId) async {
+    final url = Uri.parse('$_baseUrl/$userId/unlink/$facilityId');
+    final response = await http.delete(url);
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw Exception(data['detail'] ?? '시설 해제에 실패했습니다.');
+  }
+}
+
+--- FILE_PATH: services\common\social_auth_service.dart ---
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+
+
+class SocialAuthService {
+  static bool _isGoogleInitialized = false;
+
+  /// 구글 SDK를 통해 프로필 정보를 가져옵니다.
+  static Future<Map<String, String>?> signInWithGoogle() async {
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+      try {
+        if (!_isGoogleInitialized) {
+          await googleSignIn.initialize(
+            // TODO: GCP에서 발급받은 유형의 클라이언트 ID
+            // 근데 IDCool 용으로 아니면 설민님 계정으로
+            serverClientId: '415636031627-asr8rncpbq4c5jkn3r44d0u65cf64lvb.apps.googleusercontent.com',
+          );
+          _isGoogleInitialized = true;
+        }
+      } catch (e) {
+        // 이미 초기화된 상태에서 발생하는 StateError는 안전하게 무시합니다.
+        if (e is StateError && e.message.contains('already been called')) {
+          _isGoogleInitialized = true;
+        } else {
+          rethrow; // 다른 종류의 에러는 그대로 던집니다.
+        }
+      }
+      final googleUser = await googleSignIn.authenticate();
+      // 사용자가 로그인 팝업을 그냥 닫은 경우 null 반환
+      if (googleUser == null) {
+        return null;
+      }
+
+      return {
+        'provider': 'google',
+        'provider_id': googleUser.id,
+        'email': googleUser.email,
+        'name': googleUser.displayName ?? '구글유저',
+      };
+    } catch (error) {
+      throw Exception('구글 로그인 진행 중 오류가 발생/취소되었습니다: $error');
+    }
+  }
+
+  /// 애플 SDK를 통해 프로필 정보를 가져옵니다.
+  static Future<Map<String, String>?> signInWithApple() async {
+    try {
+      final AuthorizationCredentialAppleID credential =
+      await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      String name = '애플유저';
+      if (credential.givenName != null || credential.familyName != null) {
+        name = '${credential.familyName ?? ''}${credential.givenName ?? ''}';
+      }
+
+      return {
+        'provider': 'apple',
+        'provider_id': credential.userIdentifier ?? '',
+        'email': credential.email ?? '',
+        'name': name,
+      };
+    } catch (error) {
+      throw Exception('애플 로그인 진행 중 오류가 발생/취소되었습니다: $error');
+    }
+  }
+
+
+
+}
+
+--- FILE_PATH: services\common\user_api_service.dart ---
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../main.dart';
+
+class UserApiService {
+  static String get _baseUrl => '${AppConfig.baseUrl}/auth'; // 라우터 경로에 맞게 수정
+
+  /// 유저 권한(Role) 조회 API
+  static Future<String> getUserRole(String userId) async {
+    final url = Uri.parse('$_baseUrl/$userId/role');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['role']; // 'USER', 'ADMIN', 'DEVELOPER' 중 하나 반환
+    } else {
+      throw Exception('권한 정보를 불러오는데 실패했습니다.');
+    }
+  }
+
+  // ----------------------------------------------
+  // 계정 수정 로직
+
+  /// 유저 프로필 조회
+  static Future<Map<String, dynamic>> getUserProfile(String userId) async {
+    final url = Uri.parse('$_baseUrl/$userId/profile');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      throw Exception('프로필 정보를 불러오는데 실패했습니다.');
+    }
+  }
+
+  /// Box #2: 이름 수정
+  static Future<String> updateName(String userId, String name) async {
+    final url = Uri.parse('$_baseUrl/$userId/name');
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw Exception(data['detail'] ?? '이름 수정에 실패했습니다.');
+  }
+
+  /// Box #3: 전화번호 수정
+  static Future<String> updatePhone(String userId, String phone) async {
+    final url = Uri.parse('$_baseUrl/$userId/phone');
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone_number': phone}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw Exception(data['detail'] ?? '전화번호 수정에 실패했습니다.');
+  }
+
+  /// Box #4: 비밀번호 수정
+  static Future<String> updatePassword(String userId, String currentPw, String newPw) async {
+    final url = Uri.parse('$_baseUrl/$userId/password');
+    final response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'current_password': currentPw,
+        'new_password': newPw,
+      }),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw Exception(data['detail'] ?? '비밀번호 수정에 실패했습니다.');
+  }
+}
+
+--- FILE_PATH: services\common\find_id\auth_api_service.dart ---
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+// AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
+import '../../../main.dart';
+
+class AuthApiService {
+  // 백엔드 auth 라우터 기본 URL
+  static String get _authUrl => '${AppConfig.baseUrl}/auth';
+  /// 아이디 찾기 페이지: 이메일 계정 존재 및 연동 여부 확인
+  static Future<Map<String, dynamic>> checkAccountExistence(String email) async {
+    final url = Uri.parse('$_authUrl/check-account');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      final error = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(error['detail'] ?? '계정 정보를 확인하는데 실패했습니다.');
+    }
+  }
+}
+
+--- FILE_PATH: services\common\find_pw\auth_api_service.dart ---
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+// AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
+import '../../../main.dart';
+
+class AuthApiService {
+  // 백엔드 auth 라우터 기본 URL
+  static String get _authUrl => '${AppConfig.baseUrl}/auth';
+  /// 아이디 찾기 페이지: 이메일 계정 존재 및 연동 여부 확인
+
+
+  static Future<Map<String, dynamic>> requestPasswordCode(String email) async {
+    final response = await http.post(
+      Uri.parse('$_authUrl/password/request-code'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    if (response.statusCode == 200) return jsonDecode(utf8.decode(response.bodyBytes));
+    throw Exception(jsonDecode(utf8.decode(response.bodyBytes))['detail']);
+  }
+
+  static Future<Map<String, dynamic>> verifyPasswordCode(String token, String code) async {
+    final response = await http.post(
+      Uri.parse('$_authUrl/password/verify-code'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'code': code}),
+    );
+    if (response.statusCode == 200) return jsonDecode(utf8.decode(response.bodyBytes));
+    throw Exception(jsonDecode(utf8.decode(response.bodyBytes))['detail']);
+  }
+
+  static Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('$_authUrl/password/reset'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'new_password': newPassword}),
+    );
+    if (response.statusCode == 200) return jsonDecode(utf8.decode(response.bodyBytes));
+    throw Exception(jsonDecode(utf8.decode(response.bodyBytes))['detail']);
+  }
+
+}
+
+--- FILE_PATH: services\common\login\auth_api_service.dart ---
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+// AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
+import '../../../main.dart';
+
+class AuthApiService {
+  // 백엔드 auth 라우터 기본 URL
+  static String get _authUrl => '${AppConfig.baseUrl}/auth';
+
+  /// Box #1: 일반 로그인 API 호출
+  static Future<Map<String, dynamic>> loginGeneral({
+    required String email,
+    required String password,
+    required bool keepLogin,
+  }) async {
+    final url = Uri.parse('$_authUrl/login/general');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'keep_login': keepLogin,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      final error = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(error['detail'] ?? '로그인에 실패했습니다.');
+    }
+  }
+
+  /// Box #2: 소셜 로그인 API 호출
+  static Future<Map<String, dynamic>> loginSocial({
+    required String provider,
+    required String providerId,
+    required bool keepLogin,
+  }) async {
+    final url = Uri.parse('$_authUrl/login/social');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'provider': provider,
+        'provider_id': providerId,
+        'keep_login': keepLogin,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      final error = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(error['detail'] ?? '소셜 로그인에 실패했습니다.');
+    }
+  }
+}
+
+--- FILE_PATH: services\common\signup\auth_api_service.dart ---
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+// AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
+import '../../../main.dart';
+
+class AuthApiService {
+  // 백엔드 auth 라우터 기본 URL
+  static String get _authUrl => '${AppConfig.baseUrl}/auth';
+
+  /// Box #1: 일반 회원가입 API 호출
+  static Future<Map<String, dynamic>> signupGeneral({
+    required String email,
+    required String password,
+    required String name,
+    String? phoneNumber,
+  }) async {
+    final url = Uri.parse('$_authUrl/signup/general');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'name': name,
+        if (phoneNumber != null &&
+            phoneNumber.isNotEmpty) 'phone_number': phoneNumber,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      final error = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(error['detail'] ?? '회원가입에 실패했습니다.');
+    }
+  }
+
+  /// Box #2: 소셜 회원가입 API 호출
+  static Future<Map<String, dynamic>> signupSocial({
+    required String provider,
+    required String providerId,
+    required String email,
+    required String name,
+    String? phoneNumber,
+  }) async {
+    final url = Uri.parse('$_authUrl/signup/social');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'provider': provider,
+        'provider_id': providerId,
+        'email': email,
+        'name': name,
+        if (phoneNumber != null &&
+            phoneNumber.isNotEmpty) 'phone_number': phoneNumber,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } else {
+      final error = jsonDecode(utf8.decode(response.bodyBytes));
+      throw Exception(error['detail'] ?? '소셜 회원가입에 실패했습니다.');
+    }
+  }
+}
+

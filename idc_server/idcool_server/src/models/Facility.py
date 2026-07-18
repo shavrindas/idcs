@@ -7,7 +7,7 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, Date, Enum, DateTime, func, ForeignKey, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
-from config.db import Base
+from idcool_server.config.db import Base
 # ===============================================================
 
 class RoomStatusType(str, enum.Enum):
