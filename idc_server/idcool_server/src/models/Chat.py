@@ -5,7 +5,7 @@
 import enum
 from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import relationship
-from idcool_server.config.db import Base
+from config.db import Base
 
 class ChatRoomType(str, enum.Enum):
     DIRECT = "DIRECT"

@@ -4,7 +4,7 @@
 # ===============================================================
 from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, ForeignKey, func
 from sqlalchemy.orm import relationship
-from idcool_server.config.db import Base
+from config.db import Base
 
 class Board(Base):
     __tablename__ = "boards"
