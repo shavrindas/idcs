@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run FastAPI Server",
+      "type": "shell",
+      "command": "..\\.venv\\Scripts\\uvicorn src.app:app --reload --log-level debug",
+      "options": {
+        "cwd": "${workspaceFolder}/idc_server/idcool_server"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    }
+  ]
+}
