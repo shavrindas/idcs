@@ -23,7 +23,6 @@ import 'package:idcs/pages/facilitiy/board/facility_board_page.dart';
 import 'package:idcs/pages/facilitiy/board/post_detail_page.dart';
 import 'package:idcs/pages/facilitiy/board/post_create_page.dart';
 import 'package:idcs/pages/facilitiy/board/post_edit_page.dart';
-
 import 'pages/common/opening_page.dart';
 
 
@@ -129,7 +128,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/main_index/:userId', builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/facility_register/:userId', builder: (context, state) => FacilityRegisterPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/main_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/total_board/:userId', builder: (context, state) => TotalBoardPage(userId: state.pathParameters['userId']!),),
+    GoRoute(
+      path: '/total_board/:userId',
+      builder: (context, state) => TotalBoardPage(
+        userId: state.pathParameters['userId']!,
+      ),
+    ),
     // main_indices/[settings]
     GoRoute(path: '/settings/:userId', builder: (context, state) => SettingsPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/personal/:userId', builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!)),

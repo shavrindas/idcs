@@ -5,10 +5,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:idcs/main.dart';
 import 'package:idcs/components/cross_compontents/board/post_editor_components.dart.dart';
+import 'package:idcs/services/board/board_api_service.dart';
+
 class PostEditPage extends StatefulWidget {
   final int postId;
   final String userId;
@@ -40,15 +40,18 @@ class _PostEditPageState extends State<PostEditPage> {
 
   Future<void> _fetchOriginalPost() async {
     try {
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}?user_id=${widget.userId}'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes))['data'];
+      final decoded = await BoardApiService.fetchPostDetail(
+        postId: widget.postId,
+        userId: widget.userId,
+      );
+      final postData = decoded['data'];
 
-        _titleController.text = decoded['title'];
-        _initQuillController(decoded['content']);
-      }
+      _titleController.text = postData['title'];
+      _initQuillController(postData['content']);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('원문 로드 실패: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('원문 로드 실패: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -73,7 +76,7 @@ class _PostEditPageState extends State<PostEditPage> {
   }
 
   Future<void> _handleImageAttach() async {
-    // TODO: 이미지 업로드 로직
+    // TODO: 이미지 업로드 서비스 연동
   }
 
   Future<void> _handleSubmit() async {
@@ -82,22 +85,22 @@ class _PostEditPageState extends State<PostEditPage> {
     final String contentJson = jsonEncode(_quillController!.document.toDelta().toJson());
 
     try {
-      final response = await http.put(
-        Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}?user_id=${widget.userId}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "title": _titleController.text,
-          "content": contentJson,
-          "image_ids": _newImageIds
-        }),
+      await BoardApiService.updatePost(
+        postId: widget.postId,
+        userId: widget.userId,
+        title: _titleController.text,
+        contentJson: contentJson,
+        imageIds: _newImageIds,
       );
 
-      if (response.statusCode == 200 && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('수정 완료되었습니다.')));
-        context.pop(); // 상세 페이지로 복귀
+        context.pop();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('수정 실패: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('수정 실패: $e')));
+      }
     }
   }
 

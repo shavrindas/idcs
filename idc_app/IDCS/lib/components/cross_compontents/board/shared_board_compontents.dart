@@ -8,16 +8,22 @@ import 'package:idcs/models/post_model.dart';
 class BoardHeaderBox extends StatelessWidget {
   final String title;
   final TextEditingController searchController;
+  final String selectedSearchType;
+  final ValueChanged<String?> onSearchTypeChanged;
   final VoidCallback onSearch;
-  final VoidCallback? onCreatePost; // 시설 게시판용 새 글 작성 버튼
+  final VoidCallback? onCreatePost;
 
   const BoardHeaderBox({
     super.key,
     required this.title,
     required this.searchController,
+    required this.selectedSearchType,
+    required this.onSearchTypeChanged,
     required this.onSearch,
     this.onCreatePost,
   });
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -42,20 +48,22 @@ class BoardHeaderBox extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              // 필터 드롭다운 (예시)
+              // 드롭다운 필터 (상태 상위 전달 연동)
               DropdownButton<String>(
-                value: '전체',
-                items: <String>['전체', '제목', '작성자', '내용'].map((String value) {
-                  return DropdownMenuItem<String>(value: value, child: Text(value));
-                }).toList(),
-                onChanged: (String? newValue) {
-                  // TODO: 필터 상태 관리
-                },
+                value: selectedSearchType,
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('전체')),
+                  DropdownMenuItem(value: 'title', child: Text('제목')),
+                  DropdownMenuItem(value: 'creator', child: Text('작성자')),
+                  DropdownMenuItem(value: 'content', child: Text('내용')),
+                ],
+                onChanged: onSearchTypeChanged,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: searchController,
+                  onSubmitted: (_) => onSearch(), // 엔터키 입력 시 검색 실행
                   decoration: const InputDecoration(
                     hintText: '검색어를 입력하세요',
                     border: OutlineInputBorder(),

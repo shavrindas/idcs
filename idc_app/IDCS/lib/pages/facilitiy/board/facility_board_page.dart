@@ -4,11 +4,9 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:idcs/models/post_model.dart'; // PostModel 임포트
+import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:idcs/main.dart'; // AppConfig, AuthService
+import 'package:idcs/services/board/board_api_service.dart';
 
 class FacilityBoardPage extends StatefulWidget {
   final String userId;
@@ -22,6 +20,7 @@ class FacilityBoardPage extends StatefulWidget {
 
 class _FacilityBoardPageState extends State<FacilityBoardPage> {
   final TextEditingController _searchController = TextEditingController();
+  String _selectedSearchType = 'all';
 
   List<PostModel> _posts = [];
   bool _isLoading = true;
@@ -44,25 +43,32 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
   Future<void> _fetchPosts() async {
     setState(() => _isLoading = true);
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/board/facility/${widget.facilityId}?user_id=${widget.userId}&page=$_currentPage&limit=$_limit');
-      final response = await http.get(url);
+      final result = await BoardApiService.fetchFacilityPosts(
+        facilityId: widget.facilityId,
+        userId: widget.userId,
+        page: _currentPage,
+        limit: _limit,
+        searchType: _selectedSearchType,
+        keyword: _searchController.text,
+      );
 
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if (mounted) {
         setState(() {
-          _posts = (decoded['data'] as List).map((p) => PostModel.fromJson(p)).toList();
-          _totalPages = decoded['meta']['total_pages'] ?? 1;
+          _posts = result['posts'];
+          _totalPages = result['totalPages'];
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('시설 게시글을 불러오는데 실패했습니다: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _handlePageChange(int newPage) {
-    setState(() => _currentPage = newPage);
+  void _handleSearch() {
+    _currentPage = 1;
     _fetchPosts();
   }
 
@@ -74,11 +80,6 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
     context.push('/post_create/${widget.userId}/${widget.facilityId}').then((_) => _fetchPosts());
   }
 
-  void _handleSearch() {
-    _currentPage = 1;
-    _fetchPosts();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,22 +89,26 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1 (새 글 작성 콜백 포함)
             BoardHeaderBox(
               title: '게시글 검색',
               searchController: _searchController,
+              selectedSearchType: _selectedSearchType,
+              onSearchTypeChanged: (val) {
+                if (val != null) setState(() => _selectedSearchType = val);
+              },
               onSearch: _handleSearch,
               onCreatePost: _handleCreatePost,
             ),
             const SizedBox(height: 16),
-
-            // Box #2 & #3
             BoardListAndPagingBox(
               posts: _posts,
               isLoading: _isLoading,
               currentPage: _currentPage,
               totalPages: _totalPages,
-              onPageChanged: _handlePageChange,
+              onPageChanged: (page) {
+                setState(() => _currentPage = page);
+                _fetchPosts();
+              },
               onPostTapped: _handlePostTapped,
             ),
           ],

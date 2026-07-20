@@ -31,11 +31,108 @@ class CommentCreateReq(BaseModel):
 # ===============================================================
 # [S/bp-02] 통합 조회 보드 포스트 리스트 (페이징 30)
 # ===============================================================
+# @router.get("/integrated")
+# async def get_integrated_posts(
+#     user_id: int, 
+#     page: int = Query(1, ge=1), 
+#     limit: int = Query(30, le=100), 
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     user_query = text("SELECT role FROM user_table WHERE id = :user_id")
+#     user_res = await db.execute(user_query, {"user_id": user_id})
+#     user = user_res.fetchone()
+
+#     if not user or user.role not in ['ADMIN', 'DEVELOPER']:
+#         raise HTTPException(status_code=403, detail="통합 조회 보드에 접근할 권한이 없습니다.")
+
+#     offset = (page - 1) * limit
+    
+#     # COUNT 쿼리 (클라이언트에서 전체 페이지 계산을 위함)
+#     count_query = text("SELECT COUNT(*) FROM posts")
+#     total_count = (await db.execute(count_query)).scalar()
+
+#     query = text("""
+#         SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+#                b.facility_id, b.facility_name, u.name as creator_name
+#         FROM posts p
+#         JOIN boards b ON p.board_id = b.board_id
+#         JOIN user_table u ON p.creator_id = u.id
+#         ORDER BY p.created_at DESC
+#         LIMIT :limit OFFSET :offset
+#     """)
+#     result = await db.execute(query, {"limit": limit, "offset": offset})
+#     posts = result.fetchall()
+
+#     return {
+#         "status": "success",
+#         "data": [dict(row._mapping) for row in posts],
+#         "meta": {
+#             "page": page,
+#             "limit": limit,
+#             "total_count": total_count,
+#             "total_pages": (total_count + limit - 1) // limit
+#         }
+#     }
+
+# # ===============================================================
+# # [S/bp-03] 시설 조회 보드 포스트 리스트 (페이징 30)
+# # ===============================================================
+# @router.get("/facility/{facility_id}")
+# async def get_facility_posts(
+#     facility_id: int, 
+#     user_id: int, 
+#     page: int = Query(1, ge=1), 
+#     limit: int = Query(30, le=100), 
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     auth_query = text("""
+#         SELECT 1 FROM user_table u
+#         LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+#         WHERE u.id = :user_id 
+#           AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+#     """)
+#     auth_res = await db.execute(auth_query, {"user_id": user_id, "facility_id": facility_id})
+#     if not auth_res.fetchone():
+#         raise HTTPException(status_code=403, detail="해당 시설 보드에 접근할 권한이 없습니다.")
+
+#     offset = (page - 1) * limit
+
+#     count_query = text("SELECT COUNT(*) FROM posts p JOIN boards b ON p.board_id = b.board_id WHERE b.facility_id = :facility_id")
+#     total_count = (await db.execute(count_query, {"facility_id": facility_id})).scalar()
+
+#     query = text("""
+#         SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+#                b.facility_id, b.facility_name, u.name as creator_name
+#         FROM posts p
+#         JOIN boards b ON p.board_id = b.board_id
+#         JOIN user_table u ON p.creator_id = u.id
+#         WHERE b.facility_id = :facility_id
+#         ORDER BY p.created_at DESC
+#         LIMIT :limit OFFSET :offset
+#     """)
+#     result = await db.execute(query, {"facility_id": facility_id, "limit": limit, "offset": offset})
+#     posts = result.fetchall()
+
+#     return {
+#         "status": "success",
+#         "data": [dict(row._mapping) for row in posts],
+#         "meta": {
+#             "page": page,
+#             "limit": limit,
+#             "total_count": total_count,
+#             "total_pages": (total_count + limit - 1) // limit
+#         }
+#     }
+
+
+# [S/bp-02] 통합 조회 보드 포스트 리스트 (검색 조건 추가)
 @router.get("/integrated")
 async def get_integrated_posts(
     user_id: int, 
     page: int = Query(1, ge=1), 
-    limit: int = Query(30, le=100), 
+    limit: int = Query(30, le=100),
+    search_type: str = Query("all"), # all, title, creator, content
+    keyword: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
     user_query = text("SELECT role FROM user_table WHERE id = :user_id")
@@ -46,21 +143,44 @@ async def get_integrated_posts(
         raise HTTPException(status_code=403, detail="통합 조회 보드에 접근할 권한이 없습니다.")
 
     offset = (page - 1) * limit
-    
-    # COUNT 쿼리 (클라이언트에서 전체 페이지 계산을 위함)
-    count_query = text("SELECT COUNT(*) FROM posts")
-    total_count = (await db.execute(count_query)).scalar()
 
-    query = text("""
+    # 검색 쿼리 조건 생성
+    where_clause = "WHERE 1=1"
+    params = {"limit": limit, "offset": offset, "user_id": user_id}
+
+    if keyword and keyword.strip():
+        params["keyword"] = f"%{keyword.strip()}%"
+        if search_type == "title":
+            where_clause += " AND p.title ILIKE :keyword"
+        elif search_type == "creator":
+            where_clause += " AND u.name ILIKE :keyword"
+        elif search_type == "content":
+            where_clause += " AND p.content ILIKE :keyword"
+        else: # "all"
+            where_clause += " AND (p.title ILIKE :keyword OR u.name ILIKE :keyword OR p.content ILIKE :keyword)"
+
+    # COUNT 쿼리
+    count_query = text(f"""
+        SELECT COUNT(*) 
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+    """)
+    total_count = (await db.execute(count_query, params)).scalar()
+
+    # Data 쿼리
+    query = text(f"""
         SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
                b.facility_id, b.facility_name, u.name as creator_name
         FROM posts p
         JOIN boards b ON p.board_id = b.board_id
         JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
         ORDER BY p.created_at DESC
         LIMIT :limit OFFSET :offset
     """)
-    result = await db.execute(query, {"limit": limit, "offset": offset})
+    result = await db.execute(query, params)
     posts = result.fetchall()
 
     return {
@@ -74,15 +194,16 @@ async def get_integrated_posts(
         }
     }
 
-# ===============================================================
-# [S/bp-03] 시설 조회 보드 포스트 리스트 (페이징 30)
-# ===============================================================
+
+# [S/bp-03] 시설 조회 보드 포스트 리스트 (검색 조건 추가)
 @router.get("/facility/{facility_id}")
 async def get_facility_posts(
     facility_id: int, 
     user_id: int, 
     page: int = Query(1, ge=1), 
-    limit: int = Query(30, le=100), 
+    limit: int = Query(30, le=100),
+    search_type: str = Query("all"),
+    keyword: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
     auth_query = text("""
@@ -96,21 +217,40 @@ async def get_facility_posts(
         raise HTTPException(status_code=403, detail="해당 시설 보드에 접근할 권한이 없습니다.")
 
     offset = (page - 1) * limit
+    where_clause = "WHERE b.facility_id = :facility_id"
+    params = {"facility_id": facility_id, "limit": limit, "offset": offset, "user_id": user_id}
 
-    count_query = text("SELECT COUNT(*) FROM posts p JOIN boards b ON p.board_id = b.board_id WHERE b.facility_id = :facility_id")
-    total_count = (await db.execute(count_query, {"facility_id": facility_id})).scalar()
+    if keyword and keyword.strip():
+        params["keyword"] = f"%{keyword.strip()}%"
+        if search_type == "title":
+            where_clause += " AND p.title ILIKE :keyword"
+        elif search_type == "creator":
+            where_clause += " AND u.name ILIKE :keyword"
+        elif search_type == "content":
+            where_clause += " AND p.content ILIKE :keyword"
+        else: # "all"
+            where_clause += " AND (p.title ILIKE :keyword OR u.name ILIKE :keyword OR p.content ILIKE :keyword)"
 
-    query = text("""
+    count_query = text(f"""
+        SELECT COUNT(*) 
+        FROM posts p 
+        JOIN boards b ON p.board_id = b.board_id 
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+    """)
+    total_count = (await db.execute(count_query, params)).scalar()
+
+    query = text(f"""
         SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
                b.facility_id, b.facility_name, u.name as creator_name
         FROM posts p
         JOIN boards b ON p.board_id = b.board_id
         JOIN user_table u ON p.creator_id = u.id
-        WHERE b.facility_id = :facility_id
+        {where_clause}
         ORDER BY p.created_at DESC
         LIMIT :limit OFFSET :offset
     """)
-    result = await db.execute(query, {"facility_id": facility_id, "limit": limit, "offset": offset})
+    result = await db.execute(query, params)
     posts = result.fetchall()
 
     return {

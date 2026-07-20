@@ -6,9 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:idcs/main.dart'; // AppConfig, AuthService
+import 'package:idcs/services/board/board_api_service.dart';
 
 class TotalBoardPage extends StatefulWidget {
   final String userId;
@@ -21,11 +19,14 @@ class TotalBoardPage extends StatefulWidget {
 class _TotalBoardPageState extends State<TotalBoardPage> {
   final TextEditingController _searchController = TextEditingController();
 
+  // 📌 1. 검색 필터 선택 상태값 추가
+  String _selectedSearchType = 'all';
+
   List<PostModel> _posts = [];
   bool _isLoading = true;
   int _currentPage = 1;
   int _totalPages = 1;
-  final int _limit = 10; // 테스트를 위해 10개로 설정, 필요시 30으로 변경
+  final int _limit = 10;
 
   @override
   void initState() {
@@ -39,21 +40,28 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
     super.dispose();
   }
 
+  // 📌 2. BoardApiService 적용 및 검색 파라미터 전달
   Future<void> _fetchPosts() async {
     setState(() => _isLoading = true);
     try {
-      final url = Uri.parse('${AppConfig.baseUrl}/board/integrated?user_id=${widget.userId}&page=$_currentPage&limit=$_limit');
-      final response = await http.get(url);
+      final result = await BoardApiService.fetchIntegratedPosts(
+        userId: widget.userId,
+        page: _currentPage,
+        limit: _limit,
+        searchType: _selectedSearchType,
+        keyword: _searchController.text,
+      );
 
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if (mounted) {
         setState(() {
-          _posts = (decoded['data'] as List).map((p) => PostModel.fromJson(p)).toList();
-          _totalPages = decoded['meta']['total_pages'] ?? 1;
+          _posts = result['posts'];
+          _totalPages = result['totalPages'];
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('통합 게시글을 불러오는데 실패했습니다: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -69,7 +77,6 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
   }
 
   void _handleSearch() {
-    // TODO: 백엔드 검색 API 연동 로직
     _currentPage = 1;
     _fetchPosts();
   }
@@ -83,12 +90,15 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1
+            // 📌 3. 필수 전달 인자 누락 에러 수정 부분
             BoardHeaderBox(
               title: '통합 검색 및 필터',
               searchController: _searchController,
+              selectedSearchType: _selectedSearchType,
+              onSearchTypeChanged: (val) {
+                if (val != null) setState(() => _selectedSearchType = val);
+              },
               onSearch: _handleSearch,
-              // 통합 보드에서는 '새 글 작성' 기능이 일반적으로 없으므로 null 전달
             ),
             const SizedBox(height: 16),
 

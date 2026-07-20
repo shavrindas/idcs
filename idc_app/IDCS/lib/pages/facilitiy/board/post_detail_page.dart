@@ -5,10 +5,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:idcs/components/cross_compontents/board/post_detail_components.dart';
-import 'package:idcs/main.dart'; // AppConfig, AuthService
+import 'package:idcs/services/board/board_api_service.dart';
+import 'package:idcs/services/common/user_api_service.dart';
 
 class PostDetailPage extends StatefulWidget {
   final int postId;
@@ -45,24 +45,24 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Future<void> _fetchPostDetail() async {
     setState(() => _isLoading = true);
     try {
-      // 1. 유저 권한 로드 (삭제/수정 버튼 제어용)
-      final roleRes = await http.get(Uri.parse('${AppConfig.baseUrl}/auth/${widget.userId}/role'));
-      if (roleRes.statusCode == 200) {
-        _userRole = jsonDecode(utf8.decode(roleRes.bodyBytes))['role'];
-      }
+      _userRole = await UserApiService.getUserRole(widget.userId);
 
-      // 2. 포스트 상세 정보 로드
-      final response = await http.get(Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}?user_id=${widget.userId}'));
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-        _post = decoded['data'];
-        _comments = decoded['comments'] ?? [];
+      final decoded = await BoardApiService.fetchPostDetail(
+        postId: widget.postId,
+        userId: widget.userId,
+      );
 
-        // 3. Quill Controller 방어적 초기화
-        _initQuillController(_post!['content']);
+      if (mounted) {
+        setState(() {
+          _post = decoded['data'];
+          _comments = decoded['comments'] ?? [];
+          _initQuillController(_post!['content']);
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 로드 실패: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 로드 실패: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -77,7 +77,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
         readOnly: true,
       );
     } catch (e) {
-      // JSON 파싱 실패 시 일반 텍스트로 처리하는 방어 로직
       final doc = quill.Document()..insert(0, contentStr);
       _quillController = quill.QuillController(
         document: doc,
@@ -89,13 +88,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   Future<void> _handleDeletePost() async {
     try {
-      final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}?user_id=${widget.userId}'));
-      if (response.statusCode == 200 && mounted) {
+      await BoardApiService.deletePost(postId: widget.postId, userId: widget.userId);
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제되었습니다.')));
-        context.pop(); // 삭제 후 뒤로가기
+        context.pop();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+      }
     }
   }
 
@@ -104,28 +105,28 @@ class _PostDetailPageState extends State<PostDetailPage> {
     if (content.isEmpty) return;
 
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/board/post/${widget.postId}/comment?user_id=${widget.userId}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"content": content}),
+      await BoardApiService.addComment(
+        postId: widget.postId,
+        userId: widget.userId,
+        content: content,
       );
-      if (response.statusCode == 200) {
-        _commentController.clear();
-        _fetchPostDetail(); // 댓글 갱신
-      }
+      _commentController.clear();
+      _fetchPostDetail();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 작성 실패: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 작성 실패: $e')));
+      }
     }
   }
 
   Future<void> _handleDeleteComment(int commentId) async {
     try {
-      final response = await http.delete(Uri.parse('${AppConfig.baseUrl}/board/comment/$commentId?user_id=${widget.userId}'));
-      if (response.statusCode == 200) {
-        _fetchPostDetail();
-      }
+      await BoardApiService.deleteComment(commentId: commentId, userId: widget.userId);
+      _fetchPostDetail();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 삭제 실패: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 삭제 실패: $e')));
+      }
     }
   }
 
@@ -145,10 +146,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1: 본문
             PostContentBox(post: _post!, quillController: _quillController!),
-
-            // Box #2: 수정/삭제 제어 박스 (권한자에게만 표시)
             if (canControl) ...[
               const SizedBox(height: 8),
               PostControlBox(
@@ -158,10 +156,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 onDelete: _handleDeletePost,
               ),
             ],
-
             const SizedBox(height: 16),
-
-            // Box #3: 댓글 박스
             CommentBox(
               comments: _comments,
               currentUserId: widget.userId,
