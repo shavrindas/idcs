@@ -18,6 +18,11 @@ import 'package:idcs/pages/indices/account_edit_page.dart';
 import 'package:idcs/pages/indices/main_alarm_page.dart';
 import 'package:idcs/pages/indices/main_index_page.dart';
 import 'package:idcs/pages/indices/facility_register_page.dart';
+import 'package:idcs/pages/indices/total_board_page.dart';
+import 'package:idcs/pages/facilitiy/board/facility_board_page.dart';
+import 'package:idcs/pages/facilitiy/board/post_detail_page.dart';
+import 'package:idcs/pages/facilitiy/board/post_create_page.dart';
+import 'package:idcs/pages/facilitiy/board/post_edit_page.dart';
 
 import 'pages/common/opening_page.dart';
 
@@ -124,20 +129,52 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/main_index/:userId', builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/facility_register/:userId', builder: (context, state) => FacilityRegisterPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/main_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
-    // GoRoute(path: '/total_board/:userId', builder: (context, state) => TotalBoardPage(userId: state.pathParameters['userId']!)),
+    GoRoute(path: '/total_board/:userId', builder: (context, state) => TotalBoardPage(userId: state.pathParameters['userId']!),),
     // main_indices/[settings]
     GoRoute(path: '/settings/:userId', builder: (context, state) => SettingsPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/personal/:userId', builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!)),
 
     // [facility] - 유저 ID & 시설 ID 기반
+    GoRoute(path: '/facility_nav/:userId/:facilityId', builder: (context, state) => FacilityTempNavPage(userId: state.pathParameters['userId']!, facilityId: state.pathParameters['facilityId']!,)),
+
+
+
+
+    // 1. 시설 소요 기록 목록 페이지
     GoRoute(
-      path: '/facility_nav/:userId/:facilityId',
-      builder: (context, state) => FacilityTempNavPage(
+      path: '/facility_board/:userId/:facilityId',
+      builder: (context, state) => FacilityBoardPage(
         userId: state.pathParameters['userId']!,
         facilityId: state.pathParameters['facilityId']!,
       ),
     ),
 
+    // 2. 게시글 상세 페이지
+    GoRoute(
+      path: '/post_detail/:userId/:postId',
+      builder: (context, state) => PostDetailPage(
+        userId: state.pathParameters['userId']!,
+        postId: int.parse(state.pathParameters['postId']!),
+      ),
+    ),
+
+    // 3. 게시글 작성 페이지
+    GoRoute(
+      path: '/post_create/:userId/:facilityId',
+      builder: (context, state) => PostCreatePage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
+
+    // 4. 게시글 수정 페이지
+    GoRoute(
+      path: '/post_edit/:userId/:postId',
+      builder: (context, state) => PostEditPage(
+        userId: state.pathParameters['userId']!,
+        postId: int.parse(state.pathParameters['postId']!),
+      ),
+    ),
   ],
 );
 

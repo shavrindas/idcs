@@ -156,6 +156,11 @@ class _LoginPageState extends State<LoginPage> {
               title: '비밀번호 찾기 페이지로 이동',
               onPressed: () => context.push('/find_pw'),
             ),
+            const SizedBox(height: 16),
+            NavigationBox(
+              title: '오프닝 페이지로 이동',
+              onPressed: () => context.push('/'),
+            ),
           ],
         ),
       ),

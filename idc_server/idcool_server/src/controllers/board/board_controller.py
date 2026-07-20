@@ -7,10 +7,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from idcool_server.config.db import get_db
+from config.db import get_db
 # ===============================================================
 
-router = APIRouter(prefix="/api/board", tags=["Board"])
+router = APIRouter(prefix="/board", tags=["Board"])
 
 # --- Pydantic Schemas ---
 class PostCreateReq(BaseModel):
