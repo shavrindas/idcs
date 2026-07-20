@@ -23,3 +23,29 @@ __pycache__/
 .venv/
 
 
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+
+idc_server/idcool_server/src/controllers/board/__pycache__/board_controller.cpython-310.pyc
+idc_server/idcool_server/src/controllers/board/__pycache__/board_controller.cpython-310.pyc

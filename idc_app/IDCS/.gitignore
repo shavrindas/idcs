@@ -64,3 +64,5 @@ ios/.symlinks/
 .idea/
 .vscode/
 *.iml
+
+idc_server/idcool_server/src/controllers/board/__pycache__/board_controller.cpython-310.pyc

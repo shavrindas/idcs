@@ -15,6 +15,9 @@ note.md
 __pycache__/
 *.pyc
 
+__pycache__/
+*.pyc
+
 # Database & Migrations
 alembic.ini
 migrations/
@@ -22,3 +25,5 @@ migrations/
 # Local documents
 프로젝트 관리.md
 note.md
+
+idc_server/idcool_server/src/controllers/board/__pycache__/board_controller.cpython-310.pyc
