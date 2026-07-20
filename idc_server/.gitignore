@@ -1,3 +1,5 @@
+# C:\Users\ynham\devspace\IDCool_Systems\idc_server\.gitignore
+
 /.venv
 /__pycache__
 __init__.py
@@ -5,4 +7,18 @@ __init__.py
 프로젝트 관리.md
 alembic.ini
 __pycache__
+note.md
+
+
+# Virtual Environment & Python Caches
+.venv/
+__pycache__/
+*.pyc
+
+# Database & Migrations
+alembic.ini
+migrations/
+
+# Local documents
+프로젝트 관리.md
 note.md
