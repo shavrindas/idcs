@@ -4,7 +4,7 @@
     {
       "label": "Run FastAPI Server",
       "type": "shell",
-      "command": "..\\.venv\\Scripts\\uvicorn src.app:app --reload --log-level debug",
+      "command": "..\\.venv\\Scripts\\uvicorn src.app:app --reload   --host 0.0.0.0",
       "options": {
         "cwd": "${workspaceFolder}/idc_server/idcool_server"
       },

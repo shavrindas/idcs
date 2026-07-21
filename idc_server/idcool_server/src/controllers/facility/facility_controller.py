@@ -123,8 +123,8 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
     try:
         while True:
             data = await websocket.receive_text()
-            print(data)
-            
+            # print(data)
+            # 모니터링 출력 
             if facility_id in get_sockets:
                 for client in get_sockets[facility_id][:]:
                     try:
