@@ -3,13 +3,13 @@
 # 명세 : 시설 관련 API 엔드포인트 정의
 # ===============================================================
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
 from config.db import get_db
 from src.models.User import User, UserRole
-from src.models.Facility import Facility, FacilityUser 
+from src.models.Facility import Facility, FacilityUser, FacilityRoom
 
 router = APIRouter(prefix="/facilities", tags=["Facilities"])
 
@@ -86,3 +86,76 @@ async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Dep
     await db.delete(mapping)
     await db.commit()
     return {"message": "시설 연동이 해제되었습니다."}
+
+#특정 시설의 방 목록 조회하기
+@router.get("/rooms/{facility_id}")
+async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db)):
+    room_result = await db.execute(
+        select(FacilityRoom).where(FacilityRoom.facility_id == facility_id)
+    )
+    rooms = room_result.scalars().all()
+
+    return {
+        "rooms": [
+            {"id": r.id, "name": r.name}
+            for r in rooms
+        ]
+    }
+
+set_sockets: Dict[int, WebSocket] = {}
+get_sockets: Dict[int, List[WebSocket]] = {}
+
+#서버-시설 간 연결 관리 및 브로드캐스팅
+@router.websocket("/data/set/{facility_id}")
+async def set_facility_data(websocket: WebSocket, facility_id: int):
+    if facility_id in set_sockets:
+        await websocket.accept()
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, 
+            reason="This facility is already sending data from another device."
+        )
+        return
+
+    await websocket.accept()
+    set_sockets[facility_id] = websocket
+    print(f"[장비 연결 성공] Facility {facility_id} 데이터 송신 시작")
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            print(data)
+            
+            if facility_id in get_sockets:
+                for client in get_sockets[facility_id][:]:
+                    try:
+                        await client.send_text(data)
+                    except Exception:
+                        if client in get_sockets[facility_id]:
+                            get_sockets[facility_id].remove(client)
+
+    except WebSocketDisconnect:
+        print(f"[장비 연결 종료] Facility {facility_id} 송신 중지")
+        if facility_id in set_sockets and set_sockets[facility_id] == websocket:
+            del set_sockets[facility_id]
+
+#서버-앱 간 연결 관리
+@router.websocket("/data/get/{facility_id}")
+async def get_facility_data(websocket: WebSocket, facility_id: int):
+    print("접속 시도", facility_id)
+    await websocket.accept()
+    
+    if facility_id not in get_sockets:
+        get_sockets[facility_id] = []
+    get_sockets[facility_id].append(websocket)
+    print(f"[앱 연결 성공] Facility {facility_id} 모니터링 시작 (현재 접속자: {len(get_sockets[facility_id])}명)")
+
+    try:
+        while True:
+            await websocket.receive_text()
+            
+    except WebSocketDisconnect:
+        print(f"[앱 연결 종료] Facility {facility_id} 모니터링 중지")
+        if facility_id in get_sockets and websocket in get_sockets[facility_id]:
+            get_sockets[facility_id].remove(websocket)
+            if not get_sockets[facility_id]:
+                del get_sockets[facility_id]

@@ -13,7 +13,9 @@ import 'package:idcs/pages/common/find_pw_page.dart';
 import 'package:idcs/pages/common/login_page.dart';
 import 'package:idcs/pages/common/signup_page.dart';
 import 'package:idcs/pages/common/find_id_page.dart';
+import 'package:idcs/pages/facilitiy/monitoring//monitoring_room.dart';
 import 'package:idcs/pages/facilitiy/facility_temp_nav_page.dart';
+import 'package:idcs/pages/facilitiy/monitoring/monitoring_page.dart';
 import 'package:idcs/pages/indices/account_edit_page.dart';
 import 'package:idcs/pages/indices/main_alarm_page.dart';
 import 'package:idcs/pages/indices/main_index_page.dart';
@@ -58,7 +60,8 @@ class AuthService {
 // ===============================================================
 
 class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  static const String basewsUrl = 'ws://127.0.0.1:8000/api';
 }
 
 void main() {
@@ -179,6 +182,28 @@ final GoRouter appRouter = GoRouter(
         postId: int.parse(state.pathParameters['postId']!),
       ),
     ),
+
+    //여기서부터는 모니터링 관련
+    //--------------------------------------------------------------------------------
+    // [facility_monitoring]
+    GoRoute(
+      path: '/facility_monitoring/:userId/:facilityId/:roomId',
+      builder: (context, state) => MonitoringPage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+        roomId: state.pathParameters['roomId']!,
+      ),
+    ),
+
+    // [facility_room]
+    GoRoute(
+      path: '/facility_room/:userId/:facilityId',
+      builder: (context, state) => MonitoringRoom(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
+    //모니터링 끝-------------------------------------------------------------------
   ],
 );
 

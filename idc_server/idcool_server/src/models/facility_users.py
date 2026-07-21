@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from idcool_server.config.db import get_db_connection  # 작성하신 db.py에서 가져옴
+from config.db import get_db_connection  # 작성하신 db.py에서 가져옴
 import psycopg2.extras
 
 class facility_users(BaseModel):

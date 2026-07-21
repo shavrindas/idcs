@@ -56,6 +56,14 @@ class OpeningPage extends StatelessWidget {
 
             // Box #5: 권한 주입 (직접 입력)
             const CustomAuthInjectionBox(),
+
+            // Box #6: 시설 관리 페이지 이동
+            NavigationBox(
+              title: '시설 목록 페이지로 이동',
+              // onPressed: () => Navigator.pushNamed(context, '/signup'),
+              onPressed: () => context.push('/facilities_list/${AuthService.getCurrentUserId()}'),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

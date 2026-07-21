@@ -38,4 +38,16 @@ class FacilityApiService {
     if (response.statusCode == 200) return data['message'];
     throw Exception(data['detail'] ?? '시설 해제에 실패했습니다.');
   }
+
+  //시설 호실 목록 조회
+  static Future<List<dynamic>> getFacilityRooms(String facilityId) async {
+    final url = Uri.parse('$_baseUrl/rooms/$facilityId');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['rooms'] ?? [];
+    } else {
+      throw Exception('시설 목록을 불러오는데 실패했습니다.');
+    }
+  }
 }

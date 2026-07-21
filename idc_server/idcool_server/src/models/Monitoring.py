@@ -10,7 +10,7 @@ from sqlalchemy import (
 
 
 from sqlalchemy.orm import relationship
-from config.db import Base
+from idcool_server.config.db import Base
 
 class PointRole(Base):
     __tablename__ = "point_role_table"

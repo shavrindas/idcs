@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from idcool_server.config.db import get_db_connection
+from config.db import get_db_connection
 import psycopg2.extras
 
 class user_table(BaseModel):

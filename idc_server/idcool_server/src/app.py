@@ -81,6 +81,6 @@ from src.controllers.facility.facility_controller import router as facility_rout
 app.include_router(facility_router, prefix="/api")
 
 # 보드 라우터
-from src.controllers.board.board_controller import router as board_router
-app.include_router(board_router, prefix="/api")
+# from src.controllers.board.board_controller import router as board_router
+# app.include_router(board_router)
 
