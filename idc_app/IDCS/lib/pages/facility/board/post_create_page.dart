@@ -1,5 +1,5 @@
 // ===============================================================
-// 경로: lib/pages/facilitiy/board/post_create_page.dart
+// 경로: lib/pages/facility/board/post_create_page.dart
 // 명세: 새 게시글 작성 페이지
 // ===============================================================
 import 'dart:convert';

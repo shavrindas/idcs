@@ -32,6 +32,9 @@ class User(Base):
 
 
     # 역참조 맵핑 
+
+    fcm_tokens = relationship("UserFcmToken", back_populates="user", cascade="all, delete-orphan")
+
     facilities = relationship(
         "Facility",
         secondary="facility_users",
@@ -61,3 +64,6 @@ class UserFcmToken(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="fcm_tokens")
+
+
+    

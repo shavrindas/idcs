@@ -1,5 +1,5 @@
 // ===============================================================
-// 경로: lib/pages/facilitiy/board/post_detail_page.dart
+// 경로: lib/pages/facility/board/post_detail_page.dart
 // 명세: 게시글 상세 조회 페이지
 // ===============================================================
 import 'dart:convert';
