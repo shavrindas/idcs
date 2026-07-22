@@ -212,7 +212,7 @@ final GoRouter appRouter = GoRouter(
     ),
     //모니터링 끝-------------------------------------------------------------------
 
-    // [facility_chat]
+    // facility_chat
     GoRoute(
       path: '/chat_list/:userId/:facilityId',
       builder: (context, state) => FacilityChatListPage(

@@ -47,4 +47,14 @@ class WebSocketService {
     _channel?.sink.close();
     _messageStreamController.close();
   }
+
+
+  /// 서버로 메시지(JSON String) 전송
+  void send(String message) {
+    if (_channel != null) {
+      _channel!.sink.add(message);
+    } else {
+      print('웹소켓이 연결되어 있지 않아 메시지를 전송할 수 없습니다.');
+    }
+  }
 }

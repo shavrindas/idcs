@@ -1,8 +1,9 @@
 // 경로: lib/pages/facility/chat/chat_room_page.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:idcs/main.dart'; // AppConfig
+import 'package:idcs/main.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
+import 'package:idcs/services/chat/chat_api_service.dart'; // 추가된 채팅 서비스
 import 'package:idcs/components/cross_compontents/chat/chat_room_components.dart';
 
 class ChatRoomPage extends StatefulWidget {
@@ -18,20 +19,44 @@ class ChatRoomPage extends StatefulWidget {
 class _ChatRoomPageState extends State<ChatRoomPage> {
   final TextEditingController _msgController = TextEditingController();
   final WebSocketService _wsService = WebSocketService();
-  final List<dynamic> _messages = []; // 최신 메시지가 0번 인덱스
+  final List<dynamic> _messages = [];
+
+  bool _isLoadingHistory = true; // 과거 기록 로딩 상태
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
-    // 1. 웹소켓 연결
+    _initChatRoom();
+  }
+
+  Future<void> _initChatRoom() async {
+    // 1. 과거 메시지 기록 먼저 불러오기
+    try {
+      final pastMessages = await ChatApiService.getRoomMessages(widget.roomId, widget.userId);
+      if (mounted) {
+        setState(() {
+          _messages.addAll(pastMessages);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingHistory = false);
+    }
+
+    // 2. 실시간 웹소켓 연결
     _wsService.connect('${AppConfig.basewsUrl}/chat/ws/${widget.roomId}/${widget.userId}');
-    
-    // 2. 수신 리스너 등록
     _wsService.messageStream.listen((data) {
       final decoded = jsonDecode(data);
-      setState(() {
-        _messages.insert(0, decoded); // ListView.reverse를 위해 0번에 삽입
-      });
+      if (mounted) {
+        setState(() {
+          // 새로 수신된 실시간 메시지는 화면의 가장 아래(인덱스 0)에 삽입
+          _messages.insert(0, decoded);
+        });
+      }
     });
   }
 
@@ -46,51 +71,48 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     final text = _msgController.text.trim();
     if (text.isEmpty) return;
 
-    // TODO: WebSocketService 내부에 send 기능 추가 필요 (아래는 임시 전송 구현)
-    // _wsService.send(jsonEncode({"content": text}));
-    
-    // 임시 UI 반영 (서버 통신 전)
-    setState(() {
-      _messages.insert(0, {
-        "user_id": widget.userId,
-        "content": text,
-        "created_at": "Just now"
-      });
-    });
+    // 실제 서버로 전송 (로컬 UI 사전 삽입 코드 제거됨)
+    _wsService.send(jsonEncode({
+      "type": "TEXT",
+      "content": text
+    }));
+
     _msgController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('채팅방')), // 실제로는 빈 AppBar 두고 Box#1 사용
+      key: _scaffoldKey,
+      appBar: AppBar(title: const Text('채팅방'), automaticallyImplyLeading: true),
+      endDrawer: Drawer(
+        // ... 기존 Drawer 코드 생략 ...
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Box #1: 헤더
           ChatRoomHeaderBox(
             roomName: '채팅방 ${widget.roomId}',
             onMenuPressed: () {
-              // TODO: 참여자 목록 팝업 및 권한에 따른 인원 추가 모달 열기
+              _scaffoldKey.currentState?.openEndDrawer();
             },
           ),
-          
-          // Box #2: 메시지 리스트 (남은 공간 모두 차지)
+
           Expanded(
-            child: ChatMessageListBox(
+            // 로딩 중일 땐 인디케이터 표시
+            child: _isLoadingHistory
+                ? const Center(child: CircularProgressIndicator())
+                : ChatMessageListBox(
               messages: _messages,
               currentUserId: widget.userId,
             ),
           ),
-          
-          // Box #3: 입력창
+
           ChatInputBox(
             controller: _msgController,
             onSend: _sendMessage,
-            onAttach: () { /* 파일 첨부 */ },
           ),
-          // iOS 안전 영역 대응
-          const SafeArea(child: SizedBox.shrink()), 
+          const SafeArea(child: SizedBox.shrink()),
         ],
       ),
     );
