@@ -35,8 +35,12 @@ class FacilityTempNavPage extends StatelessWidget {
             NavigationBox(title: '시설 실시간 모니터링 페이지', onPressed: () { /* TODO: route */
               context.push('/facility_room/$userId/$facilityId');
             }),
+
+
             const SizedBox(height: 8),
-            NavigationBox(title: '시설 메신저 페이지', onPressed: () { /* TODO: route */ }),
+            NavigationBox(title: '시설 메신저 페이지', onPressed: () {
+              context.push('/chat_list/$userId/$facilityId');
+            }),
             const SizedBox(height: 8),
             NavigationBox(title: '시설 통합 검색 페이지', onPressed: () { /* TODO: route */ }),
           ],

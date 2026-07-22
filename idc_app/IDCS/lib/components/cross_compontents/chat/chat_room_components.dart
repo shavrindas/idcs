@@ -19,7 +19,7 @@ class ChatRoomHeaderBox extends StatelessWidget {
           Text(roomName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           IconButton(
             icon: const Icon(Icons.menu),
-            onPressed: onMenuPressed, // 참여자 목록, 인원 추가 등 서랍 메뉴 호출
+            onPressed: onMenuPressed, // 참여자 목록 서랍(Drawer) 메뉴 호출
             constraints: const BoxConstraints(),
             padding: EdgeInsets.zero,
           ),
@@ -29,7 +29,7 @@ class ChatRoomHeaderBox extends StatelessWidget {
   }
 }
 
-/// Box #2: 메시지 리스트 박스 (Telegram 스타일 말풍선)
+/// Box #2: 메시지 리스트 박스 (Telegram 스타일 말풍선 + 상세 기능)
 class ChatMessageListBox extends StatelessWidget {
   final List<dynamic> messages;
   final String currentUserId;
@@ -49,24 +49,29 @@ class ChatMessageListBox extends StatelessWidget {
 
           return Align(
             alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isMine ? Colors.amber[200] : Colors.grey[300],
-                borderRadius: BorderRadius.circular(12).copyWith(
-                  bottomRight: isMine ? const Radius.circular(0) : null,
-                  bottomLeft: !isMine ? const Radius.circular(0) : null,
+            child: GestureDetector(
+              onLongPressStart: (details) {
+                _showMessageMenu(context, details.globalPosition, isMine);
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isMine ? Colors.amber[200] : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(12).copyWith(
+                    bottomRight: isMine ? const Radius.circular(0) : null,
+                    bottomLeft: !isMine ? const Radius.circular(0) : null,
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  if (!isMine) 
-                    Text('User ${msg['user_id']}', style: const TextStyle(fontSize: 10, color: Colors.black54)),
-                  Text(msg['content']),
-                  Text(msg['created_at'], style: const TextStyle(fontSize: 8, color: Colors.black45)),
-                ],
+                child: Column(
+                  crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    if (!isMine)
+                      Text('User ${msg['user_id']}', style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                    Text(msg['content']),
+                    Text(msg['created_at'] ?? '', style: const TextStyle(fontSize: 8, color: Colors.black45)),
+                  ],
+                ),
               ),
             ),
           );
@@ -74,15 +79,63 @@ class ChatMessageListBox extends StatelessWidget {
       ),
     );
   }
+
+  // 메시지 롱프레스 시 출력되는 팝업 메뉴
+  void _showMessageMenu(BuildContext context, Offset position, bool isMine) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
+      items: [
+        PopupMenuItem(
+          value: 'reply',
+          child: const Row(children: [Icon(Icons.reply, size: 18), SizedBox(width: 8), Text('답장')]),
+        ),
+        PopupMenuItem(
+          value: 'pin',
+          child: const Row(children: [Icon(Icons.push_pin, size: 18), SizedBox(width: 8), Text('고정')]),
+        ),
+        // 수정, 삭제는 요구사항에 따라 만들어두되 비활성화(enabled: false)
+        PopupMenuItem(
+          value: 'edit',
+          enabled: false,
+          child: Row(children: [Icon(Icons.edit, size: 18, color: Colors.grey), const SizedBox(width: 8), const Text('수정', style: TextStyle(color: Colors.grey))]),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          enabled: false,
+          child: Row(children: [Icon(Icons.delete, size: 18, color: Colors.grey), const SizedBox(width: 8), const Text('삭제', style: TextStyle(color: Colors.grey))]),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'reply') {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('답장 기능 준비 중')));
+      } else if (value == 'pin') {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('메시지 고정 준비 중')));
+      }
+    });
+  }
 }
 
-/// Box #3: 채팅 입력 박스
+/// Box #3: 채팅 입력 박스 (파일, 이미지 첨부 버튼 포함)
 class ChatInputBox extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
-  final VoidCallback onAttach;
 
-  const ChatInputBox({super.key, required this.controller, required this.onSend, required this.onAttach});
+  const ChatInputBox({super.key, required this.controller, required this.onSend});
+
+  void _showAttachMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(leading: const Icon(Icons.image), title: const Text('이미지 보내기'), onTap: () { Navigator.pop(context); }),
+            ListTile(leading: const Icon(Icons.attach_file), title: const Text('파일 보내기'), onTap: () { Navigator.pop(context); }),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +146,7 @@ class ChatInputBox extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            onPressed: onAttach, // 파일, 이미지 첨부
+            onPressed: () => _showAttachMenu(context), // 첨부 메뉴 호출
           ),
           Expanded(
             child: TextField(

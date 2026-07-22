@@ -9,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from config.db import get_db
 from src.models.User import UserRole
+from src.models.Chat import Message, MessageType
+from src.models.Chat import ChatParticipant, Message
+
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -112,11 +115,8 @@ async def hide_or_delete_room(room_id: int, user_id: int, action: str = "hide", 
 
 @router.websocket("/ws/{room_id}/{user_id}")
 async def chat_websocket(websocket: WebSocket, room_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
-    """[Page 2] 단일 채팅방 실시간 통신 웹소켓"""
+    """[Page 2] 단일 채팅방 실시간 통신 웹소켓 및 DB 저장"""
     await manager.connect(websocket, room_id)
-    
-    # 접속 알림 (선택적)
-    # await manager.broadcast_to_room(room_id, {"type": "system", "content": f"User {user_id} joined."})
     
     try:
         while True:
@@ -124,20 +124,86 @@ async def chat_websocket(websocket: WebSocket, room_id: int, user_id: int, db: A
             data = await websocket.receive_text()
             payload = json.loads(data)
             
-            # 2. DB에 메시지 저장 로직 (비동기로 안전하게 처리)
-            # new_msg = Message(room_id=room_id, user_id=user_id, content=payload['content'], ...)
-            # db.add(new_msg); await db.commit()
+            msg_type_str = payload.get("type", "TEXT")
+            content = payload.get("content", "")
             
-            # 3. 방에 있는 모든 사용자에게 브로드캐스트
+            # MessageType Enum 변환
+            msg_type = MessageType.TEXT
+            if msg_type_str == "IMAGE": msg_type = MessageType.IMAGE
+            elif msg_type_str == "FILE": msg_type = MessageType.FILE
+
+            # 2. DB에 메시지 저장 로직
+            new_msg = Message(
+                room_id=room_id, 
+                user_id=user_id, 
+                message_type=msg_type,
+                content=content
+            )
+            db.add(new_msg)
+            await db.commit()
+            await db.refresh(new_msg)
+            
+            # 3. 방에 있는 모든 사용자에게 브로드캐스트 (실제 저장된 정보)
             broadcast_msg = {
                 "type": "chat",
-                "message_id": 12345, # DB에 저장 후 얻은 ID
+                "message_id": new_msg.message_id,
                 "user_id": user_id,
-                "content": payload.get("content", ""),
-                "created_at": "2026-07-22 16:52:00" # 실제 DB 시간으로 대체
+                "message_type": new_msg.message_type.value,
+                "content": new_msg.content,
+                # DB의 Timestamp를 String 형태로 포맷팅하여 반환
+                "created_at": new_msg.created_at.strftime("%Y-%m-%d %H:%M") if new_msg.created_at else "Just now"
             }
             await manager.broadcast_to_room(room_id, broadcast_msg)
             
     except WebSocketDisconnect:
         manager.disconnect(websocket, room_id)
-        # 퇴장 알림 (선택적)
+
+
+
+@router.get("/room/{room_id}/messages", status_code=status.HTTP_200_OK)
+async def get_chat_messages(
+    room_id: int, 
+    user_id: int, 
+    limit: int = 50, 
+    offset: int = 0, 
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    [Page 2: Box #2] 단일 채팅방 과거 메시지 기록 조회
+    - ListView.reverse 속성에 맞추기 위해 최신 메시지부터 내림차순(DESC)으로 정렬하여 반환합니다.
+    """
+    # 1. 권한 체크 (참여자인지 확인)
+    part_query = text("""
+        SELECT 1 FROM chatparticipants 
+        WHERE room_id = :room_id AND user_id = :user_id
+    """)
+    is_participant = await db.execute(part_query, {"room_id": room_id, "user_id": user_id})
+    
+    # 만약 관리자(ADMIN, DEVELOPER)도 제한 없이 봐야 한다면 user_table의 role 조회 로직 추가 필요
+    # if not is_participant.fetchone():
+    #     raise HTTPException(status_code=403, detail="해당 채팅방의 접근 권한이 없습니다.")
+
+    # 2. 메시지 조회
+    query = text("""
+        SELECT message_id, user_id, message_type, content, created_at
+        FROM messages
+        WHERE room_id = :room_id
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, {"room_id": room_id, "limit": limit, "offset": offset})
+    messages = result.fetchall()
+
+    return {
+        "status": "success",
+        "messages": [
+            {
+                "message_id": row.message_id,
+                "user_id": row.user_id,
+                "message_type": row.message_type,
+                "content": row.content,
+                # 프런트엔드 출력 포맷에 맞춤
+                "created_at": row.created_at.strftime("%Y-%m-%d %H:%M") if row.created_at else ""
+            } for row in messages
+        ]
+    }
