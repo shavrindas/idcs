@@ -53,3 +53,11 @@ class ExternalProvider(Base):
     user = relationship("User", back_populates="external_providers")
 
 
+class UserFcmToken(Base):
+    __tablename__ = "user_fcm_token"
+
+    fcm_token = Column(String(500), primary_key=True)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="fcm_tokens")
