@@ -1,5 +1,5 @@
 // ===============================================================
-// 경로: lib/pages/facilitiy/board/facility_board_page.dart
+// 경로: lib/pages/facility/board/facility_board_page.dart
 // 명세: 시설 소요 기록 페이지 (단일 시설 포스트 조회)
 // ===============================================================
 import 'package:flutter/material.dart';

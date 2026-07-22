@@ -13,20 +13,22 @@ import 'package:idcs/pages/common/find_pw_page.dart';
 import 'package:idcs/pages/common/login_page.dart';
 import 'package:idcs/pages/common/signup_page.dart';
 import 'package:idcs/pages/common/find_id_page.dart';
-import 'package:idcs/pages/facilitiy/monitoring//monitoring_room.dart';
-import 'package:idcs/pages/facilitiy/facility_temp_nav_page.dart';
-import 'package:idcs/pages/facilitiy/monitoring/monitoring_page.dart';
+import 'package:idcs/pages/facility/monitoring//monitoring_room.dart';
+import 'package:idcs/pages/facility/facility_temp_nav_page.dart';
+import 'package:idcs/pages/facility/monitoring/monitoring_page.dart';
 import 'package:idcs/pages/indices/account_edit_page.dart';
 import 'package:idcs/pages/indices/main_alarm_page.dart';
 import 'package:idcs/pages/indices/main_index_page.dart';
 import 'package:idcs/pages/indices/facility_register_page.dart';
 import 'package:idcs/pages/indices/total_board_page.dart';
-import 'package:idcs/pages/facilitiy/board/facility_board_page.dart';
-import 'package:idcs/pages/facilitiy/board/post_detail_page.dart';
-import 'package:idcs/pages/facilitiy/board/post_create_page.dart';
-import 'package:idcs/pages/facilitiy/board/post_edit_page.dart';
-import 'pages/common/opening_page.dart';
+import 'package:idcs/pages/facility/board/facility_board_page.dart';
+import 'package:idcs/pages/facility/board/post_detail_page.dart';
+import 'package:idcs/pages/facility/board/post_create_page.dart';
+import 'package:idcs/pages/facility/board/post_edit_page.dart';
+import 'package:idcs/pages/facility/chat/facility_chat_list_page.dart';
+import 'package:idcs/pages/facility/chat/chat_room_page.dart';
 
+import 'pages/common/opening_page.dart';
 
 
 
@@ -59,9 +61,14 @@ class AuthService {
 // main
 // ===============================================================
 
+// class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
+//   static const String baseUrl = 'http://127.0.0.1:8000/api';
+//   static const String basewsUrl = 'ws://127.0.0.1:8000/api';
+// }
+
 class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
-  static const String basewsUrl = 'ws://127.0.0.1:8000/api';
+  static const String baseUrl = 'http://10.0.2.2:8000/api';
+  static const String basewsUrl = 'ws://10.0.2.2:8000/api';
 }
 
 void main() {
@@ -204,6 +211,27 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     //모니터링 끝-------------------------------------------------------------------
+
+    // [facility_chat]
+    GoRoute(
+      path: '/chat_list/:userId/:facilityId',
+      builder: (context, state) => FacilityChatListPage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
+    GoRoute(
+      path: '/chat_room/:userId/:roomId',
+      builder: (context, state) => ChatRoomPage(
+        userId: state.pathParameters['userId']!,
+        roomId: int.parse(state.pathParameters['roomId']!),
+      ),
+    ),
+
+    
+
+
+
   ],
 );
 

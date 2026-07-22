@@ -1,5 +1,5 @@
 // ===============================================================
-// 경로: lib/pages/facilitiy/board/post_edit_page.dart
+// 경로: lib/pages/facility/board/post_edit_page.dart
 // 명세: 기존 게시글 수정 페이지
 // ===============================================================
 import 'dart:convert';

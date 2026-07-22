@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:idcs/components/facilitiy/monitoring/monitoring.dart';
+import 'package:idcs/components/facility/monitoring/monitoring.dart';
 import 'package:idcs/main.dart';
 import 'dart:convert';
 import 'dart:async';

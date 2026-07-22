@@ -84,3 +84,6 @@ app.include_router(facility_router, prefix="/api")
 from src.controllers.board.board_controller import router as board_router
 app.include_router(board_router, prefix="/api")
 
+# 채팅 라우터
+from src.controllers.chat.chat_controller import router as chat_router
+app.include_router(chat_router, prefix="/api")
