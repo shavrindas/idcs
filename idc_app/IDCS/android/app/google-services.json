@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "970517964763",
+    "project_id": "idcs-project-e7dc3",
+    "storage_bucket": "idcs-project-e7dc3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:970517964763:android:1bf7709fe3f16ff6cfa9fe",
+        "android_client_info": {
+          "package_name": "com.idcoolsystems.idcs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrc-yK18UenfRN2A5qzxBM6TxKzzKc06I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
