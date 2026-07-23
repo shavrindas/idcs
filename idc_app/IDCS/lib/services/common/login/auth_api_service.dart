@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:idcs/services/common/fcm_service.dart';
 // AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
 import '../../../main.dart';
 
@@ -25,7 +26,11 @@ class AuthApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(utf8.decode(response.bodyBytes));
+      //토큰 전송 추가
+      dynamic decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if(decoded['user_id'] != null)
+        FcmService.registToken();
+      return decoded;
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
       throw Exception(error['detail'] ?? '로그인에 실패했습니다.');
@@ -50,7 +55,11 @@ class AuthApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(utf8.decode(response.bodyBytes));
+      //토큰 전송 추가
+      dynamic decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      if(decoded['user_id'] != null)
+        FcmService.registToken();
+      return decoded;
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
       throw Exception(error['detail'] ?? '소셜 로그인에 실패했습니다.');

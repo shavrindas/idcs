@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSoc
 from config.db import get_db
 from src.models.User import User, UserRole
 from src.models.Facility import Facility, FacilityUser, FacilityRoom
+import src.services.alarm as alarm_services
+import json
 
 router = APIRouter(prefix="/facilities", tags=["Facilities"])
 
@@ -102,6 +104,7 @@ async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db
         ]
     }
 
+#서버-시설 간 연결 관리 및 브로드캐스팅
 set_sockets: Dict[int, WebSocket] = {}
 get_sockets: Dict[int, List[WebSocket]] = {}
 
@@ -118,12 +121,24 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
 
     await websocket.accept()
     set_sockets[facility_id] = websocket
-    print(f"[장비 연결 성공] Facility {facility_id} 데이터 송신 시작")
+
+    alarm_services.init(facility_id)
+
+    print(f"[장비 연결 성공] Facility {facility_id} 데이터 수신 시작")
 
     try:
         while True:
             data = await websocket.receive_text()
             # print(data)
+
+            data_dict = json.loads(data)
+            #역할 스캔
+            roles = await alarm_services.scan_roles(facility_id)
+
+            #알람 출력
+            await alarm_services.check_roles(facility_id, data_dict, roles)
+
+
             # 모니터링 출력 
             if facility_id in get_sockets:
                 for client in get_sockets[facility_id][:]:
@@ -132,11 +147,13 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
                     except Exception:
                         if client in get_sockets[facility_id]:
                             get_sockets[facility_id].remove(client)
+                        
 
     except WebSocketDisconnect:
-        print(f"[장비 연결 종료] Facility {facility_id} 송신 중지")
+        print(f"[장비 연결 종료] Facility {facility_id} 수신 중지")
         if facility_id in set_sockets and set_sockets[facility_id] == websocket:
             del set_sockets[facility_id]
+        alarm_services.destroy(facility_id)
 
 #서버-앱 간 연결 관리
 @router.websocket("/data/get/{facility_id}")

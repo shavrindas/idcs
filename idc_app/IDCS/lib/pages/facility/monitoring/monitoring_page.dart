@@ -31,49 +31,60 @@ class _MonitoringPageState extends State<MonitoringPage> {
   Map<String, String> equipmentData = {'팽창변 가동': 'NA', '팽창변 가동2': 'NA', '팽창변 가동3': 'NA', '컴프레셔1호 온도': 'NA', '컴프레셔1호 압력(입력)': 'NA', '컴프레셔1호 압력(출력)': 'NA','컴프레셔2호 온도': 'NA', '컴프레셔2호 압력(입력)': 'NA', '컴프레셔2호 압력(출력)': 'NA', '열 교환기 온도': 'NA',  '물탱크 온도': 'NA'};
   Map<String, String> controlData = {'운전 상태': 'NA', '운전 시간': 'NA', '컴프레셔 가동시간': 'NA', '운전 지연': 'NA', '컴프레셔 지연': 'NA', '제상 지연': 'NA', '쿨러 지연': 'NA', '아날로그 운전': 'NA', '아날로그 온도계 사용': 'NA', '제상 과열': 'NA'};
 
+  //데이터 Role접두어
+  static const role_temp_label = 'temp_';
+  static const role_deforest_label = 'deforest_';
+  static const role_emergency_label = 'emergency_';
+  static const role_inverter_label = 'inverter_';
+  static const role_equipment_label = 'equipment_';
+  static const role_control_label = 'control_';
   // 디바이스 수신 키 ➔ 앱 내부 딕셔너리 키 매핑 사전
   static const Map<String, String> deviceKeyMap = {
-    'temppv': '현재 온도',
-    'tempsv': '설정 온도',
-    'temphey': '편차',
-    'tempzero': '영점',
-    'comp': '컴프레셔',
-    'def': '제상 가동 중',
-    'emg': '이상',
-    'DFC': '제상 주기',
-    'DFT': '제상 시간',
-    'SYSH': '제상 타이머',
-    'SYSM': '제상 종료 타이머',
-    'runsw': '운전 상태',
-    'runtime': '운전 시간',
-    'cruntime': '컴프레셔 가동시간',
-    'rundel': '운전 지연',
-    'compdel': '컴프레셔 지연',
-    'cooldel': '쿨러 지연',
-    'defdel': '제상 지연',
-    'comp1temp': '컴프레셔1호 온도',
-    'comp1press1': '컴프레셔1호 압력(입력)',
-    'comp1press2': '컴프레셔1호 압력(출력)',
-    'comp2temp': '컴프레셔2호 온도',
-    'comp2press1': '컴프레셔2호 압력(입력)',
-    'comp2press2': '컴프레셔2호 압력(출력)',
-    'transtemp': '열 교환기 온도',
-    'emg_cinteocr': 'C.INT_EOCR',
-    'emg_high': '고압',
-    'emg_fan': '팬 이상',
-    'emg_lock': '감금알람',
-    'emg_press': '압력센서이상',
-    'emp_temp': '온도센서이상',
-    'emp_hot': '컴프레셔 과열',
-    'emp_low': '컴프레셔 저압',
-    'emp_rotation': '컴프레셔 역회전',
-    'emp_inv': '인버터 이상',
-    'expan': '팽창변 가동',
-    'expan2': '팽창변 가동2',
-    'expan3': '팽창변 가동3',
-    'lsv': '아날로그 운전',
-    'rtc': '아날로그 온도계 사용',
-    'dth': '제상 과열'
+    '${role_temp_label}pv': '현재 온도',
+    '${role_temp_label}sv': '설정 온도',
+    '${role_temp_label}hey': '편차',
+    '${role_temp_label}zero': '영점',
+    '${role_temp_label}comp': '컴프레셔',
+
+    '${role_deforest_label}DFC': '제상 주기',
+    '${role_deforest_label}DFT': '제상 시간',
+    '${role_deforest_label}SYSH': '제상 타이머',
+    '${role_deforest_label}SYSM': '제상 종료 타이머',
+    '${role_deforest_label}def': '제상 가동 중',
+
+    '${role_emergency_label}total': '이상',
+    '${role_emergency_label}cinteocr': 'C.INT_EOCR',
+    '${role_emergency_label}high': '고압',
+    '${role_emergency_label}fan': '팬 이상',
+    '${role_emergency_label}lock': '감금알람',
+    '${role_emergency_label}press': '압력센서이상',
+    '${role_emergency_label}temp': '온도센서이상',
+    '${role_emergency_label}hot': '컴프레셔 과열',
+    '${role_emergency_label}low': '컴프레셔 저압',
+    '${role_emergency_label}rotation': '컴프레셔 역회전',
+    '${role_emergency_label}inv': '인버터 이상',
+
+    '${role_equipment_label}comp1temp': '컴프레셔1호 온도',
+    '${role_equipment_label}comp1press1': '컴프레셔1호 압력(입력)',
+    '${role_equipment_label}comp1press2': '컴프레셔1호 압력(출력)',
+    '${role_equipment_label}comp2temp': '컴프레셔2호 온도',
+    '${role_equipment_label}comp2press1': '컴프레셔2호 압력(입력)',
+    '${role_equipment_label}comp2press2': '컴프레셔2호 압력(출력)',
+    '${role_equipment_label}transtemp': '열 교환기 온도',
+    '${role_equipment_label}expan': '팽창변 가동',
+    '${role_equipment_label}expan2': '팽창변 가동2',
+    '${role_equipment_label}expan3': '팽창변 가동3',
+
+    '${role_control_label}runsw': '운전 상태',
+    '${role_control_label}runtime': '운전 시간',
+    '${role_control_label}cruntime': '컴프레셔 가동시간',
+    '${role_control_label}rundel': '운전 지연',
+    '${role_control_label}compdel': '컴프레셔 지연',
+    '${role_control_label}cooldel': '쿨러 지연',
+    '${role_control_label}defdel': '제상 지연',
+    '${role_control_label}lsv': '아날로그 운전',
+    '${role_control_label}rtc': '아날로그 온도계 사용',
+    '${role_control_label}dth': '제상 과열'
   };
 
   @override
