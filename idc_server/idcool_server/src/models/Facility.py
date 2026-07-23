@@ -60,3 +60,18 @@ class FacilityRoom(Base):
 
     # 관계 정의
     facility = relationship("Facility", back_populates="rooms")
+
+#26.7.23 추가
+class PointRole(Base):
+    __tablename__ = "point_role_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
+    role_name = Column(String(150), nullable=False)
+    target_value = Column(String(255), nullable=True)
+    target_low_limit = Column(String(255), nullable=True)
+    target_high_limit = Column(String(255), nullable=True)
+    valid_from = Column(Date, nullable=False)
+    valid_to = Column(Date, nullable=True)
+    is_current = Column(Boolean, nullable=False, default=True)

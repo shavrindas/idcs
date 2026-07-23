@@ -10,6 +10,8 @@ from config.db import engine
 from src.models.User import User, ExternalProvider
 from src.models.Facility import Facility, FacilityRoom, FacilityUser
 import os
+import firebase_admin
+from firebase_admin import credentials
 
 # ===============================================================
 # FastAPI 서버 초기화
@@ -50,6 +52,12 @@ app.add_middleware(
 # 정적 파일 제공
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# ===============================================================
+# ─── 파이어베이스 서비스 ───
+# ===============================================================
+if not firebase_admin._apps:
+    cred = credentials.Certificate("src/idcs-project-e7dc3-firebase-adminsdk-fbsvc-a944ee7f48.json") # 다운받은 키 경로
+    firebase_admin.initialize_app(cred)
 
 # ===============================================================
 # ─── 루트 엔드포인트 ───
@@ -71,6 +79,10 @@ app.include_router(debug_router)
 # 권한 및 시설 정보 주입 라우터
 from src.controllers.free_later_controller import router as free_later_router
 app.include_router(free_later_router)
+
+# 알람 관련 라우터
+from src.controllers.alarm.alarm_controller import router as auth_router
+app.include_router(auth_router, prefix="/api")
 
 # 계정 관련 라우터
 from src.controllers.account.auth_controller import router as auth_router
