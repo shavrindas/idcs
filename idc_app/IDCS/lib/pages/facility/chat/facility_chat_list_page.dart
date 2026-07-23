@@ -42,10 +42,9 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
     }
   }
 
-  // 관리자용 단체방 생성 팝업
   void _showCreateGroupDialog() {
     final TextEditingController nameCtrl = TextEditingController();
-    final TextEditingController usersCtrl = TextEditingController(); // 임시: 콤마로 유저ID 입력
+    final TextEditingController usersCtrl = TextEditingController();
 
     showDialog(
       context: context,
@@ -76,7 +75,6 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
     );
   }
 
-  // 롱프레스 시 방 삭제/나가기 모달
   void _handleRoomLongPress(int roomId) {
     showModalBottomSheet(
       context: context,
@@ -85,11 +83,11 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
           children: [
             ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.red),
-              title: const Text('채팅방 나가기 (관리자는 삭제됨)'),
+              title: const Text('채팅방 나가기 (관리자는 단체방 삭제 가능)'),
               onTap: () async {
                 Navigator.pop(context);
                 try {
-                  await ChatApiService.leaveOrDeleteRoom(roomId, widget.userId);
+                  await ChatApiService.leaveOrDeleteRoom(roomId, widget.userId, action: 'delete');
                   _fetchRooms();
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -114,10 +112,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_isAdmin) ...[
-              ChatRoomControlBox(
-                onCreateGroup: _showCreateGroupDialog,
-                onCreateDirect: () { /* 1:1 로직 유사함 */ },
-              ),
+              ChatRoomControlBox(onCreateGroup: _showCreateGroupDialog),
               const SizedBox(height: 16),
             ],
             ChatRoomListBox(

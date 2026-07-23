@@ -24,8 +24,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   List<dynamic> _messages = [];
   List<dynamic> _participants = [];
+  Map<String, dynamic>? _replyingTo; // 답장 대상 메시지 저장
   bool _isLoadingHistory = true;
-  bool _isSearchMode = false; // 채팅 검색 모드 토글
+  bool _isSearchMode = false;
 
   @override
   void initState() {
@@ -35,11 +36,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   Future<void> _initChatRoom() async {
     try {
-      // 1. 읽음 처리 먼저
       await ChatApiService.markAsRead(widget.roomId, widget.userId);
-      // 2. 참여자 정보 로드 (Drawer 용)
       _participants = await ChatApiService.getParticipants(widget.roomId);
-      // 3. 메시지 히스토리 로드
       await _loadMessages();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -47,7 +45,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       if (mounted) setState(() => _isLoadingHistory = false);
     }
 
-    // 4. 웹소켓 연결
     _wsService.connect('${AppConfig.basewsUrl}/chat/ws/${widget.roomId}/${widget.userId}');
     _wsService.messageStream.listen((data) {
       final decoded = jsonDecode(data);
@@ -55,7 +52,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         setState(() {
           _messages.insert(0, decoded);
         });
-        // 새 메시지 수신 시 읽음 처리 API 가볍게 호출 (선택적)
         ChatApiService.markAsRead(widget.roomId, widget.userId);
       }
     });
@@ -65,13 +61,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     setState(() => _isLoadingHistory = true);
     try {
       final pastMessages = await ChatApiService.getRoomMessages(widget.roomId, widget.userId, keyword: keyword);
-      if (mounted) {
-        setState(() {
-          _messages = pastMessages; // 덮어쓰기
-        });
-      }
+      if (mounted) setState(() => _messages = pastMessages);
     } catch (e) {
-      // 에러 로직
+      // 에러 로직 생략
     } finally {
       if (mounted) setState(() => _isLoadingHistory = false);
     }
@@ -89,8 +81,31 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     final text = _msgController.text.trim();
     if (text.isEmpty) return;
 
-    _wsService.send(jsonEncode({"type": "TEXT", "content": text}));
+    // 답장 여부에 따라 parent_message_id 포함
+    final payload = {
+      "type": "TEXT",
+      "content": text,
+    };
+    if (_replyingTo != null) {
+      payload["parent_message_id"] = _replyingTo!['message_id'];
+    }
+
+    _wsService.send(jsonEncode(payload));
     _msgController.clear();
+    setState(() => _replyingTo = null);
+  }
+
+  void _handleMessageAction(Map<String, dynamic> msg, String action) async {
+    if (action == 'reply') {
+      setState(() => _replyingTo = msg);
+    } else if (action == 'pin') {
+      try {
+        await ChatApiService.togglePinMessage(widget.roomId, msg['message_id'], widget.userId);
+        _loadMessages(); // 상태 리프레시
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
   }
 
   @override
@@ -114,7 +129,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 _isSearchMode = !_isSearchMode;
                 if (!_isSearchMode) {
                   _searchController.clear();
-                  _loadMessages(); // 검색 종료 시 전체 다시 로드
+                  _loadMessages();
                 }
               });
             },
@@ -140,15 +155,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 },
               ),
             ),
-            // TODO: (관리자) 그룹 챗 추가 권한 검증은 여기서 is_admin && is_group 등 활용
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                onPressed: () { /* 인원 추가 로직 연동 */ },
-                icon: const Icon(Icons.person_add),
-                label: const Text('현재 채팅방 인원 추가'),
-              ),
-            ),
           ],
         ),
       ),
@@ -165,9 +171,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 : ChatMessageListBox(
               messages: _messages,
               currentUserId: widget.userId,
+              onAction: _handleMessageAction, // 액션 핸들러 연동
             ),
           ),
-          ChatInputBox(controller: _msgController, onSend: _sendMessage),
+          ChatInputBox(
+            controller: _msgController,
+            replyingTo: _replyingTo,
+            onSend: _sendMessage,
+            onCancelReply: () => setState(() => _replyingTo = null),
+          ),
           const SafeArea(child: SizedBox.shrink()),
         ],
       ),
