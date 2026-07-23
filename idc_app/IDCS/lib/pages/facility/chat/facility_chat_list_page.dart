@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_list_components.dart';
+import 'package:idcs/services/chat/chat_api_service.dart';
 
 class FacilityChatListPage extends StatefulWidget {
   final String userId;
@@ -15,6 +16,7 @@ class FacilityChatListPage extends StatefulWidget {
 
 class _FacilityChatListPageState extends State<FacilityChatListPage> {
   bool _isAdmin = false;
+  bool _isLoading = true;
   List<dynamic> _rooms = [];
 
   @override
@@ -24,41 +26,104 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
   }
 
   Future<void> _fetchRooms() async {
-    // TODO: ChatApiService.getChatRooms 호출 로직
-    // 임시 더미 데이터로 대체
-    setState(() {
-      _isAdmin = true; // 임시
-      _rooms = [
-        {"room_id": 101, "room_name": "시설 ${widget.facilityId} 공식방", "type": "FACILITY", "last_message": "공지", "unread_count": 0, "sort_priority": 1},
-        {"room_id": 102, "room_name": "유지보수방", "type": "GROUP", "last_message": "수리 완료", "unread_count": 3, "sort_priority": 4},
-      ];
-      // 프런트엔드 정렬 로직 (우선순위 오름차순 정렬)
-      _rooms.sort((a, b) => (a['sort_priority'] as int).compareTo(b['sort_priority'] as int));
-    });
+    setState(() => _isLoading = true);
+    try {
+      final res = await ChatApiService.getChatRooms(int.parse(widget.facilityId), widget.userId);
+      if (mounted) {
+        setState(() {
+          _isAdmin = res['is_admin'];
+          _rooms = res['rooms'];
+        });
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // 관리자용 단체방 생성 팝업
+  void _showCreateGroupDialog() {
+    final TextEditingController nameCtrl = TextEditingController();
+    final TextEditingController usersCtrl = TextEditingController(); // 임시: 콤마로 유저ID 입력
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('단체 채팅방 생성'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: '방 이름')),
+            TextField(controller: usersCtrl, decoration: const InputDecoration(labelText: '초대할 유저 ID (콤마로 구분)')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          ElevatedButton(
+            onPressed: () async {
+              final ids = usersCtrl.text.split(',').map((e) => int.tryParse(e.trim())).whereType<int>().toList();
+              if (nameCtrl.text.isNotEmpty && ids.isNotEmpty) {
+                Navigator.pop(context);
+                await ChatApiService.createGroupChat(widget.userId, nameCtrl.text, ids);
+                _fetchRooms();
+              }
+            },
+            child: const Text('생성'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 롱프레스 시 방 삭제/나가기 모달
+  void _handleRoomLongPress(int roomId) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.exit_to_app, color: Colors.red),
+              title: const Text('채팅방 나가기 (관리자는 삭제됨)'),
+              onTap: () async {
+                Navigator.pop(context);
+                try {
+                  await ChatApiService.leaveOrDeleteRoom(roomId, widget.userId);
+                  _fetchRooms();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('시설 ${widget.facilityId} 메신저')),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_isAdmin) ...[
               ChatRoomControlBox(
-                onCreateGroup: () { /* 단체방 생성 팝업 */ },
-                onCreateDirect: () { /* 1:1방 초대 팝업 */ },
+                onCreateGroup: _showCreateGroupDialog,
+                onCreateDirect: () { /* 1:1 로직 유사함 */ },
               ),
               const SizedBox(height: 16),
             ],
             ChatRoomListBox(
               rooms: _rooms,
-              onRoomTapped: (roomId) => context.push('/chat_room/${widget.userId}/$roomId'),
-              onRoomLongPressed: (roomId) {
-                // TODO: 방 숨기기/삭제 바텀시트
-              },
+              onRoomTapped: (roomId) => context.push('/chat_room/${widget.userId}/$roomId').then((_) => _fetchRooms()),
+              onRoomLongPressed: _handleRoomLongPress,
             ),
           ],
         ),
