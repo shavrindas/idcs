@@ -7,6 +7,7 @@ from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from config.db import Base
 
+
 class ChatRoomType(str, enum.Enum):
     DIRECT = "DIRECT"
     GROUP = "GROUP"
@@ -20,7 +21,7 @@ class MessageType(str, enum.Enum):
 
 
 class ChatRoom(Base):
-    __tablename__ = "chatrooms" # DB 스크립트 대소문자 매칭(chatRooms) 확인 필요하나 일반적으로 소문자 권장, 스크립트 기반 작성
+    __tablename__ = "chatrooms"
 
     room_id = Column(Integer, primary_key=True, autoincrement=True)
     facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=True) 
@@ -53,32 +54,6 @@ class ChatParticipant(Base):
     )
 
 
-# class Message(Base):
-#     __tablename__ = "messages"
-
-#     message_id = Column(Integer, primary_key=True, autoincrement=True)
-#     room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False)
-#     user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
-#     message_type = Column(Enum(MessageType, name="message_type"), nullable=False, default=MessageType.TEXT)
-#     content = Column(Text, nullable=False)
-#     created_at = Column(DateTime(timezone=True), server_default=func.now())
-#     parent_message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="SET NULL"), nullable=True)
-
-#     # 관계 정의
-#     room = relationship("ChatRoom", back_populates="messages")
-#     user = relationship("User")
-    
-#     # 자가 참조 (Self-referential) 관계 구성 (답글 기능)
-#     replies = relationship("Message", backref=relationship("Message", remote_side=[message_id]))
-
-#     # 다대다 해시태그 매핑
-#     hashtags = relationship(
-#         "Hashtag",
-#         secondary="message_hashtags",
-#         back_populates="messages"
-#     )
-
-
 class Message(Base):
     __tablename__ = "messages"
 
@@ -105,24 +80,37 @@ class Message(Base):
         back_populates="messages"
     )
 
+
 class MessageFav(Base):
     __tablename__ = "messages_fav"
 
     fav_id = Column(Integer, primary_key=True, autoincrement=True)
     room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False) # 👈 유저 식별자 추가
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # 관계 정의
     room = relationship("ChatRoom")
+    user = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("room_id", "user_id", name="uq_user_room_fav"),
+    )
 
 
 class MessagePin(Base):
     __tablename__ = "messages_pin"
 
     pin_id = Column(Integer, primary_key=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False) # 👈 빠른 조회용 room_id 역정규화 추가
     message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False) # 👈 고정한 주체(관리자) 식별자 추가
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # 관계 정의
+    room = relationship("ChatRoom")
     message = relationship("Message")
+    user = relationship("User")
 
 
 class Hashtag(Base):
