@@ -3,7 +3,7 @@ version: '3.9'
 services:
   idcool-backend:
     build:
-      context: .
+      context: ./idcs/idc_server
       dockerfile: Dockerfile
     environment:
       - REDIS_HOST=idcool-redis
