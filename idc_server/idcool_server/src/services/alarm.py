@@ -5,7 +5,8 @@ from sqlalchemy.future import select
 from fastapi import Depends
 from config.db import get_db
 from src.models.User import UserFcmToken
-from src.models.Facility import FacilityUser, PointRole
+from src.models.Facility import FacilityUser
+from src.models.Monitoring import PointRole
 import time
 import src.firebase as msg
 

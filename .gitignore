@@ -14,6 +14,7 @@ my_project_context.md
 merged_output.txt
 __pycache__
 
+.vscode
 
 # Python cache files
 __pycache__/
