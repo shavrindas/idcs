@@ -7,10 +7,8 @@ from sqlalchemy import (
     ForeignKey, UniqueConstraint, Index, CHAR, func
 )
 
-
-
 from sqlalchemy.orm import relationship
-from idcool_server.config.db import Base
+from config.db import Base
 
 class PointRole(Base):
     __tablename__ = "point_role_table"
@@ -19,11 +17,9 @@ class PointRole(Base):
     facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
     room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
     role_name = Column(String(150), nullable=False)
-    
     target_value = Column(String(255), nullable=True)
     target_low_limit = Column(String(255), nullable=True)
     target_high_limit = Column(String(255), nullable=True)
-    
     valid_from = Column(DateTime(timezone=True), nullable=False)
     valid_to = Column(DateTime(timezone=True), nullable=True)
     is_current = Column(Boolean, nullable=False, default=True)
