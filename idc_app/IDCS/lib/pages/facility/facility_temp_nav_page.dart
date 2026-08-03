@@ -24,10 +24,19 @@ class FacilityTempNavPage extends StatelessWidget {
             NavigationBox(title: '시설 알람 리스트 페이지', onPressed: () { /* TODO: route */ }),
             const SizedBox(height: 8),
 
+
+
             NavigationBox(
               title: '시설 소요기록 인덱스 페이지',
               onPressed: () {
                 context.push('/facility_board/$userId/$facilityId');
+              },
+            ),
+
+            NavigationBox(
+              title: '시설 그래프 차트 페이지',
+              onPressed: () {
+                context.push('/facility_chart/$userId/$facilityId');
               },
             ),
 
@@ -36,11 +45,11 @@ class FacilityTempNavPage extends StatelessWidget {
               context.push('/facility_room/$userId/$facilityId');
             }),
 
-
             const SizedBox(height: 8),
             NavigationBox(title: '시설 메신저 페이지', onPressed: () {
               context.push('/chat_list/$userId/$facilityId');
             }),
+
             const SizedBox(height: 8),
             NavigationBox(title: '시설 통합 검색 페이지', onPressed: () { /* TODO: route */ }),
           ],

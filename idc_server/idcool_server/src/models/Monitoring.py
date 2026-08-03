@@ -123,3 +123,35 @@ class Alarm(Base):
     admin_reset_remaining_time = Column(Interval, nullable=True)
 
     role = relationship("PointRole")
+
+
+
+# ---------------------------------------------------------------
+# 차트 그룹 및 매핑 영역
+# ---------------------------------------------------------------
+
+class ChartGroup(Base):
+    __tablename__ = "chart_group_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
+    group_name = Column(String(150), nullable=False)
+    data_type = Column(String(50), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 다대다(N:M) 관계 설정 (PointRole 모델과 양방향 참조)
+    roles = relationship(
+        "PointRole",
+        secondary="chart_group_mapping",
+        backref="chart_groups",
+        lazy="selectin"
+    )
+
+class ChartGroupMapping(Base):
+    __tablename__ = "chart_group_mapping"
+
+    group_id = Column(Integer, ForeignKey("chart_group_table.id", ondelete="CASCADE"), primary_key=True)
+    role_id = Column(Integer, ForeignKey("point_role_table.id", ondelete="CASCADE"), primary_key=True)
+

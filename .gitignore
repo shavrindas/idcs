@@ -50,3 +50,6 @@ __pycache__/
 
 idc_server/idcool_server/src/controllers/board/__pycache__/board_controller.cpython-310.pyc
 idc_server/idcool_server/src/controllers/board/__pycache__/board_controller.cpython-310.pyc
+
+testdata2.py
+testdata.py

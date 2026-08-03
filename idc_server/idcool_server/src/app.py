@@ -99,3 +99,10 @@ app.include_router(board_router, prefix="/api")
 # 채팅 라우터
 from src.controllers.chat.chat_controller import router as chat_router
 app.include_router(chat_router, prefix="/api")
+
+# 차트 라우터
+from src.controllers.chart.chart_controller import router as chart_router
+app.include_router(chart_router, prefix="/api")
+
+from src.controllers.chart.chart_mapping_controller import router as chart_mapping_router
+app.include_router(chart_mapping_router, prefix="/api")

@@ -27,7 +27,7 @@ import 'package:idcs/pages/facility/board/post_create_page.dart';
 import 'package:idcs/pages/facility/board/post_edit_page.dart';
 import 'package:idcs/pages/facility/chat/facility_chat_list_page.dart';
 import 'package:idcs/pages/facility/chat/chat_room_page.dart';
-
+import 'package:idcs/pages/facility/chart/facility_chart_page.dart';
 import 'pages/common/opening_page.dart';
 
 
@@ -228,8 +228,14 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
-    
 
+    GoRoute(
+      path: '/facility_chart/:userId/:facilityId',
+      builder: (context, state) => FacilityChartPage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
 
 
   ],
