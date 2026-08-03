@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>차트 매핑 관리</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
+        header, footer { border: 2px solid orange; padding: 10px; text-align: center; font-weight: bold; }
+        footer { border-color: purple; margin-top: 10px; }
+        .main-container { display: flex; flex: 1; margin-top: 10px; gap: 10px; }
+        
+        /* 좌측 영역 (소스) */
+        .left-panel { border: 2px solid red; flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; }
+        .facility-select { border: 1px solid #333; padding: 10px; }
+        .room-container { display: flex; flex: 1; gap: 10px; }
+        .room-box { border: 1px solid #333; flex: 1; display: flex; flex-direction: column; padding: 10px; }
+        
+        /* 우측 영역 (목적지/그룹 관리) */
+        .right-panel { border: 2px solid green; flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 10px; }
+        .group-controls { border: 1px solid #333; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .drop-zone { border: 2px dashed #666; flex: 1; padding: 10px; overflow-y: auto; background-color: #fafafa; }
+        
+        /* 포인트 롤 아이템 (드래그 가능) */
+        .point-role { border: 1px solid #999; background: #fff; padding: 8px; margin-bottom: 5px; cursor: grab; font-size: 14px; }
+        .point-role:active { cursor: grabbing; }
+    </style>
+</head>
+<body>
+
+    <header>헤더</header>
+
+    <div class="main-container">
+        <!-- 좌측: 포인트 롤 소스 영역 -->
+        <div class="left-panel">
+            <div class="facility-select">
+                <label>시설 선택 박스: </label>
+                <select id="facilitySelect"><option>시설을 선택하세요</option></select>
+            </div>
+            
+            <div class="room-container">
+                <div class="room-box">
+                    <h4>0호실 (공용)</h4>
+                    <div id="room0-list" style="overflow-y: auto; flex:1;">
+                        <!-- JS로 채워질 영역 -->
+                        <div class="point-role" draggable="true" ondragstart="drag(event)" id="pr-1">출처 | 외기 온도 | temp</div>
+                    </div>
+                </div>
+                <div class="room-box">
+                    <h4><select id="roomSelect"><option>호실 선택</option></select></h4>
+                    <div id="roomN-list" style="overflow-y: auto; flex:1;">
+                        <!-- JS로 채워질 영역 -->
+                        <div class="point-role" draggable="true" ondragstart="drag(event)" id="pr-2">출처 | 실내 온도 1 | temp</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 우측: 차트 그룹 구성 영역 -->
+        <div class="right-panel">
+            <div class="group-controls">
+                <select id="targetRoomSelect"><option>그룹 등록(수정) 대상 호실 선택</option></select>
+                <select id="groupSelect"><option>+ 새로운 그룹 추가하기</option></select>
+                <input type="text" id="groupNameInput" placeholder="그룹 명칭 입력">
+            </div>
+            
+            <h4>드래그 앤 드롭 영역</h4>
+            <div class="drop-zone" id="dropZone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <!-- 드롭된 아이템들이 배치됨 -->
+            </div>
+            
+            <button onclick="saveGroup()" style="padding: 15px; font-weight: bold;">등록하기 / 추가하기</button>
+        </div>
+    </div>
+
+    <footer>풋터</footer>
+
+    <script>
+        // 향후 분리될 API 호출 계층 (순수 JS 캡슐화)
+        // API 연동 전까지 UI 테스트를 위한 드래그 앤 드롭 기본 로직
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            var nodeCopy = document.getElementById(data).cloneNode(true);
+            nodeCopy.id = "dropped-" + data; // ID 충돌 방지
+            
+            // 드롭 존 클릭 시 삭제하는 이벤트 추가
+            nodeCopy.onclick = function() { this.remove(); };
+            ev.target.appendChild(nodeCopy);
+        }
+
+        async function saveGroup() {
+            const groupName = document.getElementById('groupNameInput').value;
+            const droppedItems = document.getElementById('dropZone').children;
+            const roleIds = Array.from(droppedItems).map(item => item.id.replace('dropped-pr-', ''));
+            
+            if(!groupName || roleIds.length === 0) {
+                alert("그룹명과 1개 이상의 포인트 롤이 필요합니다.");
+                return;
+            }
+            
+            console.log("저장될 데이터:", { groupName, roleIds });
+            alert("저장 로직 실행 (Console 확인)");
+            // TODO: fetch('http://localhost:8000/api/chart-mapping/group', { method: 'POST', body: ... })
+        }
+    </script>
+</body>
+</html>
