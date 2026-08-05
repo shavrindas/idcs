@@ -104,5 +104,6 @@ app.include_router(chat_router, prefix="/api")
 from src.controllers.chart.chart_controller import router as chart_router
 app.include_router(chart_router, prefix="/api")
 
+# 차트 관리자 매핑용 라우터 [웹]
 from src.controllers.chart.chart_mapping_controller import router as chart_mapping_router
 app.include_router(chart_mapping_router, prefix="/api")

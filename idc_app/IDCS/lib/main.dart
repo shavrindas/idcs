@@ -66,10 +66,24 @@ class AuthService {
 //   static const String basewsUrl = 'ws://127.0.0.1:8000/api';
 // }
 
+// class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
+//   static const String baseUrl = 'http://172.29.112.1:8000/api';
+//   static const String basewsUrl = 'ws://172.29.112.1:8000/api';
+// }
+
 class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
-  static const String baseUrl = 'http://10.0.2.2:8000/api';
-  static const String basewsUrl = 'ws://10.0.2.2:8000/api';
+  static const String baseUrl = 'http://192.168.29.159:8000/api';
+  static const String basewsUrl = 'ws://192.168.29.159:8000/api';
 }
+
+//
+// class AppConfig {
+//   static const String baseUrl = 'http://10.0.2.2:8000/api';
+//   static const String basewsUrl = 'ws://10.0.2.2:8000/api';
+// }
+
+// 192.168.45.249
+//  172.29.112.1
 
 void main() {
   runApp(const MyApp());
