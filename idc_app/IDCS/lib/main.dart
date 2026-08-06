@@ -2,12 +2,14 @@
 // 경로 : lib/main.dart
 // 명세 : 권한 주입 간소화 및 라우팅
 // ===============================================================
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:go_router/go_router.dart';
 
 
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dart';
 import 'package:idcs/components/indices/settings_page.dart';
 import 'package:idcs/pages/common/find_pw_page.dart';
 import 'package:idcs/pages/common/login_page.dart';
@@ -17,6 +19,7 @@ import 'package:idcs/pages/facility/monitoring//monitoring_room.dart';
 import 'package:idcs/pages/facility/facility_temp_nav_page.dart';
 import 'package:idcs/pages/facility/monitoring/monitoring_page.dart';
 import 'package:idcs/pages/indices/account_edit_page.dart';
+import 'package:idcs/pages/facility/facility_alarm_page.dart';
 import 'package:idcs/pages/indices/main_alarm_page.dart';
 import 'package:idcs/pages/indices/main_index_page.dart';
 import 'package:idcs/pages/indices/facility_register_page.dart';
@@ -29,6 +32,8 @@ import 'package:idcs/pages/facility/chat/facility_chat_list_page.dart';
 import 'package:idcs/pages/facility/chat/chat_room_page.dart';
 import 'package:idcs/pages/facility/chart/facility_chart_page.dart';
 import 'pages/common/opening_page.dart';
+import 'package:idcs/pages/facility/facility_alarm_page.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 
 
@@ -71,7 +76,12 @@ class AppConfig {// 안드로이드 에뮬레이터 로컬 루프백 주소
   static const String basewsUrl = 'ws://10.0.2.2:8000/api';
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting('ko_KR', null);
+  await Firebase.initializeApp();
+
   runApp(const MyApp());
 }
 
@@ -138,6 +148,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/main_index/:userId', builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/facility_register/:userId', builder: (context, state) => FacilityRegisterPage(userId: state.pathParameters['userId']!)),
     GoRoute(path: '/main_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
+    GoRoute(path: '/user_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
     GoRoute(
       path: '/total_board/:userId',
       builder: (context, state) => TotalBoardPage(
@@ -212,6 +223,17 @@ final GoRouter appRouter = GoRouter(
     ),
     //모니터링 끝-------------------------------------------------------------------
 
+    //알람 관련-------------------------------------------------------------------
+    // 1. 시설 알람 페이지
+    GoRoute(
+      path: '/facility_alarm/:userId/:facilityId',
+      builder: (context, state) => FacilityAlarmPage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
+
+    //알람 끝-------------------------------------------------------------------
     // facility_chat
     GoRoute(
       path: '/chat_list/:userId/:facilityId',
