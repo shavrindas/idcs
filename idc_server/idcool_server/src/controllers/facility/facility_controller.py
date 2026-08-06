@@ -122,14 +122,12 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
     await websocket.accept()
     set_sockets[facility_id] = websocket
 
-    alarm_services.init(facility_id)
-
     print(f"[장비 연결 성공] Facility {facility_id} 데이터 수신 시작")
 
     try:
         while True:
             data = await websocket.receive_text()
-            # print(data)
+            #print(data)
 
             data_dict = json.loads(data)
             #역할 스캔
@@ -153,7 +151,6 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
         print(f"[장비 연결 종료] Facility {facility_id} 수신 중지")
         if facility_id in set_sockets and set_sockets[facility_id] == websocket:
             del set_sockets[facility_id]
-        alarm_services.destroy(facility_id)
 
 #서버-앱 간 연결 관리
 @router.websocket("/data/get/{facility_id}")
@@ -168,7 +165,10 @@ async def get_facility_data(websocket: WebSocket, facility_id: int):
 
     try:
         while True:
-            await websocket.receive_text()
+            recv = await websocket.receive_text()
+
+            if recv:
+                await set_sockets[facility_id].send_text(recv)
             
     except WebSocketDisconnect:
         print(f"[앱 연결 종료] Facility {facility_id} 모니터링 중지")
