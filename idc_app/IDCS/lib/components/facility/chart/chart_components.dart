@@ -7,23 +7,22 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 
-
 /// Box #1: 차트 필터 박스 (해상도 및 조회 기간 설정)
 class ChartFilterBox extends StatelessWidget {
-  final String currentDataType;
+  // [수정: 데이터 타입 종속성 해제]
+  // chart_group_table의 구조와 그룹핑이 단일 데이터 타입(temp, gear 등)을 가리지 않고
+  // 복합적인 데이터 포인트 롤을 한 번에 렌더링할 수 있도록 변경되었습니다.
+  // 이에 따라 기존에 존재하던 currentDataType 및 onDataTypeChanged 파라미터를 완전히 제거했습니다.
   final String currentScale;
   final String currentTimeRange;
-  final Function(String) onDataTypeChanged;
   final Function(String) onScaleChanged;
   final Function(String) onTimeRangeChanged;
   final VoidCallback onApply;
 
   const ChartFilterBox({
     super.key,
-    required this.currentDataType,
     required this.currentScale,
     required this.currentTimeRange,
-    required this.onDataTypeChanged,
     required this.onScaleChanged,
     required this.onTimeRangeChanged,
     required this.onApply,
@@ -39,32 +38,16 @@ class ChartFilterBox extends StatelessWidget {
         children: [
           const Text('Box 1: 데이터 스코프 필터', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
           const SizedBox(height: 12),
-          // 1행: 데이터 타입 & 해상도
+
+          // [수정: 데이터 타입 종속성 해제]
+          // 기존 데이터 타입 선택 드롭다운이 있던 위치입니다.
+          // 데이터 타입 구분이 사라졌으므로, 해상도와 조회 기간을 한 줄(Row)로 병합하여 UI를 간소화했습니다.
           Row(
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: currentDataType,
-                  isExpanded: true, // 💡 자식 위젯 오버플로우 방지
-                  decoration: const InputDecoration(
-                    labelText: '데이터 타입',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'temp', child: Text('온도', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: 'gear', child: Text('장비 수치', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: 'static', child: Text('정적 장비', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: 'bool', child: Text('상태/이상(Bool)', overflow: TextOverflow.ellipsis)),
-                  ],
-                  onChanged: (val) { if (val != null) onDataTypeChanged(val); },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: DropdownButtonFormField<String>(
                   value: currentScale,
-                  isExpanded: true, // 💡 자식 위젯 오버플로우 방지
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: '해상도',
                     border: OutlineInputBorder(),
@@ -79,16 +62,11 @@ class ChartFilterBox extends StatelessWidget {
                   onChanged: (val) { if (val != null) onScaleChanged(val); },
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 2행: 조회 기간 & 적용 버튼
-          Row(
-            children: [
+              const SizedBox(width: 8),
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: currentTimeRange,
-                  isExpanded: true, // 💡 자식 위젯 오버플로우 방지
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: '조회 기간',
                     border: OutlineInputBorder(),
@@ -119,6 +97,7 @@ class ChartFilterBox extends StatelessWidget {
     );
   }
 }
+
 /// Box #2: 데이터 포인트(시리즈) 선택 박스
 class ChartSeriesBox extends StatelessWidget {
   final List<Map<String, dynamic>> availableGroups; // 이제 개별 role이 아닌 Group 리스트를 받습니다.
@@ -164,6 +143,7 @@ class ChartSeriesBox extends StatelessWidget {
 
 
 /// Box #3: 차트 렌더링 캔버스 영역
+
 class ChartCanvasBox extends StatelessWidget {
   final Map<String, dynamic>? chartData;
   final bool isLoading;
@@ -180,8 +160,7 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(child: const Center(child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: Colors.grey))));
     }
 
-    // 1. 데이터 파싱 및 척도 계산
-    final String dataType = chartData!['meta']['data_type'];
+    // [수정] 백엔드에서 data_type을 제거했으므로 해당 변수 추출(String dataType = ...) 구문을 삭제했습니다.
     final List<dynamic> datasets = chartData!['data']['datasets'];
 
     List<LineChartBarData> lineBars = [];
@@ -190,7 +169,6 @@ class ChartCanvasBox extends StatelessWidget {
     double minY = double.infinity;
     double maxY = -double.infinity;
 
-    // 시리즈별 컬러 팔레트
     final List<Color> colors = [
       Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal
     ];
@@ -200,21 +178,28 @@ class ChartCanvasBox extends StatelessWidget {
       final List<dynamic> dataPoints = ds['data'];
       List<FlSpot> spots = [];
 
+      // [유저 예상 반영] target_value, target_low_limit 등이 Null일 수 있으므로 파싱 방어 추가
+      // (이 값들은 향후 어노테이션 배경색을 칠할 때 활용될 예정입니다.)
+      final String? rawLow = ds['target_low_limit'];
+      final String? rawHigh = ds['target_high_limit'];
+      final double? targetLow = rawLow != null ? double.tryParse(rawLow) : null;
+      final double? targetHigh = rawHigh != null ? double.tryParse(rawHigh) : null;
+
       for (var point in dataPoints) {
-        // 타임스탬프를 X축 좌표(Milliseconds)로 변환
         final DateTime dt = DateTime.parse(point['timestamp']).toLocal();
         final double x = dt.millisecondsSinceEpoch.toDouble();
 
         double y = 0.0;
-        if (dataType == 'temp' || dataType == 'gear' || dataType == 'static') {
+
+        // [수정] 전역 dataType 대신 개별 포인트 내부의 key(mean vs status) 존재 여부로 파악합니다.
+        if (point.containsKey('mean')) {
           y = (point['mean'] as num?)?.toDouble() ?? 0.0;
-        } else if (dataType == 'bool') {
+        } else if (point.containsKey('status')) {
           y = point['status'] == true ? 1.0 : 0.0;
         }
 
         spots.add(FlSpot(x, y));
 
-        // 차트 축 한계선 갱신
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
@@ -225,33 +210,30 @@ class ChartCanvasBox extends StatelessWidget {
         lineBars.add(
           LineChartBarData(
             spots: spots,
-            isCurved: true, // 곡선 처리
+            isCurved: true,
             color: colors[i % colors.length],
             barWidth: 2,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false), // 기본 점 숨김 (성능 및 가시성)
+            dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
         );
       }
     }
 
-    // 데이터가 점 1개뿐이거나 모든 값이 동일할 때의 Y축 여백(Padding) 예외 처리
     if (minY == double.infinity || maxY == -double.infinity) {
       minY = 0; maxY = 10;
     } else if (minY == maxY) {
       minY -= 5; maxY += 5;
     } else {
-      final padding = (maxY - minY) * 0.1; // 상하 10% 여백
+      final padding = (maxY - minY) * 0.1;
       minY -= padding; maxY += padding;
     }
 
-    // 예외 처리: 데이터가 비어있을 때
     if (lineBars.isEmpty) {
       return _buildContainer(child: const Center(child: Text('유효한 그래프 데이터가 없습니다.')));
     }
 
-    // 2. 렌더링
     return _buildContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -268,7 +250,6 @@ class ChartCanvasBox extends StatelessWidget {
                   minY: minY,
                   maxY: maxY,
                   lineBarsData: lineBars,
-                  // 터치(툴팁) 설정
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
                       getTooltipItems: (touchedSpots) {
@@ -283,14 +264,12 @@ class ChartCanvasBox extends StatelessWidget {
                       },
                     ),
                   ),
-                  // 격자선 설정
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: true,
                     getDrawingHorizontalLine: (value) => const FlLine(color: Colors.black12, strokeWidth: 1),
                     getDrawingVerticalLine: (value) => const FlLine(color: Colors.black12, strokeWidth: 1),
                   ),
-                  // 축 타이틀 설정
                   titlesData: FlTitlesData(
                     topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -299,9 +278,7 @@ class ChartCanvasBox extends StatelessWidget {
                         showTitles: true,
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
-                          // 최소, 최대 X값에 가까운 라벨은 겹침 방지를 위해 스킵
                           if (value == minX || value == maxX) return const SizedBox.shrink();
-
                           final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),

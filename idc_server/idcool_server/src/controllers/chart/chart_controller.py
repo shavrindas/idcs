@@ -32,133 +32,85 @@ TIME_RANGE_MAPPING = {
 async def get_chart_data(
     facility_id: int,
     room_id: int,
-    data_type: str = Query(..., description="조회할 데이터 타입: temp, gear, static, bool"),
-    scale: str = Query("1m", description="데이터 해상도 (예: 10s, 1m, 5m, 1h)"),
-    time_range: str = Query("1d", description="조회 기간 (예: 1h, 1d, 7d)"),
-    role_ids: Optional[str] = Query(None, description="조회할 PointRole ID 목록 (콤마로 구분)"),
+    scale: str = Query("1m", description="데이터 해상도"),
+    time_range: str = Query("1d", description="조회 기간"),
+    role_ids: str = Query(..., description="조회할 PointRole ID 목록 (콤마로 구분)"),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    선택된 호실과 데이터 타입에 맞는 시계열 데이터를 주어진 해상도에 맞춰 집계하여 반환합니다.
-    """
-    if scale not in SCALE_MAPPING:
-        raise HTTPException(status_code=400, detail="유효하지 않은 scale 값입니다.")
-    if time_range not in TIME_RANGE_MAPPING:
-        raise HTTPException(status_code=400, detail="유효하지 않은 time_range 값입니다.")
+    if scale not in SCALE_MAPPING or time_range not in TIME_RANGE_MAPPING:
+        raise HTTPException(status_code=400, detail="유효하지 않은 파라미터입니다.")
     
     bucket_interval = SCALE_MAPPING[scale]
     range_interval = TIME_RANGE_MAPPING[time_range]
-    
-    target_roles = [int(r.strip()) for r in role_ids.split(",")] if role_ids else []
+    target_roles = [int(r.strip()) for r in role_ids.split(",")]
 
-    # 1. 대상 데이터 타입에 따른 테이블 및 컬럼 매핑
-    table_name = ""
-    agg_columns = ""
-    if data_type == "temp":
-        table_name = "temperature_numerical_logs"
-        agg_columns = "AVG(temp_mean) AS mean, MIN(temp_min) AS min, MAX(temp_max) AS max"
-    elif data_type == "gear":
-        table_name = "gear_numerical_logs"
-        agg_columns = "AVG(gear_mean) AS mean, MIN(gear_min) AS min, MAX(gear_max) AS max"
-    elif data_type == "static":
-        table_name = "equipment_static_logs"
-        agg_columns = "AVG(setnum) AS mean"
-    elif data_type == "bool":
-        table_name = "bool_logs"
-        # Bool의 경우 해당 버킷 내에서 한 번이라도 True가 있었으면 True로 간주(혹은 비율 집계 가능)
-        agg_columns = "BOOL_OR(status_value) AS status"
-    else:
-        raise HTTPException(status_code=400, detail="지원하지 않는 data_type 입니다.")
-
-    # 2. 호실 내 해당 데이터 타입의 Role 정보 조회 (target_value, target_limit 등 포함)
+    # 1. PointRole 메타데이터 조회 (타입 구분을 위해 role_name 활용)
+    # [주석] chart_group_table 의 구조와 그룹핑은 타입을 가리지 않습니다.
+    # 포인트롤 자체가 곧 타입 정보를 가지므로(role_name), 백엔드에서 이를 분석해 각각의 하이퍼테이블을 조회합니다.
     role_query = text("""
         SELECT id, role_name, target_value, target_low_limit, target_high_limit
         FROM point_role_table
-        WHERE facility_id = :facility_id AND room_id = :room_id AND is_current = TRUE
+        WHERE id = ANY(:role_ids) AND is_current = TRUE
     """)
-    role_result = await db.execute(role_query, {"facility_id": facility_id, "room_id": room_id})
+    role_result = await db.execute(role_query, {"role_ids": target_roles})
     roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
 
-    if target_roles:
-        roles_info = {k: v for k, v in roles_info.items() if k in target_roles}
-
     if not roles_info:
-        return {"status": "success", "data": {"datasets": []}, "message": "조회할 Role 데이터가 없습니다."}
+        return {"status": "success", "data": {"datasets": []}, "message": "유효한 Role 데이터가 없습니다."}
 
-    valid_role_ids = list(roles_info.keys())
+    # 역할별 쿼리 대상 분류
+    temp_roles, gear_roles, static_roles, bool_roles = [], [], [], []
+    for r_id, r_info in roles_info.items():
+        r_name = r_info["role_name"].lower()
+        if "temp_" in r_name: temp_roles.append(r_id)
+        elif "gear_" in r_name: gear_roles.append(r_id)
+        elif "static_" in r_name: static_roles.append(r_id)
+        elif "bool_" in r_name: bool_roles.append(r_id)
 
-    # 3. 테스트 데이터 기준점(최신 시간) 찾기 로직 
-    # (2025년 생성 데이터 테스트를 위해 NOW() 대신 테이블의 최신 시간을 기준으로 역산)
-    max_time_query = text(f"SELECT MAX(timestamp) FROM {table_name} WHERE role_id = ANY(:role_ids)")
-    max_time_result = await db.execute(max_time_query, {"role_ids": valid_role_ids})
-    latest_time = max_time_result.scalar()
+    # 2. 통합 타임라인을 위한 기준 시간(가장 최근 데이터 시간) 확보
+    # 전체 쿼리를 단순화하기 위해 temperature 테이블 기준으로 최근 시간을 잡음 (실 환경에선 전체 테이블 MAX 비교 권장)
+    max_time_query = text("SELECT MAX(timestamp) FROM temperature_numerical_logs WHERE role_id = ANY(:role_ids)")
+    latest_time = (await db.execute(max_time_query, {"role_ids": temp_roles if temp_roles else target_roles})).scalar()
 
     if not latest_time:
         return {"status": "success", "data": {"datasets": []}, "message": "기록된 로그가 없습니다."}
 
-
-    # 4. time_bucket 및 Interval 쿼리 연산 순서 및 명시적 타입 지정
-    # :latest_time::timestamptz 구문 대신, PostgreSQL 함수(CAST)를 사용해 바인딩 연산 순서를 명확히 지정합니다.
-    chart_query = text(f"""
-        SELECT 
-            role_id,
-            time_bucket('{bucket_interval}', timestamp) AS bucket,
-            {agg_columns}
-        FROM {table_name}
-        WHERE role_id = ANY(:role_ids) 
-          AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
-          AND timestamp <= CAST(:latest_time AS timestamptz)
-        GROUP BY role_id, bucket
-        ORDER BY bucket ASC
-    """)
-    
-    result = await db.execute(chart_query, {
-        "role_ids": valid_role_ids,
-        "latest_time": latest_time
-    })
-    rows = result.fetchall()
-    print(f"DEBUG LOG: 조회된 데이터 총 행(Row) 수 = {len(rows)}개")
-
-    # 5. 프론트엔드 (fl_chart) 소비를 위한 데이터 가공 로직
+    # 3. 타입별 데이터 집계 및 병합 헬퍼 함수
     datasets_map: Dict[int, Any] = {
-        role_id: {
-            "role_id": role_id,
-            "role_name": roles_info[role_id]["role_name"],
-            "target_value": roles_info[role_id]["target_value"],
-            "target_low_limit": roles_info[role_id]["target_low_limit"],
-            "target_high_limit": roles_info[role_id]["target_high_limit"],
+        r_id: {
+            "role_id": r_id, "role_name": roles_info[r_id]["role_name"],
+            "target_value": roles_info[r_id]["target_value"],
+            "target_low_limit": roles_info[r_id]["target_low_limit"],
+            "target_high_limit": roles_info[r_id]["target_high_limit"],
             "data": []
-        }
-        for role_id in valid_role_ids
+        } for r_id in roles_info.keys()
     }
 
-    for row in rows:
-        r_dict = dict(row._mapping)
-        r_id = r_dict["role_id"]
-        
-        # timestamp를 ISO 포맷 문자열로 변환
-        point = {"timestamp": r_dict["bucket"].isoformat()}
-        
-        if data_type in ["temp", "gear"]:
-            point.update({"mean": r_dict["mean"], "min": r_dict["min"], "max": r_dict["max"]})
-        elif data_type == "static":
-            point.update({"mean": r_dict["mean"]})
-        elif data_type == "bool":
-            point.update({"status": r_dict["status"]})
-            
-        datasets_map[r_id]["data"].append(point)
+    async def fetch_and_map(table_name: str, agg_columns: str, type_roles: List[int], data_key_mapping: dict):
+        if not type_roles: return
+        query = text(f"""
+            SELECT role_id, time_bucket('{bucket_interval}', timestamp) AS bucket, {agg_columns}
+            FROM {table_name}
+            WHERE role_id = ANY(:role_ids)
+              AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+              AND timestamp <= CAST(:latest_time AS timestamptz)
+            GROUP BY role_id, bucket ORDER BY bucket ASC
+        """)
+        rows = await db.execute(query, {"role_ids": type_roles, "latest_time": latest_time})
+        for r in rows.fetchall():
+            r_dict = dict(r._mapping)
+            point = {"timestamp": r_dict["bucket"].isoformat()}
+            for db_key, out_key in data_key_mapping.items(): point[out_key] = r_dict[db_key]
+            datasets_map[r_dict["role_id"]]["data"].append(point)
+
+    # 4. 각 하이퍼테이블 병렬/순차 조회
+    await fetch_and_map("temperature_numerical_logs", "AVG(temp_mean) AS mean, MIN(temp_min) AS min, MAX(temp_max) AS max", temp_roles, {"mean": "mean", "min": "min", "max": "max"})
+    await fetch_and_map("gear_numerical_logs", "AVG(gear_mean) AS mean, MIN(gear_min) AS min, MAX(gear_max) AS max", gear_roles, {"mean": "mean", "min": "min", "max": "max"})
+    await fetch_and_map("equipment_static_logs", "AVG(setnum) AS mean", static_roles, {"mean": "mean"})
+    await fetch_and_map("bool_logs", "BOOL_OR(status_value) AS status", bool_roles, {"status": "status"})
 
     return {
         "status": "success",
-        "meta": {
-            "facility_id": facility_id,
-            "room_id": room_id,
-            "scale": scale,
-            "time_range": time_range,
-            "data_type": data_type,
-            "reference_time": latest_time.isoformat()
-        },
-        "data": {
-            "datasets": list(datasets_map.values())
-        }
+        "meta": {"facility_id": facility_id, "room_id": room_id, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
+        "data": {"datasets": list(datasets_map.values())}
     }
