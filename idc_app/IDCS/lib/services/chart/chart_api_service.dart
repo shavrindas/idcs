@@ -15,19 +15,17 @@ class ChartApiService {
   static Future<Map<String, dynamic>> getHistoricalData({
     required int facilityId,
     required int roomId,
-    required String dataType,
     required String scale,
     required String timeRange,
-    List<int>? roleIds,
+    required List<int> roleIds, // 필수로 변경
   }) async {
-    String urlStr = '$_baseUrl/$facilityId/$roomId?data_type=$dataType&scale=$scale&time_range=$timeRange';
+    String urlStr = '$_baseUrl/$facilityId/$roomId?scale=$scale&time_range=$timeRange&role_ids=${roleIds.join(',')}';
+    final url = Uri.parse(urlStr);
+    final response = await http.get(url);
 
     if (roleIds != null && roleIds.isNotEmpty) {
       urlStr += '&role_ids=${roleIds.join(',')}';
     }
-
-    final url = Uri.parse(urlStr);
-    final response = await http.get(url);
 
     final String responseBody = utf8.decode(response.bodyBytes);
 
