@@ -24,68 +24,72 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   // 평평한 1층 딕셔너리 데이터 구조
   late Map<String, String> infoData;
-  Map<String, String> realtempData = {'현재 온도': 'NA', '설정 온도': 'NA', '편차': 'NA', '영점': 'NA', '컴프레셔': 'NA'};
-  Map<String, String> deforestData = {'제상 주기': 'NA', '제상 시간': 'NA', '제상 타이머': 'NA', '제상 종료 타이머': 'NA', '제상 가동 중': 'NA', '수동 제상': 'NA'};
-  Map<String, String> emergencyData = {'이상': 'NA', 'C.INT_EOCR': 'NA', '고압': 'NA', '팬 이상': 'NA', '감금알람': 'NA', '압력센서이상': 'NA', '온도센서이상': 'NA', '컴프레셔 과열': 'NA', '컴프레셔 저압': 'NA', '컴프레셔 역회전': 'NA', '인버터 이상': 'NA'};
-  Map<String, String> inverterData = {'전류량': 'NA', '전압': 'NA', '입력 전압': 'NA', '출력 전압': 'NA', '설정 회전수': 'NA', '실제 회전수': 'NA'};
-  Map<String, String> equipmentData = {'팽창변 가동': 'NA', '팽창변 가동2': 'NA', '팽창변 가동3': 'NA', '컴프레셔1호 온도': 'NA', '컴프레셔1호 압력(입력)': 'NA', '컴프레셔1호 압력(출력)': 'NA','컴프레셔2호 온도': 'NA', '컴프레셔2호 압력(입력)': 'NA', '컴프레셔2호 압력(출력)': 'NA', '열 교환기 온도': 'NA',  '물탱크 온도': 'NA'};
-  Map<String, String> controlData = {'운전 상태': 'NA', '운전 시간': 'NA', '컴프레셔 가동시간': 'NA', '운전 지연': 'NA', '컴프레셔 지연': 'NA', '제상 지연': 'NA', '쿨러 지연': 'NA', '아날로그 운전': 'NA', '아날로그 온도계 사용': 'NA', '제상 과열': 'NA'};
-
-  //데이터 Role접두어
-  static const role_temp_label = 'temp_';
-  static const role_deforest_label = 'deforest_';
-  static const role_emergency_label = 'emergency_';
-  static const role_inverter_label = 'inverter_';
-  static const role_equipment_label = 'equipment_';
-  static const role_control_label = 'control_';
-  // 디바이스 수신 키 ➔ 앱 내부 딕셔너리 키 매핑 사전
+  Map<String, String> realtempData = {'H_COMP': 'NA', '고내온도_#1': 'NA', '설정값_#1': 'NA', '편차값_#1': 'NA', 'ZERO_#1': 'NA'};
+  Map<String, String> deforestData = {'제상용 전자변': 'NA', '제상타임_#1': 'NA', '싸이클_#1': 'NA', '시스템분_#1': 'NA', '시스템시간_#1': 'NA'};
+  Map<String, String> emergencyData = {'CINT': 'NA', 'HIGH': 'NA', 'UF/OCR': 'NA', '감금알람': 'NA', '토출온도이상': 'NA', '가스부족': 'NA', '온도센서이상': 'NA', '역상방지이상': 'NA', 'LOW 스위치': 'NA', '과열TIC': 'NA', 'ARLAM': 'NA', 'RESET': 'NA'};
+  Map<String, String> inverterData = {'Hz_#1': 'NA', 'KW_#1': 'NA', '출력전압_#1': 'NA', '출력전류_#1': 'NA', '출력주파수_#1': 'NA'};
+  Map<String, String> equipmentData = {'토출온도_#1': 'NA', '고압_#1': 'NA', '저압_#1': 'NA'};
+  Map<String, String> controlData = {'운전SW': 'NA', '룸온도스위치': 'NA', '방열기 팬 #1': 'NA', '방열기 팬 #2': 'NA', '액 전자변': 'NA', '전자변': 'NA', '쿨러 팬': 'NA', '아날로그TC': 'NA', '쿨러 팬 자동여부': 'NA', '히터정지': 'NA', '초기지연': 'NA', '콤프지연': 'NA', '쿨러지연': 'NA', '수동제상': 'NA', '컴퓨터 S/W': 'NA', '운전시간_#1': 'NA', '운전시간만_#1': 'NA', '초기지연_#1': 'NA', 'H_콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA', '초기지연_#1': 'NA', '콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA'};
   static const Map<String, String> deviceKeyMap = {
-    '${role_temp_label}pv': '현재 온도',
-    '${role_temp_label}sv': '설정 온도',
-    '${role_temp_label}hey': '편차',
-    '${role_temp_label}zero': '영점',
-    '${role_temp_label}comp': '컴프레셔',
-
-    '${role_deforest_label}DFC': '제상 주기',
-    '${role_deforest_label}DFT': '제상 시간',
-    '${role_deforest_label}SYSH': '제상 타이머',
-    '${role_deforest_label}SYSM': '제상 종료 타이머',
-    '${role_deforest_label}def': '제상 가동 중',
-
-    '${role_emergency_label}total': '이상',
-    '${role_emergency_label}cinteocr': 'C.INT_EOCR',
-    '${role_emergency_label}high': '고압',
-    '${role_emergency_label}fan': '팬 이상',
-    '${role_emergency_label}lock': '감금알람',
-    '${role_emergency_label}press': '압력센서이상',
-    '${role_emergency_label}temp': '온도센서이상',
-    '${role_emergency_label}hot': '컴프레셔 과열',
-    '${role_emergency_label}low': '컴프레셔 저압',
-    '${role_emergency_label}rotation': '컴프레셔 역회전',
-    '${role_emergency_label}inv': '인버터 이상',
-
-    '${role_equipment_label}comp1temp': '컴프레셔1호 온도',
-    '${role_equipment_label}comp1press1': '컴프레셔1호 압력(입력)',
-    '${role_equipment_label}comp1press2': '컴프레셔1호 압력(출력)',
-    '${role_equipment_label}comp2temp': '컴프레셔2호 온도',
-    '${role_equipment_label}comp2press1': '컴프레셔2호 압력(입력)',
-    '${role_equipment_label}comp2press2': '컴프레셔2호 압력(출력)',
-    '${role_equipment_label}transtemp': '열 교환기 온도',
-    '${role_equipment_label}expan': '팽창변 가동',
-    '${role_equipment_label}expan2': '팽창변 가동2',
-    '${role_equipment_label}expan3': '팽창변 가동3',
-
-    '${role_control_label}runsw': '운전 상태',
-    '${role_control_label}runtime': '운전 시간',
-    '${role_control_label}cruntime': '컴프레셔 가동시간',
-    '${role_control_label}rundel': '운전 지연',
-    '${role_control_label}compdel': '컴프레셔 지연',
-    '${role_control_label}cooldel': '쿨러 지연',
-    '${role_control_label}defdel': '제상 지연',
-    '${role_control_label}lsv': '아날로그 운전',
-    '${role_control_label}rtc': '아날로그 온도계 사용',
-    '${role_control_label}dth': '제상 과열'
+    'control_runsw': '운전SW',
+    'emergency_cint': 'CINT',
+    'emergency_high': 'HIGH',
+    'emergency_uf_ocr': 'UF/OCR',
+    'emergency_locked': '감금알람',
+    'emergency_outtemp': '토출온도이상',
+    'emergency_gas': '가스부족',
+    'emergency_tempsensor': '온도센서이상',
+    'emergency_defemg': '역상방지이상',
+    'emergency_lowsw': 'LOW 스위치',
+    'emergency_hottic': '과열TIC',
+    'control_roomtemp': '룸온도스위치',
+    'temp_comp': 'H_COMP',
+    'control_cffan1': '방열기 팬 #1',
+    'control_cffan2': '방열기 팬 #2',
+    'control_lsv': '액 전자변',
+    'control_ingsv': '전자변',
+    'control_uffan': '쿨러 팬',
+    'deforest_def': '제상용 전자변',
+    'emergency_emg': 'ARLAM',
+    'control_tica': '아날로그TC',
+    'control_efa': '쿨러 팬 자동여부',
+    'control_heatdelflag': '히터정지',
+    'control_initdelflag': '초기지연',
+    'control_compdelflag': '콤프지연',
+    'control_coolerdelflag': '쿨러지연',
+    'control_mdf': '수동제상',
+    'control_sw': '컴퓨터 S/W',
+    'emergency_emgreset': 'RESET',
+    'equipment_temp1': '토출온도_#1',
+    'temp_pv': '고내온도_#1',
+    'temp_sv': '설정값_#1',
+    'temp_hey': '편차값_#1',
+    'temp_zero': 'ZERO_#1',
+    'equipment_press1': '고압_#1',
+    'equipment_press2': '저압_#1',
+    'control_runtimelow': '운전시간_#1',
+    'control_runtimehigh': '운전시간만_#1',
+    'deforest_dfcm': '제상타임_#1',
+    'deforest_dfct': '싸이클_#1',
+    'deforest_sysm': '시스템분_#1',
+    'deforest_syst': '시스템시간_#1',
+    'control_initdelst': '초기지연_#1',
+    'control_compdelst': 'H_콤프지연_#1',
+    'control_cooldelst': '쿨러지연타임_#1',
+    'control_defdelst': 'DF 지연_#1',
+    'control_initdeltm': '초기지연_#1',
+    'control_compdeltm': '콤프지연_#1',
+    'control_cooldeltm': '쿨러지연타임_#1',
+    'control_defdeltm': 'DF 지연_#1',
+    'inverter_hz': 'Hz_#1',
+    'inverter_kw': 'KW_#1',
+    'inverter_outv': '출력전압_#1',
+    'inverter_outa': '출력전류_#1',
+    'inverter_outhz': '출력주파수_#1',
   };
+  static final Map<String, String> reverseDeviceKeyMap = Map.fromEntries(
+    deviceKeyMap.entries.map((entry) => MapEntry(entry.value, entry.key)),
+  );
 
   @override
   void initState() {
@@ -110,9 +114,10 @@ class _MonitoringPageState extends State<MonitoringPage> {
   void _parseAndMapDeviceMessage(String rawJsonString) {
     try {
       final Map<String, dynamic> parsedJson = jsonDecode(rawJsonString);
+      final Map<String, dynamic> parsedSJson = parsedJson['datas'];
 
       setState(() {
-        for (var entry in parsedJson.entries) {
+        for (var entry in parsedSJson.entries) {
           // 방법 1 적용 예시 (키 조립)
           final List<String> parts = entry.key.split('.');
 
@@ -152,6 +157,28 @@ class _MonitoringPageState extends State<MonitoringPage> {
     super.dispose();
   }
 
+  void remoteClickEvent(String label, String input) {// 1. 한글 라벨을 원본 장비 키(예: 'control_runsw')로 변환
+    final String? rawKey = reverseDeviceKeyMap[label];
+
+    if (rawKey == null) {
+      print('매핑할 수 없는 키입니다: $label');
+      return;
+    }
+
+    // 2. 서버 형식에 맞게 req_id 생성 (예: "1.control_runsw")
+    final String reqId = '${widget.roomId}.$rawKey';
+
+    Map<String, String> temp = {
+      'type': "WR",
+      'req_id': reqId,
+      'req_val': input
+    };
+    if(_webSocketService.isConnected) {
+      print(jsonEncode(temp));
+      _webSocketService.send(jsonEncode(temp));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,12 +192,12 @@ class _MonitoringPageState extends State<MonitoringPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             MonitoringCard(title: '시설 기본 정보', fields: infoData),
-            MonitoringCard(title: '실제 온도', fields: realtempData),
-            MonitoringCard(title: '제상 정보', fields: deforestData),
-            MonitoringCard(title: '이상 정보', fields: emergencyData),
-            MonitoringCard(title: '인버터 정보', fields: inverterData),
-            MonitoringCard(title: '장비 정보', fields: equipmentData),
-            MonitoringCard(title: '제어 정보', fields: controlData),
+            MonitoringCard(title: '실제 온도', fields: realtempData, OnConfirm: remoteClickEvent),
+            MonitoringCard(title: '제상 정보', fields: deforestData, OnConfirm: remoteClickEvent),
+            MonitoringCard(title: '이상 정보', fields: emergencyData, OnConfirm: remoteClickEvent),
+            MonitoringCard(title: '인버터 정보', fields: inverterData, OnConfirm: remoteClickEvent),
+            MonitoringCard(title: '장비 정보', fields: equipmentData, OnConfirm: remoteClickEvent),
+            MonitoringCard(title: '제어 정보', fields: controlData, OnConfirm: remoteClickEvent),
           ],
         ),
       ),
