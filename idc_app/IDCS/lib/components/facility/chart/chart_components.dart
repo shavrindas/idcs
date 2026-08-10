@@ -6,22 +6,34 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
-/// Box #1: 차트 필터 박스 (해상도 및 조회 기간 설정)
-class ChartFilterBox extends StatelessWidget {
-  final String currentScale;
-  final String currentTimeRange;
-  final Function(String) onScaleChanged;
-  final Function(String) onTimeRangeChanged;
-  final VoidCallback onApply;
+// ===============================================================
+// 경로: lib/components/facility/chart/chart_components.dart
+// 기존 ChartFilterBox를 아래 코드로 대체하세요.
+// ===============================================================
+import 'package:flutter/material.dart';
 
-  const ChartFilterBox({
+/// Box #1: 차트 검색 스코프 박스 (명시적 기간 설정)
+class ChartSearchScopeBox extends StatelessWidget {
+  final DateTime startTime;
+  final DateTime endTime;
+  final String autoScale; // 자동 계산된 단위를 보여주기 위함
+  final VoidCallback onSelectStartTime;
+  final VoidCallback onSelectEndTime;
+  final VoidCallback onSearch;
+
+  const ChartSearchScopeBox({
     super.key,
-    required this.currentScale,
-    required this.currentTimeRange,
-    required this.onScaleChanged,
-    required this.onTimeRangeChanged,
-    required this.onApply,
+    required this.startTime,
+    required this.endTime,
+    required this.autoScale,
+    required this.onSelectStartTime,
+    required this.onSelectEndTime,
+    required this.onSearch,
   });
+
+  String _formatDate(DateTime dt) {
+    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,55 +43,36 @@ class ChartFilterBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Box 1: 데이터 스코프 필터', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Box 1: 데이터 스코프 검색', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+              Text('적용 스케일: $autoScale', style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 12)),
+            ],
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: currentScale,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: '해상도',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
-                  ],
-                  onChanged: (val) { if (val != null) onScaleChanged(val); },
+                child: OutlinedButton.icon(
+                  onPressed: onSelectStartTime,
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(_formatDate(startTime)),
                 ),
               ),
-              const SizedBox(width: 8),
+              const Padding(padding: EdgeInsets.symmetric(horizontal: 8.0), child: Text('~')),
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: currentTimeRange,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: '조회 기간',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
-                  ],
-                  onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
+                child: OutlinedButton.icon(
+                  onPressed: onSelectEndTime,
+                  icon: const Icon(Icons.calendar_today, size: 16),
+                  label: Text(_formatDate(endTime)),
                 ),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: onApply,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                child: const Text('적용'),
+                onPressed: onSearch,
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                child: const Text('검색'),
               ),
             ],
           ),
@@ -133,15 +126,21 @@ class ChartSeriesBox extends StatelessWidget {
 }
 
 /// Box #3: 차트 렌더링 캔버스 영역
+
 class ChartCanvasBox extends StatefulWidget {
   final Map<String, dynamic>? chartData;
   final bool isLoading;
   final bool isPanMode;
+  // 💡 검색 기준 시간을 직접 받아와서 축을 고정시킴
+  final DateTime searchedStartTime;
+  final DateTime searchedEndTime;
 
   const ChartCanvasBox({
     super.key,
     required this.chartData,
     required this.isLoading,
+    required this.searchedStartTime,
+    required this.searchedEndTime,
     this.isPanMode = true,
   });
 
@@ -153,13 +152,12 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
   double? _currentMinX;
   double? _currentMaxX;
 
-  double _baseMinX = double.infinity;
-  double _baseMaxX = -double.infinity;
+  late double _baseMinX;
+  late double _baseMaxX;
 
-  // 줌 제스처용 임시 변수
   double _lastMinX = 0;
   double _lastMaxX = 0;
-  double _startFocalPoint = 0; // 💡 시작 좌표 저장 변수 추가
+  double _startFocalPoint = 0;
 
   void resetViewport() {
     setState(() {
@@ -169,28 +167,25 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _calculateBaseBounds();
+  }
+
+  @override
   void didUpdateWidget(covariant ChartCanvasBox oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.chartData != oldWidget.chartData) {
+    if (widget.searchedStartTime != oldWidget.searchedStartTime ||
+        widget.searchedEndTime != oldWidget.searchedEndTime ||
+        widget.chartData != oldWidget.chartData) {
       _calculateBaseBounds();
     }
   }
 
   void _calculateBaseBounds() {
-    if (widget.chartData == null || widget.chartData!['data']['datasets'] == null) return;
-
-    final List<dynamic> datasets = widget.chartData!['data']['datasets'];
-    _baseMinX = double.infinity;
-    _baseMaxX = -double.infinity;
-
-    for (var ds in datasets) {
-      for (var point in ds['data']) {
-        final DateTime dt = DateTime.parse(point['timestamp']).toLocal();
-        final double x = dt.millisecondsSinceEpoch.toDouble();
-        if (x < _baseMinX) _baseMinX = x;
-        if (x > _baseMaxX) _baseMaxX = x;
-      }
-    }
+    // 💡 데이터 속 포인트 시간과 무관하게 검색 기간으로 X축 영역을 완벽히 고정
+    _baseMinX = widget.searchedStartTime.millisecondsSinceEpoch.toDouble();
+    _baseMaxX = widget.searchedEndTime.millisecondsSinceEpoch.toDouble();
 
     _currentMinX = _baseMinX;
     _currentMaxX = _baseMaxX;
@@ -202,22 +197,17 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
       return _buildContainer(child: const Center(child: CircularProgressIndicator()));
     }
 
-    if (widget.chartData == null || widget.chartData!['data']['datasets'] == null || (widget.chartData!['data']['datasets'] as List).isEmpty) {
-      return _buildContainer(child: const Center(child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: Colors.grey))));
-    }
-
-    final List<dynamic> datasets = widget.chartData!['data']['datasets'];
+    // 💡 데이터가 없어도 에러 메시지를 띄우지 않고 빈 배열로 그리드를 그려주기 위해 안전하게 호출
+    final List<dynamic> datasets = widget.chartData?['data']?['datasets'] ?? [];
     List<LineChartBarData> lineBars = [];
 
     double minY = double.infinity;
     double maxY = -double.infinity;
     final List<Color> colors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal];
 
-    if (_baseMinX == double.infinity) _calculateBaseBounds();
-
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
-      final List<dynamic> dataPoints = ds['data'];
+      final List<dynamic> dataPoints = ds['data'] ?? [];
       List<FlSpot> spots = [];
 
       for (var point in dataPoints) {
@@ -251,6 +241,7 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
       }
     }
 
+    // 데이터가 없어 무한대일 경우 기본 Y축 설정 (빈 공간 렌더링용)
     if (minY == double.infinity || maxY == -double.infinity) {
       minY = 0; maxY = 10;
     } else if (minY == maxY) {
@@ -258,10 +249,6 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
     } else {
       final padding = (maxY - minY) * 0.1;
       minY -= padding; maxY += padding;
-    }
-
-    if (lineBars.isEmpty) {
-      return _buildContainer(child: const Center(child: Text('유효한 그래프 데이터가 없습니다.')));
     }
 
     Widget chartWidget = LineChart(
@@ -274,7 +261,7 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
         clipData: const FlClipData.all(),
         lineTouchData: LineTouchData(
           enabled: !widget.isPanMode,
-          handleBuiltInTouches: !widget.isPanMode, // 💡 핵심 2: fl_chart가 터치 제스처를 강제로 뺏어가는 현상 완전 차단
+          handleBuiltInTouches: !widget.isPanMode,
           touchTooltipData: LineTouchTooltipData(
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
@@ -302,6 +289,7 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
               showTitles: true,
               reservedSize: 30,
               getTitlesWidget: (value, meta) {
+                // 시작/종료 축에는 텍스트가 잘리지 않도록 비움
                 if (value == _baseMinX || value == _baseMaxX) return const SizedBox.shrink();
                 final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
                 return Padding(
@@ -333,21 +321,18 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
 
     if (widget.isPanMode) {
       chartWidget = GestureDetector(
-        behavior: HitTestBehavior.opaque, // 💡 여백 영역 터치 인식 활성화
+        behavior: HitTestBehavior.opaque,
         onScaleStart: (details) {
           _lastMinX = _currentMinX ?? _baseMinX;
           _lastMaxX = _currentMaxX ?? _baseMaxX;
-          _startFocalPoint = details.localFocalPoint.dx; // 💡 핵심 1: 터치 시작점 X좌표 절대값 저장
+          _startFocalPoint = details.localFocalPoint.dx;
         },
         onScaleUpdate: (details) {
           setState(() {
             final double range = _lastMaxX - _lastMinX;
             final double scale = details.scale;
 
-            // 💡 시작점 기준 절대 이동 거리(dx) 계산
             final double dx = details.localFocalPoint.dx - _startFocalPoint;
-
-            // 이동 속도/민감도 계산 (대략적인 컨테이너 가로 픽셀을 350으로 산정)
             final double timeShift = (range / 350) * dx;
 
             double newMinX = _lastMinX - timeShift;
@@ -360,7 +345,6 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
               newMaxX -= diff;
             }
 
-            // 범위 이탈 방지
             if (newMinX < _baseMinX) {
               newMaxX += (_baseMinX - newMinX);
               newMinX = _baseMinX;
@@ -409,6 +393,7 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
     );
   }
 }
+
 
 /// Box #4: 차트 도구 박스 (제어 및 어노테이션 도구)
 class ChartToolBox extends StatelessWidget {
