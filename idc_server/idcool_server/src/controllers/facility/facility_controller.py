@@ -162,6 +162,11 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
 
                         role_id = result.scalars().first()
 
+                        if not role_id:
+                            print(f"⚠️ [로그 저장 실패] 매칭되는 PointRole을 찾을 수 없습니다. (room_id: {datas[0]}, role_name: {datas[1]})")
+                            # 필요하다면 여기서 에러 응답을 리턴하거나 로직을 중단합니다.
+                            break
+
                         now_time = datetime.now(timezone.utc)
 
                         new_log = RemoteControlLog(
@@ -172,6 +177,8 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
 
                         db.add(new_log)
                         await db.commit()
+
+                        break
                         
 
     except WebSocketDisconnect:
