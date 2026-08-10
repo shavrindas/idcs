@@ -1,5 +1,6 @@
 // ===============================================================
 // 경로: lib/pages/facility/chart/facility_chart_page.dart
+// 명세: 차트 시각화 및 필터링 제어 페이지
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/chart/chart_components.dart';
@@ -22,11 +23,15 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
 
   // 2. 데이터 포인트 선택 상태
   int? _selectedGroupId;
-  List<Map<String, dynamic>> _availableGroups = []; // _allGroups 변수도 불필요하여 제거
+  List<Map<String, dynamic>> _availableGroups = [];
 
   // 3. 차트 렌더링 상태
   bool _isLoading = false;
   Map<String, dynamic>? _chartData;
+
+  // 💡 4. 차트 뷰포트 및 도구 제어 상태 추가
+  final GlobalKey<ChartCanvasBoxState> _chartCanvasKey = GlobalKey<ChartCanvasBoxState>();
+  bool _isPanMode = true; // 기본적으로 줌/이동 가능 상태(Pan 모드)로 시작
 
   @override
   void initState() {
@@ -116,6 +121,8 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
         setState(() {
           _chartData = result;
         });
+        // 새 데이터를 불러왔을 때 뷰포트 초기화
+        _chartCanvasKey.currentState?.resetViewport();
       }
     } catch (e) {
       if (mounted) {
@@ -137,7 +144,6 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
           children: [
             // Box 1
             ChartFilterBox(
-              // currentDataType: _currentDataType 파라미터 완전 제거
               currentScale: _currentScale,
               currentTimeRange: _currentTimeRange,
               onScaleChanged: (val) => setState(() => _currentScale = val),
@@ -159,14 +165,24 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box 4
-            const ChartToolBox(),
+            // 💡 Box 4: 도구 상태 주입 및 메서드 연동
+            ChartToolBox(
+              isPanMode: _isPanMode,
+              onTogglePanMode: () {
+                setState(() => _isPanMode = !_isPanMode);
+              },
+              onResetViewport: () {
+                _chartCanvasKey.currentState?.resetViewport();
+              },
+            ),
             const SizedBox(height: 8),
 
-            // Box 3
+            // 💡 Box 3: Key 할당 및 제어 상태 주입
             ChartCanvasBox(
+              key: _chartCanvasKey,
               chartData: _chartData,
               isLoading: _isLoading,
+              isPanMode: _isPanMode,
             ),
           ],
         ),
