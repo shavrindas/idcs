@@ -10,8 +10,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSoc
 from config.db import get_db
 from src.models.User import User, UserRole
 from src.models.Facility import Facility, FacilityUser, FacilityRoom
+from src.models.Monitoring import PointRole, RemoteControlLog
 import src.services.alarm as alarm_services
 import json
+import re
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/facilities", tags=["Facilities"])
 
@@ -130,21 +133,45 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
             #print(data)
 
             data_dict = json.loads(data)
-            #역할 스캔
-            roles = await alarm_services.scan_roles(facility_id)
 
-            #알람 출력
-            await alarm_services.check_roles(facility_id, data_dict, roles)
+            if "datas" in data_dict.keys():
+                #역할 스캔
+                roles = await alarm_services.scan_roles(facility_id)
 
+                #알람 출력
+                await alarm_services.check_roles(facility_id, data_dict["datas"], roles)
 
-            # 모니터링 출력 
-            if facility_id in get_sockets:
-                for client in get_sockets[facility_id][:]:
-                    try:
-                        await client.send_text(data)
-                    except Exception:
-                        if client in get_sockets[facility_id]:
-                            get_sockets[facility_id].remove(client)
+                # 모니터링 출력 
+                if facility_id in get_sockets:
+                    for client in get_sockets[facility_id][:]:
+                        try:
+                            await client.send_text(data)
+                        except Exception:
+                            if client in get_sockets[facility_id]:
+                                get_sockets[facility_id].remove(client)
+
+            if "status" in data_dict.keys():
+                if "SUCCESS" in data_dict["status"]:
+                    datas = re.split(r"[._]", data_dict["request_id"])
+                    print(datas)
+
+                    async for db in get_db():
+                        stmt = select(PointRole.id).where(PointRole.role_name == datas[1]).where(PointRole.room_id == int(datas[0]))
+
+                        result = await db.execute(stmt)
+
+                        role_id = result.scalars().first()
+
+                        now_time = datetime.now(timezone.utc)
+
+                        new_log = RemoteControlLog(
+                            role_id = role_id,
+                            control_value=data_dict["request_val"],
+                            timestamp=now_time
+                        )
+
+                        db.add(new_log)
+                        await db.commit()
                         
 
     except WebSocketDisconnect:
