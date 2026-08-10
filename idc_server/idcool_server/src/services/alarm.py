@@ -50,9 +50,12 @@ async def check_roles(facility_id: int, data_dict: Dict[str, str], roles):
         # 1. 알람 대상 조건 검사 및 발생 대상 선별
         for role in roles:
             for k, v in data_dict.items():
-                if role.role_name in k:
+                if role.role_name in k and str(role.room_id) in k:
                     val = float(v)
-                    is_out_of_bounds = val <= float(role.target_low_limit) or val >= float(role.target_high_limit)
+                    low_limit = float(role.target_low_limit) if role.target_low_limit not in (None, "", "null") else float('-inf')
+                    high_limit = float(role.target_high_limit) if role.target_high_limit not in (None, "", "null") else float('inf')
+
+                    is_out_of_bounds = val <= low_limit or val >= high_limit
                     
                     if is_out_of_bounds:
                         candidate_alarms.append((k, role))
