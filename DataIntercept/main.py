@@ -1,3 +1,4 @@
+import asyncio
 import socket
 import config as config
 import DataMap as DM
@@ -58,28 +59,39 @@ while True:
             # 파싱 및 정제
             data_parts = re.split(r"[ÿ|]", line)
 
-            if len(data_parts) > 1 and "%" in data_parts[1]:
-                recvdata = data_parts[1].split("%")
-                # 끝에 빈 문자열이 생기는 경우 제거
-                if recvdata and recvdata[-1] == "":
-                    recvdata.pop()
+            if len(data_parts) > 1:
+                if "%" in data_parts[1]:
+                    recvdata = data_parts[1].split("%")
+                    # 끝에 빈 문자열이 생기는 경우 제거
+                    if recvdata and recvdata[-1] == "":
+                        recvdata.pop()
 
-                # 데이터 매핑 및 가공
-                for adr, deg, lab in DL.DataLists:
-                    if adr in DM.DataMaps:
-                        idx = DM.DataMaps[adr]
+                    # 데이터 매핑 및 가공
+                    for adr, deg, lab in DL.DataLists:
+                        if adr in DM.DataMaps:
+                            idx = DM.DataMaps[adr]
                         
-                        # 인덱스 범위 안전 검사
-                        if idx < len(recvdata):
-                            try:
-                                raw_val = int(recvdata[idx])
-                                deg_str = str(deg)
-                                decimals = len(deg_str.split('.')[1]) if '.' in deg_str else 0
-                                labled_data[lab] = round(raw_val * deg, decimals)
-                            except ValueError:
-                                pass
-                        else:
-                            print(f"인덱스 초과 에러 - 주소: {adr}, 지시 인덱스: {idx}, 수신 개수: {len(recvdata)}")
+                            # 인덱스 범위 안전 검사
+                            if idx < len(recvdata):
+                                try:
+                                    raw_val = int(recvdata[idx])
+                                    deg_str = str(deg)
+                                    decimals = len(deg_str.split('.')[1]) if '.' in deg_str else 0
+                                    labled_data[lab] = round(raw_val * deg, decimals)
+                                except ValueError:
+                                    pass
+                            else:
+                                print(f"인덱스 초과 에러 - 주소: {adr}, 지시 인덱스: {idx}, 수신 개수: {len(recvdata)}")
+                if "AWr" in data_parts[0]:
+                    print(f"🎯 장비로부터 AWr 응답 감지: {line.strip()}")
+                
+                    # 결과 데이터 저장
+                    ET.device_response_data["status"] = "SUCCESS"
+                    ET.device_response_data["raw_line"] = line
+                
+                    # 다른 스레드(asyncio 루프)에 있는 Event를 안전하게 Set (플래그 On)
+                    ET.loop.call_soon_threadsafe(ET.device_response_event.set)
+                    continue # 브로드캐스트 파싱 로직을 타지 않고 다음 라인으로 패스
 
     except ConnectionResetError:
         print("상대방과의 연결이 강제로 끊겼습니다.")
