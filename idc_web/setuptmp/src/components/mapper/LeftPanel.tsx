@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Role } from '../types';
+import type { Role } from '../../types';
 
 interface Props {
   facilities: any[];

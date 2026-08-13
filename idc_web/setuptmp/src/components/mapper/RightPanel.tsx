@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Role, ChartGroup } from '../types';
+import type { Role, ChartGroup } from '../../types';
 
 interface Props {
   existingGroups: ChartGroup[];
