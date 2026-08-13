@@ -22,7 +22,6 @@ export const apiService = {
     const res = await fetch(`${BASE_URL}/chart-mapping/groups/${facilityId}/${roomId}`);
     return res.json();
   },
-  // data_type 제거
   createChartGroup: async (data: { facility_id: number; room_id: number; group_name: string; role_ids: number[] }) => {
     const res = await fetch(`${BASE_URL}/chart-mapping/group`, {
       method: 'POST',
@@ -31,4 +30,6 @@ export const apiService = {
     });
     return res.json();
   }
+
+  
 };
