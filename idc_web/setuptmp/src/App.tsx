@@ -1,18 +1,50 @@
+// src/App.tsx
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { ChartMappingPage } from './pages/ChartMappingPage';
+import { ChartViewerPage }  from './pages/ChartViewerPage';
 import './App.css';
 
 function App() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: 10 }}>
-      <header style={{ border: '2px solid orange', padding: 10, textAlign: 'center', marginBottom: 10 }}>
-        <h2>IDCool 차트 매핑 관리자</h2>
-      </header>
-      
-      {/* 라우팅 라이브러리(react-router-dom) 도입 전이므로 바로 페이지 렌더링 */}
-      <ChartMappingPage />
-      
-    </div>
+    <Router>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100vh', 
+        padding: 10, 
+        backgroundColor: '#121212', // 와이어프레임과 유사한 다크 테마
+        color: '#ffffff',
+        boxSizing: 'border-box' 
+      }}>
+        
+        {/* 공통 Header */}
+        <header style={{ border: '2px solid #e91e63', padding: 20, textAlign: 'center', marginBottom: 10 }}>
+          <h2 style={{ margin: 0, color: '#e91e63' }}>header</h2>
+        </header>
+        
+        {/* 공통 Nav */}
+        <nav style={{ border: '2px solid #ff9800', padding: 15, marginBottom: 10, display: 'flex', gap: 20, alignItems: 'center' }}>
+          <strong style={{ color: '#ff9800' }}>nav</strong>
+          <Link to="/" style={{ color: '#ffffff', textDecoration: 'none' }}>[맵핑 관리자]</Link>
+          <Link to="/viewer" style={{ color: '#ffffff', textDecoration: 'none' }}>[웹 차트 뷰어]</Link>
+        </nav>
+
+        {/* 라우팅 영역 (페이지별 내용이 바뀌는 곳) */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <Routes>
+            <Route path="/" element={<ChartMappingPage />} />
+            <Route path="/viewer" element={<ChartViewerPage />} />
+          </Routes>
+        </div>
+
+        {/* 공통 Footer */}
+        <footer style={{ border: '2px solid #673ab7', padding: 20, textAlign: 'center', marginTop: 10 }}>
+          <span style={{ color: '#673ab7', fontWeight: 'bold' }}>footer</span>
+        </footer>
+
+      </div>
+    </Router>
   );
 }
 

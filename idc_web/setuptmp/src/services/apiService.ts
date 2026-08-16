@@ -22,13 +22,17 @@ export const apiService = {
     const res = await fetch(`${BASE_URL}/chart-mapping/groups/${facilityId}/${roomId}`);
     return res.json();
   },
-  // data_type 제거
   createChartGroup: async (data: { facility_id: number; room_id: number; group_name: string; role_ids: number[] }) => {
     const res = await fetch(`${BASE_URL}/chart-mapping/group`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    return res.json();
+  },
+
+  getHistoricalData: async (facilityId: number, roomId: number, scale: string, endTime: string, roleIds: number[]) => {
+    const res = await fetch(`${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&end_time=${endTime}&role_ids=${roleIds.join(',')}`);
     return res.json();
   }
 };
