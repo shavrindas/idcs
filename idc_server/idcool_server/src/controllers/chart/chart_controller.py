@@ -14,9 +14,10 @@ SCALE_MAPPING = {
     "10s": "10 seconds",
     "1m": "1 minute",
     "5m": "5 minutes",
+    "10m": "10 minutes",  
+    "15m": "15 minutes",  
     "1h": "1 hour"
 }
-
 @router.get("/{facility_id}/{room_id}")
 async def get_chart_data(
     facility_id: int,
