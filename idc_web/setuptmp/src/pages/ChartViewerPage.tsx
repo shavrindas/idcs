@@ -39,7 +39,10 @@ export const ChartViewerPage: React.FC = () => {
   const [showSubInfo, setShowSubInfo] = useState<boolean>(false); 
   const [showSubGrid, setShowSubGrid] = useState<boolean>(true);
 
-  // 💡 TS 에러 수정을 위해 명시적으로 | null 추가[cite: 3]
+  // 💡 [RQ-6.4] 개별 옵션 드롭다운 메뉴 및 가이드라인 상태 관리
+  const [openMenuRoleId, setOpenMenuRoleId] = useState<number | null>(null);
+  const [activeGuidelines, setActiveGuidelines] = useState<number[]>([]);
+
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null);
 
@@ -51,6 +54,7 @@ export const ChartViewerPage: React.FC = () => {
     if (selectedFacility) {
       apiService.getRooms(Number(selectedFacility)).then(res => setRooms(res.rooms || []));
       setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]);
+      setActiveGuidelines([]); setOpenMenuRoleId(null);
     }
   }, [selectedFacility]);
 
@@ -69,6 +73,7 @@ export const ChartViewerPage: React.FC = () => {
           setRoleColors(newColorMap);
         });
       setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]);
+      setActiveGuidelines([]); setOpenMenuRoleId(null);
     }
   }, [selectedRoom, selectedFacility]);
 
@@ -156,40 +161,40 @@ export const ChartViewerPage: React.FC = () => {
     }
   };
 
-  // 💡 [신규] 최근 시간 단위(1H, 3H, 1D 등)로 타겟을 '현재'로 갱신하고 차트 뷰포트 이동
   const handleQuickTimeSelect = (hours: number) => {
     const now = new Date();
-    setTargetDate(getLocalDatetimeString(now)); // 항상 현재 기준
-    
-    // API 데이터 로딩 후 줌을 맞추기 위해 약간의 딜레이 적용
+    setTargetDate(getLocalDatetimeString(now)); 
     setTimeout(() => {
       const mainInst = mainChartRef.current?.getEchartsInstance();
       if (mainInst) {
         const end = now.getTime();
         const start = end - (hours * 60 * 60 * 1000);
         const zoomPayload = { type: 'dataZoom', startValue: start, endValue: end };
-        
         mainInst.dispatchAction(zoomPayload);
         subChartRef.current?.getEchartsInstance().dispatchAction(zoomPayload);
       }
     }, 300); 
   };
 
-  // 💡 [신규] 최근 요일(일~토)로 타겟 시간 이동
   const handleQuickDaySelect = (targetDayOfWeek: number) => {
     const now = new Date();
     const currentDay = now.getDay();
     let diff = currentDay - targetDayOfWeek;
-    
-    // 만약 오늘(목=4)인데 화요일(2)을 선택하면 2일 전. 
-    // 오늘(목=4)인데 금요일(5)을 선택하면 (4-5 = -1), 지난주 금요일(6일 전)로 처리.
-    if (diff < 0) {
-      diff += 7;
-    }
-    
-    // diff가 0이면 오늘을 의미함
+    if (diff < 0) diff += 7;
     const targetDateObj = new Date(now.getTime() - (diff * 24 * 60 * 60 * 1000));
     setTargetDate(getLocalDatetimeString(targetDateObj));
+  };
+
+  // 💡 [RQ-6.4] 색상 변경 적용
+  const handleColorChange = (roleId: number, color: string) => {
+    setRoleColors(prev => ({ ...prev, [roleId]: color }));
+  };
+
+  // 💡 [RQ-6.4] 가이드라인 토글
+  const handleGuidelineToggle = (roleId: number) => {
+    setActiveGuidelines(prev => 
+      prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
+    );
   };
 
   const currentGroup = groups.find(g => g.group_id === Number(selectedGroupId));
@@ -228,6 +233,7 @@ export const ChartViewerPage: React.FC = () => {
               roleColors={roleColors} 
               showInfo={showMainInfo} 
               showGrid={showMainGrid} 
+              activeGuidelines={activeGuidelines} // 💡 [RQ-6.4] 속성 전달
             />
           </div>
           
@@ -288,7 +294,6 @@ export const ChartViewerPage: React.FC = () => {
               {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
             </select>
 
-            {/* 💡 [신규] 최근 시간 단위 스위칭 컴포넌트 */}
             <div style={{ border: '1px solid #555', padding: 10, marginTop: 5, backgroundColor: '#222' }}>
               <div style={{ fontSize: 12, marginBottom: 8, color: '#aaa' }}>최근 시간 이동 (현재 기준)</div>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -307,7 +312,6 @@ export const ChartViewerPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 💡 [신규] 최근 요일 스위칭 컴포넌트 */}
             <div style={{ border: '1px solid #555', padding: 10, backgroundColor: '#222' }}>
               <div style={{ fontSize: 12, marginBottom: 8, color: '#aaa' }}>최근 요일 이동</div>
               <div style={{ display: 'flex', gap: 5 }}>
@@ -351,18 +355,69 @@ export const ChartViewerPage: React.FC = () => {
               const roleInfo = allRoles.find(r => r.role_id === roleId);
               const roleName = roleInfo ? roleInfo.role_name : `Role ${roleId}`;
               const color = roleColors[roleId] || '#ffffff';
+              const isBool = isBoolRole(roleId);
               
               return (
-                <label key={roleId} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: color, fontWeight: 'bold' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={checkedRoles.includes(roleId)} 
-                    onChange={() => handleRoleToggle(roleId)}
-                    style={{ marginRight: 5, accentColor: color }}
-                  /> 
-                  <span style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: color, marginRight: 5, borderRadius: 2 }}></span>
-                  {roleName}
-                </label>
+                // 💡 [RQ-6.4] 개별 옵션 드롭다운 메뉴를 띄우기 위한 relative 래퍼
+                <div key={roleId} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: color, fontWeight: 'bold' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={checkedRoles.includes(roleId)} 
+                      onChange={() => handleRoleToggle(roleId)}
+                      style={{ marginRight: 5, accentColor: color }}
+                    /> 
+                    {roleName}
+                  </label>
+                  
+                  {/* 💡 [RQ-6.4] 톱니바퀴 아이콘 (메뉴 토글 버튼) */}
+                  <span 
+                    onClick={() => setOpenMenuRoleId(openMenuRoleId === roleId ? null : roleId)}
+                    style={{ marginLeft: 5, cursor: 'pointer', fontSize: 16 }}
+                  >
+                    ⚙️
+                  </span>
+
+                  {/* 💡 [RQ-6.4] 드롭다운 팝오버 메뉴 (위쪽으로 노출) */}
+                  {openMenuRoleId === roleId && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      bottom: 'calc(100% + 8px)', // 위쪽 방향으로 배치
+                      left: 0, 
+                      zIndex: 1000, 
+                      backgroundColor: '#2a2a2a', 
+                      border: '1px solid #555', 
+                      padding: 10, 
+                      borderRadius: 4, 
+                      minWidth: 160,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    }}>
+                      <div style={{ marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, color: '#ccc' }}>색상 변경:</span>
+                        <input 
+                          type="color" 
+                          value={color} 
+                          onChange={(e) => handleColorChange(roleId, e.target.value)} 
+                          style={{ cursor: 'pointer', border: 'none', background: 'transparent', width: 30, height: 25 }}
+                        />
+                      </div>
+                      
+                      {!isBool && (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <label style={{ fontSize: 12, color: '#ccc', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={activeGuidelines.includes(roleId)} 
+                              onChange={() => handleGuidelineToggle(roleId)}
+                              style={{ marginRight: 5 }}
+                            /> 
+                            가이드라인 표시
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               );
             })}
             {selectedGroupId && groupRoleIds.length === 0 && (

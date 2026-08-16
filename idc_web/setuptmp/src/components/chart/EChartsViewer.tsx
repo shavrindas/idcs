@@ -6,22 +6,20 @@ import * as echarts from 'echarts';
 interface Props {
   datasets?: any[];
   roleColors: Record<number, string>;
-  // [RQ-Top.1, RQ-Lower.1] 정보 출력 토글용
   showInfo?: boolean;
-  // [RQ-Top.3, RQ-Lower.4] 그리드 출력 토글용
   showGrid?: boolean;
-  // [RQ-Lower.2, RQ-Lower.3] 시점 동기화를 위한 부모 컴포넌트 참조 전달
-  echartsRef?: React.RefObject<ReactECharts | null>; // 👈 '| null' 추가
+  echartsRef?: React.RefObject<ReactECharts | null>;
+  // [RQ-6.4] 가이드라인 활성화된 포인트 롤 ID 배열
+  activeGuidelines?: number[]; 
 }
 
-// RQ-3.3: 두 개의 분리된 차트를 묶기 위한 그룹명
 const SYNC_GROUP_NAME = 'idcool-chart-group';
 echarts.connect(SYNC_GROUP_NAME);
 
 // ==========================================
 // 1. 수치형 데이터 전용 메인 차트
 // ==========================================
-export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef }) => {
+export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [] }) => {
   useEffect(() => {
     if (echartsRef && echartsRef.current) {
       echartsRef.current.getEchartsInstance().group = SYNC_GROUP_NAME;
@@ -29,38 +27,75 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
   }, [echartsRef]);
 
   const getOption = () => {
-    const seriesData = (datasets || []).map(ds => ({
-      name: ds.role_name,
-      type: 'line',
-      showSymbol: false,
-      itemStyle: { color: roleColors[ds.role_id] },
-      data: (ds.data || []).map((pt: any) => [new Date(pt.timestamp).getTime(), pt.mean])
-    }));
+    const seriesData = (datasets || []).map(ds => {
+      const color = roleColors[ds.role_id];
+      const seriesItem: any = {
+        name: ds.role_name,
+        type: 'line',
+        showSymbol: false,
+        itemStyle: { color: color },
+        data: (ds.data || []).map((pt: any) => [new Date(pt.timestamp).getTime(), pt.mean])
+      };
+
+      // [RQ-6.4] 활성화된 가이드라인 렌더링
+      if (activeGuidelines.includes(ds.role_id)) {
+        const markLineData: any[] = [];
+        
+        if (ds.target_value != null) {
+          markLineData.push({ yAxis: Number(ds.target_value), name: 'Target', lineStyle: { type: 'solid', color: color, width: 2 } });
+        }
+        if (ds.target_low_limit != null) {
+          markLineData.push({ yAxis: Number(ds.target_low_limit), name: 'Low', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
+        }
+        if (ds.target_high_limit != null) {
+          markLineData.push({ yAxis: Number(ds.target_high_limit), name: 'High', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
+        }
+
+        if (markLineData.length > 0) {
+          seriesItem.markLine = {
+            data: markLineData,
+            symbol: 'none',
+            label: { 
+              show: true, 
+              position: 'start', // 💡 좌측(시작점)에 배치
+              distance: [10, -10], // 선 바로 위쪽/좌측 안쪽으로 살짝 띄움
+              formatter: '{b}: {c}', 
+              color: color,
+              fontSize: 11,
+              backgroundColor: 'rgba(30, 30, 30, 0.7)', // 💡 배경 그리드와 겹칠 때 글자가 또렷하게 보이도록 반투명 배경 추가
+              padding: [2, 4],
+              borderRadius: 2
+            }
+          };
+        }
+      }
+
+      return seriesItem;
+    });
 
     return {
-      // [RQ-Top.1] 정보 출력 토글
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
       grid: { left: 60, right: 50, top: 30, bottom: 25 },
-      // [RQ-Top.3] 그리드 출력 토글 (X축)
       xAxis: { 
         type: 'time', 
         axisLabel: { show: false }, 
         axisTick: { show: false },
         splitLine: { show: showGrid, lineStyle: { color: '#333' } }
       },
-      // [RQ-Top.3] 그리드 출력 토글 (Y축)
       yAxis: { 
         type: 'value', 
         name: '수치 (Main)',
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } }
+        splitLine: { show: showGrid, lineStyle: { color: '#333' } },
+        // [RQ-6.4] 가이드라인이 차트 범위를 벗어나도 렌더링되도록 스케일 조정 방지 풀기
+        scale: true 
       },
       dataZoom: [{ type: 'inside' }],
       series: seriesData
     };
   };
 
-  return <ReactECharts ref={echartsRef} option={getOption()} style={{ height: '100%', width: '100%' }} notMerge={true} />;
+  return <ReactECharts ref={echartsRef as any} option={getOption()} style={{ height: '100%', width: '100%' }} notMerge={true} />;
 };
 
 // ==========================================
@@ -93,10 +128,8 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
     });
 
     return {
-      // [RQ-Lower.1] 정보 출력 토글
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       grid: { left: 60, right: 50, top: 10, bottom: 25 },
-      // [RQ-Lower.4] 그리드 출력 토글 (X축)
       xAxis: { 
         type: 'time',
         splitLine: { show: showGrid, lineStyle: { color: '#333' } }
@@ -105,7 +138,6 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
         type: 'category', 
         name: '상태 (Sub)', 
         data: boolCategories.length > 0 ? boolCategories : ['데이터 없음'],
-        // [RQ-Lower.4] 그리드 출력 토글 (Y축)
         splitLine: { show: showGrid, lineStyle: { color: '#444', type: 'dashed' } },
         axisLabel: { color: '#ccc', fontSize: 10 }
       },
@@ -117,5 +149,5 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
     };
   };
 
-  return <ReactECharts ref={echartsRef} option={getOption()} style={{ height: '100%', width: '100%' }} notMerge={true} />;
+  return <ReactECharts ref={echartsRef as any} option={getOption()} style={{ height: '100%', width: '100%' }} notMerge={true} />;
 };
