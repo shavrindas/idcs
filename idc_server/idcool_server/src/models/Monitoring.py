@@ -6,6 +6,8 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, REAL, Interval, 
     ForeignKey, UniqueConstraint, Index, CHAR, func
 )
+from src.models.Board import Post
+
 
 from sqlalchemy.orm import relationship
 from config.db import Base
@@ -155,3 +157,13 @@ class ChartGroupMapping(Base):
     group_id = Column(Integer, ForeignKey("chart_group_table.id", ondelete="CASCADE"), primary_key=True)
     role_id = Column(Integer, ForeignKey("point_role_table.id", ondelete="CASCADE"), primary_key=True)
 
+class PostHiddenChartGroup(Base):
+    __tablename__ = "post_hidden_chart_groups"
+
+    post_id = Column(Integer, ForeignKey("posts.post_id", ondelete="CASCADE"), primary_key=True)
+    group_id = Column(Integer, ForeignKey("chart_group_table.id", ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 설정 (필요시)
+    post = relationship("Post")
+    group = relationship("ChartGroup")
