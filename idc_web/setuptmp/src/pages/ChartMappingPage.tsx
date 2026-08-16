@@ -9,17 +9,17 @@ export const ChartMappingPage: React.FC = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<number | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
-  
+
   const [room0Roles, setRoom0Roles] = useState<Role[]>([]);
   const [targetRoomRoles, setTargetRoomRoles] = useState<Role[]>([]);
-  
+
   const [existingGroups, setExistingGroups] = useState<ChartGroup[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number | 'new'>('new');
   const [groupName, setGroupName] = useState('');
   const [droppedRoles, setDroppedRoles] = useState<Role[]>([]);
 
   useEffect(() => {
-    apiService.getFacilities().then(data => setFacilities(data.facilities || []));
+    apiService.getFacilities().then((data) => setFacilities(data.facilities || []));
   }, []);
 
   const handleFacilityChange = async (facId: number) => {
@@ -28,10 +28,10 @@ export const ChartMappingPage: React.FC = () => {
     setTargetRoomRoles([]);
     setExistingGroups([]);
     resetGroupForm();
-    
+
     const roomData = await apiService.getRooms(facId);
     setRooms(roomData.rooms || []);
-    const roleData = await apiService.getPointRoles(facId, 0); 
+    const roleData = await apiService.getPointRoles(facId, 0);
     setRoom0Roles(roleData.roles || []);
   };
 
@@ -53,30 +53,49 @@ export const ChartMappingPage: React.FC = () => {
   };
 
   const handleGroupSelect = (val: string) => {
-    if (val === 'new') { resetGroupForm(); return; }
+    if (val === 'new') {
+      resetGroupForm();
+      return;
+    }
     const gId = Number(val);
     setSelectedGroupId(gId);
-    const targetGroup = existingGroups.find(g => g.group_id === gId);
+    const targetGroup = existingGroups.find((g) => g.group_id === gId);
     if (targetGroup) {
       setGroupName(targetGroup.group_name);
       const allAvailableRoles = [...room0Roles, ...targetRoomRoles];
-      const validRoleIds = (targetGroup.role_ids || []).filter(id => id !== null);
-      const loadedRoles = validRoleIds.map(id => allAvailableRoles.find(r => r.role_id === id)).filter(Boolean) as Role[];
+      const validRoleIds = (targetGroup.role_ids || []).filter((id) => id !== null);
+      const loadedRoles = validRoleIds
+        .map((id) => allAvailableRoles.find((r) => r.role_id === id))
+        .filter(Boolean) as Role[];
       setDroppedRoles(loadedRoles);
     }
   };
 
-  const onDragStart = (e: React.DragEvent, role: Role) => e.dataTransfer.setData("application/json", JSON.stringify(role));
-  const onDragOver = (e: React.DragEvent) => e.preventDefault();
+  const onDragStart = (e: React.DragEvent, role: Role) => {
+    e.dataTransfer.setData('application/json', JSON.stringify(role));
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const roleData = e.dataTransfer.getData("application/json");
+    const roleData = e.dataTransfer.getData('application/json');
     if (roleData) {
       const role: Role = JSON.parse(roleData);
-      if (!droppedRoles.find(r => r.role_id === role.role_id)) {
+      if (!droppedRoles.find((r) => r.role_id === role.role_id)) {
         setDroppedRoles([...droppedRoles, role]);
       }
     }
+  };
+
+  const handleReorderRoles = (sourceIndex: number, targetIndex: number) => {
+    if (sourceIndex === targetIndex) return;
+    const updated = [...droppedRoles];
+    const [movedItem] = updated.splice(sourceIndex, 1);
+    updated.splice(targetIndex, 0, movedItem);
+    setDroppedRoles(updated);
   };
 
   const handleSaveGroup = async () => {
@@ -90,7 +109,7 @@ export const ChartMappingPage: React.FC = () => {
         facility_id: selectedFacility,
         room_id: selectedRoom,
         group_name: groupName,
-        role_ids: droppedRoles.map(r => r.role_id)
+        role_ids: droppedRoles.map((r) => r.role_id),
       });
       alert('생성 완료!');
       handleRoomChange(selectedRoom);
@@ -100,16 +119,31 @@ export const ChartMappingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flex: 1, gap: 10 }}>
-      <LeftPanel 
-        facilities={facilities} rooms={rooms} selectedFacility={selectedFacility} selectedRoom={selectedRoom}
-        room0Roles={room0Roles} targetRoomRoles={targetRoomRoles}
-        onFacilityChange={handleFacilityChange} onRoomChange={handleRoomChange} onDragStart={onDragStart} 
+    <div style={{ display: 'flex', flex: 1, minHeight: 0, height: '100%', gap: 10 }}>
+      <LeftPanel
+        facilities={facilities}
+        rooms={rooms}
+        selectedFacility={selectedFacility}
+        selectedRoom={selectedRoom}
+        room0Roles={room0Roles}
+        targetRoomRoles={targetRoomRoles}
+        droppedRoleIds={droppedRoles.map((r) => r.role_id)}
+        onFacilityChange={handleFacilityChange}
+        onRoomChange={handleRoomChange}
+        onDragStart={onDragStart}
       />
-      <RightPanel 
-        existingGroups={existingGroups} selectedGroupId={selectedGroupId} groupName={groupName} droppedRoles={droppedRoles}
-        onGroupSelect={handleGroupSelect} onGroupNameChange={setGroupName} onDrop={onDrop} onDragOver={onDragOver}
-        onRemoveRole={(id) => setDroppedRoles(droppedRoles.filter(r => r.role_id !== id))} onSaveGroup={handleSaveGroup} 
+      <RightPanel
+        existingGroups={existingGroups}
+        selectedGroupId={selectedGroupId}
+        groupName={groupName}
+        droppedRoles={droppedRoles}
+        onGroupSelect={handleGroupSelect}
+        onGroupNameChange={setGroupName}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onRemoveRole={(id) => setDroppedRoles(droppedRoles.filter((r) => r.role_id !== id))}
+        onReorderRoles={handleReorderRoles}
+        onSaveGroup={handleSaveGroup}
       />
     </div>
   );

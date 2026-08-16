@@ -1,84 +1,105 @@
 // src/components/chart/EChartsViewer.tsx
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
 
 interface Props {
   datasets?: any[];
+  roleColors: Record<number, string>;
 }
 
-export const EChartsViewer: React.FC<Props> = ({ datasets }) => {
+const SYNC_GROUP_NAME = 'idcool-chart-group';
+echarts.connect(SYNC_GROUP_NAME);
+
+// ==========================================
+// 1. 수치형 데이터 전용 메인 차트
+// ==========================================
+export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors }) => {
   const chartRef = useRef<ReactECharts>(null);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.getEchartsInstance().group = SYNC_GROUP_NAME;
+    }
+  }, []);
+
+  const getOption = () => {
+    const seriesData = (datasets || []).map(ds => ({
+      name: ds.role_name,
+      type: 'line',
+      showSymbol: false,
+      itemStyle: { color: roleColors[ds.role_id] },
+      data: (ds.data || []).map((pt: any) => [new Date(pt.timestamp).getTime(), pt.mean])
+    }));
+
+    return {
+      tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+      axisPointer: { link: [{ xAxisIndex: 'all' }] },
+      grid: { left: 60, right: 50, top: 30, bottom: 25 },
+      xAxis: { type: 'time', axisLabel: { show: false }, axisTick: { show: false } },
+      yAxis: { type: 'value', name: '수치 (Main)' },
+      dataZoom: [{ type: 'inside' }],
+      series: seriesData
+    };
+  };
+
+  return <ReactECharts ref={chartRef} option={getOption()} style={{ height: '100%', width: '100%' }} notMerge={true} />;
+};
+
+// ==========================================
+// 2. 상태형(BOOL) 데이터 전용 서브 차트
+// ==========================================
+export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors }) => {
+  const chartRef = useRef<ReactECharts>(null);
+
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.getEchartsInstance().group = SYNC_GROUP_NAME;
+    }
+  }, []);
 
   const getOption = () => {
     const seriesData: any[] = [];
-    
-    datasets?.forEach(ds => {
-      // 롤 이름이나 데이터 구조로 bool 데이터를 식별
-      const isBool = ds.role_name.toLowerCase().includes('bool') || (ds.data[0] && ds.data[0].hasOwnProperty('status'));
-      
-      const mappedData = ds.data.map((pt: any) => {
-        const time = new Date(pt.timestamp).getTime();
-        const val = isBool ? (pt.status ? 1 : 0) : pt.mean;
-        return [time, val];
-      });
+    const boolCategories = (datasets || []).map(ds => ds.role_name);
 
-      if (isBool) {
-        seriesData.push({
-          name: ds.role_name,
-          type: 'scatter',
-          xAxisIndex: 1, // Sub Chart 영역
-          yAxisIndex: 1,
-          symbolSize: 8,
-          data: mappedData
-        });
-      } else {
-        seriesData.push({
-          name: ds.role_name,
-          type: 'line',
-          xAxisIndex: 0, // Main Chart 영역
-          yAxisIndex: 0,
-          showSymbol: false,
-          data: mappedData
-        });
-      }
+    (datasets || []).forEach((ds, index) => {
+      // 💡 다양한 True 상태값 (1, "1", "true", true) 필터링
+      const mappedData = (ds.data || [])
+        .filter((pt: any) => 
+          pt.status === true || pt.status === 1 || String(pt.status) === 'true' || 
+          pt.mean === 1 || String(pt.mean) === '1'
+        )
+        .map((pt: any) => [new Date(pt.timestamp).getTime(), index]);
+
+      seriesData.push({
+        name: ds.role_name,
+        type: 'scatter',
+        symbol: 'rect',
+        symbolSize: [3, 20],
+        itemStyle: { color: roleColors[ds.role_id] },
+        data: mappedData
+      });
     });
 
     return {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'cross' },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+      grid: { left: 60, right: 50, top: 10, bottom: 25 },
+      xAxis: { type: 'time' },
+      // 💡 ECharts 에러 방어: 카테고리가 0개일 때 빈 배열 대신 placeholder 제공
+      yAxis: { 
+        type: 'category', 
+        name: '상태 (Sub)', 
+        data: boolCategories.length > 0 ? boolCategories : ['데이터 없음'],
+        splitLine: { show: true, lineStyle: { color: '#333' } },
+        axisLabel: { color: '#ccc', fontSize: 10 }
       },
-      axisPointer: {
-        link: [{ xAxisIndex: 'all' }],
-        label: { backgroundColor: '#777' }
-      },
-      grid: [
-        { left: 50, right: 50, top: 40, bottom: '35%' }, // Main Chart
-        { left: 50, right: 50, top: '75%', height: '20%' } // Sub Chart
-      ],
-      xAxis: [
-        { type: 'time', gridIndex: 0, axisLabel: { show: false }, axisLine: { show: false }, axisTick: { show: false } },
-        { type: 'time', gridIndex: 1 }
-      ],
-      yAxis: [
-        { type: 'value', gridIndex: 0, name: '수치' },
-        { type: 'value', gridIndex: 1, name: '상태', splitLine: { show: false }, min: -0.5, max: 1.5, axisLabel: { show: false } }
-      ],
       dataZoom: [
-        { type: 'inside', xAxisIndex: [0, 1] },
-        { type: 'slider', xAxisIndex: [0, 1], bottom: 0, height: 20 }
+        { type: 'inside' },
+        { type: 'slider', bottom: 0, height: 20 }
       ],
       series: seriesData
     };
   };
 
-  return (
-    <ReactECharts
-      ref={chartRef}
-      option={getOption()}
-      style={{ height: '100%', width: '100%' }}
-      notMerge={false} 
-    />
-  );
+  return <ReactECharts ref={chartRef} option={getOption()} style={{ height: '100%', width: '100%' }} notMerge={true} />;
 };
