@@ -131,3 +131,15 @@ class MessageHashtag(Base):
 
     message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="CASCADE"), primary_key=True)
     hashtag_id = Column(Integer, ForeignKey("hashtags.hashtag_id", ondelete="CASCADE"), primary_key=True)
+
+
+class PostHiddenChartGroup(Base):
+    __tablename__ = "post_hidden_chart_groups"
+
+    post_id = Column(Integer, ForeignKey("posts.post_id", ondelete="CASCADE"), primary_key=True)
+    group_id = Column(Integer, ForeignKey("chart_group_table.id", ondelete="CASCADE"), primary_key=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 설정 (필요시)
+    post = relationship("Post")
+    group = relationship("ChartGroup")
