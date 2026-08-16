@@ -39,9 +39,11 @@ export const ChartViewerPage: React.FC = () => {
   const [showSubInfo, setShowSubInfo] = useState<boolean>(false); 
   const [showSubGrid, setShowSubGrid] = useState<boolean>(true);
 
-  // 💡 [RQ-6.4] 개별 옵션 드롭다운 메뉴 및 가이드라인 상태 관리
   const [openMenuRoleId, setOpenMenuRoleId] = useState<number | null>(null);
   const [activeGuidelines, setActiveGuidelines] = useState<number[]>([]);
+
+  // 💡 [신규] 로딩 상태 관리
+  const [isChartLoading, setIsChartLoading] = useState<boolean>(false);
 
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null);
@@ -88,15 +90,35 @@ export const ChartViewerPage: React.FC = () => {
     }
   }, [selectedGroupId, groups]);
 
+  // 💡 [수정] 데이터 호출 시 경합 조건(Race Condition) 방어 로직 추가
   useEffect(() => {
+    let isMounted = true; // 컴포넌트 마운트 상태 추적 플래그
+
     if (selectedFacility && selectedRoom && checkedRoles.length > 0 && targetDate) {
+      setIsChartLoading(true); // 로딩 시작
       const endIso = new Date(targetDate).toISOString();
+      
       apiService.getHistoricalData(Number(selectedFacility), Number(selectedRoom), scale, endIso, checkedRoles)
-        .then(res => setChartDataSets(res.data?.datasets || []))
-        .catch(err => console.error("차트 호출 오류:", err));
+        .then(res => {
+          // 응답이 도착했을 때, 컴포넌트가 살아있고 스코프가 바뀌지 않았을 때만 상태 업데이트
+          if (isMounted) {
+            setChartDataSets(res.data?.datasets || []);
+          }
+        })
+        .catch(err => {
+          if (isMounted) console.error("차트 호출 오류:", err);
+        })
+        .finally(() => {
+          if (isMounted) setIsChartLoading(false); // 로딩 종료
+        });
     } else {
       setChartDataSets([]);
     }
+
+    // 의존성 배열이 바뀌어 재호출되기 직전(또는 언마운트 시) 실행되는 클린업 함수
+    return () => {
+      isMounted = false; // 이전 API의 결과가 나중에 도착하더라도 무시되도록 함
+    };
   }, [selectedFacility, selectedRoom, scale, targetDate, checkedRoles]);
 
   const isBoolRole = (roleId: number) => {
@@ -105,6 +127,7 @@ export const ChartViewerPage: React.FC = () => {
   };
 
   const handleModeToggle = () => {
+    if (isChartLoading) return; // 로딩 중 조작 방지
     setMode(prev => {
       const nextMode = prev === 'DEFAULT' ? 'EXTENT' : 'DEFAULT';
       if (nextMode === 'EXTENT') {
@@ -117,6 +140,7 @@ export const ChartViewerPage: React.FC = () => {
   };
 
   const handleRoleToggle = (roleId: number) => {
+    if (isChartLoading) return; // 로딩 중 조작 방지
     const isBool = isBoolRole(roleId);
     setCheckedRoles(prev => {
       const isCurrentlyChecked = prev.includes(roleId);
@@ -162,6 +186,7 @@ export const ChartViewerPage: React.FC = () => {
   };
 
   const handleQuickTimeSelect = (hours: number) => {
+    if (isChartLoading) return; // 로딩 중 조작 방지
     const now = new Date();
     setTargetDate(getLocalDatetimeString(now)); 
     setTimeout(() => {
@@ -177,6 +202,7 @@ export const ChartViewerPage: React.FC = () => {
   };
 
   const handleQuickDaySelect = (targetDayOfWeek: number) => {
+    if (isChartLoading) return; // 로딩 중 조작 방지
     const now = new Date();
     const currentDay = now.getDay();
     let diff = currentDay - targetDayOfWeek;
@@ -185,12 +211,10 @@ export const ChartViewerPage: React.FC = () => {
     setTargetDate(getLocalDatetimeString(targetDateObj));
   };
 
-  // 💡 [RQ-6.4] 색상 변경 적용
   const handleColorChange = (roleId: number, color: string) => {
     setRoleColors(prev => ({ ...prev, [roleId]: color }));
   };
 
-  // 💡 [RQ-6.4] 가이드라인 토글
   const handleGuidelineToggle = (roleId: number) => {
     setActiveGuidelines(prev => 
       prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]
@@ -222,18 +246,20 @@ export const ChartViewerPage: React.FC = () => {
               <button onClick={applyOneHourView} style={{ padding: '4px 8px', backgroundColor: '#ff9800', color: 'white', border: 'none', cursor: 'pointer' }}>
                 1시간 뷰
               </button>
-              <input type="datetime-local" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ padding: 4, backgroundColor: '#333', color: 'white', border: '1px solid #555' }} />
+              <input type="datetime-local" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} disabled={isChartLoading} style={{ padding: 4, backgroundColor: '#333', color: 'white', border: '1px solid #555' }} />
             </div>
           </div>
           
           <div style={{ border: '2px solid #ffffff', flex: 2, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0 }}>
+            {/* 💡 [신규] 로딩 상태 주입 */}
             <MainChartViewer 
               echartsRef={mainChartRef}
               datasets={mainDataSets} 
               roleColors={roleColors} 
               showInfo={showMainInfo} 
               showGrid={showMainGrid} 
-              activeGuidelines={activeGuidelines} // 💡 [RQ-6.4] 속성 전달
+              activeGuidelines={activeGuidelines} 
+              isLoading={isChartLoading}
             />
           </div>
           
@@ -256,12 +282,14 @@ export const ChartViewerPage: React.FC = () => {
           </div>
 
           <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0 }}>
+            {/* 💡 [신규] 로딩 상태 주입 */}
             <SubChartViewer 
               echartsRef={subChartRef}
               datasets={subDataSets} 
               roleColors={roleColors} 
               showInfo={showSubInfo}
               showGrid={showSubGrid}
+              isLoading={isChartLoading}
             />
           </div>
         </div>
@@ -275,21 +303,21 @@ export const ChartViewerPage: React.FC = () => {
           <div style={{ border: '2px solid #ffffff', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <h4 style={{ margin: 0, textAlign: 'center' }}>메인 조작 패널 1 (스코핑)</h4>
             
-            <button onClick={handleModeToggle} style={{ padding: 8, cursor: 'pointer', backgroundColor: '#555', color: '#fff', border: 'none' }}>
+            <button onClick={handleModeToggle} disabled={isChartLoading} style={{ padding: 8, cursor: 'pointer', backgroundColor: '#555', color: '#fff', border: 'none', opacity: isChartLoading ? 0.5 : 1 }}>
               현재 모드: {mode} (토글)
             </button>
-            <select value={scale} onChange={(e) => setScale(e.target.value as ChartScale)} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
+            <select value={scale} onChange={(e) => setScale(e.target.value as ChartScale)} disabled={isChartLoading} style={{ padding: 8, backgroundColor: '#333', color: '#fff', opacity: isChartLoading ? 0.5 : 1 }}>
               <option value="1m">1분 단위</option>
               <option value="5m">5분 단위</option>
               <option value="10m">10분 단위</option>
               <option value="15m">15분 단위</option>
               <option value="1h">1시간 단위</option>
             </select>
-            <select value={selectedFacility} onChange={(e) => setSelectedFacility(e.target.value ? Number(e.target.value) : '')} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
+            <select value={selectedFacility} onChange={(e) => setSelectedFacility(e.target.value ? Number(e.target.value) : '')} disabled={isChartLoading} style={{ padding: 8, backgroundColor: '#333', color: '#fff', opacity: isChartLoading ? 0.5 : 1 }}>
               <option value="">-- 시설 선택 --</option>
               {facilities.map(fac => <option key={fac.id} value={fac.id}>{fac.name}</option>)}
             </select>
-            <select value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value ? Number(e.target.value) : '')} disabled={!selectedFacility} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
+            <select value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value ? Number(e.target.value) : '')} disabled={!selectedFacility || isChartLoading} style={{ padding: 8, backgroundColor: '#333', color: '#fff', opacity: isChartLoading ? 0.5 : 1 }}>
               <option value="">-- 호실 선택 --</option>
               {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
             </select>
@@ -304,7 +332,8 @@ export const ChartViewerPage: React.FC = () => {
                   <button 
                     key={btn.label} 
                     onClick={() => handleQuickTimeSelect(btn.h)} 
-                    style={{ flex: 1, padding: '6px 0', backgroundColor: '#444', color: '#fff', border: '1px solid #666', cursor: 'pointer', fontSize: 12 }}
+                    disabled={isChartLoading}
+                    style={{ flex: 1, padding: '6px 0', backgroundColor: '#444', color: '#fff', border: '1px solid #666', cursor: isChartLoading ? 'not-allowed' : 'pointer', fontSize: 12, opacity: isChartLoading ? 0.5 : 1 }}
                   >
                     {btn.label}
                   </button>
@@ -319,7 +348,8 @@ export const ChartViewerPage: React.FC = () => {
                   <button 
                     key={dayStr} 
                     onClick={() => handleQuickDaySelect(idx)} 
-                    style={{ flex: 1, padding: '6px 0', backgroundColor: '#444', color: '#fff', border: '1px solid #666', cursor: 'pointer', fontSize: 12 }}
+                    disabled={isChartLoading}
+                    style={{ flex: 1, padding: '6px 0', backgroundColor: '#444', color: '#fff', border: '1px solid #666', cursor: isChartLoading ? 'not-allowed' : 'pointer', fontSize: 12, opacity: isChartLoading ? 0.5 : 1 }}
                   >
                     {dayStr}
                   </button>
@@ -343,8 +373,8 @@ export const ChartViewerPage: React.FC = () => {
           <select 
             value={selectedGroupId} 
             onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : '')} 
-            disabled={!selectedRoom || groups.length === 0}
-            style={{ padding: 8, minWidth: 200, backgroundColor: '#333', color: 'white' }}
+            disabled={!selectedRoom || groups.length === 0 || isChartLoading}
+            style={{ padding: 8, minWidth: 200, backgroundColor: '#333', color: 'white', opacity: isChartLoading ? 0.5 : 1 }}
           >
             <option value="">-- 맵핑 그룹 선택 --</option>
             {groups.map(g => <option key={g.group_id} value={g.group_id}>{g.group_name}</option>)}
@@ -358,19 +388,19 @@ export const ChartViewerPage: React.FC = () => {
               const isBool = isBoolRole(roleId);
               
               return (
-                // 💡 [RQ-6.4] 개별 옵션 드롭다운 메뉴를 띄우기 위한 relative 래퍼
                 <div key={roleId} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: color, fontWeight: 'bold' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: isChartLoading ? 'not-allowed' : 'pointer', color: color, fontWeight: 'bold', opacity: isChartLoading ? 0.5 : 1 }}>
                     <input 
                       type="checkbox" 
                       checked={checkedRoles.includes(roleId)} 
                       onChange={() => handleRoleToggle(roleId)}
+                      disabled={isChartLoading}
                       style={{ marginRight: 5, accentColor: color }}
                     /> 
+                    <span style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: color, marginRight: 5, borderRadius: 2 }}></span>
                     {roleName}
                   </label>
                   
-                  {/* 💡 [RQ-6.4] 톱니바퀴 아이콘 (메뉴 토글 버튼) */}
                   <span 
                     onClick={() => setOpenMenuRoleId(openMenuRoleId === roleId ? null : roleId)}
                     style={{ marginLeft: 5, cursor: 'pointer', fontSize: 16 }}
@@ -378,11 +408,10 @@ export const ChartViewerPage: React.FC = () => {
                     ⚙️
                   </span>
 
-                  {/* 💡 [RQ-6.4] 드롭다운 팝오버 메뉴 (위쪽으로 노출) */}
                   {openMenuRoleId === roleId && (
                     <div style={{ 
                       position: 'absolute', 
-                      bottom: 'calc(100% + 8px)', // 위쪽 방향으로 배치
+                      bottom: 'calc(100% + 8px)', 
                       left: 0, 
                       zIndex: 1000, 
                       backgroundColor: '#2a2a2a', 
