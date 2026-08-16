@@ -34,15 +34,14 @@ export const ChartViewerPage: React.FC = () => {
   const [chartDataSets, setChartDataSets] = useState<any[]>([]);
   const [roleColors, setRoleColors] = useState<Record<number, string>>({});
 
-  // [RQ-Top & RQ-Lower] 툴바 상태 관리 추가
   const [showMainInfo, setShowMainInfo] = useState<boolean>(true);
   const [showMainGrid, setShowMainGrid] = useState<boolean>(true);
-  const [showSubInfo, setShowSubInfo] = useState<boolean>(false); // 툴팁 가림 현상 방지를 위해 Sub는 기본 Off
+  const [showSubInfo, setShowSubInfo] = useState<boolean>(false); 
   const [showSubGrid, setShowSubGrid] = useState<boolean>(true);
 
-  // [RQ-Lower] 차트 강제 동기화를 위한 ECharts 인스턴스 참조
-  const mainChartRef = useRef<ReactECharts>(null);
-  const subChartRef = useRef<ReactECharts>(null);
+  // 💡 TS 에러 수정을 위해 명시적으로 | null 추가[cite: 3]
+  const mainChartRef = useRef<ReactECharts | null>(null);
+  const subChartRef = useRef<ReactECharts | null>(null);
 
   useEffect(() => {
     apiService.getFacilities().then(res => setFacilities(res.facilities || []));
@@ -126,17 +125,9 @@ export const ChartViewerPage: React.FC = () => {
     });
   };
 
-  // ==========================================
-  // 차트 강제 동기화 (Zoom/Pan 일치) 로직
-  // ==========================================
-
-  const syncChartDataZoom = (
-    sourceRef: React.RefObject<ReactECharts | null>, 
-    targetRef: React.RefObject<ReactECharts | null>
-  ) => {
+  const syncChartDataZoom = (sourceRef: React.RefObject<ReactECharts | null>, targetRef: React.RefObject<ReactECharts | null>) => {
     const srcInst = sourceRef.current?.getEchartsInstance();
     const tgtInst = targetRef.current?.getEchartsInstance();
-    
     if (srcInst && tgtInst) {
       const option = srcInst.getOption() as any;
       if (option.dataZoom && option.dataZoom.length > 0) {
@@ -146,27 +137,59 @@ export const ChartViewerPage: React.FC = () => {
       }
     }
   };
-  
-  // [RQ-Top.2] 1시간 단위 강제 포커싱 뷰어
+
   const applyOneHourView = () => {
     const mainInst = mainChartRef.current?.getEchartsInstance();
     if (mainInst) {
       const option = mainInst.getOption() as any;
       let centerTime = new Date(targetDate).getTime();
-      
-      // 차트가 현재 줌 되어있다면 화면 중앙을 기준으로 1시간을 잡음
       if (option.dataZoom && option.dataZoom.length > 0 && option.dataZoom[0].startValue) {
         const sv = option.dataZoom[0].startValue;
         const ev = option.dataZoom[0].endValue;
         centerTime = (sv + ev) / 2;
       }
-      
       const halfHourMs = 30 * 60 * 1000;
       const zoomPayload = { type: 'dataZoom', startValue: centerTime - halfHourMs, endValue: centerTime + halfHourMs };
       
       mainInst.dispatchAction(zoomPayload);
       subChartRef.current?.getEchartsInstance().dispatchAction(zoomPayload);
     }
+  };
+
+  // 💡 [신규] 최근 시간 단위(1H, 3H, 1D 등)로 타겟을 '현재'로 갱신하고 차트 뷰포트 이동
+  const handleQuickTimeSelect = (hours: number) => {
+    const now = new Date();
+    setTargetDate(getLocalDatetimeString(now)); // 항상 현재 기준
+    
+    // API 데이터 로딩 후 줌을 맞추기 위해 약간의 딜레이 적용
+    setTimeout(() => {
+      const mainInst = mainChartRef.current?.getEchartsInstance();
+      if (mainInst) {
+        const end = now.getTime();
+        const start = end - (hours * 60 * 60 * 1000);
+        const zoomPayload = { type: 'dataZoom', startValue: start, endValue: end };
+        
+        mainInst.dispatchAction(zoomPayload);
+        subChartRef.current?.getEchartsInstance().dispatchAction(zoomPayload);
+      }
+    }, 300); 
+  };
+
+  // 💡 [신규] 최근 요일(일~토)로 타겟 시간 이동
+  const handleQuickDaySelect = (targetDayOfWeek: number) => {
+    const now = new Date();
+    const currentDay = now.getDay();
+    let diff = currentDay - targetDayOfWeek;
+    
+    // 만약 오늘(목=4)인데 화요일(2)을 선택하면 2일 전. 
+    // 오늘(목=4)인데 금요일(5)을 선택하면 (4-5 = -1), 지난주 금요일(6일 전)로 처리.
+    if (diff < 0) {
+      diff += 7;
+    }
+    
+    // diff가 0이면 오늘을 의미함
+    const targetDateObj = new Date(now.getTime() - (diff * 24 * 60 * 60 * 1000));
+    setTargetDate(getLocalDatetimeString(targetDateObj));
   };
 
   const currentGroup = groups.find(g => g.group_id === Number(selectedGroupId));
@@ -182,28 +205,22 @@ export const ChartViewerPage: React.FC = () => {
         {/* ================= 왼쪽: 차트 영역 ================= */}
         <div style={{ flex: 3, border: '2px solid #2196f3', display: 'flex', flexDirection: 'column', padding: 10, gap: 10, minHeight: 0 }}>
           
-          {/* Top Tool Bar */}
           <div style={{ border: '2px solid #9c27b0', padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, backgroundColor: '#2a2a2a' }}>
             <span style={{ color: '#9c27b0', fontWeight: 'bold' }}>Top Tool Bar</span>
             <div style={{ display: 'flex', gap: 10 }}>
-              {/* [RQ-Top.1] 메인 차트 정보 툴팁 토글 */}
               <button onClick={() => setShowMainInfo(!showMainInfo)} style={{ padding: '4px 8px', backgroundColor: showMainInfo ? '#4caf50' : '#555', color: 'white', border: 'none', cursor: 'pointer' }}>
                 정보 {showMainInfo ? 'ON' : 'OFF'}
               </button>
-              {/* [RQ-Top.3] 메인 차트 그리드 토글 */}
               <button onClick={() => setShowMainGrid(!showMainGrid)} style={{ padding: '4px 8px', backgroundColor: showMainGrid ? '#2196f3' : '#555', color: 'white', border: 'none', cursor: 'pointer' }}>
                 그리드 {showMainGrid ? 'ON' : 'OFF'}
               </button>
-              {/* [RQ-Top.2] 공용 시간 출력 (1시간 뷰포트) */}
               <button onClick={applyOneHourView} style={{ padding: '4px 8px', backgroundColor: '#ff9800', color: 'white', border: 'none', cursor: 'pointer' }}>
                 1시간 뷰
               </button>
-              {/* [RQ-Top.4] 날짜(시간) 설정 */}
               <input type="datetime-local" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ padding: 4, backgroundColor: '#333', color: 'white', border: '1px solid #555' }} />
             </div>
           </div>
           
-          {/* Main Chart Viewer */}
           <div style={{ border: '2px solid #ffffff', flex: 2, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0 }}>
             <MainChartViewer 
               echartsRef={mainChartRef}
@@ -214,30 +231,24 @@ export const ChartViewerPage: React.FC = () => {
             />
           </div>
           
-          {/* Lower Tool Bar */}
           <div style={{ border: '2px solid #9c27b0', padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, backgroundColor: '#2a2a2a' }}>
             <span style={{ color: '#9c27b0', fontWeight: 'bold' }}>Lower Tool Bar</span>
             <div style={{ display: 'flex', gap: 10 }}>
-              {/* [RQ-Lower.1] 서브 차트 정보 툴팁 토글 */}
               <button onClick={() => setShowSubInfo(!showSubInfo)} style={{ padding: '4px 8px', backgroundColor: showSubInfo ? '#4caf50' : '#555', color: 'white', border: 'none', cursor: 'pointer' }}>
                 정보 {showSubInfo ? 'ON' : 'OFF'}
               </button>
-              {/* [RQ-Lower.4] 서브 차트 그리드 토글 */}
               <button onClick={() => setShowSubGrid(!showSubGrid)} style={{ padding: '4px 8px', backgroundColor: showSubGrid ? '#2196f3' : '#555', color: 'white', border: 'none', cursor: 'pointer' }}>
                 그리드 {showSubGrid ? 'ON' : 'OFF'}
               </button>
-              {/* [RQ-Lower.2] 서브 차트를 메인 차트 기준 시점으로 동기화 */}
               <button onClick={() => syncChartDataZoom(mainChartRef, subChartRef)} style={{ padding: '4px 8px', backgroundColor: '#9c27b0', color: 'white', border: 'none', cursor: 'pointer' }}>
                 시점 맞추기 (TOP 기준)
               </button>
-              {/* [RQ-Lower.3] 메인 차트를 서브 차트 기준 시점으로 동기화 */}
               <button onClick={() => syncChartDataZoom(subChartRef, mainChartRef)} style={{ padding: '4px 8px', backgroundColor: '#9c27b0', color: 'white', border: 'none', cursor: 'pointer' }}>
                 시점 맞추기 (BOOL 기준)
               </button>
             </div>
           </div>
 
-          {/* Sub Chart Viewer */}
           <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0 }}>
             <SubChartViewer 
               echartsRef={subChartRef}
@@ -249,7 +260,7 @@ export const ChartViewerPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ================= 오른쪽: 패널 1 영역 (유지) ================= */}
+        {/* ================= 오른쪽: 패널 1 영역 ================= */}
         <div style={{ flex: 1, border: '2px solid #e91e63', display: 'flex', flexDirection: 'column', padding: 10, gap: 10 }}>
           <div style={{ border: '2px solid #ffffff', padding: 15, textAlign: 'center', fontWeight: 'bold' }}>
             [임시 격리] 검색창 모듈
@@ -257,24 +268,61 @@ export const ChartViewerPage: React.FC = () => {
           
           <div style={{ border: '2px solid #ffffff', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <h4 style={{ margin: 0, textAlign: 'center' }}>메인 조작 패널 1 (스코핑)</h4>
-            <button onClick={handleModeToggle} style={{ padding: 8, cursor: 'pointer' }}>
+            
+            <button onClick={handleModeToggle} style={{ padding: 8, cursor: 'pointer', backgroundColor: '#555', color: '#fff', border: 'none' }}>
               현재 모드: {mode} (토글)
             </button>
-            <select value={scale} onChange={(e) => setScale(e.target.value as ChartScale)} style={{ padding: 8 }}>
+            <select value={scale} onChange={(e) => setScale(e.target.value as ChartScale)} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
               <option value="1m">1분 단위</option>
               <option value="5m">5분 단위</option>
               <option value="10m">10분 단위</option>
               <option value="15m">15분 단위</option>
               <option value="1h">1시간 단위</option>
             </select>
-            <select value={selectedFacility} onChange={(e) => setSelectedFacility(e.target.value ? Number(e.target.value) : '')} style={{ padding: 8 }}>
+            <select value={selectedFacility} onChange={(e) => setSelectedFacility(e.target.value ? Number(e.target.value) : '')} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
               <option value="">-- 시설 선택 --</option>
               {facilities.map(fac => <option key={fac.id} value={fac.id}>{fac.name}</option>)}
             </select>
-            <select value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value ? Number(e.target.value) : '')} disabled={!selectedFacility} style={{ padding: 8 }}>
+            <select value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value ? Number(e.target.value) : '')} disabled={!selectedFacility} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
               <option value="">-- 호실 선택 --</option>
               {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
             </select>
+
+            {/* 💡 [신규] 최근 시간 단위 스위칭 컴포넌트 */}
+            <div style={{ border: '1px solid #555', padding: 10, marginTop: 5, backgroundColor: '#222' }}>
+              <div style={{ fontSize: 12, marginBottom: 8, color: '#aaa' }}>최근 시간 이동 (현재 기준)</div>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {[
+                  { label: '1H', h: 1 }, { label: '3H', h: 3 }, { label: '6H', h: 6 }, 
+                  { label: '12H', h: 12 }, { label: '1D', h: 24 }, { label: '1W', h: 24 * 7 }
+                ].map(btn => (
+                  <button 
+                    key={btn.label} 
+                    onClick={() => handleQuickTimeSelect(btn.h)} 
+                    style={{ flex: 1, padding: '6px 0', backgroundColor: '#444', color: '#fff', border: '1px solid #666', cursor: 'pointer', fontSize: 12 }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 💡 [신규] 최근 요일 스위칭 컴포넌트 */}
+            <div style={{ border: '1px solid #555', padding: 10, backgroundColor: '#222' }}>
+              <div style={{ fontSize: 12, marginBottom: 8, color: '#aaa' }}>최근 요일 이동</div>
+              <div style={{ display: 'flex', gap: 5 }}>
+                {['일', '월', '화', '수', '목', '금', '토'].map((dayStr, idx) => (
+                  <button 
+                    key={dayStr} 
+                    onClick={() => handleQuickDaySelect(idx)} 
+                    style={{ flex: 1, padding: '6px 0', backgroundColor: '#444', color: '#fff', border: '1px solid #666', cursor: 'pointer', fontSize: 12 }}
+                  >
+                    {dayStr}
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
           
           <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontWeight: 'bold' }}>
@@ -283,7 +331,7 @@ export const ChartViewerPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ================= 하단: 메인 조작 패널 2 (유지) ================= */}
+      {/* ================= 하단: 메인 조작 패널 2 ================= */}
       <div style={{ border: '2px solid #4caf50', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h4 style={{ margin: 0, textAlign: 'center', color: '#4caf50' }}>메인 조작 패널 2 (맵핑 그룹 활성화)</h4>
         
