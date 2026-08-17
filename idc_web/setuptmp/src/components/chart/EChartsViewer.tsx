@@ -10,143 +10,217 @@ interface Props {
   showGrid?: boolean;
   echartsRef?: React.RefObject<ReactECharts | null>;
   activeGuidelines?: number[]; 
-  // 💡 [신규] 로딩 상태를 전달받을 프로퍼티 추가
   isLoading?: boolean; 
+  posts?: any[];
+  alarms?: any[];
+  // 💡 [수정] 여러 포스트가 겹친 구역 클릭을 위해 number[] 타입 허용
+  onChartClick?: (type: 'post' | 'alarm', id: number | number[]) => void; 
 }
 
 const SYNC_GROUP_NAME = 'idcool-chart-group';
 echarts.connect(SYNC_GROUP_NAME);
 
+const formatShortTime = (ts: number) => {
+  const d = new Date(ts);
+  return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+};
+
+// 💡 [핵심] 포스트의 겹침 구간(Segment)을 계산하여 배열로 반환하는 헬퍼 함수
+const generatePostSegments = (validPosts: any[]) => {
+  if (!validPosts || validPosts.length === 0) return [];
+  
+  const points = new Set<number>();
+  validPosts.forEach(p => {
+    points.add(p.st);
+    points.add(p.et);
+  });
+  
+  const sortedPoints = Array.from(points).sort((a, b) => a - b);
+  const segments: any[] = [];
+  
+  for (let i = 0; i < sortedPoints.length - 1; i++) {
+    const segSt = sortedPoints[i];
+    const segEt = sortedPoints[i + 1];
+    if (segSt === segEt) continue;
+    
+    // 현재 세그먼트를 덮고 있는 활성 포스트 필터링
+    const activePosts = validPosts.filter(p => p.st <= segSt && p.et >= segEt);
+    if (activePosts.length > 0) {
+      segments.push({ st: segSt, et: segEt, activePosts });
+    }
+  }
+  return segments;
+};
+
 // ==========================================
 // 1. 수치형 데이터 전용 메인 차트
 // ==========================================
-export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false }) => {
+export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick }) => {
   useEffect(() => {
     if (echartsRef && echartsRef.current) {
-      echartsRef.current.getEchartsInstance().group = SYNC_GROUP_NAME;
+      const instance = echartsRef.current.getEchartsInstance();
+      instance.group = SYNC_GROUP_NAME; 
+      
+      instance.off('click');
+      instance.on('click', (params: any) => {
+        // 💡 겹친 구역 클릭 시 파라미터 내의 postIds 배열을 반환
+        if (params.seriesName === 'GlobalAnnotations' && params.data && params.data.postIds) {
+          if (onChartClick) onChartClick('post', params.data.postIds);
+        }
+      });
     }
-  }, [echartsRef]);
+  }, [echartsRef, onChartClick]);
 
   const getOption = () => {
-    const seriesData = (datasets || []).map(ds => {
+    const seriesData: any[] = (datasets || []).map(ds => {
       const color = roleColors[ds.role_id];
       const seriesItem: any = {
-        name: ds.role_name,
-        type: 'line',
-        showSymbol: false,
-        itemStyle: { color: color },
+        name: ds.role_name, type: 'line', showSymbol: false, itemStyle: { color: color },
         data: (ds.data || []).map((pt: any) => [new Date(pt.timestamp).getTime(), pt.mean])
-      };
+      }; 
 
       if (activeGuidelines.includes(ds.role_id)) {
         const markLineData: any[] = [];
-        
-        if (ds.target_value != null) {
-          markLineData.push({ yAxis: Number(ds.target_value), name: 'Target', lineStyle: { type: 'solid', color: color, width: 2 } });
-        }
-        if (ds.target_low_limit != null) {
-          markLineData.push({ yAxis: Number(ds.target_low_limit), name: 'Low', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
-        }
-        if (ds.target_high_limit != null) {
-          markLineData.push({ yAxis: Number(ds.target_high_limit), name: 'High', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
-        }
+        if (ds.target_value != null) markLineData.push({ yAxis: Number(ds.target_value), name: 'Target', lineStyle: { type: 'solid', color: color, width: 2 } });
+        if (ds.target_low_limit != null) markLineData.push({ yAxis: Number(ds.target_low_limit), name: 'Low', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
+        if (ds.target_high_limit != null) markLineData.push({ yAxis: Number(ds.target_high_limit), name: 'High', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
 
         if (markLineData.length > 0) {
           seriesItem.markLine = {
-            data: markLineData,
-            symbol: 'none',
-            label: { 
-              show: true, 
-              position: 'start',
-              distance: [10, -10],
-              formatter: '{b}: {c}', 
-              color: color,
-              fontSize: 11,
-              backgroundColor: 'rgba(30, 30, 30, 0.7)',
-              padding: [2, 4],
-              borderRadius: 2
-            }
+            data: markLineData, symbol: 'none',
+            label: { show: true, position: 'start', distance: [10, -10], formatter: '{b}: {c}', color: color, fontSize: 11, backgroundColor: 'rgba(30, 30, 30, 0.7)', padding: [2, 4], borderRadius: 2 }
           };
         }
       }
-
       return seriesItem;
     });
+
+    // 시작일/종료일 동일성 방어 로직 적용
+    const validPosts = posts.filter(p => p.start_date && p.end_date).map(p => {
+      const st = new Date(p.start_date).getTime();
+      let et = new Date(p.end_date).getTime();
+      if (st === et) et += 60 * 60 * 1000;
+      return { ...p, st, et };
+    });
+
+    const segments = generatePostSegments(validPosts);
+    
+    // 1. 소요기록 영역 (겹치는 구역 병합 출력)
+    const postAreas = segments.map(seg => {
+      // 💡 겹친 포스트 제목들을 개행문자로 연결
+      const combinedTitle = seg.activePosts.map((p: any) => p.title).join('\n');
+      const postIds = seg.activePosts.map((p: any) => p.id);
+
+      return [
+        { 
+          xAxis: seg.st, postIds: postIds, itemStyle: { color: 'rgba(255, 0, 0, 0.05)' },
+          label: { 
+            show: true, position: 'insideTop', formatter: combinedTitle, color: '#ff4d4f', 
+            fontWeight: 'bold', fontSize: 12, backgroundColor: 'rgba(20,20,20,0.8)', 
+            padding: [4, 8], borderRadius: 4, lineHeight: 18 // 개행된 텍스트 간격 확보
+          } 
+        },
+        { xAxis: seg.et }
+      ];
+    });
+
+    // 2. 소요기록 경계선 및 알람 라인 (개별 원본 포스트 기준)
+    const globalLines: any[] = [];
+    
+    validPosts.forEach(p => {
+      globalLines.push({ xAxis: p.st, label: { show: true, position: 'end', formatter: formatShortTime(p.st), color: '#ff4d4f', fontSize: 10 }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
+      globalLines.push({ xAxis: p.et, label: { show: true, position: 'end', formatter: formatShortTime(p.et), color: '#ff4d4f', fontSize: 10 }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
+    });
+
+    alarms.forEach(a => {
+      const time = new Date(a.timestamp).getTime();
+      globalLines.push({ xAxis: time, label: { show: true, position: 'end', formatter: formatShortTime(time), color: 'cyan', fontSize: 10 }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
+      globalLines.push({ xAxis: time, label: { show: true, position: 'start', formatter: a.alarm_name, color: 'cyan', fontSize: 10 }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
+    });
+
+    const annotationSeries: any = {
+      name: 'GlobalAnnotations', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [], 
+      markArea: { silent: false, data: postAreas },
+      markLine: { silent: false, symbol: ['none', 'none'], z: 10, data: globalLines }
+    };
+    seriesData.push(annotationSeries);
 
     return {
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
-      grid: { left: 60, right: 50, top: 30, bottom: 25 },
-      xAxis: { 
-        type: 'time', 
-        axisLabel: { show: false }, 
-        axisTick: { show: false },
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } }
-      },
-      yAxis: { 
-        type: 'value', 
-        name: '수치 (Main)',
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } },
-        scale: true 
-      },
+      grid: { left: 60, right: 50, top: 40, bottom: 25 },
+      xAxis: { type: 'time', axisLabel: { show: false }, axisTick: { show: false }, splitLine: { show: showGrid, lineStyle: { color: '#333' } } },
+      yAxis: { type: 'value', name: '수치 (Main)', splitLine: { show: showGrid, lineStyle: { color: '#333' } }, scale: true },
       dataZoom: [{ type: 'inside' }],
       series: seriesData
-    };
+    }; 
   };
 
-  return <ReactECharts ref={echartsRef as any} option={getOption()} showLoading={isLoading} style={{ height: '100%', width: '100%' }} notMerge={true} />;
+  return <ReactECharts ref={echartsRef as any} option={getOption()} showLoading={isLoading} style={{ height: '100%', width: '100%' }} notMerge={true} />; 
 };
 
 // ==========================================
 // 2. 상태형(BOOL) 데이터 전용 서브 차트
 // ==========================================
-export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, isLoading = false }) => {
+export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, isLoading = false, posts = [], alarms = [] }) => {
   useEffect(() => {
-    if (echartsRef && echartsRef.current) {
-      echartsRef.current.getEchartsInstance().group = SYNC_GROUP_NAME;
-    }
+    if (echartsRef && echartsRef.current) echartsRef.current.getEchartsInstance().group = SYNC_GROUP_NAME; 
   }, [echartsRef]);
 
   const getOption = () => {
     const seriesData: any[] = [];
-    const boolCategories = (datasets || []).map(ds => ds.role_name);
+    const boolCategories = (datasets || []).map(ds => ds.role_name); 
 
     (datasets || []).forEach((ds, index) => {
       const mappedData = (ds.data || [])
         .filter((pt: any) => pt.status === true || pt.status === 1 || String(pt.status) === 'true' || pt.mean === 1 || String(pt.mean) === '1')
-        .map((pt: any) => [new Date(pt.timestamp).getTime(), index]);
+        .map((pt: any) => [new Date(pt.timestamp).getTime(), index]); 
 
       seriesData.push({
-        name: ds.role_name,
-        type: 'scatter',
-        symbol: 'rect',
-        symbolSize: [3, 20],
-        itemStyle: { color: roleColors[ds.role_id] },
-        data: mappedData
-      });
+        name: ds.role_name, type: 'scatter', symbol: 'rect', symbolSize: [3, 20], itemStyle: { color: roleColors[ds.role_id] }, data: mappedData
+      }); 
     });
+
+    const validPosts = posts.filter(p => p.start_date && p.end_date).map(p => {
+      const st = new Date(p.start_date).getTime();
+      let et = new Date(p.end_date).getTime();
+      if (st === et) et += 60 * 60 * 1000;
+      return { ...p, st, et };
+    });
+    
+    const segments = generatePostSegments(validPosts);
+    const globalLines: any[] = [];
+    
+    validPosts.forEach(p => {
+      globalLines.push({ xAxis: p.st, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
+      globalLines.push({ xAxis: p.et, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
+    });
+    alarms.forEach(a => {
+      const time = new Date(a.timestamp).getTime();
+      globalLines.push({ xAxis: time, lineStyle: { type: 'dashed', color: 'cyan', width: 2 }, label: { show: false } });
+    });
+
+    const annotationSeries: any = {
+      name: 'GlobalAnnotationsSub', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [],
+      markArea: { silent: true, data: segments.map(seg => [ { xAxis: seg.st, itemStyle: { color: 'rgba(255,0,0,0.05)' } }, { xAxis: seg.et } ])},
+      markLine: { symbol: ['none', 'none'], z: 10, silent: true, data: globalLines }
+    };
+    seriesData.push(annotationSeries);
 
     return {
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       grid: { left: 60, right: 50, top: 10, bottom: 25 },
-      xAxis: { 
-        type: 'time',
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } }
-      },
+      xAxis: { type: 'time', splitLine: { show: showGrid, lineStyle: { color: '#333' } } },
       yAxis: { 
-        type: 'category', 
-        name: '상태 (Sub)', 
+        type: 'category', name: '상태 (Sub)', 
         data: boolCategories.length > 0 ? boolCategories : ['데이터 없음'],
         splitLine: { show: showGrid, lineStyle: { color: '#444', type: 'dashed' } },
         axisLabel: { color: '#ccc', fontSize: 10 }
       },
-      dataZoom: [
-        { type: 'inside' },
-        { type: 'slider', bottom: 0, height: 20 }
-      ],
+      dataZoom: [{ type: 'inside' }, { type: 'slider', bottom: 0, height: 20 }],
       series: seriesData
-    };
+    }; 
   };
 
-  return <ReactECharts ref={echartsRef as any} option={getOption()} showLoading={isLoading} style={{ height: '100%', width: '100%' }} notMerge={true} />;
+  return <ReactECharts ref={echartsRef as any} option={getOption()} showLoading={isLoading} style={{ height: '100%', width: '100%' }} notMerge={true} />; 
 };
