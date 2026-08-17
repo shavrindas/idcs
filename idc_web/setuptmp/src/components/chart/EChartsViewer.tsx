@@ -13,11 +13,44 @@ interface Props {
   isLoading?: boolean; 
   posts?: any[];
   alarms?: any[];
-  onChartClick?: (type: 'post' | 'alarm', id: number) => void;
+  // 💡 [수정] 여러 포스트가 겹친 구역 클릭을 위해 number[] 타입 허용
+  onChartClick?: (type: 'post' | 'alarm', id: number | number[]) => void; 
 }
 
 const SYNC_GROUP_NAME = 'idcool-chart-group';
 echarts.connect(SYNC_GROUP_NAME);
+
+const formatShortTime = (ts: number) => {
+  const d = new Date(ts);
+  return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+};
+
+// 💡 [핵심] 포스트의 겹침 구간(Segment)을 계산하여 배열로 반환하는 헬퍼 함수
+const generatePostSegments = (validPosts: any[]) => {
+  if (!validPosts || validPosts.length === 0) return [];
+  
+  const points = new Set<number>();
+  validPosts.forEach(p => {
+    points.add(p.st);
+    points.add(p.et);
+  });
+  
+  const sortedPoints = Array.from(points).sort((a, b) => a - b);
+  const segments: any[] = [];
+  
+  for (let i = 0; i < sortedPoints.length - 1; i++) {
+    const segSt = sortedPoints[i];
+    const segEt = sortedPoints[i + 1];
+    if (segSt === segEt) continue;
+    
+    // 현재 세그먼트를 덮고 있는 활성 포스트 필터링
+    const activePosts = validPosts.filter(p => p.st <= segSt && p.et >= segEt);
+    if (activePosts.length > 0) {
+      segments.push({ st: segSt, et: segEt, activePosts });
+    }
+  }
+  return segments;
+};
 
 // ==========================================
 // 1. 수치형 데이터 전용 메인 차트
@@ -30,8 +63,9 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
       
       instance.off('click');
       instance.on('click', (params: any) => {
-        if (params.seriesName === 'GlobalAnnotations' && params.data && params.data.postId) {
-          if (onChartClick) onChartClick('post', params.data.postId);
+        // 💡 겹친 구역 클릭 시 파라미터 내의 postIds 배열을 반환
+        if (params.seriesName === 'GlobalAnnotations' && params.data && params.data.postIds) {
+          if (onChartClick) onChartClick('post', params.data.postIds);
         }
       });
     }
@@ -61,37 +95,51 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
       return seriesItem;
     });
 
-    // 💡 [개선] 소요기록(Post)과 알람(Alarm)을 동시에 완벽하게 처리하는 어노테이션 시리즈
-    const validPosts = posts.filter(p => p.start_date && p.end_date);
-    
-    // 1. 소요기록 영역(배경색)
-    const postAreas = validPosts.map(p => [
-      { xAxis: new Date(p.start_date).getTime(), postId: p.id, itemStyle: { color: 'rgba(255, 0, 0, 0.05)' } },
-      { xAxis: new Date(p.end_date).getTime() }
-    ]);
-
-    // 2. 소요기록 경계선(시작/끝) 및 알람 선(점선) 통합
-    const globalLines: any[] = [];
-    
-    // 포스트 라인 (실선)
-    validPosts.forEach(p => {
+    // 시작일/종료일 동일성 방어 로직 적용
+    const validPosts = posts.filter(p => p.start_date && p.end_date).map(p => {
       const st = new Date(p.start_date).getTime();
-      const et = new Date(p.end_date).getTime();
-      globalLines.push({ xAxis: st, postId: p.id, label: { show: true, position: 'end', formatter: '시작: ' + p.title, color: '#ff4d4f' }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
-      globalLines.push({ xAxis: et, postId: p.id, label: { show: true, position: 'start', formatter: '종료: ' + p.title, color: '#ff4d4f' }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
+      let et = new Date(p.end_date).getTime();
+      if (st === et) et += 60 * 60 * 1000;
+      return { ...p, st, et };
     });
 
-    // 알람 라인 (점선)
+    const segments = generatePostSegments(validPosts);
+    
+    // 1. 소요기록 영역 (겹치는 구역 병합 출력)
+    const postAreas = segments.map(seg => {
+      // 💡 겹친 포스트 제목들을 개행문자로 연결
+      const combinedTitle = seg.activePosts.map((p: any) => p.title).join('\n');
+      const postIds = seg.activePosts.map((p: any) => p.id);
+
+      return [
+        { 
+          xAxis: seg.st, postIds: postIds, itemStyle: { color: 'rgba(255, 0, 0, 0.05)' },
+          label: { 
+            show: true, position: 'insideTop', formatter: combinedTitle, color: '#ff4d4f', 
+            fontWeight: 'bold', fontSize: 12, backgroundColor: 'rgba(20,20,20,0.8)', 
+            padding: [4, 8], borderRadius: 4, lineHeight: 18 // 개행된 텍스트 간격 확보
+          } 
+        },
+        { xAxis: seg.et }
+      ];
+    });
+
+    // 2. 소요기록 경계선 및 알람 라인 (개별 원본 포스트 기준)
+    const globalLines: any[] = [];
+    
+    validPosts.forEach(p => {
+      globalLines.push({ xAxis: p.st, label: { show: true, position: 'end', formatter: formatShortTime(p.st), color: '#ff4d4f', fontSize: 10 }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
+      globalLines.push({ xAxis: p.et, label: { show: true, position: 'end', formatter: formatShortTime(p.et), color: '#ff4d4f', fontSize: 10 }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
+    });
+
     alarms.forEach(a => {
       const time = new Date(a.timestamp).getTime();
-      const timeStr = new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      globalLines.push({ xAxis: time, label: { show: true, position: 'end', formatter: timeStr, color: 'cyan' }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
-      globalLines.push({ xAxis: time, label: { show: true, position: 'start', formatter: a.alarm_name, color: 'cyan' }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
+      globalLines.push({ xAxis: time, label: { show: true, position: 'end', formatter: formatShortTime(time), color: 'cyan', fontSize: 10 }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
+      globalLines.push({ xAxis: time, label: { show: true, position: 'start', formatter: a.alarm_name, color: 'cyan', fontSize: 10 }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
     });
 
     const annotationSeries: any = {
-      name: 'GlobalAnnotations',
-      type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [], 
+      name: 'GlobalAnnotations', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [], 
       markArea: { silent: false, data: postAreas },
       markLine: { silent: false, symbol: ['none', 'none'], z: 10, data: globalLines }
     };
@@ -100,7 +148,7 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
     return {
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
-      grid: { left: 60, right: 50, top: 40, bottom: 25 }, // Top 여백 살짝 증가
+      grid: { left: 60, right: 50, top: 40, bottom: 25 },
       xAxis: { type: 'time', axisLabel: { show: false }, axisTick: { show: false }, splitLine: { show: showGrid, lineStyle: { color: '#333' } } },
       yAxis: { type: 'value', name: '수치 (Main)', splitLine: { show: showGrid, lineStyle: { color: '#333' } }, scale: true },
       dataZoom: [{ type: 'inside' }],
@@ -133,14 +181,19 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
       }); 
     });
 
-    const validPosts = posts.filter(p => p.start_date && p.end_date);
+    const validPosts = posts.filter(p => p.start_date && p.end_date).map(p => {
+      const st = new Date(p.start_date).getTime();
+      let et = new Date(p.end_date).getTime();
+      if (st === et) et += 60 * 60 * 1000;
+      return { ...p, st, et };
+    });
+    
+    const segments = generatePostSegments(validPosts);
     const globalLines: any[] = [];
     
     validPosts.forEach(p => {
-      const st = new Date(p.start_date).getTime();
-      const et = new Date(p.end_date).getTime();
-      globalLines.push({ xAxis: st, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
-      globalLines.push({ xAxis: et, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
+      globalLines.push({ xAxis: p.st, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
+      globalLines.push({ xAxis: p.et, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
     });
     alarms.forEach(a => {
       const time = new Date(a.timestamp).getTime();
@@ -149,7 +202,7 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
 
     const annotationSeries: any = {
       name: 'GlobalAnnotationsSub', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [],
-      markArea: { silent: true, data: validPosts.map(p => [ { xAxis: new Date(p.start_date).getTime(), itemStyle: { color: 'rgba(255,0,0,0.05)' } }, { xAxis: new Date(p.end_date).getTime() } ]) },
+      markArea: { silent: true, data: segments.map(seg => [ { xAxis: seg.st, itemStyle: { color: 'rgba(255,0,0,0.05)' } }, { xAxis: seg.et } ])},
       markLine: { symbol: ['none', 'none'], z: 10, silent: true, data: globalLines }
     };
     seriesData.push(annotationSeries);

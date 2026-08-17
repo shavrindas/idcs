@@ -4,17 +4,17 @@ import ReactECharts from 'echarts-for-react';
 import { MainChartViewer, SubChartViewer } from '../components/chart/EChartsViewer';
 import type { ChartMode, ChartScale } from '../constants/chartConfig';
 import { apiService } from '../services/apiService';
-import type { Role, ChartGroup } from '../types'; 
+import type { Role, ChartGroup } from '../types';
 
 const getLocalDatetimeString = (date: Date) => {
   const offset = date.getTimezoneOffset() * 60000;
   return (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
-}; 
+};
 
 const COLOR_PALETTE = [
   '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', 
   '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f'
-]; 
+];
 
 export const ChartViewerPage: React.FC = () => {
   const [mode, setMode] = useState<ChartMode>('DEFAULT');
@@ -44,11 +44,12 @@ export const ChartViewerPage: React.FC = () => {
   const [activeGuidelines, setActiveGuidelines] = useState<number[]>([]);
   const [isChartLoading, setIsChartLoading] = useState<boolean>(false); 
 
-  // 💡 백엔드 실제 데이터 상태
   const [posts, setPosts] = useState<any[]>([]);
   const [alarms, setAlarms] = useState<any[]>([]);
   const [hiddenPosts, setHiddenPosts] = useState<any[]>([]);
-  const [selectedPostViewerId, setSelectedPostViewerId] = useState<number | null>(null);
+  
+  // 💡 [수정] 여러 개의 포스트를 띄우기 위해 배열로 상태 변경
+  const [selectedPostViewerIds, setSelectedPostViewerIds] = useState<number[]>([]);
 
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null); 
@@ -61,7 +62,7 @@ export const ChartViewerPage: React.FC = () => {
     if (selectedFacility) {
       apiService.getRooms(Number(selectedFacility)).then(res => setRooms(res.rooms || []));
       setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); 
-      setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]);
+      setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
     }
   }, [selectedFacility]); 
 
@@ -75,7 +76,7 @@ export const ChartViewerPage: React.FC = () => {
         roles.forEach((r: Role, idx: number) => { newColorMap[r.role_id] = COLOR_PALETTE[idx % COLOR_PALETTE.length]; });
         setRoleColors(newColorMap);
       });
-      setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]);
+      setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
     }
   }, [selectedRoom, selectedFacility]); 
 
@@ -84,7 +85,7 @@ export const ChartViewerPage: React.FC = () => {
       const group = groups.find(g => g.group_id === Number(selectedGroupId));
       if (group && group.role_ids) setCheckedRoles(group.role_ids.filter(id => id !== null));
     } else {
-      setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]);
+      setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
     }
   }, [selectedGroupId, groups]); 
 
@@ -199,15 +200,18 @@ export const ChartViewerPage: React.FC = () => {
   const handleColorChange = (roleId: number, color: string) => setRoleColors(prev => ({ ...prev, [roleId]: color }));
   const handleGuidelineToggle = (roleId: number) => setActiveGuidelines(prev => prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]);
 
-  const handleChartClick = (type: 'post' | 'alarm', id: number) => {
-    if (type === 'post') setSelectedPostViewerId(id);
+  // 💡 [수정] 여러 포스트가 병합된 구역을 클릭 시 배열을 수용
+  const handleChartClick = (type: 'post' | 'alarm', ids: number | number[]) => {
+    if (type === 'post') {
+      setSelectedPostViewerIds(Array.isArray(ids) ? ids : [ids]);
+    }
   };
 
-  const handleHidePost = async () => {
-    if (!selectedGroupId || !selectedPostViewerId) return;
+  const handleHidePost = async (postId: number) => {
+    if (!selectedGroupId) return;
     try {
-      await apiService.hidePostFromGroup(Number(selectedGroupId), selectedPostViewerId);
-      setSelectedPostViewerId(null);
+      await apiService.hidePostFromGroup(Number(selectedGroupId), postId);
+      setSelectedPostViewerIds(prev => prev.filter(id => id !== postId)); // 뷰어 목록에서도 제거
       setRefreshTrigger(prev => prev + 1); 
     } catch (e) { console.error(e); }
   };
@@ -225,15 +229,6 @@ export const ChartViewerPage: React.FC = () => {
 
   const mainDataSets = chartDataSets.filter(ds => ds.role_name && !isBoolRole(ds.role_id));
   const subDataSets = chartDataSets.filter(ds => ds.role_name && isBoolRole(ds.role_id)); 
-
-  // 💡 [신규] 뷰어 밖에 선이 있어도 진행 중인 이벤트를 알 수 있도록 뱃지 필터링
-  const currentTargetTime = new Date(targetDate).getTime();
-  const activePosts = posts.filter(p => {
-    if (!p.start_date || !p.end_date) return false;
-    const st = new Date(p.start_date).getTime();
-    const et = new Date(p.end_date).getTime();
-    return currentTargetTime >= st && currentTargetTime <= et;
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10, boxSizing: 'border-box' }}>
@@ -253,13 +248,7 @@ export const ChartViewerPage: React.FC = () => {
           </div>
           
           <div style={{ border: '2px solid #ffffff', flex: 2, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0, position: 'relative' }}>
-            {/* 💡 [신규] 화면 밖 소요기록 방어 뱃지 */}
-            {activePosts.length > 0 && (
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '4px 10px', backgroundColor: 'rgba(255, 77, 79, 0.2)', color: '#ff4d4f', fontWeight: 'bold', borderBottom: '1px solid #ff4d4f', zIndex: 5, fontSize: 12, display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: 10 }}>🚨 현재 시점 진행 중인 소요기록:</span>
-                {activePosts.map(p => p.title).join(', ')}
-              </div>
-            )}
+            {/* 🚨 기존 플로팅 뱃지 UI 삭제됨 */}
             <MainChartViewer 
               echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} 
               showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading}
@@ -337,23 +326,33 @@ export const ChartViewerPage: React.FC = () => {
             </div>
           </div>
           
-          <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', flexDirection: 'column', padding: 10, backgroundColor: '#1e1e1e' }}>
+          <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', flexDirection: 'column', padding: 10, backgroundColor: '#1e1e1e', overflowY: 'auto' }}>
             <h4 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>소요기록 Viewer</h4>
-            {selectedPostViewerId ? (
-              <div style={{ color: '#fff', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <h5 style={{ color: '#ff4d4f', margin: '0 0 5px 0' }}>{posts.find(p => p.id === selectedPostViewerId)?.title || '제목 없음'}</h5>
-                <p style={{ fontSize: 12, color: '#aaa', flex: 1 }}>{posts.find(p => p.id === selectedPostViewerId)?.content}</p>
-                <button 
-                  onClick={handleHidePost}
-                  disabled={!selectedGroupId}
-                  style={{ marginTop: 'auto', padding: 8, backgroundColor: '#ff4d4f', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: 4 }}
-                >
-                  이 그룹에서 숨기기
-                </button>
+            
+            {/* 💡 [수정] 여러 포스트를 동시에 렌더링하기 위한 맵핑 로직 적용 */}
+            {selectedPostViewerIds.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                {selectedPostViewerIds.map(postId => {
+                  const post = posts.find(p => p.id === postId);
+                  if (!post) return null;
+                  return (
+                    <div key={postId} style={{ color: '#fff', display: 'flex', flexDirection: 'column', borderBottom: '1px solid #444', paddingBottom: 10 }}>
+                      <h5 style={{ color: '#ff4d4f', margin: '0 0 5px 0' }}>{post.title}</h5>
+                      <p style={{ fontSize: 12, color: '#aaa', margin: '0 0 10px 0' }}>{post.content}</p>
+                      <button 
+                        onClick={() => handleHidePost(postId)}
+                        disabled={!selectedGroupId}
+                        style={{ alignSelf: 'flex-end', padding: '4px 8px', backgroundColor: '#ff4d4f', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: 4, fontSize: 11 }}
+                      >
+                        이 그룹에서 숨기기
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555' }}>
-                차트에서 붉은 영역(소요기록 제목)을 클릭하세요.
+                차트에서 붉은 영역(소요기록)을 클릭하세요.
               </div>
             )}
           </div>
