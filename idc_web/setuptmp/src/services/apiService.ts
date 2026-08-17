@@ -31,8 +31,28 @@ export const apiService = {
     return res.json();
   },
 
-  getHistoricalData: async (facilityId: number, roomId: number, scale: string, endTime: string, roleIds: number[]) => {
-    const res = await fetch(`${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&end_time=${endTime}&role_ids=${roleIds.join(',')}`);
+  // getHistoricalData: async (facilityId: number, roomId: number, scale: string, endTime: string, roleIds: number[]) => {
+  //   const res = await fetch(`${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&end_time=${endTime}&role_ids=${roleIds.join(',')}`);
+  //   return res.json();
+  // }
+
+
+  // 데이터 호출 API (groupId 파라미터 추가)
+  getHistoricalData: async (facilityId: number, roomId: number, groupId: number | '', scale: string, endTime: string, roleIds: number[]) => {
+    let url = `${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&end_time=${endTime}&role_ids=${roleIds.join(',')}`;
+    if (groupId !== '') url += `&group_id=${groupId}`; // 그룹 ID가 있을 경우 전달
+    
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  // 소요기록 블랙리스트 추가/제거 API
+  hidePostFromGroup: async (groupId: number, postId: number) => {
+    const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}/hide-post/${postId}`, { method: 'POST' });
+    return res.json();
+  },
+  showPostInGroup: async (groupId: number, postId: number) => {
+    const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}/show-post/${postId}`, { method: 'DELETE' });
     return res.json();
   }
 };
