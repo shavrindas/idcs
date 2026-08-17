@@ -124,12 +124,13 @@ async def get_chart_data(
         WHERE b.facility_id = :facility_id
           AND p.start_date IS NOT NULL 
           AND p.end_date IS NOT NULL
-          AND p.start_date <= :end_time
-          AND p.end_date >= :start_time
+          /* 💡 [수정됨] DATE 타입을 TIMESTAMP WITH TIME ZONE으로 캐스팅하여 타입 충돌 방어 */
+          AND CAST(p.start_date AS TIMESTAMP WITH TIME ZONE) <= :end_time
+          AND (CAST(p.end_date AS TIMESTAMP WITH TIME ZONE) + INTERVAL '1 day') > :start_time
     """)
     post_rows = await db.execute(post_query, {"facility_id": facility_id, "start_time": start_time, "end_time": end_time})
     all_posts = [dict(r._mapping) for r in post_rows.fetchall()]
-
+    
     # 2. 현재 차트 그룹의 숨겨진 포스트 ID 목록 조회
     hidden_post_ids = set()
     if group_id:
