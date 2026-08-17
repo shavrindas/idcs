@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/global_nav_box.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/components/indices/main_alarm/user_alarm_components.dart';
@@ -17,9 +18,11 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
   bool _isLoading = true;
   List<dynamic> _alarms = [];
 
-  // 💡 검색을 위한 컨트롤러 및 필터 상태 관리 변수
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // 💡 검색 대상 상태 변수 ('name', 'room', 'facility')
+  String _searchTarget = 'name';
 
   @override
   void initState() {
@@ -34,7 +37,6 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     super.dispose();
   }
 
-  // 유저 데이터(권한 등)를 불러오는 초기화 함수
   Future<void> _fetchUserData() async {
     setState(() {
       _isLoading = true;
@@ -76,17 +78,40 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
   }
 
   void onPressed(int facilityId) {
-    // TODO: 시설 눌렀을 때 페이지 이동 등의 로직 작성
-    print('선택된 시설 ID: $facilityId');
+    context.push('/facility_nav/${widget.userId}/$facilityId');
   }
 
   @override
   Widget build(BuildContext context) {
-    // 💡 검색어 기반 알람 필터링
+    // 💡 선택된 검색 기준(_searchTarget)별 필터링 조건
     final filteredAlarms = _alarms.where((alarm) {
-      final name = (alarm['alarm_name'] ?? '').toString().toLowerCase();
-      return name.contains(_searchQuery.toLowerCase());
+      final query = _searchQuery.toLowerCase();
+      if (query.isEmpty) return true;
+
+      if (_searchTarget == 'facility') {
+        final facility = (alarm['facility_name'] ?? '').toString().toLowerCase();
+        return facility.contains(query);
+      } else if (_searchTarget == 'room') {
+        final room = (alarm['room_name'] ?? '').toString().toLowerCase();
+        return room.contains(query);
+      } else {
+        final name = (alarm['alarm_name'] ?? '').toString().toLowerCase();
+        return name.contains(query);
+      }
     }).toList();
+
+    // 선택된 필터 기준에 따른 힌트 문구
+    String getHintText() {
+      switch (_searchTarget) {
+        case 'facility':
+          return '시설 이름으로 검색...';
+        case 'room':
+          return '룸 이름으로 검색...';
+        case 'name':
+        default:
+          return '알람 이름으로 검색...';
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('메인 알람 페이지')),
@@ -105,42 +130,87 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
             ),
             const SizedBox(height: 16),
 
-            // 💡 Page 내부에 위치한 검색창
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: '알람 이름으로 검색...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(Icons.clear, size: 20),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _searchQuery = '';
-                    });
-                  },
-                )
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 12,
+            // 💡 검색창 + 필터 드롭다운 레이아웃
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: getHintText(),
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      isDense: true,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: Colors.grey.shade400),
+                const SizedBox(width: 8),
+
+                // 필터 옵션 드롭다운 (알람 명 / 룸 이름 / 시설 이름)
+                Container(
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _searchTarget,
+                      icon: const Icon(Icons.arrow_drop_down, size: 20),
+                      isDense: true,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'name',
+                          child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                        ),
+                        DropdownMenuItem(
+                          value: 'room',
+                          child: Text('룸 이름', style: TextStyle(fontSize: 14)),
+                        ),
+                        DropdownMenuItem(
+                          value: 'facility',
+                          child: Text('시설 이름', style: TextStyle(fontSize: 14)),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _searchTarget = value;
+                          });
+                        }
+                      },
+                    ),
+                  ),
                 ),
-                isDense: true,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              ],
             ),
             const SizedBox(height: 16),
 
-            // Box #2: 통합 알람 박스 (필터링된 결과 전달)
+            // Box #2: 통합 알람 박스
             UserAlarmBox(
               alarms: filteredAlarms,
               onFacilityPressed: onPressed,
