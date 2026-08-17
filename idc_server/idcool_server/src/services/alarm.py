@@ -18,9 +18,11 @@ CACHE_TTL = 300
 role_cache: dict[int, list] = {}
 
 def invalidate_role_cache(facility_id: int):
-    role_cache.pop(facility_id, None)
+    role_cache.pop(f"{facility_id}_list", None)
+    role_cache.pop(f"{facility_id}_dict", None)
 
 
+# 2단계: 기존 리스트 형태의 함수 (캐시 키에 _list 추가)
 async def scan_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
     now = time.time()
     cache_entry = role_cache.get(facility_id)
@@ -33,10 +35,45 @@ async def scan_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
                 "roles": role_result.scalars().all(),
                 "updated_at": now
             }
-            print(f"[DB 갱신] Facility {facility_id} PointRole 캐시 업데이트 완료")
+            #print(f"[DB 갱신] Facility {facility_id} PointRole 캐시 업데이트 완료")
             break
         
     roles = role_cache[facility_id]["roles"]
+    return roles
+
+
+# 3단계: 딕셔너리 형태의 함수 (캐시 키에 _dict 추가)
+async def scan_roles_asc_name(facility_id: int, db: AsyncSession = Depends(get_db)):
+    now = time.time()
+    cache_key = f"{facility_id}_dict" # 🟢 키 분리
+    cache_entry = role_cache.get(cache_key)
+    
+    if (not cache_entry or 
+        (now - cache_entry["updated_at"] > CACHE_TTL)):
+        
+        async for db in get_db():
+            role_result = await db.execute(
+                select(PointRole).where(PointRole.facility_id == facility_id)
+            )
+            
+        raw_roles = role_result.scalars().all()
+        
+        sorted_roles = sorted(
+            raw_roles, 
+            key=lambda x: f"{x.room_id}.{x.role_name}"
+        )
+        
+        roles_dict = {
+            f"{role.room_id}.{role.role_name}": role 
+            for role in sorted_roles
+        }
+        
+        role_cache[cache_key] = {
+            "roles": roles_dict,
+            "updated_at": now
+        }
+        
+    roles = role_cache[cache_key]["roles"]
     return roles
 
 async def check_roles(facility_id: int, data_dict: Dict[str, str], roles):
