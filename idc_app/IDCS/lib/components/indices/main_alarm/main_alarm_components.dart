@@ -38,7 +38,7 @@ class IntegratedFacilityBox extends StatelessWidget {
             itemBuilder: (context, index) {
               final fac = facilities[index];
               // TODO: 알람 발생 여부는 추후 백엔드 데이터에 맞춰 실제 필드로 교체
-              final bool hasAlarm = index % 2 == 0; // 임시: 짝수 인덱스에만 알람 표시
+              final bool hasAlarm = false; // 임시: 짝수 인덱스에만 알람 표시
 
               return InkWell(
                 onTap: () => onFacilityPressed(fac['id']),
