@@ -43,7 +43,7 @@ class FacilityAlarmBox extends StatelessWidget {
               itemCount: alarms.length,
               itemBuilder: (context, index) {
                 final alarm = alarms[index];
-                final bool hasAlarm = index % 2 == 0;
+                final bool hasAlarm = false;
                 final rawTime = alarm['timestamp']?.toString() ?? '';
 
                 return Padding(
@@ -69,6 +69,15 @@ class FacilityAlarmBox extends StatelessWidget {
                               children: [
                                 Text(
                                   alarm['alarm_name'] ?? '알람 이름 없음',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  alarm['room_name'] ?? '호실 이름 없음',
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,

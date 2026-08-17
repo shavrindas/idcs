@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:idcs/components/facility/monitoring/monitoring.dart';
 import 'package:idcs/main.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
-import 'package:idcs/main.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/components/indices/main_alarm/main_alarm_components.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;
@@ -18,6 +20,8 @@ class MonitoringPage extends StatefulWidget {
 }
 
 class _MonitoringPageState extends State<MonitoringPage> {
+  bool _isLoading = true;
+  List<dynamic> _rooms = [];
   // 웹소켓 통신 클래스 인스턴스 생성
   final WebSocketService _webSocketService = WebSocketService();
   StreamSubscription<String>? _wsSubscription; // 스트림 구독 해제를 위한 객체
@@ -41,7 +45,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     'emergency_tempsensor': '온도센서이상',
     'emergency_defemg': '역상방지이상',
     'emergency_lowsw': 'LOW 스위치',
-    'emergency_hottic': '과열TIC',
+    'control_hottic': '과열TIC',
     'control_roomtemp': '룸온도스위치',
     'temp_comp': 'H_COMP',
     'control_cffan1': '방열기 팬 #1',
@@ -108,6 +112,32 @@ class _MonitoringPageState extends State<MonitoringPage> {
     _wsSubscription = _webSocketService.messageStream.listen((rawJson) {
       _parseAndMapDeviceMessage(rawJson);
     });
+
+    _fetchFacilityData();
+  }
+
+  // 1. 유저 데이터(권한 등)를 불러오는 초기화 함수
+  Future<void> _fetchFacilityData() async {
+    setState(() {
+      _isLoading = true; // 로딩 상태 활성화
+    });
+
+    try {
+      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+      setState(() {
+        _rooms = rooms;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('권한 조회 실패: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false; // 로딩 상태 해제
+        });
+      }
+    }
   }
 
   // 통신 클래스로부터 넘겨받은 날것의 데이터를 매핑하는 비즈니스 로직
@@ -191,6 +221,12 @@ class _MonitoringPageState extends State<MonitoringPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            IntegratedFacilityBox(
+                facilities: _rooms,
+                onFacilityPressed: (roomId) {
+                  // 터치 시 시설 라우팅용 nav 페이지로 이동
+                  context.push('/facility_monitoring/${widget.userId}/${widget.facilityId}/$roomId');
+                }),
             MonitoringCard(title: '시설 기본 정보', fields: infoData),
             MonitoringCard(title: '실제 온도', fields: realtempData, OnConfirm: remoteClickEvent),
             MonitoringCard(title: '제상 정보', fields: deforestData, OnConfirm: remoteClickEvent),
