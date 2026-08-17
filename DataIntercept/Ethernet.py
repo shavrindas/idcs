@@ -3,6 +3,9 @@ import websockets
 import json
 import time
 from WriteList import DataLists as RD
+import queue
+
+send_queue = queue.Queue()
 
 # 💡 스레드 간 신호 공유를 위해 전역 변수로 유지하되 초기화는 내부에서 수행
 device_response_event = None
@@ -15,6 +18,17 @@ async def send_periodic_data(ws, AdrMap):
     while True:
         payload = {'datas': AdrMap}
         await ws.send(json.dumps(payload))
+
+        try:
+            target_json = send_queue.get(block=False)
+            print(target_json)
+            await ws.send(target_json)
+            
+            send_queue.task_done()
+            
+        except queue.Empty:
+            pass
+
         await asyncio.sleep(1)  # 1초 주기
 
 async def receive_server_commands(ws, sock):

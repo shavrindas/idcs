@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSoc
 from config.db import get_db
 from src.models.User import User, UserRole
 from src.models.Facility import Facility, FacilityUser, FacilityRoom
-from src.models.Monitoring import PointRole, RemoteControlLog
+from src.models.Monitoring import PointRole, RemoteControlLog, BoolLog, TemperatureNumericalLog, EquipmentStaticLog
 import src.services.alarm as alarm_services
 import json
 import re
@@ -134,7 +134,68 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
 
             data_dict = json.loads(data)
 
-            if "datas" in data_dict.keys():
+            if "time" in data_dict:
+                bool_logs = []
+                real_logs = []
+                static_logs = []
+                roles = await alarm_services.scan_roles_asc_name(facility_id)
+                #print(roles)
+                #print(f"현재시간: {datetime.strptime(data_dict["time"], "%Y-%m-%d %H:%M:%S")}")
+
+                dt_object = datetime.strptime(data_dict["time"], "%Y-%m-%d %H:%M:%S")
+
+                for datakey, labled_dict in data_dict.items():
+                    try:
+                        json_dict = json.loads(labled_dict) if isinstance(labled_dict, str) else labled_dict
+                    except json.JSONDecodeError:
+                        continue
+
+                    for label, values in json_dict.items():
+                        if label in roles:
+                            role_obj = roles[label]
+
+                            #print(f"✅ 매칭 성공! 라벨: {label} | 롤 정보: {values}")
+
+                            if datakey == "bool":
+                                bool_logs.append(BoolLog(
+                                    role_id=role_obj.id,
+                                    timestamp=dt_object,
+                                    status_value=values.get("last_value")
+                                ))
+                            elif datakey == "real":
+                                real_logs.append(TemperatureNumericalLog(
+                                    role_id = role_obj.id,
+                                    timestamp = dt_object,
+                                    temp_min = values.get("val_min"),
+                                    temp_max = values.get("val_max"),
+                                    temp_mean = values.get("val_mean"),
+                                    temp_stdev = values.get("val_std"),
+                                    sample_count = values.get("count")
+                                ))
+                            elif datakey == "real_static":
+                                static_logs.append(EquipmentStaticLog(
+                                    role_id=role_obj.id,
+                                    timestamp=dt_object,
+                                    setnum=values.get("last_value")
+                                ))
+                        else:
+                            pass
+                
+                async for db in get_db():
+                    iscommit = False
+                    if bool_logs:
+                        db.add_all(bool_logs)
+                        iscommit = True
+                    if real_logs:
+                        db.add_all(real_logs)
+                        iscommit = True
+                    if static_logs:
+                        db.add_all(static_logs)
+                        iscommit = True
+                    if iscommit:
+                        await db.commit()
+
+            if "datas" in data_dict:
                 #역할 스캔
                 roles = await alarm_services.scan_roles(facility_id)
 

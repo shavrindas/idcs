@@ -45,7 +45,7 @@ class UserAlarmBox extends StatelessWidget {
               itemCount: alarms.length,
               itemBuilder: (context, index) {
                 final alarm = alarms[index];
-                final bool hasAlarm = index % 2 == 0;
+                final bool hasAlarm = false;
 
                 // 백엔드에서 넘겨주는 날짜 키값 및 facility_id 확인
                 final rawTime = alarm['timestamp']?.toString() ?? '';
@@ -74,6 +74,24 @@ class UserAlarmBox extends StatelessWidget {
                               children: [
                                 Text(
                                   alarm['alarm_name'] ?? '알람 이름 없음',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  alarm['facility_name'] ?? '시설 이름 없음',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  alarm['room_name'] ?? '룸 이름 없음',
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
