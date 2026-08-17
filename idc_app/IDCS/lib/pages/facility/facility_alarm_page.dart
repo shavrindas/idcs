@@ -20,9 +20,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
   bool _isLoading = true;
   List<dynamic> _alarms = [];
 
-  // 💡 검색을 위한 컨트롤러 및 변수 선언
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // 💡 검색 필터 기준 상태 변수 추가 ('name' 또는 'room')
+  String _searchTarget = 'name';
 
   @override
   void initState() {
@@ -63,10 +65,17 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 💡 검색어로 필터링된 알람 목록 생성
     final filteredAlarms = _alarms.where((alarm) {
-      final name = (alarm['alarm_name'] ?? '').toString().toLowerCase();
-      return name.contains(_searchQuery.toLowerCase());
+      final query = _searchQuery.toLowerCase();
+      if (query.isEmpty) return true;
+
+      if (_searchTarget == 'room') {
+        final room = (alarm['room_name'] ?? '').toString().toLowerCase();
+        return room.contains(query);
+      } else {
+        final name = (alarm['alarm_name'] ?? '').toString().toLowerCase();
+        return name.contains(query);
+      }
     }).toList();
 
     return Scaffold(
@@ -78,42 +87,85 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. 💡 Page 내부에 들어간 검색창
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: '알람 이름으로 검색...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(Icons.clear, size: 20),
-                  onPressed: () {
-                    setState(() {
-                      _searchController.clear();
-                      _searchQuery = '';
-                    });
-                  },
-                )
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 12,
+            // 💡 Row로 검색창과 드롭다운을 가로 배치
+            Row(
+              children: [
+                // 1. 검색 입력창
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      // 선택된 필터 기준에 따라 힌트 문구 변경
+                      hintText: _searchTarget == 'name' ? '알람 명으로 검색...' : '룸 이름으로 검색...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                          : null,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      isDense: true,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: Colors.grey.shade400),
+                const SizedBox(width: 8),
+
+                // 2. 오른쪽 필터 선택 드롭다운
+                Container(
+                  height: 42,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _searchTarget,
+                      icon: const Icon(Icons.arrow_drop_down, size: 20),
+                      isDense: true,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'name',
+                          child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                        ),
+                        DropdownMenuItem(
+                          value: 'room',
+                          child: Text('룸 ID', style: TextStyle(fontSize: 14)),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _searchTarget = value;
+                          });
+                        }
+                      },
+                    ),
+                  ),
                 ),
-                isDense: true,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              ],
             ),
             const SizedBox(height: 16),
 
-            // 2. 필터링된 알람 데이터 전달
+            // 3. 필터링된 알람 데이터 전달
             FacilityAlarmBox(
               alarms: filteredAlarms,
               isSearching: _searchQuery.isNotEmpty,

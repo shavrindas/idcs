@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from fastapi import APIRouter, Depends, HTTPException
 from config.db import get_db
 from src.models.User import UserFcmToken
-from src.models.Facility import  FacilityUser
+from src.models.Facility import  FacilityUser, Facility, FacilityRoom
 from src.models.Monitoring import PointRole, Alarm
 
 router = APIRouter(prefix="/alarms", tags=["Alarms"])
@@ -52,11 +52,18 @@ async def registToken(user_in: RegistTokenRequest, db: AsyncSession = Depends(ge
 
 @router.get("/{user_id}")
 async def get_alarms_for_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    # 1. Alarm 객체와 PointRole.facility_id를 함께 SELECT
     stmt = (
-        select(Alarm, PointRole.facility_id)
+        select(
+            Alarm, 
+            PointRole.facility_id, 
+            Facility.name.label("facility_name"), 
+            FacilityRoom.id.label("room_id"), 
+            FacilityRoom.name.label("room_name")
+        )
         .join(PointRole, Alarm.role_id == PointRole.id)
         .join(FacilityUser, FacilityUser.facility_id == PointRole.facility_id)
+        .join(Facility, Facility.id == FacilityUser.facility_id)
+        .join(FacilityRoom, PointRole.room_id == FacilityRoom.id)
         .where(
             FacilityUser.user_id == user_id,
             PointRole.is_current == True
@@ -65,30 +72,38 @@ async def get_alarms_for_user(user_id: int, db: AsyncSession = Depends(get_db)):
     )
 
     result = await db.execute(stmt)
-    # result.all()은 (Alarm 객체, facility_id) 형태의 튜플 리스트를 반환합니다.
     rows = result.all()
 
-    # 2. Alarm의 속성들과 facility_id를 합쳐서 딕셔너리 리스트 생성
     alarms_with_facility = []
-    for alarm, facility_id in rows:
-        # Alarm 모델의 테이블 컬럼 값을 동적으로 dict 변환
+    for alarm, facility_id, facility_name, room_id, room_name in rows:
         alarm_dict = {
             column.name: getattr(alarm, column.name)
             for column in alarm.__table__.columns
         }
-        # facility_id 첨가
-        alarm_dict['facility_id'] = facility_id
-        
+        alarm_dict.update({
+            'facility_id': facility_id,
+            'facility_name': facility_name,
+            'room_id': room_id,
+            'room_name': room_name
+        })
         alarms_with_facility.append(alarm_dict)
 
     return {'alarms': alarms_with_facility}
 
-#시설을 통해 알람 받기
+
 @router.get("/facility/{facility_id}")
 async def get_alarms_for_facility(facility_id: int, db: AsyncSession = Depends(get_db)):
     stmt = (
-        select(Alarm)
+        select(
+            Alarm, 
+            PointRole.facility_id, 
+            Facility.name.label("facility_name"), 
+            FacilityRoom.id.label("room_id"), 
+            FacilityRoom.name.label("room_name")
+        )
         .join(PointRole, Alarm.role_id == PointRole.id)
+        .join(Facility, Facility.id == PointRole.facility_id)
+        .join(FacilityRoom, PointRole.room_id == FacilityRoom.id)
         .where(
             PointRole.facility_id == facility_id,
             PointRole.is_current == True
@@ -97,6 +112,20 @@ async def get_alarms_for_facility(facility_id: int, db: AsyncSession = Depends(g
     )
 
     result = await db.execute(stmt)
-    alarms = list(result.scalars().all())
+    rows = result.all()
 
-    return {'alarms': alarms}
+    alarms_with_facility = []
+    for alarm, fac_id, facility_name, room_id, room_name in rows:
+        alarm_dict = {
+            column.name: getattr(alarm, column.name)
+            for column in alarm.__table__.columns
+        }
+        alarm_dict.update({
+            'facility_id': fac_id,
+            'facility_name': facility_name,
+            'room_id': room_id,
+            'room_name': room_name
+        })
+        alarms_with_facility.append(alarm_dict)
+
+    return {'alarms': alarms_with_facility}
