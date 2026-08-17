@@ -1,11 +1,10 @@
-# ===============================================================
-# 경로 : src/controllers/chart/chart_controller.py (수정본)
-# ===============================================================
+# src/controllers/chart/chart_controller.py
+
 from fastapi import APIRouter, Depends, Query, HTTPException
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from datetime import datetime
+from datetime import datetime, timedelta
 from config.db import get_db
 
 router = APIRouter(prefix="/chart", tags=["Chart"])
@@ -18,6 +17,8 @@ SCALE_MAPPING = {
     "15m": "15 minutes",  
     "1h": "1 hour"
 }
+
+
 @router.get("/{facility_id}/{room_id}")
 async def get_chart_data(
     facility_id: int,
@@ -26,8 +27,10 @@ async def get_chart_data(
     start_time: Optional[datetime] = Query(None, description="조회 시작 시간"),
     end_time: Optional[datetime] = Query(None, description="조회 종료 시간"),
     role_ids: str = Query(..., description="조회할 PointRole ID 목록"),
+    group_id: Optional[int] = Query(None, description="현재 활성화된 차트 그룹 ID (블랙리스트 조회용)"),
     db: AsyncSession = Depends(get_db)
 ):
+    
     if scale not in SCALE_MAPPING:
         raise HTTPException(status_code=400, detail="유효하지 않은 스케일입니다.")
     
@@ -43,7 +46,7 @@ async def get_chart_data(
     roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
 
     if not roles_info:
-        return {"status": "success", "data": {"datasets": []}, "message": "유효한 Role 데이터가 없습니다."}
+        return {"status": "success", "data": {"datasets": [], "alarms": [], "posts": [], "hidden_posts": []}, "message": "유효한 Role 데이터가 없습니다."}
 
     temp_roles, gear_roles, static_roles, bool_roles = [], [], [], []
     for r_id, r_info in roles_info.items():
@@ -53,16 +56,13 @@ async def get_chart_data(
         elif "static_" in r_name: static_roles.append(r_id)
         elif "bool_" in r_name: bool_roles.append(r_id)
 
-    # 💡 조회 기간 강제 보정 (값이 안 들어왔을 경우 최근 1일 기준으로 설정)
     if not end_time:
         max_time_query = text("SELECT MAX(timestamp) FROM temperature_numerical_logs WHERE role_id = ANY(:role_ids)")
         end_time = (await db.execute(max_time_query, {"role_ids": temp_roles if temp_roles else target_roles})).scalar()
         if not end_time:
-            return {"status": "success", "data": {"datasets": []}, "message": "기록된 로그가 없습니다."}
+            return {"status": "success", "data": {"datasets": [], "alarms": [], "posts": [], "hidden_posts": []}, "message": "기록된 로그가 없습니다."}
 
     if not start_time:
-        # datetime.timedelta는 파이썬 내장 라이브러리 활용
-        from datetime import timedelta
         start_time = end_time - timedelta(days=1)
 
     datasets_map: Dict[int, Any] = {
@@ -75,7 +75,6 @@ async def get_chart_data(
         } for r_id in roles_info.keys()
     }
 
-    # 💡 start_time, end_time을 쿼리에 적용
     async def fetch_and_map(table_name: str, agg_columns: str, type_roles: List[int], data_key_mapping: dict):
         if not type_roles: return
         query = text(f"""
@@ -98,8 +97,66 @@ async def get_chart_data(
     await fetch_and_map("equipment_static_logs", "AVG(setnum) AS mean", static_roles, {"mean": "mean"})
     await fetch_and_map("bool_logs", "BOOL_OR(status_value) AS status", bool_roles, {"status": "status"})
 
+    # 💡 [신규 추가] 알람(Alarm) 데이터 조회
+    alarm_query = text("""
+        SELECT alarm_id, role_id, alarm_name, severity, timestamp, is_triggered, end_time
+        FROM alarms
+        WHERE role_id = ANY(:role_ids)
+          AND timestamp >= :start_time
+          AND timestamp <= :end_time
+        ORDER BY timestamp ASC
+    """)
+    alarm_rows = await db.execute(alarm_query, {"role_ids": target_roles, "start_time": start_time, "end_time": end_time})
+    alarms_list = []
+    for row in alarm_rows.fetchall():
+        alarm_dict = dict(row._mapping)
+        if alarm_dict.get("timestamp"):
+            alarm_dict["timestamp"] = alarm_dict["timestamp"].isoformat()
+        if alarm_dict.get("end_time"):
+            alarm_dict["end_time"] = alarm_dict["end_time"].isoformat()
+        alarms_list.append(alarm_dict)
+
+    # 1. 시설에 해당하는 포스트 중 기간이 설정되어 있고 차트 조회 범위와 겹치는 항목 조회
+    post_query = text("""
+        SELECT p.post_id as id, p.title, p.content, p.start_date, p.end_date
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        WHERE b.facility_id = :facility_id
+          AND p.start_date IS NOT NULL 
+          AND p.end_date IS NOT NULL
+          AND p.start_date <= :end_time
+          AND p.end_date >= :start_time
+    """)
+    post_rows = await db.execute(post_query, {"facility_id": facility_id, "start_time": start_time, "end_time": end_time})
+    all_posts = [dict(r._mapping) for r in post_rows.fetchall()]
+
+    # 2. 현재 차트 그룹의 숨겨진 포스트 ID 목록 조회
+    hidden_post_ids = set()
+    if group_id:
+        hidden_query = text("SELECT post_id FROM post_hidden_chart_groups WHERE group_id = :group_id")
+        hidden_rows = await db.execute(hidden_query, {"group_id": group_id})
+        hidden_post_ids = {r[0] for r in hidden_rows.fetchall()}
+
+    visible_posts = []
+    hidden_posts = []
+    for p in all_posts:
+        p_dict = dict(p)
+        if p_dict.get("start_date"): p_dict["start_date"] = p_dict["start_date"].isoformat()
+        if p_dict.get("end_date"): p_dict["end_date"] = p_dict["end_date"].isoformat()
+        
+        if p_dict["id"] in hidden_post_ids:
+            hidden_posts.append(p_dict)
+        else:
+            visible_posts.append(p_dict)
+
+    # 💡 최종 통합 응답 반환
     return {
         "status": "success",
         "meta": {"scale": scale, "start_time": start_time.isoformat(), "end_time": end_time.isoformat()},
-        "data": {"datasets": list(datasets_map.values())}
+        "data": {
+            "datasets": list(datasets_map.values()),
+            "alarms": alarms_list,
+            "posts": visible_posts,
+            "hidden_posts": hidden_posts
+        }
     }
