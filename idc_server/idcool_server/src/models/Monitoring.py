@@ -2,13 +2,15 @@
 # 경로 : src/models/Monitoring.py
 # 명세 : 포인트 역할, 각종 계측 로그 및 알람 관련 데이터 모델 정의
 # ===============================================================
+
+
 from sqlalchemy import (
     Column, Integer, String, Boolean, DateTime, REAL, Interval, 
-    ForeignKey, UniqueConstraint, Index, CHAR, func
+    ForeignKey, UniqueConstraint, Index, CHAR, func, Enum
 )
 from src.models.Board import Post
 
-
+import enum
 from sqlalchemy.orm import relationship
 from config.db import Base
 
@@ -30,6 +32,9 @@ class PointRole(Base):
     facility = relationship("Facility")
     room = relationship("FacilityRoom")
 
+    # 1:1 메타데이터 관계 (uselist=False)
+    metadata_info = relationship("PointRoleMetadata", back_populates="role", uselist=False, lazy="joined")
+
     # is_current가 True인 대상에 대해서만 유일성을 보장하는 부분 인덱스(Partial Index) 모사
     # (SQLAlchemy 내에서 PostgreSQL partial index 선언)
     __table_args__ = (
@@ -40,6 +45,25 @@ class PointRole(Base):
             postgresql_where=(is_current == True)
         ),
     )
+
+
+class PointDataTypeEnum(str, enum.Enum):
+    TEMP = "TEMP"
+    GEAR = "GEAR"
+    BOOL = "BOOL"
+    STATIC = "STATIC"
+
+
+class PointRoleMetadata(Base):
+    __tablename__ = "point_role_metadata"
+
+    role_id = Column(Integer, ForeignKey("point_role_table.id", ondelete="CASCADE"), primary_key=True)
+    anydata = Column(Boolean, nullable=False, default=False)
+    data_type = Column(Enum(PointDataTypeEnum, name="point_data_type", create_type=False), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # PointRole과의 1:1 양방향 관계
+    role = relationship("PointRole", back_populates="metadata_info")
 
 
 # ---------------------------------------------------------------
