@@ -37,10 +37,18 @@ export const apiService = {
   // }
 
 
-  // 데이터 호출 API (groupId 파라미터 추가)
-  getHistoricalData: async (facilityId: number, roomId: number, groupId: number | '', scale: string, endTime: string, roleIds: number[]) => {
-    let url = `${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&end_time=${endTime}&role_ids=${roleIds.join(',')}`;
-    if (groupId !== '') url += `&group_id=${groupId}`; // 그룹 ID가 있을 경우 전달
+  // 데이터 호출 API 
+  // getHistoricalData: async (facilityId: number, roomId: number, groupId: number | '', scale: string, endTime: string, roleIds: number[]) => {
+  //   let url = `${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&end_time=${endTime}&role_ids=${roleIds.join(',')}`;
+  //   if (groupId !== '') url += `&group_id=${groupId}`; // 그룹 ID가 있을 경우 전달
+    
+  //   const res = await fetch(url);
+  //   return res.json();
+  // },
+
+  getHistoricalData: async (facilityId: number, roomId: number, groupId: number | '', scale: string, startTime: string, endTime: string, roleIds: number[]) => {
+    let url = `${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&start_time=${startTime}&end_time=${endTime}&role_ids=${roleIds.join(',')}`;
+    if (groupId !== '') url += `&group_id=${groupId}`; 
     
     const res = await fetch(url);
     return res.json();
@@ -55,4 +63,6 @@ export const apiService = {
     const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}/show-post/${postId}`, { method: 'DELETE' });
     return res.json();
   }
+
+
 };
