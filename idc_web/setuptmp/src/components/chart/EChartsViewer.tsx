@@ -17,6 +17,7 @@ interface Props {
   onDataZoomPan?: (startVal: number, endVal: number) => void;
   // 💡 [신규] 새로운 데이터 병합 시 차트의 시점을 유지하기 위한 뷰포트 줌 상태
   currentZoom?: { start: number; end: number } | null;
+  loadedRange?: { start: number; end: number } | null;
 }
 
 const SYNC_GROUP_NAME = 'idcool-chart-group';
