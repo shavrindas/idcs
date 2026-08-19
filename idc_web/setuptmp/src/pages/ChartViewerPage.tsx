@@ -48,6 +48,7 @@ export const ChartViewerPage: React.FC = () => {
 
   const [openMenuRoleId, setOpenMenuRoleId] = useState<number | null>(null);
   const [activeGuidelines, setActiveGuidelines] = useState<number[]>([]);
+  const [invertedBools, setInvertedBools] = useState<number[]>([]);
   const [isChartLoading, setIsChartLoading] = useState<boolean>(false); 
 
   const [posts, setPosts] = useState<any[]>([]);
@@ -55,29 +56,29 @@ export const ChartViewerPage: React.FC = () => {
   const [hiddenPosts, setHiddenPosts] = useState<any[]>([]);
   const [selectedPostViewerIds, setSelectedPostViewerIds] = useState<number[]>([]);
 
-  // 💡 [신규] Smart Omnibox 상태
   const [omniboxInput, setOmniboxInput] = useState('');
   const [omniboxSuggestions, setOmniboxSuggestions] = useState<any[]>([]);
 
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null); 
-  const currentZoomRef = useRef<{start: number, end: number} | null>(null);
   const loadedRangeRef = useRef<{ start: number, end: number } | null>(null);
   const [loadedRangeState, setLoadedRangeState] = useState<{ start: number, end: number } | null>(null);
 
+  // 💡 [신규] 차트의 현재 좌측 끝 시간 기록용 상태 (복사 기능에 사용)
+  const [currentViewStart, setCurrentViewStart] = useState<number | null>(null);
+
   useEffect(() => { apiService.getFacilities().then(res => setFacilities(res.facilities || [])); }, []); 
 
-  // 💡 [개선] 종속된 객체가 로드되면 가장 작은 ID(배열의 첫 요소)를 자동으로 선택합니다.
   useEffect(() => {
     if (selectedFacility) {
       apiService.getRooms(Number(selectedFacility)).then(res => {
         const fetchedRooms = res.rooms || [];
         setRooms(fetchedRooms);
-        if (fetchedRooms.length > 0) setSelectedRoom(fetchedRooms[0].id); // 자동 선택
+        if (fetchedRooms.length > 0) setSelectedRoom(fetchedRooms[0].id); 
       });
       setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); 
-      setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null); currentZoomRef.current = null;
+      setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
     }
   }, [selectedFacility]); 
 
@@ -86,7 +87,7 @@ export const ChartViewerPage: React.FC = () => {
       apiService.getChartGroups(Number(selectedFacility), Number(selectedRoom)).then(res => {
         const fetchedGroups = res.groups || [];
         setGroups(fetchedGroups);
-        if (fetchedGroups.length > 0) setSelectedGroupId(fetchedGroups[0].group_id); // 자동 선택
+        if (fetchedGroups.length > 0) setSelectedGroupId(fetchedGroups[0].group_id); 
       }); 
       apiService.getPointRoles(Number(selectedFacility), Number(selectedRoom)).then(res => {
         const roles = res.roles || [];
@@ -95,8 +96,8 @@ export const ChartViewerPage: React.FC = () => {
         roles.forEach((r: Role, idx: number) => { newColorMap[r.role_id] = COLOR_PALETTE[idx % COLOR_PALETTE.length]; });
         setRoleColors(newColorMap);
       });
-      setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null); currentZoomRef.current = null;
+      setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
     }
   }, [selectedRoom, selectedFacility]); 
 
@@ -105,38 +106,24 @@ export const ChartViewerPage: React.FC = () => {
       const group = groups.find(g => g.group_id === Number(selectedGroupId));
       if (group && group.role_ids) setCheckedRoles(group.role_ids.filter(id => id !== null));
     } else {
-      setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null); currentZoomRef.current = null;
+      setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
     }
   }, [selectedGroupId, groups]); 
 
-  // 💡 [신규] Smart Omnibox 자동완성 탐색 로직 (시설 종속성 반영)
   useEffect(() => {
     const q = omniboxInput.replace(/\s+/g, '').toLowerCase();
-    if (!q) {
-      setOmniboxSuggestions([]);
-      return;
-    }
+    if (!q) { setOmniboxSuggestions([]); return; }
     const sugs: any[] = [];
     
-    // 시설은 항상 검색 대상
-    facilities.forEach(f => {
-      if (f.name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'facility', id: f.id, name: f.name, label: `${f.name} (시설)` });
-    });
-    // 호실은 시설이 선택되어 있을 때만
+    facilities.forEach(f => { if (f.name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'facility', id: f.id, name: f.name, label: `${f.name} (시설)` }); });
     if (selectedFacility) {
-      rooms.forEach(r => {
-        if (r.name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'room', id: r.id, name: r.name, label: `${r.name} (호실)` });
-      });
+      rooms.forEach(r => { if (r.name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'room', id: r.id, name: r.name, label: `${r.name} (호실)` }); });
     }
-    // 그룹은 호실이 선택되어 있을 때만
     if (selectedRoom) {
-      groups.forEach(g => {
-        if (g.group_name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'group', id: g.group_id, name: g.group_name, label: `${g.group_name} (맵핑)` });
-      });
+      groups.forEach(g => { if (g.group_name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'group', id: g.group_id, name: g.group_name, label: `${g.group_name} (맵핑)` }); });
     }
     
-    // 최대 유사도(길이 차이가 가장 적은 순) 정렬
     sugs.sort((a, b) => a.name.length - b.name.length);
     setOmniboxSuggestions(sugs);
   }, [omniboxInput, facilities, rooms, groups, selectedFacility, selectedRoom]);
@@ -148,63 +135,33 @@ export const ChartViewerPage: React.FC = () => {
     setOmniboxInput('');
   };
 
-  // 💡 [신규] 파서: 날짜 및 시간 추출 후 남은 문자로 상태 제어
   const handleOmniboxSubmit = () => {
     let remain = omniboxInput;
     let updatedDate = new Date(targetDate);
     let dateChanged = false;
     let timeChanged = false;
 
-    // 1. 날짜 추출
-    const dateRegex1 = /(?:^|\s)(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:\s|$)/; // YYYY/MM/DD
-    const dateRegex2 = /(?:^|\s)(\d{1,2})[./-](\d{1,2})(?:\s|$)/;             // MM/DD
-    const dateRegex3 = /(?:^|\s)(\d{1,2})\s*월\s*(\d{1,2})\s*일(?:\s|$)/;     // M월 D일
+    const dateRegex1 = /(?:^|\s)(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:\s|$)/; 
+    const dateRegex2 = /(?:^|\s)(\d{1,2})[./-](\d{1,2})(?:\s|$)/;             
+    const dateRegex3 = /(?:^|\s)(\d{1,2})\s*월\s*(\d{1,2})\s*일(?:\s|$)/;     
 
     let m;
-    if ((m = remain.match(dateRegex1))) {
-      updatedDate.setFullYear(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]));
-      remain = remain.replace(m[0], ' ');
-      dateChanged = true;
-    } else if ((m = remain.match(dateRegex3))) {
-      updatedDate.setMonth(parseInt(m[1]) - 1, parseInt(m[2]));
-      remain = remain.replace(m[0], ' ');
-      dateChanged = true;
-    } else if ((m = remain.match(dateRegex2))) {
-      updatedDate.setMonth(parseInt(m[1]) - 1, parseInt(m[2]));
-      remain = remain.replace(m[0], ' ');
-      dateChanged = true;
-    }
+    if ((m = remain.match(dateRegex1))) { updatedDate.setFullYear(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3])); remain = remain.replace(m[0], ' '); dateChanged = true; } 
+    else if ((m = remain.match(dateRegex3))) { updatedDate.setMonth(parseInt(m[1]) - 1, parseInt(m[2])); remain = remain.replace(m[0], ' '); dateChanged = true; } 
+    else if ((m = remain.match(dateRegex2))) { updatedDate.setMonth(parseInt(m[1]) - 1, parseInt(m[2])); remain = remain.replace(m[0], ' '); dateChanged = true; }
 
-    // 2. 시간 추출
-    const timeRegex1 = /(?:^|\s)([01]\d|2[0-3]):([0-5]\d)(?:\s|$)/; // 12:34
-    const timeRegex2 = /(?:^|\s)([01]\d|2[0-3])([0-5]\d)(?:\s|$)/;  // 1234
+    const timeRegex1 = /(?:^|\s)([01]\d|2[0-3]):([0-5]\d)(?:\s|$)/; 
+    const timeRegex2 = /(?:^|\s)([01]\d|2[0-3])([0-5]\d)(?:\s|$)/;  
     
-    if ((m = remain.match(timeRegex1))) {
-      updatedDate.setHours(parseInt(m[1]), parseInt(m[2]), 0, 0);
-      remain = remain.replace(m[0], ' ');
-      timeChanged = true;
-    } else if ((m = remain.match(timeRegex2))) {
-      updatedDate.setHours(parseInt(m[1]), parseInt(m[2]), 0, 0);
-      remain = remain.replace(m[0], ' ');
-      timeChanged = true;
-    }
+    if ((m = remain.match(timeRegex1))) { updatedDate.setHours(parseInt(m[1]), parseInt(m[2]), 0, 0); remain = remain.replace(m[0], ' '); timeChanged = true; } 
+    else if ((m = remain.match(timeRegex2))) { updatedDate.setHours(parseInt(m[1]), parseInt(m[2]), 0, 0); remain = remain.replace(m[0], ' '); timeChanged = true; }
 
-    // 일자만 입력하고 시간을 치지 않았다면 00:00으로 초기화
-    if (dateChanged && !timeChanged) {
-      updatedDate.setHours(0, 0, 0, 0);
-    }
+    if (dateChanged && !timeChanged) updatedDate.setHours(0, 0, 0, 0);
+    if (dateChanged || timeChanged) setTargetDate(getLocalDatetimeString(updatedDate));
 
-    if (dateChanged || timeChanged) {
-      setTargetDate(getLocalDatetimeString(updatedDate));
-    }
-
-    // 3. 남은 문자열이 있다면 1순위 추천 항목을 자동 선택
     const q = remain.replace(/\s+/g, '');
-    if (q && omniboxSuggestions.length > 0) {
-      handleOmniboxSelect(omniboxSuggestions[0]);
-    } else {
-      setOmniboxInput('');
-    }
+    if (q && omniboxSuggestions.length > 0) handleOmniboxSelect(omniboxSuggestions[0]);
+    else setOmniboxInput('');
   };
 
   const fetchAndMergeChunk = async (fetchStartMs: number, fetchEndMs: number, direction: 'replace' | 'append' | 'prepend') => {
@@ -223,12 +180,13 @@ export const ChartViewerPage: React.FC = () => {
       const newHiddenPosts = res.data?.hidden_posts || [];
 
       if (direction === 'replace') {
-        currentZoomRef.current = null;
         setChartDataSets(newDatasets);
         setPosts(newPosts);
         setAlarms(newAlarms);
         setHiddenPosts(newHiddenPosts);
         loadedRangeRef.current = { start: fetchStartMs, end: fetchEndMs };
+        // 초기 로드 시 뷰포트 시작시간 기록
+        setCurrentViewStart(fetchStartMs);
       } else {
         setChartDataSets(prev => prev.map(prevDs => {
           const newDs = newDatasets.find((n: any) => n.role_id === prevDs.role_id);
@@ -283,7 +241,7 @@ export const ChartViewerPage: React.FC = () => {
       fetchAndMergeChunk(startMs, endMs, 'replace');
     } else {
       setChartDataSets([]); setPosts([]); setAlarms([]); setHiddenPosts([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null);
+      loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFacility, selectedRoom, scale, targetDate, checkedRoles, refreshTrigger]); 
@@ -302,16 +260,14 @@ export const ChartViewerPage: React.FC = () => {
   }, 500);
 
   const handleZoomCapture = useCallback((start: number, end: number) => {
-    currentZoomRef.current = { start, end };
+    setCurrentViewStart(start); // 💡 이동 시 복사용 시간 업데이트
     handleDataZoomFetch(start, end);
   }, [handleDataZoomFetch]);
 
   const isBoolRole = (roleId: number) => {
     const role = allRoles.find(r => String(r.role_id) === String(roleId));
     if (!role) return false;
-    if (role.data_type) {
-      return role.data_type === 'BOOL';
-    }
+    if (role.data_type) return role.data_type === 'BOOL';
     return role.role_name.toLowerCase().includes('bool');
   }; 
 
@@ -342,6 +298,10 @@ export const ChartViewerPage: React.FC = () => {
       }
     });
   }; 
+
+  const handleInvertToggle = (roleId: number) => {
+    setInvertedBools(prev => prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]);
+  };
 
   const syncChartDataZoom = (sourceRef: React.RefObject<ReactECharts | null>, targetRef: React.RefObject<ReactECharts | null>) => {
     const srcInst = sourceRef.current?.getEchartsInstance();
@@ -419,6 +379,20 @@ export const ChartViewerPage: React.FC = () => {
     } catch (e) { console.error(e); }
   };
 
+  // 💡 [신규] 클립보드 복사 로직 (파서 포맷 생성)
+  const handleCopySearchQuery = () => {
+    if (!selectedFacility || !selectedRoom || !currentViewStart) return;
+    const facName = facilities.find(f => f.id === selectedFacility)?.name || '';
+    const roomName = rooms.find(r => r.id === selectedRoom)?.name || '';
+    
+    const d = new Date(currentViewStart);
+    const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+    const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    
+    const query = `${facName} ${roomName} ${dateStr} ${timeStr}`;
+    navigator.clipboard.writeText(query).then(() => alert(`클립보드에 복사되었습니다:\n${query}`));
+  };
+
   const currentGroup = groups.find(g => g.group_id === Number(selectedGroupId));
   const groupRoleIds = currentGroup && currentGroup.role_ids ? currentGroup.role_ids.filter(id => id !== null) : [];
 
@@ -435,6 +409,8 @@ export const ChartViewerPage: React.FC = () => {
           <div style={{ border: '2px solid #9c27b0', padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, backgroundColor: '#2a2a2a' }}>
             <span style={{ color: '#9c27b0', fontWeight: 'bold' }}>Top Tool Bar</span>
             <div style={{ display: 'flex', gap: 10 }}>
+              {/* 💡 [신규] 클립보드 복사 버튼 추가 */}
+              <button onClick={handleCopySearchQuery} title="현재 차트 시점 정보 복사" style={{ padding: '4px 8px', backgroundColor: '#607d8b', color: 'white', border: 'none', cursor: 'pointer', borderRadius: 4 }}>📋 Copy</button>
               <button onClick={() => setShowMainInfo(!showMainInfo)} style={{ padding: '4px 8px', backgroundColor: showMainInfo ? '#4caf50' : '#555', color: 'white', border: 'none', cursor: 'pointer' }}>정보 {showMainInfo ? 'ON' : 'OFF'}</button>
               <button onClick={() => setShowMainGrid(!showMainGrid)} style={{ padding: '4px 8px', backgroundColor: showMainGrid ? '#2196f3' : '#555', color: 'white', border: 'none', cursor: 'pointer' }}>그리드 {showMainGrid ? 'ON' : 'OFF'}</button>
               <button onClick={applyOneHourView} style={{ padding: '4px 8px', backgroundColor: '#ff9800', color: 'white', border: 'none', cursor: 'pointer' }}>1시간 뷰</button>
@@ -466,7 +442,7 @@ export const ChartViewerPage: React.FC = () => {
             <SubChartViewer 
               echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} 
               showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading}
-              posts={posts} alarms={alarms} 
+              posts={posts} alarms={alarms} invertedBools={invertedBools}
               loadedRange={loadedRangeState} 
             />
           </div>
@@ -475,7 +451,6 @@ export const ChartViewerPage: React.FC = () => {
         {/* ================= 오른쪽: 패널 1 영역 ================= */}
         <div style={{ flex: 1, border: '2px solid #e91e63', display: 'flex', flexDirection: 'column', padding: 10, gap: 10 }}>
           
-          {/* 💡 [신규] Smart Omnibox UI */}
           <div style={{ border: '2px solid #ffffff', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <h4 style={{ margin: 0, textAlign: 'center', color: '#ff9800' }}>Smart Omnibox (스마트 검색)</h4>
             <div style={{ position: 'relative' }}>
@@ -489,12 +464,12 @@ export const ChartViewerPage: React.FC = () => {
                 style={{ width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: '#333', color: '#fff', border: '1px solid #555', outline: 'none' }}
               />
               {omniboxSuggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#444', border: '1px solid #666', zIndex: 100, maxHeight: 150, overflowY: 'auto' }}>
-                  {omniboxSuggestions.map((sug, i) => (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#444', border: '1px solid #666', zIndex: 100 }}>
+                  {omniboxSuggestions.slice(0, 12).map((sug, i) => ( 
                     <div 
                       key={i} 
                       onClick={() => handleOmniboxSelect(sug)}
-                      style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #555', color: '#82b1ff', fontSize: 13 }}
+                      style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #555', color: '#82b1ff', fontSize: 13, textAlign: 'left' }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#555')}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
@@ -585,10 +560,11 @@ export const ChartViewerPage: React.FC = () => {
       </div>
 
       {/* ================= 하단: 메인 조작 패널 2 (분할 구조 도입) ================= */}
-      <div style={{ display: 'flex', gap: 10, height: '150px' }}>
+      {/* 💡 [UI 수정] 고정 높이를 없애고 flexShrink: 0 적용하여 컨텐츠 확장에 대응 */}
+      <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
         
         {/* 좌측: 맵핑 그룹 활성화 */}
-        <div style={{ flex: 3, border: '2px solid #4caf50', padding: 15, display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
+        <div style={{ flex: 3, border: '2px solid #4caf50', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h4 style={{ margin: 0, color: '#4caf50' }}>메인 조작 패널 2 (맵핑 그룹 활성화)</h4>
           <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
             <select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : '')} disabled={!selectedRoom || groups.length === 0 || isChartLoading} style={{ padding: 8, minWidth: 150, backgroundColor: '#333', color: 'white', opacity: isChartLoading ? 0.5 : 1 }}>
@@ -625,6 +601,14 @@ export const ChartViewerPage: React.FC = () => {
                             </label>
                           </div>
                         )}
+                        {isBool && (
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <label style={{ fontSize: 12, color: '#ccc', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={invertedBools.includes(roleId)} onChange={() => handleInvertToggle(roleId)} style={{ marginRight: 5 }} /> 
+                              상태 반전 (Invert)
+                            </label>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -635,7 +619,7 @@ export const ChartViewerPage: React.FC = () => {
         </div>
 
         {/* 우측: 소요기록 Black List */}
-        <div style={{ flex: 1, border: '2px solid #ff4d4f', padding: 15, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#2a1215', overflowY: 'auto' }}>
+        <div style={{ flex: 1, border: '2px solid #ff4d4f', padding: 15, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#2a1215' }}>
           <h4 style={{ margin: 0, color: '#ff4d4f', textAlign: 'center' }}>소요기록 Black List</h4>
           <div style={{ fontSize: 12, color: '#aaa', textAlign: 'center', marginBottom: 5 }}>현재 그룹에서 제외된 포스트</div>
           
