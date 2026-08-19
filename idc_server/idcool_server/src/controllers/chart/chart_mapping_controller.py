@@ -17,9 +17,10 @@ class GroupCreateReq(BaseModel):
 @router.get("/roles/{facility_id}/{room_id}")
 async def get_point_roles(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
     query = text("""
-        SELECT id as role_id, role_name, target_value
-        FROM point_role_table
-        WHERE facility_id = :facility_id AND room_id = :room_id AND is_current = TRUE
+        SELECT pr.id as role_id, pr.role_name, pr.target_value, prm.data_type
+        FROM point_role_table pr
+        LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
+        WHERE pr.facility_id = :facility_id AND pr.room_id = :room_id AND pr.is_current = TRUE
     """)
     result = await db.execute(query, {"facility_id": facility_id, "room_id": room_id})
     roles = [dict(row._mapping) for row in result.fetchall()]

@@ -38,9 +38,10 @@ async def get_chart_data(
     target_roles = [int(r.strip()) for r in role_ids.split(",")]
 
     role_query = text("""
-        SELECT id, role_name, target_value, target_low_limit, target_high_limit
-        FROM point_role_table
-        WHERE id = ANY(:role_ids) AND is_current = TRUE
+        SELECT pr.id, pr.role_name, pr.target_value, pr.target_low_limit, pr.target_high_limit, prm.data_type
+        FROM point_role_table pr
+        LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
+        WHERE pr.id = ANY(:role_ids) AND pr.is_current = TRUE
     """)
     role_result = await db.execute(role_query, {"role_ids": target_roles})
     roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
@@ -50,11 +51,25 @@ async def get_chart_data(
 
     temp_roles, gear_roles, static_roles, bool_roles = [], [], [], []
     for r_id, r_info in roles_info.items():
-        r_name = r_info["role_name"].lower()
-        if "temp_" in r_name: temp_roles.append(r_id)
-        elif "gear_" in r_name: gear_roles.append(r_id)
-        elif "static_" in r_name: static_roles.append(r_id)
-        elif "bool_" in r_name: bool_roles.append(r_id)
+        dtype = r_info.get("data_type")
+        
+        # 메타데이터가 아직 할당되지 않은 예전 롤에 대한 방어 로직 (이름 기반 Fallback)
+        if not dtype:
+            r_name = r_info["role_name"].lower()
+            if "temp_" in r_name: temp_roles.append(r_id)
+            elif "gear_" in r_name: gear_roles.append(r_id)
+            elif "static_" in r_name: static_roles.append(r_id)
+            elif "bool_" in r_name: bool_roles.append(r_id)
+            continue
+            
+        if dtype == 'BOOL':
+            bool_roles.append(r_id)
+        elif dtype == 'STATIC':
+            static_roles.append(r_id)
+        elif dtype == 'GEAR':
+            gear_roles.append(r_id) # 쿼리는 gear 테이블에서 수행 (결과는 메인차트로 감)
+        else: # TEMP 및 기본
+            temp_roles.append(r_id)
 
     if not end_time:
         max_time_query = text("SELECT MAX(timestamp) FROM temperature_numerical_logs WHERE role_id = ANY(:role_ids)")
