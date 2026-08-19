@@ -58,9 +58,9 @@ export const ChartViewerPage: React.FC = () => {
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null); 
 
-  // 💡 [핵심] 현재 차트에 로드된 전체 범위 상태값
+  // 💡 [핵심] 차트의 현재 뷰포트 상태를 강제 기억하는 Ref (재렌더링 시 활용)
+  const currentZoomRef = useRef<{start: number, end: number} | null>(null);
   const loadedRangeRef = useRef<{ start: number, end: number } | null>(null);
-  const [loadedRangeState, setLoadedRangeState] = useState<{ start: number, end: number } | null>(null);
 
   useEffect(() => { apiService.getFacilities().then(res => setFacilities(res.facilities || [])); }, []); 
 
@@ -69,7 +69,7 @@ export const ChartViewerPage: React.FC = () => {
       apiService.getRooms(Number(selectedFacility)).then(res => setRooms(res.rooms || []));
       setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); 
       setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null);
+      loadedRangeRef.current = null; currentZoomRef.current = null;
     }
   }, [selectedFacility]); 
 
@@ -84,7 +84,7 @@ export const ChartViewerPage: React.FC = () => {
         setRoleColors(newColorMap);
       });
       setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null);
+      loadedRangeRef.current = null; currentZoomRef.current = null;
     }
   }, [selectedRoom, selectedFacility]); 
 
@@ -94,11 +94,10 @@ export const ChartViewerPage: React.FC = () => {
       if (group && group.role_ids) setCheckedRoles(group.role_ids.filter(id => id !== null));
     } else {
       setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null);
+      loadedRangeRef.current = null; currentZoomRef.current = null;
     }
   }, [selectedGroupId, groups]); 
 
-  // 💡 [핵심] 청크 요청 및 병합
   const fetchAndMergeChunk = async (fetchStartMs: number, fetchEndMs: number, direction: 'replace' | 'append' | 'prepend') => {
     if (!selectedFacility || !selectedRoom || checkedRoles.length === 0) return;
     setIsChartLoading(true);
@@ -115,6 +114,7 @@ export const ChartViewerPage: React.FC = () => {
       const newHiddenPosts = res.data?.hidden_posts || [];
 
       if (direction === 'replace') {
+        currentZoomRef.current = null; // 새로운 스코프 검색 시 줌 초기화
         setChartDataSets(newDatasets);
         setPosts(newPosts);
         setAlarms(newAlarms);
@@ -158,7 +158,6 @@ export const ChartViewerPage: React.FC = () => {
           loadedRangeRef.current = { start: newStart, end: newEnd };
         }
       }
-      setLoadedRangeState(loadedRangeRef.current);
     } catch (err) {
       console.error("차트 청크 호출 오류:", err);
     } finally {
@@ -174,14 +173,14 @@ export const ChartViewerPage: React.FC = () => {
       fetchAndMergeChunk(startMs, endMs, 'replace');
     } else {
       setChartDataSets([]); setPosts([]); setAlarms([]); setHiddenPosts([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null);
+      loadedRangeRef.current = null; currentZoomRef.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFacility, selectedRoom, scale, targetDate, checkedRoles, refreshTrigger]); 
 
-  const handleDataZoomPan = useDebouncedCallback((viewStartMs: number, viewEndMs: number) => {
+  // 💡 [수정] 디바운스된 백엔드 요청 함수
+  const handleDataZoomFetch = useDebouncedCallback((viewStartMs: number, viewEndMs: number) => {
     if (isChartLoading || !loadedRangeRef.current || checkedRoles.length === 0) return;
-    
     const config = CHART_SCOPING_CONFIG[mode][scale];
     const chunkMs = config.chunkSize;
     const buffer = chunkMs * 0.2; 
@@ -193,13 +192,16 @@ export const ChartViewerPage: React.FC = () => {
     }
   }, 500);
 
-  // 💡 [수정] PointRoleMetadata 기반의 data_type 우선 확인[cite: 8]
+  // 💡 [신규] 차트 줌 발생 시 즉시 상태 기록 후 데이터 요청 트리거
+  const handleZoomCapture = useCallback((start: number, end: number) => {
+    currentZoomRef.current = { start, end };
+    handleDataZoomFetch(start, end);
+  }, [handleDataZoomFetch]);
+
   const isBoolRole = (roleId: number) => {
     const role = allRoles.find(r => String(r.role_id) === String(roleId));
     if (!role) return false;
-    if (role.data_type) {
-      return role.data_type === 'BOOL';
-    }
+    if (role.data_type) return role.data_type === 'BOOL';
     return role.role_name.toLowerCase().includes('bool');
   }; 
 
@@ -331,12 +333,13 @@ export const ChartViewerPage: React.FC = () => {
           </div>
           
           <div style={{ border: '2px solid #ffffff', flex: 2, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0, position: 'relative' }}>
+            {/* 🚨 뱃지 UI 완전 삭제 적용됨 */}
             <MainChartViewer 
               echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} 
               showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading}
               posts={posts} alarms={alarms} onChartClick={handleChartClick} 
-              loadedRange={loadedRangeState} // 💡 렌더링 범위 강제 주입
-              onDataZoomPan={handleDataZoomPan} // 💡 이벤트 콜백 추가
+              currentZoom={currentZoomRef.current} // 💡 기존의 loadedRangeState 대신 ref.current 주입
+              onDataZoomPan={handleZoomCapture} // 💡 캡처 함수 바인딩
             />
           </div>
           
@@ -355,7 +358,7 @@ export const ChartViewerPage: React.FC = () => {
               echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} 
               showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading}
               posts={posts} alarms={alarms} 
-              loadedRange={loadedRangeState} // 💡 렌더링 범위 강제 주입
+              currentZoom={currentZoomRef.current}
             />
           </div>
         </div>
@@ -414,6 +417,7 @@ export const ChartViewerPage: React.FC = () => {
           <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', flexDirection: 'column', padding: 10, backgroundColor: '#1e1e1e', overflowY: 'auto' }}>
             <h4 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>소요기록 Viewer</h4>
             
+            {/* 💡 [수정] 여러 포스트를 동시에 렌더링하기 위한 맵핑 로직 적용 */}
             {selectedPostViewerIds.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
                 {selectedPostViewerIds.map(postId => {
@@ -493,7 +497,7 @@ export const ChartViewerPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 💡 우측: 소요기록 Black List (API 연동 완료) */}
+        {/* 우측: 소요기록 Black List */}
         <div style={{ flex: 1, border: '2px solid #ff4d4f', padding: 15, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#2a1215', overflowY: 'auto' }}>
           <h4 style={{ margin: 0, color: '#ff4d4f', textAlign: 'center' }}>소요기록 Black List</h4>
           <div style={{ fontSize: 12, color: '#aaa', textAlign: 'center', marginBottom: 5 }}>현재 그룹에서 제외된 포스트</div>

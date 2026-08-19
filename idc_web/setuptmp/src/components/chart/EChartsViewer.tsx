@@ -15,8 +15,10 @@ interface Props {
   alarms?: any[];
   onChartClick?: (type: 'post' | 'alarm', id: number | number[]) => void;
   onDataZoomPan?: (startVal: number, endVal: number) => void;
-  loadedRange?: { start: number; end: number } | null;
+  // 💡 [신규] 새로운 데이터 병합 시 차트의 시점을 유지하기 위한 뷰포트 줌 상태
+  currentZoom?: { start: number; end: number } | null;
 }
+
 const SYNC_GROUP_NAME = 'idcool-chart-group';
 echarts.connect(SYNC_GROUP_NAME);
 
@@ -25,6 +27,7 @@ const formatShortTime = (ts: number) => {
   return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 };
 
+// 💡 소요기록 중복 구역(Segment) 분할 병합 함수
 const generatePostSegments = (validPosts: any[]) => {
   if (!validPosts || validPosts.length === 0) return [];
   const points = new Set<number>();
@@ -45,20 +48,31 @@ const generatePostSegments = (validPosts: any[]) => {
 // ==========================================
 // 1. 수치형 데이터 전용 메인 차트
 // ==========================================
-
-export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick, loadedRange }) => {
+export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick, onDataZoomPan, currentZoom }) => {
   useEffect(() => {
     if (echartsRef && echartsRef.current) {
       const instance = echartsRef.current.getEchartsInstance();
       instance.group = SYNC_GROUP_NAME; 
+      
       instance.off('click');
       instance.on('click', (params: any) => {
         if (params.seriesName === 'GlobalAnnotations' && params.data && params.data.postIds) {
           if (onChartClick) onChartClick('post', params.data.postIds);
         }
       });
+
+      // 💡 [수정] 줌 이벤트 발생 시 현재 뷰포트 상태를 상위로 지속 전달
+      instance.off('dataZoom');
+      instance.on('dataZoom', () => {
+        const option = instance.getOption() as any;
+        if (option.dataZoom && option.dataZoom.length > 0 && option.dataZoom[0].startValue != null) {
+          if (onDataZoomPan) {
+            onDataZoomPan(option.dataZoom[0].startValue, option.dataZoom[0].endValue);
+          }
+        }
+      });
     }
-  }, [echartsRef, onChartClick]);
+  }, [echartsRef, onChartClick, onDataZoomPan]);
 
   const getOption = () => {
     const seriesData: any[] = (datasets || []).map(ds => {
@@ -110,21 +124,21 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
     const annotationSeries: any = { name: 'GlobalAnnotations', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [], markArea: { silent: false, data: postAreas }, markLine: { silent: false, symbol: ['none', 'none'], z: 10, data: globalLines } };
     seriesData.push(annotationSeries);
 
+    // 💡 [핵심] 재렌더링 시 이전 뷰포트 상태 강제 복원 (데이터 튕김 현상 방지)
+    const dataZoomInside: any = { type: 'inside', filterMode: 'empty' };
+    if (currentZoom) {
+      dataZoomInside.startValue = currentZoom.start;
+      dataZoomInside.endValue = currentZoom.end;
+    }
+
     return {
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
       grid: { left: 60, right: 50, top: 40, bottom: 25 },
-      xAxis: { 
-        type: 'time', 
-        // 💡 [핵심] ECharts가 데이터 한계선에 갇히지 않도록 축을 강제 고정
-        min: loadedRange?.start, 
-        max: loadedRange?.end,
-        axisLabel: { show: false }, 
-        axisTick: { show: false }, 
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } } 
-      },
+      // 💡 min/max 제한을 풀어 ECharts가 자연스럽게 데이터를 따라가도록 해제
+      xAxis: { type: 'time', axisLabel: { show: false }, axisTick: { show: false }, splitLine: { show: showGrid, lineStyle: { color: '#333' } } },
       yAxis: { type: 'value', name: '수치 (Main)', splitLine: { show: showGrid, lineStyle: { color: '#333' } }, scale: true },
-      dataZoom: [{ type: 'inside' }],
+      dataZoom: [dataZoomInside],
       series: seriesData
     }; 
   };
@@ -136,7 +150,7 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
 // 2. 상태형(BOOL) 데이터 전용 서브 차트
 // ==========================================
 
-export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, isLoading = false, posts = [], alarms = [], loadedRange }) => {
+export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, isLoading = false, posts = [], alarms = [], currentZoom }) => {
   useEffect(() => {
     if (echartsRef && echartsRef.current) echartsRef.current.getEchartsInstance().group = SYNC_GROUP_NAME; 
   }, [echartsRef]);
@@ -179,17 +193,21 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
     };
     seriesData.push(annotationSeries);
 
+    const dataZoomInside: any = { type: 'inside', filterMode: 'empty' };
+    const dataZoomSlider: any = { type: 'slider', bottom: 0, height: 20, filterMode: 'empty' };
+    if (currentZoom) {
+      dataZoomInside.startValue = currentZoom.start;
+      dataZoomInside.endValue = currentZoom.end;
+      dataZoomSlider.startValue = currentZoom.start;
+      dataZoomSlider.endValue = currentZoom.end;
+    }
+
     return {
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       grid: { left: 60, right: 50, top: 10, bottom: 25 },
-      xAxis: { 
-        type: 'time', 
-        min: loadedRange?.start, 
-        max: loadedRange?.end,
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } } 
-      },
+      xAxis: { type: 'time', splitLine: { show: showGrid, lineStyle: { color: '#333' } } },
       yAxis: { type: 'category', name: '상태 (Sub)', data: boolCategories.length > 0 ? boolCategories : ['데이터 없음'], splitLine: { show: showGrid, lineStyle: { color: '#444', type: 'dashed' } }, axisLabel: { color: '#ccc', fontSize: 10 } },
-      dataZoom: [{ type: 'inside' }, { type: 'slider', bottom: 0, height: 20 }],
+      dataZoom: [dataZoomInside, dataZoomSlider],
       series: seriesData
     }; 
   };
