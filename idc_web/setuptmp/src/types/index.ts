@@ -1,6 +1,8 @@
+// src/types/index.ts
 export interface Role {
   role_id: number;
   role_name: string;
+  data_type?: string; 
 }
 
 export interface ChartGroup {

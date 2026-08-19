@@ -1,8 +1,9 @@
 // src/pages/ChartViewerPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { MainChartViewer, SubChartViewer } from '../components/chart/EChartsViewer';
-import type { ChartMode, ChartScale } from '../constants/chartConfig';
+import { CHART_SCOPING_CONFIG} from '../constants/chartConfig'; 
+import type{ ChartMode, ChartScale } from '../constants/chartConfig'; 
 import { apiService } from '../services/apiService';
 import type { Role, ChartGroup } from '../types';
 
@@ -11,10 +12,15 @@ const getLocalDatetimeString = (date: Date) => {
   return (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
 };
 
-const COLOR_PALETTE = [
-  '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', 
-  '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f'
-];
+const COLOR_PALETTE = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f'];
+
+function useDebouncedCallback<T extends (...args: any[]) => void>(callback: T, delay: number) {
+  const timeoutRef = useRef<number | null>(null);
+  return useCallback((...args: Parameters<T>) => {
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => callback(...args), delay);
+  }, [callback, delay]);
+}
 
 export const ChartViewerPage: React.FC = () => {
   const [mode, setMode] = useState<ChartMode>('DEFAULT');
@@ -47,22 +53,23 @@ export const ChartViewerPage: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [alarms, setAlarms] = useState<any[]>([]);
   const [hiddenPosts, setHiddenPosts] = useState<any[]>([]);
-  
-  // 💡 [수정] 여러 개의 포스트를 띄우기 위해 배열로 상태 변경
   const [selectedPostViewerIds, setSelectedPostViewerIds] = useState<number[]>([]);
 
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null); 
 
-  useEffect(() => {
-    apiService.getFacilities().then(res => setFacilities(res.facilities || []));
-  }, []); 
+  // 💡 [핵심] 현재 차트에 로드된 전체 범위 상태값
+  const loadedRangeRef = useRef<{ start: number, end: number } | null>(null);
+  const [loadedRangeState, setLoadedRangeState] = useState<{ start: number, end: number } | null>(null);
+
+  useEffect(() => { apiService.getFacilities().then(res => setFacilities(res.facilities || [])); }, []); 
 
   useEffect(() => {
     if (selectedFacility) {
       apiService.getRooms(Number(selectedFacility)).then(res => setRooms(res.rooms || []));
       setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); 
       setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null);
     }
   }, [selectedFacility]); 
 
@@ -77,6 +84,7 @@ export const ChartViewerPage: React.FC = () => {
         setRoleColors(newColorMap);
       });
       setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null);
     }
   }, [selectedRoom, selectedFacility]); 
 
@@ -86,36 +94,113 @@ export const ChartViewerPage: React.FC = () => {
       if (group && group.role_ids) setCheckedRoles(group.role_ids.filter(id => id !== null));
     } else {
       setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null);
     }
   }, [selectedGroupId, groups]); 
 
-  useEffect(() => {
-    let isMounted = true; 
-
-    if (selectedFacility && selectedRoom && checkedRoles.length > 0 && targetDate) {
-      setIsChartLoading(true); 
-      const endIso = new Date(targetDate).toISOString();
+  // 💡 [핵심] 청크 요청 및 병합
+  const fetchAndMergeChunk = async (fetchStartMs: number, fetchEndMs: number, direction: 'replace' | 'append' | 'prepend') => {
+    if (!selectedFacility || !selectedRoom || checkedRoles.length === 0) return;
+    setIsChartLoading(true);
+    
+    try {
+      const startIso = new Date(fetchStartMs).toISOString();
+      const endIso = new Date(fetchEndMs).toISOString();
       
-      apiService.getHistoricalData(Number(selectedFacility), Number(selectedRoom), selectedGroupId, scale, endIso, checkedRoles)
-        .then(res => {
-          if (isMounted) {
-            setChartDataSets(res.data?.datasets || []);
-            setAlarms(res.data?.alarms || []);
-            setPosts(res.data?.posts || []);
-            setHiddenPosts(res.data?.hidden_posts || []);
+      const res = await apiService.getHistoricalData(Number(selectedFacility), Number(selectedRoom), selectedGroupId, scale, startIso, endIso, checkedRoles);
+      
+      const newDatasets = res.data?.datasets || [];
+      const newPosts = res.data?.posts || [];
+      const newAlarms = res.data?.alarms || [];
+      const newHiddenPosts = res.data?.hidden_posts || [];
+
+      if (direction === 'replace') {
+        setChartDataSets(newDatasets);
+        setPosts(newPosts);
+        setAlarms(newAlarms);
+        setHiddenPosts(newHiddenPosts);
+        loadedRangeRef.current = { start: fetchStartMs, end: fetchEndMs };
+      } else {
+        setChartDataSets(prev => prev.map(prevDs => {
+          const newDs = newDatasets.find((n: any) => n.role_id === prevDs.role_id);
+          if (!newDs) return prevDs;
+          
+          let mergedData = direction === 'append' ? [...prevDs.data, ...newDs.data] : [...newDs.data, ...prevDs.data];
+          mergedData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          
+          const MAX_POINTS = 5000;
+          if (mergedData.length > MAX_POINTS) {
+            mergedData = direction === 'append' ? mergedData.slice(-MAX_POINTS) : mergedData.slice(0, MAX_POINTS);
           }
-        })
-        .catch(err => { if (isMounted) console.error("차트 호출 오류:", err); })
-        .finally(() => { if (isMounted) setIsChartLoading(false); });
-    } else {
-      setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]);
+          return { ...prevDs, data: mergedData };
+        }));
+
+        setPosts(prev => {
+          const combined = direction === 'append' ? [...prev, ...newPosts] : [...newPosts, ...prev];
+          return Array.from(new Map(combined.map(p => [p.id, p])).values()); 
+        });
+        setAlarms(prev => {
+          const combined = direction === 'append' ? [...prev, ...newAlarms] : [...newAlarms, ...prev];
+          return Array.from(new Map(combined.map(a => [a.alarm_id, a])).values());
+        });
+
+        if (loadedRangeRef.current) {
+          const config = CHART_SCOPING_CONFIG[mode][scale];
+          const maxMsRange = config.chunkSize * config.maxChunks;
+          
+          let newStart = Math.min(loadedRangeRef.current.start, fetchStartMs);
+          let newEnd = Math.max(loadedRangeRef.current.end, fetchEndMs);
+
+          if (newEnd - newStart > maxMsRange) {
+            if (direction === 'append') newStart = newEnd - maxMsRange;
+            if (direction === 'prepend') newEnd = newStart + maxMsRange;
+          }
+          loadedRangeRef.current = { start: newStart, end: newEnd };
+        }
+      }
+      setLoadedRangeState(loadedRangeRef.current);
+    } catch (err) {
+      console.error("차트 청크 호출 오류:", err);
+    } finally {
+      setIsChartLoading(false);
     }
-    return () => { isMounted = false; };
+  };
+
+  useEffect(() => {
+    if (selectedFacility && selectedRoom && checkedRoles.length > 0 && targetDate) {
+      const endMs = new Date(targetDate).getTime();
+      const chunkMs = CHART_SCOPING_CONFIG[mode][scale].chunkSize;
+      const startMs = endMs - chunkMs;
+      fetchAndMergeChunk(startMs, endMs, 'replace');
+    } else {
+      setChartDataSets([]); setPosts([]); setAlarms([]); setHiddenPosts([]);
+      loadedRangeRef.current = null; setLoadedRangeState(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFacility, selectedRoom, scale, targetDate, checkedRoles, refreshTrigger]); 
 
+  const handleDataZoomPan = useDebouncedCallback((viewStartMs: number, viewEndMs: number) => {
+    if (isChartLoading || !loadedRangeRef.current || checkedRoles.length === 0) return;
+    
+    const config = CHART_SCOPING_CONFIG[mode][scale];
+    const chunkMs = config.chunkSize;
+    const buffer = chunkMs * 0.2; 
+
+    if (viewStartMs < loadedRangeRef.current.start + buffer) {
+      fetchAndMergeChunk(loadedRangeRef.current.start - chunkMs, loadedRangeRef.current.start, 'prepend');
+    } else if (viewEndMs > loadedRangeRef.current.end - buffer) {
+      fetchAndMergeChunk(loadedRangeRef.current.end, loadedRangeRef.current.end + chunkMs, 'append');
+    }
+  }, 500);
+
+  // 💡 [수정] PointRoleMetadata 기반의 data_type 우선 확인[cite: 8]
   const isBoolRole = (roleId: number) => {
     const role = allRoles.find(r => String(r.role_id) === String(roleId));
-    return role ? role.role_name.toLowerCase().includes('bool') : false;
+    if (!role) return false;
+    if (role.data_type) {
+      return role.data_type === 'BOOL';
+    }
+    return role.role_name.toLowerCase().includes('bool');
   }; 
 
   const handleModeToggle = () => {
@@ -135,7 +220,8 @@ export const ChartViewerPage: React.FC = () => {
     if (isChartLoading) return; 
     const isBool = isBoolRole(roleId);
     setCheckedRoles(prev => {
-      if (prev.includes(roleId)) return prev.filter(id => id !== roleId);
+      const isCurrentlyChecked = prev.includes(roleId);
+      if (isCurrentlyChecked) return prev.filter(id => id !== roleId);
       else {
         if (mode === 'EXTENT' && !isBool) {
           const boolRoles = prev.filter(id => isBoolRole(id));
@@ -200,18 +286,15 @@ export const ChartViewerPage: React.FC = () => {
   const handleColorChange = (roleId: number, color: string) => setRoleColors(prev => ({ ...prev, [roleId]: color }));
   const handleGuidelineToggle = (roleId: number) => setActiveGuidelines(prev => prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]);
 
-  // 💡 [수정] 여러 포스트가 병합된 구역을 클릭 시 배열을 수용
   const handleChartClick = (type: 'post' | 'alarm', ids: number | number[]) => {
-    if (type === 'post') {
-      setSelectedPostViewerIds(Array.isArray(ids) ? ids : [ids]);
-    }
+    if (type === 'post') setSelectedPostViewerIds(Array.isArray(ids) ? ids : [ids]);
   };
 
   const handleHidePost = async (postId: number) => {
     if (!selectedGroupId) return;
     try {
       await apiService.hidePostFromGroup(Number(selectedGroupId), postId);
-      setSelectedPostViewerIds(prev => prev.filter(id => id !== postId)); // 뷰어 목록에서도 제거
+      setSelectedPostViewerIds(prev => prev.filter(id => id !== postId)); 
       setRefreshTrigger(prev => prev + 1); 
     } catch (e) { console.error(e); }
   };
@@ -248,11 +331,12 @@ export const ChartViewerPage: React.FC = () => {
           </div>
           
           <div style={{ border: '2px solid #ffffff', flex: 2, display: 'flex', flexDirection: 'column', backgroundColor: '#1e1e1e', minHeight: 0, position: 'relative' }}>
-            {/* 🚨 기존 플로팅 뱃지 UI 삭제됨 */}
             <MainChartViewer 
               echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} 
               showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading}
               posts={posts} alarms={alarms} onChartClick={handleChartClick} 
+              loadedRange={loadedRangeState} // 💡 렌더링 범위 강제 주입
+              onDataZoomPan={handleDataZoomPan} // 💡 이벤트 콜백 추가
             />
           </div>
           
@@ -271,6 +355,7 @@ export const ChartViewerPage: React.FC = () => {
               echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} 
               showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading}
               posts={posts} alarms={alarms} 
+              loadedRange={loadedRangeState} // 💡 렌더링 범위 강제 주입
             />
           </div>
         </div>
@@ -329,7 +414,6 @@ export const ChartViewerPage: React.FC = () => {
           <div style={{ border: '2px solid #ffffff', flex: 1, display: 'flex', flexDirection: 'column', padding: 10, backgroundColor: '#1e1e1e', overflowY: 'auto' }}>
             <h4 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>소요기록 Viewer</h4>
             
-            {/* 💡 [수정] 여러 포스트를 동시에 렌더링하기 위한 맵핑 로직 적용 */}
             {selectedPostViewerIds.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
                 {selectedPostViewerIds.map(postId => {
@@ -409,7 +493,7 @@ export const ChartViewerPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 우측: 소요기록 Black List */}
+        {/* 💡 우측: 소요기록 Black List (API 연동 완료) */}
         <div style={{ flex: 1, border: '2px solid #ff4d4f', padding: 15, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#2a1215', overflowY: 'auto' }}>
           <h4 style={{ margin: 0, color: '#ff4d4f', textAlign: 'center' }}>소요기록 Black List</h4>
           <div style={{ fontSize: 12, color: '#aaa', textAlign: 'center', marginBottom: 5 }}>현재 그룹에서 제외된 포스트</div>
