@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { LeftPanel } from '../components/mapper/LeftPanel';
-import { RightPanel } from '../components/mapper/RightPanel';
+import { LeftPanel } from '../components/chart/mapper/LeftPanel';
+import { RightPanel } from '../components/chart/mapper/RightPanel';
 import type { Role, ChartGroup } from '../types';
 
 export const ChartMappingPage: React.FC = () => {
