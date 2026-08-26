@@ -1,0 +1,21 @@
+git clone https://github.com/shavrindas/idcs.git
+
+docker network create idcool-network
+
+cd .\doker_list\idcool_database\
+docker compose up -d
+
+cd ..\idcool_redis
+docker compose up -d
+
+cd ..\idcool_server
+docker compose up -d --build
+
+cd ..\idcool_web
+docker compose up -d --build
+
+cd ..\idcool_nginx
+docker compose up -d --build
+
+
+http://localhost/
