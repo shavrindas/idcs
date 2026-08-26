@@ -2,11 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# 패키지 설치
-COPY ./requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+# 1. 의존성 파일 복사 및 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY . /app
+# 2. idc_server 폴더 내부 전체(idcool_server 폴더 등)를 /app으로 복사
+COPY . .
 
-WORKDIR /app/idcs/idc_server/idcool_server
+# 3. 실제 Python 실행 루트(idcool_server)로 이동
+WORKDIR /app/idcool_server
+
+# 4. src.app 실행
 CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8080"]

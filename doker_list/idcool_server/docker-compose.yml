@@ -1,10 +1,9 @@
-version: '3.9'
-
 services:
   idcool-backend:
+    container_name: idcool-backend
     build:
-      context: ./idcs/idc_server
-      dockerfile: Dockerfile
+      context: ../../idcs/idc_server        # 깃 클론된 idc_server 루트
+      dockerfile: ../../doker_list/idcool_server/Dockerfile
     environment:
       - REDIS_HOST=idcool-redis
       - REDIS_PORT=6379

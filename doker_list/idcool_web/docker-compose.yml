@@ -1,0 +1,14 @@
+services:
+  idcool-frontend:
+    container_name: idcool-frontend
+    build:
+      context: ../../idcs/idc_web/setuptmp
+      dockerfile: ../../../doker_list/idcool_web/Dockerfile
+    networks:
+      - idcool-net
+    restart: unless-stopped
+
+networks:
+  idcool-net:
+    external: true
+    name: idcool-network
