@@ -62,7 +62,15 @@ export const apiService = {
   showPostInGroup: async (groupId: number, postId: number) => {
     const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}/show-post/${postId}`, { method: 'DELETE' });
     return res.json();
+  },
+
+  updatePointRoleIndexing: async (updates: { role_id: number; display_name: string; short_name: string }[]) => {
+    const res = await fetch(`${BASE_URL}/chart-mapping/roles/indexing`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
   }
-
-
 };
