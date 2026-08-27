@@ -58,13 +58,13 @@ class PointRoleMetadata(Base):
     __tablename__ = "point_role_metadata"
 
     role_id = Column(Integer, ForeignKey("point_role_table.id", ondelete="CASCADE"), primary_key=True)
+    display_name = Column(String(150), nullable=True) 
+    short_name = Column(String(50), nullable=True)     
     anydata = Column(Boolean, nullable=False, default=False)
     data_type = Column(Enum(PointDataTypeEnum, name="point_data_type", create_type=False), nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # PointRole과의 1:1 양방향 관계
     role = relationship("PointRole", back_populates="metadata_info")
-
 
 # ---------------------------------------------------------------
 # TimescaleDB 하이퍼테이블 로그 영역 (기본 복합키나 단방향 관계 매핑 지원)
