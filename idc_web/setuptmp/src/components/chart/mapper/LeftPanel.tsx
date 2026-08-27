@@ -15,6 +15,15 @@ interface Props {
   onDragStart: (e: React.DragEvent, role: Role) => void;
 }
 
+const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
+  const roleName = roleInfo?.role_name || (fallbackId ? `Role ${fallbackId}` : '');
+  const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${fallbackId}`;
+  const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${fallbackId}`;
+
+  return { roleName, roleLabel, badgeLabel };
+};
+
+
 export const LeftPanel: React.FC<Props> = ({
   facilities,
   rooms,
@@ -27,14 +36,49 @@ export const LeftPanel: React.FC<Props> = ({
   onRoomChange,
   onDragStart,
 }) => {
-  // 이미 오른쪽 패널에 추가된 항목은 목록에서 제외
+
+
   const visibleRoom0Roles = room0Roles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
   );
   const visibleTargetRoles = targetRoomRoles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
   );
-
+  const renderRoleItem = (role: Role) => {
+    const { roleLabel, badgeLabel } = getRoleLabels(role, role.role_id);
+return (
+      <div
+        key={role.role_id}
+        draggable
+        onDragStart={(e) => onDragStart(e, role)}
+        style={{
+          border: '1px solid #999',
+          padding: 8,
+          marginBottom: 5,
+          cursor: 'grab',
+          backgroundColor: '#ff8a80',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
+        {/* 약어 배지 영역 */}
+        <span
+          style={{
+            fontSize: '11px',
+            backgroundColor: '#333',
+            color: '#fff',
+            padding: '2px 4px',
+            borderRadius: '4px',
+          }}
+        >
+          {badgeLabel}
+        </span>
+        {/* 풀네임(디스플레이명) 영역 */}
+        <span>{roleLabel}</span>
+      </div>
+    );
+  };
   return (
     <div
       style={{
@@ -84,7 +128,7 @@ export const LeftPanel: React.FC<Props> = ({
                 backgroundColor: '#ff8a80',
               }}
             >
-              {role.role_name}
+              {renderRoleItem(role)}
             </div>
           ))}
         </div>
@@ -127,7 +171,7 @@ export const LeftPanel: React.FC<Props> = ({
                   backgroundColor: '#ff8a80',
                 }}
               >
-                {role.role_name}
+                {renderRoleItem(role)}
               </div>
             ))}
           </div>

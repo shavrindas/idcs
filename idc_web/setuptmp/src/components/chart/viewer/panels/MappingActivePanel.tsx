@@ -24,6 +24,7 @@ interface Props {
 export const MappingActivePanel: React.FC<Props> = ({ groups, allRoles, roleColors, selectedGroupId, selectedRoom, isChartLoading, checkedRoles, activeGuidelines, invertedBools, openMenuRoleId, onGroupChange, onRoleToggle, onMenuToggle, onColorChange, onGuidelineToggle, onInvertToggle, isBoolRole }) => {
   const currentGroup = groups.find(g => g.group_id === Number(selectedGroupId));
   const groupRoleIds = currentGroup && currentGroup.role_ids ? currentGroup.role_ids.filter(id => id !== null) : [];
+  
 
   return (
     <div style={{ flex: 3, border: '2px solid #4caf50', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -37,7 +38,9 @@ export const MappingActivePanel: React.FC<Props> = ({ groups, allRoles, roleColo
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
           {selectedGroupId && groupRoleIds.map(roleId => {
             const roleInfo = allRoles.find(r => r.role_id === roleId);
-            const roleName = roleInfo ? roleInfo.role_name : `Role ${roleId}`;
+            const roleName = roleInfo ? roleInfo.role_name : `Role ${roleId}`;                              // 기능형 명칭
+            const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${roleId}`;  // 표시용 명칭 
+            const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${roleId}`;        // 약어용 명칭
             const color = roleColors[roleId] || '#ffffff';
             const isBool = isBoolRole(roleId);
             
@@ -46,7 +49,7 @@ export const MappingActivePanel: React.FC<Props> = ({ groups, allRoles, roleColo
                 <label style={{ display: 'flex', alignItems: 'center', cursor: isChartLoading ? 'not-allowed' : 'pointer', color: color, fontWeight: 'bold', opacity: isChartLoading ? 0.5 : 1 }}>
                   <input type="checkbox" checked={checkedRoles.includes(roleId)} onChange={() => onRoleToggle(roleId)} disabled={isChartLoading} style={{ marginRight: 5, accentColor: color }} /> 
                   <span style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: color, marginRight: 5, borderRadius: 2 }}></span>
-                  {roleName}
+                  {roleLabel}
                 </label>
                 <span onClick={() => onMenuToggle(openMenuRoleId === roleId ? null : roleId)} style={{ marginLeft: 5, cursor: 'pointer', fontSize: 16 }}>⚙️</span>
                 {openMenuRoleId === roleId && (

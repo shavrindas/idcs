@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Role, ChartGroup } from '../../../types';
 
-
 interface Props {
   existingGroups: ChartGroup[];
   selectedGroupId: number | 'new';
@@ -15,6 +14,15 @@ interface Props {
   onReorderRoles: (sourceIndex: number, targetIndex: number) => void;
   onSaveGroup: () => void;
 }
+
+// 명칭 및 약어 Fallback 헬퍼 함수
+const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
+  const roleName = roleInfo?.role_name || (fallbackId ? `Role ${fallbackId}` : '');
+  const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${fallbackId}`;
+  const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${fallbackId}`;
+
+  return { roleName, roleLabel, badgeLabel };
+};
 
 export const RightPanel: React.FC<Props> = ({
   existingGroups,
@@ -104,36 +112,57 @@ export const RightPanel: React.FC<Props> = ({
         {droppedRoles.length === 0 && (
           <p style={{ color: '#999' }}>여기로 포인트 롤을 드래그하세요.</p>
         )}
-        {droppedRoles.map((role, idx) => (
-          <div
-            key={role.role_id}
-            draggable
-            onDragStart={(e) => handleItemDragStart(e, idx)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => handleItemDrop(e, idx)}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              border: '1px solid blue',
-              padding: 8,
-              marginBottom: 5,
-              cursor: 'grab',
-              backgroundColor: '#ff8a80',
-            }}
-          >
-            <span>☰ {role.role_name}</span>
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemoveRole(role.role_id);
+        {droppedRoles.map((role, idx) => {
+          const { roleLabel, badgeLabel } = getRoleLabels(role, role.role_id);
+
+          return (
+            <div
+              key={role.role_id}
+              draggable
+              onDragStart={(e) => handleItemDragStart(e, idx)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleItemDrop(e, idx)}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                border: '1px solid blue',
+                padding: 8,
+                marginBottom: 5,
+                cursor: 'grab',
+                backgroundColor: '#ff8a80',
               }}
-              style={{ cursor: 'pointer', marginLeft: 8 }}
             >
-              ❌
-            </span>
-          </div>
-        ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>☰</span>
+                {/* 약어 배지 영역 */}
+                <span
+                  style={{
+                    fontSize: '11px',
+                    backgroundColor: '#333',
+                    color: '#fff',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  {badgeLabel}
+                </span>
+                {/* 디스플레이명(또는 기능명) 풀네임 영역 */}
+                <span>{roleLabel}</span>
+              </div>
+
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveRole(role.role_id);
+                }}
+                style={{ cursor: 'pointer', marginLeft: 8 }}
+              >
+                ❌
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <button
