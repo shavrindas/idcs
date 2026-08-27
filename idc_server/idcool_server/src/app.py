@@ -110,3 +110,6 @@ app.include_router(chart_mapping_router, prefix="/api")
 
 from src.controllers.facility.facility_management_controller import router as facility_mgmt_router
 app.include_router(facility_mgmt_router, prefix="/api")
+
+from src.controllers.account.auth_web_controller import router as web_auth_router
+app.include_router(web_auth_router, prefix="/api")

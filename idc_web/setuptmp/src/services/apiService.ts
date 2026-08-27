@@ -153,6 +153,13 @@ deletePointRoleAdmin: async (roleId: number) => {
   return res.json();
 },
 
+  getUserFacilities: async (userId: number) => {
+    const response = await fetch(`/api/facilities/${userId}`);
+    if (!response.ok) {
+      throw new Error('사용자 시설 목록을 불러오는데 실패했습니다.');
+    }
+    return response.json();
+  },
 
 
 };
