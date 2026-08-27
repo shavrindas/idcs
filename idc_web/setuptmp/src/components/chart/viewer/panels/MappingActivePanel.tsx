@@ -46,9 +46,18 @@ export const MappingActivePanel: React.FC<Props> = ({ groups, allRoles, roleColo
             
             return (
               <div key={roleId} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                {/* <label style={{ display: 'flex', alignItems: 'center', cursor: isChartLoading ? 'not-allowed' : 'pointer', color: color, fontWeight: 'bold', opacity: isChartLoading ? 0.5 : 1 }}>
+                  <input type="checkbox" checked={checkedRoles.includes(roleId)} onChange={() => onRoleToggle(roleId)} disabled={isChartLoading} style={{ marginRight: 5, accentColor: color }} /> 
+                  <span style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: color, marginRight: 5, borderRadius: 2 }}></span>
+                  {roleLabel}
+                </label> */}
                 <label style={{ display: 'flex', alignItems: 'center', cursor: isChartLoading ? 'not-allowed' : 'pointer', color: color, fontWeight: 'bold', opacity: isChartLoading ? 0.5 : 1 }}>
                   <input type="checkbox" checked={checkedRoles.includes(roleId)} onChange={() => onRoleToggle(roleId)} disabled={isChartLoading} style={{ marginRight: 5, accentColor: color }} /> 
                   <span style={{ display: 'inline-block', width: 12, height: 12, backgroundColor: color, marginRight: 5, borderRadius: 2 }}></span>
+                  {/* 약어 배지 표시 */}
+                  <span style={{ fontSize: '10px', backgroundColor: '#444', color: '#fff', padding: '1px 4px', borderRadius: '3px', marginRight: 5 }}>
+                    {badgeLabel}
+                  </span>
                   {roleLabel}
                 </label>
                 <span onClick={() => onMenuToggle(openMenuRoleId === roleId ? null : roleId)} style={{ marginLeft: 5, cursor: 'pointer', fontSize: 16 }}>⚙️</span>
