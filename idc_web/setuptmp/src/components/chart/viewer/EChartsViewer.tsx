@@ -66,9 +66,12 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
     const seriesData: any[] = (datasets || []).map(ds => {
       const color = roleColors[ds.role_id];
       const seriesItem: any = {
-        name: ds.role_name, type: 'line', showSymbol: false, itemStyle: { color: color },
+        name: ds.display_name || ds.role_name,
+        type: 'line',
+        showSymbol: false,
+        itemStyle: { color: color },
         data: (ds.data || []).map((pt: any) => [new Date(pt.timestamp).getTime(), pt.mean])
-      }; 
+      };
       if (activeGuidelines.includes(ds.role_id)) {
         const markLineData: any[] = [];
         if (ds.target_value != null) markLineData.push({ yAxis: Number(ds.target_value), name: 'Target', lineStyle: { type: 'solid', color: color, width: 2 } });
@@ -151,7 +154,8 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
 
   const getOption = () => {
     const seriesData: any[] = [];
-    const boolCategories = (datasets || []).map(ds => ds.role_name); 
+    const boolCategories = (datasets || []).map(ds => ds.display_name || ds.role_name);
+     
 
     (datasets || []).forEach((ds, index) => {
       // 💡 [신규] 반전 설정 여부 확인
@@ -164,8 +168,8 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
         })
         .map((pt: any) => [new Date(pt.timestamp).getTime(), index]); 
 
-      // 💡 더 이어져 보이도록 사각형(width)의 크기를 3에서 6으로 소폭 증가시켰습니다.
-      seriesData.push({ name: ds.role_name, type: 'scatter', symbol: 'rect', symbolSize: [6, 20], itemStyle: { color: roleColors[ds.role_id] }, data: mappedData }); 
+
+      seriesData.push({ name: ds.display_name || ds.role_name, type: 'scatter', symbol: 'rect', symbolSize: [6, 20], itemStyle: { color: roleColors[ds.role_id] }, data: mappedData }); 
     });
 
     const validPosts = posts.filter(p => p.start_date && p.end_date).map(p => {

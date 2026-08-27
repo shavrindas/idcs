@@ -14,10 +14,28 @@ class GroupCreateReq(BaseModel):
     group_name: str
     role_ids: List[int]
 
+# @router.get("/roles/{facility_id}/{room_id}")
+# async def get_point_roles(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
+#     query = text("""
+#         SELECT pr.id as role_id, pr.role_name, pr.target_value, prm.data_type
+#         FROM point_role_table pr
+#         LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
+#         WHERE pr.facility_id = :facility_id AND pr.room_id = :room_id AND pr.is_current = TRUE
+#     """)
+#     result = await db.execute(query, {"facility_id": facility_id, "room_id": room_id})
+#     roles = [dict(row._mapping) for row in result.fetchall()]
+#     return {"status": "success", "roles": roles}
+
 @router.get("/roles/{facility_id}/{room_id}")
 async def get_point_roles(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
     query = text("""
-        SELECT pr.id as role_id, pr.role_name, pr.target_value, prm.data_type
+        SELECT 
+            pr.id as role_id, 
+            pr.role_name,
+            COALESCE(NULLIF(prm.display_name, ''), pr.role_name) as display_name,
+            COALESCE(NULLIF(prm.short_name, ''), pr.role_name) as short_name,
+            pr.target_value, 
+            prm.data_type
         FROM point_role_table pr
         LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
         WHERE pr.facility_id = :facility_id AND pr.room_id = :room_id AND pr.is_current = TRUE
