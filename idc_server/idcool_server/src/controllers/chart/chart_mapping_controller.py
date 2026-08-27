@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -110,3 +110,52 @@ async def show_post_in_group(group_id: int, post_id: int, db: AsyncSession = Dep
     await db.execute(query, {"post_id": post_id, "group_id": group_id})
     await db.commit()
     return {"status": "success", "message": "차트에 다시 표시됩니다."}
+
+
+
+# ---------------------------------------------------------------------
+# 인덱싱용 
+
+class PointRoleIndexUpdateItem(BaseModel):
+    role_id: int
+    display_name: Optional[str] = None
+    short_name: Optional[str] = None
+
+class PointRoleIndexBulkUpdateReq(BaseModel):
+    updates: List[PointRoleIndexUpdateItem]
+
+@router.put("/roles/indexing")
+async def bulk_update_point_role_indexing(
+    req: PointRoleIndexBulkUpdateReq, 
+    db: AsyncSession = Depends(get_db)
+):
+    try:
+        upsert_query = text("""
+            INSERT INTO point_role_metadata (role_id, display_name, short_name, updated_at)
+            VALUES (:role_id, NULLIF(:display_name, ''), NULLIF(:short_name, ''), CURRENT_TIMESTAMP)
+            ON CONFLICT (role_id) 
+            DO UPDATE SET 
+                display_name = EXCLUDED.display_name,
+                short_name = EXCLUDED.short_name,
+                updated_at = CURRENT_TIMESTAMP
+        """)
+        for item in req.updates:
+            # 3자 제한 검증
+            short_val = item.short_name.strip() if item.short_name else None
+            if short_val and len(short_val) > 3:
+                raise HTTPException(status_code=400, detail=f"약어명은 최대 3자까지 허용됩니다. (Role ID: {item.role_id})")
+            
+            await db.execute(upsert_query, {
+                "role_id": item.role_id,
+                "display_name": item.display_name.strip() if item.display_name else None,
+                "short_name": short_val
+            })
+
+        await db.commit()
+        return {"status": "success", "message": f"{len(req.updates)}건의 인덱싱 정보가 저장되었습니다."}
+    except HTTPException as he:
+        await db.rollback()
+        raise he
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

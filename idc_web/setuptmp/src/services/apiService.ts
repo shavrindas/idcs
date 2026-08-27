@@ -62,7 +62,104 @@ export const apiService = {
   showPostInGroup: async (groupId: number, postId: number) => {
     const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}/show-post/${postId}`, { method: 'DELETE' });
     return res.json();
-  }
+  },
+
+  updatePointRoleIndexing: async (updates: { role_id: number; display_name: string; short_name: string }[]) => {
+    const res = await fetch(`${BASE_URL}/chart-mapping/roles/indexing`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+
+
+
+
+// 시설 매니지먼트 
+
+getAllFacilitiesAdmin: async () => {
+  const res = await fetch(`${BASE_URL}/facility-manager/facilities`);
+  return res.json();
+},
+createFacilityAdmin: async (data: any) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/facility`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+},
+updateFacilityAdmin: async (id: number, data: any) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/facility/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+},
+getFacilityUsersAdmin: async (id: number) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/facility/${id}/users`);
+  return res.json();
+},
+createRoomAdmin: async (facId: number, data: any) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/room`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+},
+updateRoomAdmin: async (roomId: number, data: any) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/room/${roomId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+},
+deleteRoomAdmin: async (roomId: number) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/room/${roomId}`, { method: 'DELETE' });
+  return res.json();
+},
+
+
+getRolesByRoomAdmin: async (roomId: number) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/room/${roomId}/roles`);
+  return res.json();
+},
+createPointRoleAdmin: async (facId: number, roomId: number, data: any) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/room/${roomId}/role`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+},
+updatePointRoleAdmin: async (roleId: number, data: any) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/role/${roleId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+},
+deletePointRoleAdmin: async (roleId: number) => {
+  const res = await fetch(`${BASE_URL}/facility-manager/role/${roleId}`, { method: 'DELETE' });
+  return res.json();
+},
+
+  getUserFacilities: async (userId: number) => {
+    const response = await fetch(`/api/facilities/${userId}`);
+    if (!response.ok) {
+      throw new Error('사용자 시설 목록을 불러오는데 실패했습니다.');
+    }
+    return response.json();
+  },
 
 
 };
