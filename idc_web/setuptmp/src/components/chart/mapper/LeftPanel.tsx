@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Role } from '../../../types';
 
-
 interface Props {
   facilities: any[];
   rooms: any[];
@@ -23,7 +22,6 @@ const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
   return { roleName, roleLabel, badgeLabel };
 };
 
-
 export const LeftPanel: React.FC<Props> = ({
   facilities,
   rooms,
@@ -36,17 +34,16 @@ export const LeftPanel: React.FC<Props> = ({
   onRoomChange,
   onDragStart,
 }) => {
-
-
   const visibleRoom0Roles = room0Roles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
   );
   const visibleTargetRoles = targetRoomRoles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
   );
+
   const renderRoleItem = (role: Role) => {
     const { roleLabel, badgeLabel } = getRoleLabels(role, role.role_id);
-return (
+    return (
       <div
         key={role.role_id}
         draggable
@@ -79,6 +76,7 @@ return (
       </div>
     );
   };
+
   return (
     <div
       style={{
@@ -115,22 +113,7 @@ return (
           }}
         >
           <h4>0호실 (공용)</h4>
-          {visibleRoom0Roles.map((role) => (
-            <div
-              key={role.role_id}
-              draggable
-              onDragStart={(e) => onDragStart(e, role)}
-              style={{
-                border: '1px solid #999',
-                padding: 8,
-                marginBottom: 5,
-                cursor: 'grab',
-                backgroundColor: '#ff8a80',
-              }}
-            >
-              {renderRoleItem(role)}
-            </div>
-          ))}
+          {visibleRoom0Roles.map((role) => renderRoleItem(role))}
         </div>
 
         {/* 개별 호실 영역 */}
@@ -158,22 +141,7 @@ return (
           </select>
 
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            {visibleTargetRoles.map((role) => (
-              <div
-                key={role.role_id}
-                draggable
-                onDragStart={(e) => onDragStart(e, role)}
-                style={{
-                  border: '1px solid #999',
-                  padding: 8,
-                  marginBottom: 5,
-                  cursor: 'grab',
-                  backgroundColor: '#ff8a80',
-                }}
-              >
-                {renderRoleItem(role)}
-              </div>
-            ))}
+            {visibleTargetRoles.map((role) => renderRoleItem(role))}
           </div>
         </div>
       </div>
