@@ -18,6 +18,10 @@ const getLocalDatetimeString = (date: Date) => {
   return (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
 };
 
+interface ViewerProps {
+  user: { id: number; role: string; name: string };
+}
+
 const COLOR_PALETTE = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f'];
 
 function useDebouncedCallback<T extends (...args: any[]) => void>(callback: T, delay: number) {
@@ -28,7 +32,8 @@ function useDebouncedCallback<T extends (...args: any[]) => void>(callback: T, d
   }, [callback, delay]);
 }
 
-export const ChartViewerPage: React.FC = () => {
+//export const ChartViewerPage: React.FC = () => {
+export const ChartViewerPage: React.FC<ViewerProps> = ({ user }) => {
   const [mode, setMode] = useState<ChartMode>('DEFAULT');
   const [scale, setScale] = useState<ChartScale>('1m');
   const [targetDate, setTargetDate] = useState<string>(getLocalDatetimeString(new Date()));
@@ -71,7 +76,11 @@ export const ChartViewerPage: React.FC = () => {
   const [loadedRangeState, setLoadedRangeState] = useState<{ start: number, end: number } | null>(null);
   const [currentViewStart, setCurrentViewStart] = useState<number | null>(null);
 
-  useEffect(() => { apiService.getFacilities().then(res => setFacilities(res.facilities || [])); }, []); 
+  useEffect(() => { 
+    //apiService.getFacilities().then(res => setFacilities(res.facilities || [])); 
+    apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || [])); 
+  }, [user.id]);
+
 
   useEffect(() => {
     if (selectedFacility) {
