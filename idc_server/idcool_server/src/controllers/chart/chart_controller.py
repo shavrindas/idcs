@@ -37,14 +37,32 @@ async def get_chart_data(
     bucket_interval = SCALE_MAPPING[scale]
     target_roles = [int(r.strip()) for r in role_ids.split(",")]
 
+    # role_query = text("""
+    #     SELECT pr.id, pr.role_name, pr.target_value, pr.target_low_limit, pr.target_high_limit, prm.data_type
+    #     FROM point_role_table pr
+    #     LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
+    #     WHERE pr.id = ANY(:role_ids) AND pr.is_current = TRUE
+    # """)
+    # role_result = await db.execute(role_query, {"role_ids": target_roles})
+    # roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
+
     role_query = text("""
-        SELECT pr.id, pr.role_name, pr.target_value, pr.target_low_limit, pr.target_high_limit, prm.data_type
+        SELECT 
+            pr.id, 
+            pr.role_name, 
+            COALESCE(NULLIF(prm.display_name, ''), pr.role_name) as display_name,
+            COALESCE(NULLIF(prm.short_name, ''), pr.role_name) as short_name,
+            pr.target_value, 
+            pr.target_low_limit, 
+            pr.target_high_limit, 
+            prm.data_type
         FROM point_role_table pr
         LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
         WHERE pr.id = ANY(:role_ids) AND pr.is_current = TRUE
     """)
     role_result = await db.execute(role_query, {"role_ids": target_roles})
     roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
+
 
     if not roles_info:
         return {"status": "success", "data": {"datasets": [], "alarms": [], "posts": [], "hidden_posts": []}, "message": "유효한 Role 데이터가 없습니다."}
@@ -80,16 +98,27 @@ async def get_chart_data(
     if not start_time:
         start_time = end_time - timedelta(days=1)
 
+    # datasets_map: Dict[int, Any] = {
+    #     r_id: {
+    #         "role_id": r_id, "role_name": roles_info[r_id]["role_name"],
+    #         "target_value": roles_info[r_id]["target_value"],
+    #         "target_low_limit": roles_info[r_id]["target_low_limit"],
+    #         "target_high_limit": roles_info[r_id]["target_high_limit"],
+    #         "data": []
+    #     } for r_id in roles_info.keys()
+    # }
     datasets_map: Dict[int, Any] = {
         r_id: {
-            "role_id": r_id, "role_name": roles_info[r_id]["role_name"],
+            "role_id": r_id, 
+            "role_name": roles_info[r_id]["role_name"],
+            "display_name": roles_info[r_id]["display_name"],
+            "short_name": roles_info[r_id]["short_name"],
             "target_value": roles_info[r_id]["target_value"],
             "target_low_limit": roles_info[r_id]["target_low_limit"],
             "target_high_limit": roles_info[r_id]["target_high_limit"],
             "data": []
         } for r_id in roles_info.keys()
     }
-
     async def fetch_and_map(table_name: str, agg_columns: str, type_roles: List[int], data_key_mapping: dict):
         if not type_roles: return
         query = text(f"""
