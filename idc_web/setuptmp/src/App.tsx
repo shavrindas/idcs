@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { ChartMappingPage } from './pages/ChartMappingPage';
 import { ChartViewerPage }  from './pages/ChartViewerPage';
 import { PRIndexingPage }    from './pages/PRIndexingPage';
+import { FacilityManagerPage } from './pages/FacilityManagerPage';
 import './App.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Link to="/" style={{ color: '#ffffff', textDecoration: 'none' }}>[맵핑 관리자]</Link>
           <Link to="/viewer" style={{ color: '#ffffff', textDecoration: 'none' }}>[웹 차트 뷰어]</Link>
           <Link to="/indexing" style={{ color: '#ffffff', textDecoration: 'none' }}>[명칭 인덱싱]</Link>
+          <Link to="/facility-manager" style={{ color: '#ffffff', textDecoration: 'none' }}>[시설/호실 관리]</Link>
         </nav>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -33,6 +35,7 @@ function App() {
             <Route path="/" element={<ChartMappingPage />} />
             <Route path="/viewer" element={<ChartViewerPage />} />
             <Route path="/indexing" element={<PRIndexingPage />} />
+            <Route path="/facility-manager" element={<FacilityManagerPage />} />
           </Routes>
         </div>
 
