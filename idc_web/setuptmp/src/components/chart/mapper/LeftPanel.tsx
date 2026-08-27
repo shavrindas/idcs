@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Role } from '../../../types';
 
-
 interface Props {
   facilities: any[];
   rooms: any[];
@@ -15,6 +14,14 @@ interface Props {
   onDragStart: (e: React.DragEvent, role: Role) => void;
 }
 
+const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
+  const roleName = roleInfo?.role_name || (fallbackId ? `Role ${fallbackId}` : '');
+  const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${fallbackId}`;
+  const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${fallbackId}`;
+
+  return { roleName, roleLabel, badgeLabel };
+};
+
 export const LeftPanel: React.FC<Props> = ({
   facilities,
   rooms,
@@ -27,13 +34,48 @@ export const LeftPanel: React.FC<Props> = ({
   onRoomChange,
   onDragStart,
 }) => {
-  // 이미 오른쪽 패널에 추가된 항목은 목록에서 제외
   const visibleRoom0Roles = room0Roles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
   );
   const visibleTargetRoles = targetRoomRoles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
   );
+
+  const renderRoleItem = (role: Role) => {
+    const { roleLabel, badgeLabel } = getRoleLabels(role, role.role_id);
+    return (
+      <div
+        key={role.role_id}
+        draggable
+        onDragStart={(e) => onDragStart(e, role)}
+        style={{
+          border: '1px solid #999',
+          padding: 8,
+          marginBottom: 5,
+          cursor: 'grab',
+          backgroundColor: '#ff8a80',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+      >
+        {/* 약어 배지 영역 */}
+        <span
+          style={{
+            fontSize: '11px',
+            backgroundColor: '#333',
+            color: '#fff',
+            padding: '2px 4px',
+            borderRadius: '4px',
+          }}
+        >
+          {badgeLabel}
+        </span>
+        {/* 풀네임(디스플레이명) 영역 */}
+        <span>{roleLabel}</span>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -71,22 +113,7 @@ export const LeftPanel: React.FC<Props> = ({
           }}
         >
           <h4>0호실 (공용)</h4>
-          {visibleRoom0Roles.map((role) => (
-            <div
-              key={role.role_id}
-              draggable
-              onDragStart={(e) => onDragStart(e, role)}
-              style={{
-                border: '1px solid #999',
-                padding: 8,
-                marginBottom: 5,
-                cursor: 'grab',
-                backgroundColor: '#ff8a80',
-              }}
-            >
-              {role.role_name}
-            </div>
-          ))}
+          {visibleRoom0Roles.map((role) => renderRoleItem(role))}
         </div>
 
         {/* 개별 호실 영역 */}
@@ -114,22 +141,7 @@ export const LeftPanel: React.FC<Props> = ({
           </select>
 
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            {visibleTargetRoles.map((role) => (
-              <div
-                key={role.role_id}
-                draggable
-                onDragStart={(e) => onDragStart(e, role)}
-                style={{
-                  border: '1px solid #999',
-                  padding: 8,
-                  marginBottom: 5,
-                  cursor: 'grab',
-                  backgroundColor: '#ff8a80',
-                }}
-              >
-                {role.role_name}
-              </div>
-            ))}
+            {visibleTargetRoles.map((role) => renderRoleItem(role))}
           </div>
         </div>
       </div>
