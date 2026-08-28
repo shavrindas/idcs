@@ -4,6 +4,8 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/models/post_model.dart';
+import 'package:idcs/theme/app_theme.dart';
+
 /// Box #1: 보드 헤더 박스 (검색 및 필터)
 class BoardHeaderBox extends StatelessWidget {
   final String title;
@@ -23,58 +25,76 @@ class BoardHeaderBox extends StatelessWidget {
     this.onCreatePost,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               if (onCreatePost != null)
                 ElevatedButton.icon(
                   onPressed: onCreatePost,
-                  icon: const Icon(Icons.edit, size: 16),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
                   label: const Text('새 글 작성'),
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
                 ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              // 드롭다운 필터 (상태 상위 전달 연동)
-              DropdownButton<String>(
-                value: selectedSearchType,
-                items: const [
-                  DropdownMenuItem(value: 'all', child: Text('전체')),
-                  DropdownMenuItem(value: 'title', child: Text('제목')),
-                  DropdownMenuItem(value: 'creator', child: Text('작성자')),
-                  DropdownMenuItem(value: 'content', child: Text('내용')),
-                ],
-                onChanged: onSearchTypeChanged,
+              Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.outline),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedSearchType,
+                    icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
+                    isDense: true,
+                    items: const [
+                      DropdownMenuItem(value: 'all', child: Text('전체')),
+                      DropdownMenuItem(value: 'title', child: Text('제목')),
+                      DropdownMenuItem(value: 'creator', child: Text('작성자')),
+                      DropdownMenuItem(value: 'content', child: Text('내용')),
+                    ],
+                    onChanged: onSearchTypeChanged,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: searchController,
-                  onSubmitted: (_) => onSearch(), // 엔터키 입력 시 검색 실행
+                  onSubmitted: (_) => onSearch(),
                   decoration: const InputDecoration(
                     hintText: '검색어를 입력하세요',
-                    border: OutlineInputBorder(),
                     isDense: true,
+                    prefixIcon: Icon(Icons.search_rounded, size: 20),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: onSearch,
-                child: const Text('검색'),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: onSearch,
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(64, 48)),
+                  child: const Text('검색'),
+                ),
               ),
             ],
           ),
@@ -106,33 +126,48 @@ class BoardListAndPagingBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Box #2: 리스트 영역
-          Container(
-            height: 400, // 리스트 고정 높이 또는 Expanded 사용 가능
-            padding: const EdgeInsets.all(8.0),
+          SizedBox(
+            height: 400,
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : posts.isEmpty
-                ? const Center(child: Text('등록된 포스트가 없습니다.'))
+                ? const Center(
+                    child: Text('등록된 포스트가 없습니다.', style: TextStyle(color: AppColors.textSecondary)),
+                  )
                 : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: posts.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
+              separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.outline),
               itemBuilder: (context, index) {
                 final post = posts[index];
                 return ListTile(
-                  title: Text(post.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text('[${post.facilityName}] 작성자: ${post.creatorName}'),
-                  trailing: const Icon(Icons.chevron_right, size: 16),
+                  title: Text(
+                    post.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  ),
+                  subtitle: Text(
+                    '[${post.facilityName}] 작성자: ${post.creatorName}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textSecondary),
                   onTap: () => onPostTapped(post.postId),
                 );
               },
             ),
           ),
-          const Divider(height: 1, color: Colors.grey),
+          const Divider(height: 1, color: AppColors.outline),
 
           // Box #3: 페이징 영역
           _buildPagingControl(),
@@ -142,50 +177,52 @@ class BoardListAndPagingBox extends StatelessWidget {
   }
 
   Widget _buildPagingControl() {
-    final int blockSize = 5; //[cite: 6]
-    final int currentBlock = ((currentPage - 1) ~/ blockSize); //[cite: 6]
-    final int startPage = currentBlock * blockSize + 1; //[cite: 6]
-    final int endPage = (startPage + blockSize - 1 > totalPages) ? totalPages : startPage + blockSize - 1; //[cite: 6]
-    final safeTotalPages = totalPages > 0 ? totalPages : 1; //[cite: 6]
+    final int blockSize = 5;
+    final int currentBlock = ((currentPage - 1) ~/ blockSize);
+    final int startPage = currentBlock * blockSize + 1;
+    final int endPage = (startPage + blockSize - 1 > totalPages) ? totalPages : startPage + blockSize - 1;
+    final safeTotalPages = totalPages > 0 ? totalPages : 1;
 
     return Padding(
-      padding: const EdgeInsets.all(8.0), //[cite: 6]
-      // 💡 SingleChildScrollView로 감싸서 오버플로우 방지
+      padding: const EdgeInsets.all(8.0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center, //[cite: 6]
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              constraints: const BoxConstraints(), // 여백 축소
-              padding: const EdgeInsets.all(4),
-              icon: const Icon(Icons.keyboard_double_arrow_left), //[cite: 6]
-              onPressed: currentPage > 1 ? () => onPageChanged(1) : null, //[cite: 6]
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(6),
+              icon: const Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: AppColors.textSecondary),
+              onPressed: currentPage > 1 ? () => onPageChanged(1) : null,
             ),
             IconButton(
-              constraints: const BoxConstraints(), // 여백 축소
-              padding: const EdgeInsets.all(4),
-              icon: const Icon(Icons.chevron_left), //[cite: 6]
-              onPressed: startPage > 1 ? () => onPageChanged(startPage - 1) : null, //[cite: 6]
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(6),
+              icon: const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textSecondary),
+              onPressed: startPage > 1 ? () => onPageChanged(startPage - 1) : null,
             ),
             const SizedBox(width: 4),
 
-            ...List.generate(endPage - startPage + 1, (index) { //[cite: 6]
-              final pageNum = startPage + index; //[cite: 6]
+            ...List.generate(endPage - startPage + 1, (index) {
+              final pageNum = startPage + index;
+              final bool isActive = currentPage == pageNum;
               return InkWell(
-                onTap: () => onPageChanged(pageNum), //[cite: 6]
+                onTap: () => onPageChanged(pageNum),
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2), // 4 -> 2로 간격 감소
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), // 간격 감소
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: currentPage == pageNum ? Colors.blueAccent : Colors.transparent, //[cite: 6]
-                    borderRadius: BorderRadius.circular(4), //[cite: 6]
+                    color: isActive ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '$pageNum', //[cite: 6]
+                    '$pageNum',
                     style: TextStyle(
-                      color: currentPage == pageNum ? Colors.white : Colors.black, //[cite: 6]
-                      fontWeight: currentPage == pageNum ? FontWeight.bold : FontWeight.normal, //[cite: 6]
+                      color: isActive ? Colors.white : AppColors.textPrimary,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -194,16 +231,16 @@ class BoardListAndPagingBox extends StatelessWidget {
 
             const SizedBox(width: 4),
             IconButton(
-              constraints: const BoxConstraints(), // 여백 축소
-              padding: const EdgeInsets.all(4),
-              icon: const Icon(Icons.chevron_right), //[cite: 6]
-              onPressed: endPage < safeTotalPages ? () => onPageChanged(endPage + 1) : null, //[cite: 6]
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(6),
+              icon: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textSecondary),
+              onPressed: endPage < safeTotalPages ? () => onPageChanged(endPage + 1) : null,
             ),
             IconButton(
-              constraints: const BoxConstraints(), // 여백 축소
-              padding: const EdgeInsets.all(4),
-              icon: const Icon(Icons.keyboard_double_arrow_right), //[cite: 6]
-              onPressed: currentPage < safeTotalPages ? () => onPageChanged(safeTotalPages) : null, //[cite: 6]
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(6),
+              icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: AppColors.textSecondary),
+              onPressed: currentPage < safeTotalPages ? () => onPageChanged(safeTotalPages) : null,
             ),
           ],
         ),

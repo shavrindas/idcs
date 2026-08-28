@@ -4,6 +4,7 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:idcs/firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -36,6 +37,7 @@ import 'package:idcs/pages/facility/chart/facility_chart_page.dart';
 import 'pages/common/opening_page.dart';
 import 'package:idcs/pages/facility/facility_alarm_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 
 part 'config.dart';
@@ -57,6 +59,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'IDCool Systems Routing',
+      theme: AppTheme.light,
       routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

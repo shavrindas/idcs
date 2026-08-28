@@ -1,15 +1,20 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export const MainPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  const btnStyle = { padding: '15px 30px', margin: '10px', fontSize: '16px', cursor: 'pointer', backgroundColor: '#ff9800', color: '#fff', border: 'none', borderRadius: '5px' };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-      <h2 style={{ color: '#ff9800' }}>Admin Dashboard (메인 페이지)</h2>
-      <h4>나중에 알람 같은거 추가</h4>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 8 }}>
+      <div
+        style={{
+          width: 56, height: 56, borderRadius: 16,
+          background: 'var(--primary-bg)', color: 'var(--primary)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 26, marginBottom: 8,
+        }}
+      >
+        📊
+      </div>
+      <h2 style={{ fontSize: 18 }}>관리자 대시보드</h2>
+      <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>알람 등 요약 위젯이 추후 이곳에 추가될 예정입니다.</p>
     </div>
   );
 };

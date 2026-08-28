@@ -5,6 +5,7 @@ import 'package:idcs/main.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/chat/chat_api_service.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_room_components.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class ChatRoomPage extends StatefulWidget {
   final String userId;
@@ -116,14 +117,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         title: _isSearchMode
             ? TextField(
           controller: _searchController,
-          decoration: const InputDecoration(hintText: '메시지 검색...', border: InputBorder.none),
-          style: const TextStyle(color: Colors.black),
+          decoration: const InputDecoration(hintText: '메시지 검색...', border: InputBorder.none, filled: false),
+          style: const TextStyle(color: AppColors.textPrimary),
           onSubmitted: (val) => _loadMessages(keyword: val),
         )
             : const Text('채팅방'),
         actions: [
           IconButton(
-            icon: Icon(_isSearchMode ? Icons.close : Icons.search),
+            icon: Icon(_isSearchMode ? Icons.close_rounded : Icons.search_rounded),
             onPressed: () {
               setState(() {
                 _isSearchMode = !_isSearchMode;
@@ -140,8 +141,8 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         child: Column(
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Center(child: Text('참여중인 유저 목록', style: TextStyle(color: Colors.white, fontSize: 18))),
+              decoration: BoxDecoration(color: AppColors.primary),
+              child: Center(child: Text('참여중인 유저 목록', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
             ),
             Expanded(
               child: ListView.builder(
@@ -149,7 +150,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 itemBuilder: (context, index) {
                   final p = _participants[index];
                   return ListTile(
-                    leading: CircleAvatar(child: Icon(p['role'] == 'USER' ? Icons.person : Icons.admin_panel_settings)),
+                    leading: CircleAvatar(
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                      child: Icon(p['role'] == 'USER' ? Icons.person_rounded : Icons.admin_panel_settings_rounded, color: AppColors.primary),
+                    ),
                     title: Text('${p['name']} (${p['role']})'),
                   );
                 },
