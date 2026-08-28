@@ -58,20 +58,17 @@ export const RightPanel: React.FC<Props> = ({
 
   return (
     <div
+      className="card"
       style={{
-        border: '2px solid green',
         flex: 1,
         minHeight: 0,
-        padding: 10,
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
+        gap: 12,
       }}
     >
       <div
         style={{
-          border: '1px solid #333',
-          padding: 10,
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
@@ -80,6 +77,7 @@ export const RightPanel: React.FC<Props> = ({
         <select
           value={selectedGroupId}
           onChange={(e) => onGroupSelect(e.target.value)}
+          className="input"
         >
           <option value="new">+ 새로운 그룹 추가하기</option>
           {existingGroups.map((g) => (
@@ -93,24 +91,26 @@ export const RightPanel: React.FC<Props> = ({
           placeholder="새 그룹 명칭 입력"
           value={groupName}
           onChange={(e) => onGroupNameChange(e.target.value)}
+          className="input"
         />
       </div>
 
-      <h4>드래그 앤 드롭 영역</h4>
+      <p className="label">드래그 앤 드롭 영역</p>
       <div
         onDrop={onDrop}
         onDragOver={onDragOver}
         style={{
-          border: '2px dashed #666',
+          border: '2px dashed var(--border)',
+          borderRadius: 12,
           flex: 1,
           minHeight: 0,
-          padding: 10,
+          padding: 12,
           overflowY: 'auto',
-          backgroundColor: '#f9f9f9',
+          background: 'var(--bg)',
         }}
       >
         {droppedRoles.length === 0 && (
-          <p style={{ color: '#999' }}>여기로 포인트 롤을 드래그하세요.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>여기로 포인트 롤을 드래그하세요.</p>
         )}
         {droppedRoles.map((role, idx) => {
           const { roleLabel, badgeLabel } = getRoleLabels(role, role.role_id);
@@ -122,33 +122,20 @@ export const RightPanel: React.FC<Props> = ({
               onDragStart={(e) => handleItemDragStart(e, idx)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleItemDrop(e, idx)}
+              className="card"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                border: '1px solid blue',
-                padding: 8,
-                marginBottom: 5,
+                padding: '8px 10px',
+                marginBottom: 6,
                 cursor: 'grab',
-                backgroundColor: '#ff8a80',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>☰</span>
-                {/* 약어 배지 영역 */}
-                <span
-                  style={{
-                    fontSize: '11px',
-                    backgroundColor: '#333',
-                    color: '#fff',
-                    padding: '2px 4px',
-                    borderRadius: '4px',
-                  }}
-                >
-                  {badgeLabel}
-                </span>
-                {/* 디스플레이명(또는 기능명) 풀네임 영역 */}
-                <span>{roleLabel}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ color: 'var(--text-secondary)' }}>☰</span>
+                <span className="chip">{badgeLabel}</span>
+                <span style={{ fontSize: 13 }}>{roleLabel}</span>
               </div>
 
               <span
@@ -156,19 +143,16 @@ export const RightPanel: React.FC<Props> = ({
                   e.stopPropagation();
                   onRemoveRole(role.role_id);
                 }}
-                style={{ cursor: 'pointer', marginLeft: 8 }}
+                style={{ cursor: 'pointer', marginLeft: 8, color: 'var(--text-secondary)' }}
               >
-                ❌
+                ✕
               </span>
             </div>
           );
         })}
       </div>
 
-      <button
-        onClick={onSaveGroup}
-        style={{ padding: 15, fontWeight: 'bold', cursor: 'pointer' }}
-      >
+      <button onClick={onSaveGroup} className="btn btn-primary" style={{ height: 44 }}>
         {selectedGroupId === 'new' ? '등록하기' : '수정하기 (Backend 연결 요망)'}
       </button>
     </div>

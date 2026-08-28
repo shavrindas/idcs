@@ -10,23 +10,23 @@ interface Props {
 }
 
 export const SmartOmniboxPanel: React.FC<Props> = ({ input, suggestions, isChartLoading, onInputChange, onSubmit, onSelect }) => (
-  <div style={{ border: '2px solid #ffffff', padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
-    <h4 style={{ margin: 0, textAlign: 'center', color: '#ff9800' }}>Smart Omnibox (스마트 검색)</h4>
+  <div className="card" style={{ padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <h4 style={{ textAlign: 'center', fontSize: 14 }}>스마트 검색</h4>
     <div style={{ position: 'relative' }}>
-      <input 
+      <input
         type="text" value={input} onChange={e => onInputChange(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') onSubmit(); }}
         disabled={isChartLoading} placeholder="예: 제1시설 101호 8월17일 1234"
-        style={{ width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: '#333', color: '#fff', border: '1px solid #555', outline: 'none' }}
+        className="input"
       />
       {suggestions.length > 0 && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#444', border: '1px solid #666', zIndex: 100 }}>
+        <div className="card" style={{ position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 100, padding: 6 }}>
           {suggestions.slice(0, 12).map((sug, i) => (
-            <div 
+            <div
               key={i} onClick={() => onSelect(sug)}
-              style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #555', color: '#82b1ff', fontSize: 13, textAlign: 'left' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#555')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              style={{ padding: '8px 10px', cursor: 'pointer', borderRadius: 8, color: 'var(--primary)', fontSize: 13, fontWeight: 600, textAlign: 'left' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-bg)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
             >
               {sug.label}
             </div>
@@ -34,6 +34,6 @@ export const SmartOmniboxPanel: React.FC<Props> = ({ input, suggestions, isChart
         </div>
       )}
     </div>
-    <div style={{ fontSize: 11, color: '#aaa', textAlign: 'center' }}>엔터키 입력 시 자동 파싱 적용</div>
+    <div style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' }}>엔터키 입력 시 자동 파싱 적용</div>
   </div>
 );

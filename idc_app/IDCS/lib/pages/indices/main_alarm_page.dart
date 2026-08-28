@@ -4,6 +4,7 @@ import 'package:idcs/components/indices/global_nav_box.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/components/indices/main_alarm/user_alarm_components.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class MainAlarmPage extends StatefulWidget {
   final String userId;
@@ -130,7 +131,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
             ),
             const SizedBox(height: 16),
 
-            // 💡 검색창 + 필터 드롭다운 레이아웃
+            // 검색창 + 필터 드롭다운 레이아웃
             Row(
               children: [
                 Expanded(
@@ -138,10 +139,10 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: getHintText(),
-                      prefixIcon: const Icon(Icons.search, size: 20),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
+                        icon: const Icon(Icons.clear_rounded, size: 20),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -150,14 +151,6 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                         },
                       )
                           : null,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 12,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
                       isDense: true,
                     ),
                     onChanged: (value) {
@@ -171,16 +164,17 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
 
                 // 필터 옵션 드롭다운 (알람 명 / 룸 이름 / 시설 이름)
                 Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.surface,
+                    border: Border.all(color: AppColors.outline),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _searchTarget,
-                      icon: const Icon(Icons.arrow_drop_down, size: 20),
+                      icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
                       isDense: true,
                       items: const [
                         DropdownMenuItem(

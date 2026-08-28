@@ -6,11 +6,11 @@ export const FacilityManagerPage: React.FC = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<number | ''>('');
-  
+
   // 호실별 접기/펼치기 상태 및 역할 캐시
   const [expandedRoomIds, setExpandedRoomIds] = useState<number[]>([]);
   const [roomRolesMap, setRoomRolesMap] = useState<Record<number, any[]>>({});
-  
+
   // 선택 및 수정 상태
   const [selectedRoom, setSelectedRoom] = useState<any | null>(null);
   const [selectedRole, setSelectedRole] = useState<any | null>(null);
@@ -174,20 +174,26 @@ export const FacilityManagerPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 10, padding: 10, boxSizing: 'border-box' }}>
-      
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 12, padding: 24, boxSizing: 'border-box' }}>
+
       {/* 1. 상단 하향식 검색바 */}
-      <div style={{ position: 'relative', backgroundColor: '#222', padding: 8, borderRadius: 4, border: '1px solid #444', flexShrink: 0 }}>
+      <div className="card" style={{ position: 'relative', padding: 8, flexShrink: 0 }}>
         <input
-          type="text" placeholder="시설 -> 호실 검색 후 Enter"
+          type="text" placeholder="시설 → 호실 검색 후 Enter"
           value={searchInput} onChange={e => setSearchInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && suggestions.length > 0) handleApplySuggestion(suggestions[0]); }}
-          style={{ width: '100%', padding: 8, backgroundColor: '#333', color: '#fff', border: '1px solid #555', boxSizing: 'border-box' }}
+          className="input"
         />
         {suggestions.length > 0 && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#2b2b2b', border: '1px solid #555', zIndex: 10 }}>
+          <div className="card" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 8, right: 8, zIndex: 10, padding: 6 }}>
             {suggestions.map((sug, idx) => (
-              <div key={idx} onClick={() => handleApplySuggestion(sug)} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #444', color: '#82b1ff' }}>
+              <div
+                key={idx}
+                onClick={() => handleApplySuggestion(sug)}
+                style={{ padding: '8px 10px', cursor: 'pointer', borderRadius: 8, color: 'var(--primary)', fontSize: 13, fontWeight: 600 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-bg)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
                 {sug.label}
               </div>
             ))}
@@ -196,13 +202,13 @@ export const FacilityManagerPage: React.FC = () => {
       </div>
 
       {/* 2. 시설/호실/포인트롤 매니저 3단 레이아웃 */}
-      <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
-        
-        {/* [1열] 시설 관리 패널 (flex: 1) */}
-        <div style={{ flex: 1, minWidth: 260, border: '1px solid #4caf50', padding: 10, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#1a241b', minHeight: 0 }}>
-          <h4 style={{ margin: 0, color: '#4caf50' }}>시설 관리</h4>
-          
-          <select value={selectedFacility} onChange={e => handleFacilityChange(Number(e.target.value))} style={{ padding: 8, backgroundColor: '#333', color: '#fff' }}>
+      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
+
+        {/* [1열] 시설 관리 패널 */}
+        <div className="card" style={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+          <h4 style={{ fontSize: 14 }}>시설 관리</h4>
+
+          <select value={selectedFacility} onChange={e => handleFacilityChange(Number(e.target.value))} className="input">
             <option value="">-- [시설 선택] --</option>
             {facilities.map(f => (
               <option key={f.id} value={f.id}>
@@ -212,47 +218,47 @@ export const FacilityManagerPage: React.FC = () => {
           </select>
 
           {editFac ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px dashed #555', paddingTop: 8 }}>
-              <span style={{ fontSize: 12, color: '#aaa' }}>선택 시설 수정 ({editFac.is_active ? 'Active' : 'Inactive'})</span>
-              <input type="text" placeholder="시설 이름" value={editFac.name} onChange={e => setEditFac({ ...editFac, name: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="text" placeholder="접근 코드" value={editFac.access_code} onChange={e => setEditFac({ ...editFac, access_code: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <label style={{ fontSize: 11, color: '#aaa' }}>(계약-숨김) 시작일</label>
-              <input type="date" value={editFac.start_date || ''} onChange={e => setEditFac({ ...editFac, start_date: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <label style={{ fontSize: 11, color: '#aaa' }}>(계약-숨김) 종료일</label>
-              <input type="date" value={editFac.end_date || ''} onChange={e => setEditFac({ ...editFac, end_date: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <button onClick={handleUpdateFacility} style={{ padding: 6, backgroundColor: '#2196f3', color: '#fff', border: 'none', cursor: 'pointer' }}>시설 갱신</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+              <span className="label">선택 시설 수정 ({editFac.is_active ? 'Active' : 'Inactive'})</span>
+              <input type="text" placeholder="시설 이름" value={editFac.name} onChange={e => setEditFac({ ...editFac, name: e.target.value })} className="input" style={{ height: 36 }} />
+              <input type="text" placeholder="접근 코드" value={editFac.access_code} onChange={e => setEditFac({ ...editFac, access_code: e.target.value })} className="input" style={{ height: 36 }} />
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>(계약-숨김) 시작일</label>
+              <input type="date" value={editFac.start_date || ''} onChange={e => setEditFac({ ...editFac, start_date: e.target.value })} className="input" style={{ height: 36 }} />
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>(계약-숨김) 종료일</label>
+              <input type="date" value={editFac.end_date || ''} onChange={e => setEditFac({ ...editFac, end_date: e.target.value })} className="input" style={{ height: 36 }} />
+              <button onClick={handleUpdateFacility} className="btn btn-primary" style={{ marginTop: 2 }}>시설 갱신</button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px dashed #555', paddingTop: 8 }}>
-              <span style={{ fontSize: 12, color: '#aaa' }}>신규 시설 등록</span>
-              <input type="text" placeholder="시설 이름" value={newFac.name} onChange={e => setNewFac({ ...newFac, name: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="text" placeholder="접근 코드" value={newFac.access_code} onChange={e => setNewFac({ ...newFac, access_code: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="date" value={newFac.start_date} onChange={e => setNewFac({ ...newFac, start_date: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="date" value={newFac.end_date} onChange={e => setNewFac({ ...newFac, end_date: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <button onClick={handleCreateFacility} style={{ padding: 6, backgroundColor: '#4caf50', color: '#fff', border: 'none', cursor: 'pointer' }}>시설 생성</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+              <span className="label">신규 시설 등록</span>
+              <input type="text" placeholder="시설 이름" value={newFac.name} onChange={e => setNewFac({ ...newFac, name: e.target.value })} className="input" style={{ height: 36 }} />
+              <input type="text" placeholder="접근 코드" value={newFac.access_code} onChange={e => setNewFac({ ...newFac, access_code: e.target.value })} className="input" style={{ height: 36 }} />
+              <input type="date" value={newFac.start_date} onChange={e => setNewFac({ ...newFac, start_date: e.target.value })} className="input" style={{ height: 36 }} />
+              <input type="date" value={newFac.end_date} onChange={e => setNewFac({ ...newFac, end_date: e.target.value })} className="input" style={{ height: 36 }} />
+              <button onClick={handleCreateFacility} className="btn btn-primary" style={{ marginTop: 2 }}>시설 생성</button>
             </div>
           )}
 
-          <h5 style={{ margin: '10px 0 0 0', color: '#ccc' }}>소속 유저 ({users.length}명)</h5>
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', backgroundColor: '#111', padding: 6, fontSize: 12, border: '1px solid #333' }}>
+          <h5 style={{ margin: '6px 0 0 0', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>소속 유저 ({users.length}명)</h5>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: 'var(--bg)', borderRadius: 10, padding: 8, fontSize: 12, border: '1px solid var(--border)' }}>
             {users.map(u => (
-              <div key={u.id} style={{ borderBottom: '1px solid #222', padding: '3px 0' }}>
-                <strong style={{ color: '#82b1ff' }}>{u.name}</strong> ({u.email})
+              <div key={u.id} style={{ borderBottom: '1px solid var(--border)', padding: '4px 0' }}>
+                <strong style={{ color: 'var(--primary)' }}>{u.name}</strong> ({u.email})
               </div>
             ))}
           </div>
         </div>
 
-        {/* [2열] 호실 트리 및 관리 (flex: 1.8 로 확장하여 이름 잘림 방지) */}
-        <div style={{ flex: 1.8, minWidth: 340, border: '1px solid #2196f3', padding: 10, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#18222c', minHeight: 0 }}>
-          <h4 style={{ margin: 0, color: '#2196f3' }}>호실 및 포인트 롤 트리</h4>
-          
+        {/* [2열] 호실 트리 및 관리 */}
+        <div className="card" style={{ flex: 1.8, minWidth: 340, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+          <h4 style={{ fontSize: 14 }}>호실 및 포인트 롤 트리</h4>
+
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <input type="text" placeholder="새 호실 명칭" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} disabled={!selectedFacility} style={{ flex: 1, padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-            <button onClick={handleCreateRoom} disabled={!selectedFacility} style={{ padding: '6px 12px', backgroundColor: '#2196f3', color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>호실 추가</button>
+            <input type="text" placeholder="새 호실 명칭" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} disabled={!selectedFacility} className="input" style={{ flex: 1, height: 36 }} />
+            <button onClick={handleCreateRoom} disabled={!selectedFacility} className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }}>호실 추가</button>
           </div>
 
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', border: '1px solid #444', backgroundColor: '#111', padding: 6 }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--bg)', padding: 8 }}>
             {rooms.map(r => {
               const isExpanded = expandedRoomIds.includes(r.id);
               const isSelected = selectedRoom?.id === r.id;
@@ -260,53 +266,53 @@ export const FacilityManagerPage: React.FC = () => {
               const roles = roomRolesMap[r.id] || [];
 
               return (
-                <div key={r.id} style={{ marginBottom: 6, border: isSelected ? '1px solid #2196f3' : '1px solid #333', borderRadius: 4, backgroundColor: '#1e1e1e' }}>
-                  <div 
+                <div key={r.id} className="card" style={{ marginBottom: 6, padding: 0, borderColor: isSelected ? 'var(--primary)' : 'var(--border)', overflow: 'hidden' }}>
+                  <div
                     onClick={() => { setSelectedRoom({ ...r }); setSelectedRole(null); }}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', cursor: 'pointer', backgroundColor: isSelected ? '#2a3b4c' : '#252525' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', cursor: 'pointer', background: isSelected ? 'var(--primary-bg)' : 'transparent' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span onClick={(e) => toggleRoomExpand(r.id, e)} style={{ cursor: 'pointer', fontSize: 13, userSelect: 'none' }}>
+                      <span onClick={(e) => toggleRoomExpand(r.id, e)} style={{ cursor: 'pointer', fontSize: 13, userSelect: 'none', color: 'var(--text-secondary)' }}>
                         {isExpanded ? '▼' : '▶'}
                       </span>
-                      <strong>{r.name}</strong>
-                      <span style={{ fontSize: 11, color: '#aaa' }}>[{r.status}]</span>
+                      <strong style={{ fontSize: 13 }}>{r.name}</strong>
+                      <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>[{r.status}]</span>
                     </div>
                     <div>
                       {!isCommonRoom && (
-                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRoom(r.id); }} style={{ backgroundColor: '#ff4d4f', color: '#fff', border: 'none', padding: '2px 6px', cursor: 'pointer', borderRadius: 3, fontSize: 11 }}>삭제</button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteRoom(r.id); }} className="btn btn-danger btn-sm" style={{ height: 26, padding: '0 8px' }}>삭제</button>
                       )}
                     </div>
                   </div>
 
                   {/* 호실 하위 포인트롤 리스트 (접기/펼치기) */}
                   {isExpanded && (
-                    <div style={{ padding: '6px 10px 6px 28px', backgroundColor: '#161616', borderTop: '1px solid #333' }}>
+                    <div style={{ padding: '8px 12px 8px 30px', borderTop: '1px solid var(--border)' }}>
                       {roles.map(role => (
-                        <div 
+                        <div
                           key={role.role_id}
                           onClick={(e) => { e.stopPropagation(); setSelectedRole({ ...role }); }}
                           style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '4px 6px', marginBottom: 3, fontSize: 12, borderRadius: 3, cursor: 'pointer',
-                            backgroundColor: selectedRole?.role_id === role.role_id ? '#3a4a5a' : '#222',
-                            color: role.is_current ? '#eee' : '#777'
+                            padding: '5px 8px', marginBottom: 3, fontSize: 12, borderRadius: 8, cursor: 'pointer',
+                            backgroundColor: selectedRole?.role_id === role.role_id ? 'var(--primary-bg)' : 'transparent',
+                            color: role.is_current ? 'var(--text)' : 'var(--text-secondary)'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <span style={{ backgroundColor: '#333', padding: '1px 4px', borderRadius: 2, fontSize: 10 }}>{role.short_name || 'N/A'}</span>
-                            <span style={{ fontWeight: 500 }}>{role.display_name || role.role_name}</span>
-                            <span style={{ fontSize: 10, color: '#888' }}>({role.role_name})</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span className="chip" style={{ fontSize: 10, padding: '1px 6px' }}>{role.short_name || 'N/A'}</span>
+                            <span style={{ fontWeight: 600 }}>{role.display_name || role.role_name}</span>
+                            <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>({role.role_name})</span>
                           </div>
                           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                            <span style={{ fontSize: 10, color: role.is_current ? '#4caf50' : '#f44336' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: role.is_current ? '#2fae66' : 'var(--error)' }}>
                               {role.is_current ? 'Active' : 'Expired'}
                             </span>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.role_id, r.id); }} style={{ background: 'transparent', border: 'none', color: '#ff7875', cursor: 'pointer', fontSize: 11 }}>✕</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.role_id, r.id); }} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: 12 }}>✕</button>
                           </div>
                         </div>
                       ))}
-                      {roles.length === 0 && <span style={{ fontSize: 11, color: '#666' }}>등록된 포인트 롤이 없습니다.</span>}
+                      {roles.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>등록된 포인트 롤이 없습니다.</span>}
                     </div>
                   )}
                 </div>
@@ -315,98 +321,102 @@ export const FacilityManagerPage: React.FC = () => {
           </div>
 
           {selectedRoom && (
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center', borderTop: '1px dashed #555', paddingTop: 8, flexShrink: 0 }}>
-              <span style={{ fontSize: 12, color: '#aaa', whiteSpace: 'nowrap' }}>호실 수정:</span>
-              <input type="text" value={selectedRoom.name} onChange={e => setSelectedRoom({ ...selectedRoom, name: e.target.value })} style={{ flex: 1, padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <select value={selectedRoom.status} onChange={e => setSelectedRoom({ ...selectedRoom, status: e.target.value })} style={{ padding: 6, backgroundColor: '#333', color: '#fff' }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: 10, flexShrink: 0 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>호실 수정:</span>
+              <input type="text" value={selectedRoom.name} onChange={e => setSelectedRoom({ ...selectedRoom, name: e.target.value })} className="input" style={{ flex: 1, height: 36 }} />
+              <select value={selectedRoom.status} onChange={e => setSelectedRoom({ ...selectedRoom, status: e.target.value })} className="input" style={{ height: 36, width: 160 }}>
                 <option value="OPERATING">OPERATING</option>
                 <option value="MAINTENANCE">MAINTENANCE</option>
                 <option value="NOT_OPERATING">NOT_OPERATING</option>
               </select>
-              <button onClick={handleUpdateRoom} style={{ padding: '6px 10px', backgroundColor: '#4caf50', color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>저장</button>
+              <button onClick={handleUpdateRoom} className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }}>저장</button>
             </div>
           )}
         </div>
 
-        {/* [3열] 포인트 롤 등록 및 수정 패널 (flex: 1.2, minHeight: 0 스크롤 안정화) */}
-        <div style={{ flex: 1.2, minWidth: 280, border: '1px solid #9c27b0', padding: 10, display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#22182c', minHeight: 0 }}>
-          <h4 style={{ margin: 0, color: '#ba68c8', flexShrink: 0 }}>
+        {/* [3열] 포인트 롤 등록 및 수정 패널 */}
+        <div className="card" style={{ flex: 1.2, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
+          <h4 style={{ fontSize: 14, flexShrink: 0 }}>
             포인트 롤 관리 {selectedRoom ? `(${selectedRoom.name})` : ''}
           </h4>
 
           {selectedRole ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', flex: 1, minHeight: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-                <span style={{ fontSize: 12, color: '#aaa' }}>선택 포인트롤 수정</span>
-                <span style={{ fontSize: 11, color: selectedRole.is_current ? '#4caf50' : '#f44336' }}>
+                <span className="label">선택 포인트롤 수정</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: selectedRole.is_current ? '#2fae66' : 'var(--error)' }}>
                   {selectedRole.is_current ? '운영 중 (Active)' : '만료/숨김 (Inactive)'}
                 </span>
               </div>
-              <input type="text" value={selectedRole.role_name} disabled style={{ padding: 6, backgroundColor: '#1e1e1e', color: '#888', border: '1px solid #444' }} title="기능명칭은 수정 불가" />
-              <input type="text" placeholder="디스플레이 명칭" value={selectedRole.display_name || ''} onChange={e => setSelectedRole({ ...selectedRole, display_name: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="text" maxLength={3} placeholder="약어 명칭 (3자)" value={selectedRole.short_name || ''} onChange={e => setSelectedRole({ ...selectedRole, short_name: e.target.value.toUpperCase() })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#69c0ff', border: '1px solid #555' }} />
-              <select value={selectedRole.data_type || 'TEMP'} onChange={e => setSelectedRole({ ...selectedRole, data_type: e.target.value })} style={{ padding: 6, backgroundColor: '#333', color: '#fff' }}>
+              <input type="text" value={selectedRole.role_name} disabled className="input" style={{ height: 36 }} title="기능명칭은 수정 불가" />
+              <input type="text" placeholder="디스플레이 명칭" value={selectedRole.display_name || ''} onChange={e => setSelectedRole({ ...selectedRole, display_name: e.target.value })} className="input" style={{ height: 36 }} />
+              <input type="text" maxLength={3} placeholder="약어 명칭 (3자)" value={selectedRole.short_name || ''} onChange={e => setSelectedRole({ ...selectedRole, short_name: e.target.value.toUpperCase() })} className="input" style={{ height: 36, color: 'var(--primary)', fontWeight: 700 }} />
+              <select value={selectedRole.data_type || 'TEMP'} onChange={e => setSelectedRole({ ...selectedRole, data_type: e.target.value })} className="input" style={{ height: 36 }}>
                 <option value="TEMP">TEMP</option><option value="GEAR">GEAR</option><option value="BOOL">BOOL</option><option value="STATIC">STATIC</option>
               </select>
-              <input type="text" placeholder="목표 수치 (target_value)" value={selectedRole.target_value || ''} onChange={e => setSelectedRole({ ...selectedRole, target_value: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input 
-                    type="text" 
-                    placeholder="하한 (low_limit)" 
-                    value={selectedRole.target_low_limit || ''} 
-                    onChange={e => setSelectedRole({ ...selectedRole, target_low_limit: e.target.value })} 
-                    style={{ flex: 1, minWidth: 0, padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555', boxSizing: 'border-box' }} 
+              <input type="text" placeholder="목표 수치 (target_value)" value={selectedRole.target_value || ''} onChange={e => setSelectedRole({ ...selectedRole, target_value: e.target.value })} className="input" style={{ height: 36 }} />
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <input
+                    type="text"
+                    placeholder="하한 (low_limit)"
+                    value={selectedRole.target_low_limit || ''}
+                    onChange={e => setSelectedRole({ ...selectedRole, target_low_limit: e.target.value })}
+                    className="input"
+                    style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
-                <input 
-                    type="text" 
-                    placeholder="상한 (high_limit)" 
-                    value={selectedRole.target_high_limit || ''} 
-                    onChange={e => setSelectedRole({ ...selectedRole, target_high_limit: e.target.value })} 
-                    style={{ flex: 1, minWidth: 0, padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555', boxSizing: 'border-box' }} 
+                <input
+                    type="text"
+                    placeholder="상한 (high_limit)"
+                    value={selectedRole.target_high_limit || ''}
+                    onChange={e => setSelectedRole({ ...selectedRole, target_high_limit: e.target.value })}
+                    className="input"
+                    style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
-                </div>
-              <label style={{ fontSize: 11, color: '#aaa' }}>적용 시작 일시 (valid_from)</label>
-              <input type="datetime-local" value={selectedRole.valid_from ? selectedRole.valid_from.slice(0, 16) : ''} onChange={e => setSelectedRole({ ...selectedRole, valid_from: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <label style={{ fontSize: 11, color: '#aaa' }}>적용 종료 일시 (valid_to - 미입력 시 계속 활성화)</label>
-              <input type="datetime-local" value={selectedRole.valid_to ? selectedRole.valid_to.slice(0, 16) : ''} onChange={e => setSelectedRole({ ...selectedRole, valid_to: e.target.value })} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
+              </div>
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>적용 시작 일시 (valid_from)</label>
+              <input type="datetime-local" value={selectedRole.valid_from ? selectedRole.valid_from.slice(0, 16) : ''} onChange={e => setSelectedRole({ ...selectedRole, valid_from: e.target.value })} className="input" style={{ height: 36 }} />
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>적용 종료 일시 (valid_to - 미입력 시 계속 활성화)</label>
+              <input type="datetime-local" value={selectedRole.valid_to ? selectedRole.valid_to.slice(0, 16) : ''} onChange={e => setSelectedRole({ ...selectedRole, valid_to: e.target.value })} className="input" style={{ height: 36 }} />
               <div style={{ display: 'flex', gap: 6, marginTop: 4, flexShrink: 0 }}>
-                <button onClick={handleUpdateRole} style={{ flex: 1, padding: 8, backgroundColor: '#2196f3', color: '#fff', border: 'none', cursor: 'pointer' }}>롤 정보 수정</button>
-                <button onClick={() => setSelectedRole(null)} style={{ padding: 8, backgroundColor: '#555', color: '#fff', border: 'none', cursor: 'pointer' }}>취소</button>
+                <button onClick={handleUpdateRole} className="btn btn-primary" style={{ flex: 1 }}>롤 정보 수정</button>
+                <button onClick={() => setSelectedRole(null)} className="btn btn-ghost">취소</button>
               </div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', flex: 1, minHeight: 0 }}>
-              <span style={{ fontSize: 12, color: '#aaa' }}>신규 포인트 롤 추가</span>
-              <input type="text" placeholder="기능 명칭 (role_name: 고유 식별)" value={newRole.role_name} onChange={e => setNewRole({ ...newRole, role_name: e.target.value })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="text" placeholder="디스플레이 명칭" value={newRole.display_name} onChange={e => setNewRole({ ...newRole, display_name: e.target.value })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <input type="text" maxLength={3} placeholder="약어 명칭 (3자)" value={newRole.short_name} onChange={e => setNewRole({ ...newRole, short_name: e.target.value.toUpperCase() })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#69c0ff', border: '1px solid #555' }} />
-              <select value={newRole.data_type} onChange={e => setNewRole({ ...newRole, data_type: e.target.value })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#333', color: '#fff' }}>
+              <span className="label">신규 포인트 롤 추가</span>
+              <input type="text" placeholder="기능 명칭 (role_name: 고유 식별)" value={newRole.role_name} onChange={e => setNewRole({ ...newRole, role_name: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }} />
+              <input type="text" placeholder="디스플레이 명칭" value={newRole.display_name} onChange={e => setNewRole({ ...newRole, display_name: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }} />
+              <input type="text" maxLength={3} placeholder="약어 명칭 (3자)" value={newRole.short_name} onChange={e => setNewRole({ ...newRole, short_name: e.target.value.toUpperCase() })} disabled={!selectedRoom} className="input" style={{ height: 36, color: 'var(--primary)', fontWeight: 700 }} />
+              <select value={newRole.data_type} onChange={e => setNewRole({ ...newRole, data_type: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }}>
                 <option value="TEMP">TEMP</option><option value="GEAR">GEAR</option><option value="BOOL">BOOL</option><option value="STATIC">STATIC</option>
               </select>
-              <input type="text" placeholder="목표 수치 (target_value)" value={newRole.target_value} onChange={e => setNewRole({ ...newRole, target_value: e.target.value })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input 
-                    type="text" 
-                    placeholder="하한 수치" 
-                    value={newRole.target_low_limit} 
-                    onChange={e => setNewRole({ ...newRole, target_low_limit: e.target.value })} 
-                    disabled={!selectedRoom} 
-                    style={{ flex: 1, minWidth: 0, padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555', boxSizing: 'border-box' }} 
+              <input type="text" placeholder="목표 수치 (target_value)" value={newRole.target_value} onChange={e => setNewRole({ ...newRole, target_value: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }} />
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <input
+                    type="text"
+                    placeholder="하한 수치"
+                    value={newRole.target_low_limit}
+                    onChange={e => setNewRole({ ...newRole, target_low_limit: e.target.value })}
+                    disabled={!selectedRoom}
+                    className="input"
+                    style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
-                <input 
-                    type="text" 
-                    placeholder="상한 수치" 
-                    value={newRole.target_high_limit} 
-                    onChange={e => setNewRole({ ...newRole, target_high_limit: e.target.value })} 
-                    disabled={!selectedRoom} 
-                    style={{ flex: 1, minWidth: 0, padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555', boxSizing: 'border-box' }} 
+                <input
+                    type="text"
+                    placeholder="상한 수치"
+                    value={newRole.target_high_limit}
+                    onChange={e => setNewRole({ ...newRole, target_high_limit: e.target.value })}
+                    disabled={!selectedRoom}
+                    className="input"
+                    style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
-                </div>
-              <label style={{ fontSize: 11, color: '#aaa' }}>적용 시작 일시 (valid_from)</label>
-              <input type="datetime-local" value={newRole.valid_from} onChange={e => setNewRole({ ...newRole, valid_from: e.target.value })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <label style={{ fontSize: 11, color: '#aaa' }}>적용 종료 일시 (valid_to - 미입력 시 계속 활성화)</label>
-              <input type="datetime-local" value={newRole.valid_to} onChange={e => setNewRole({ ...newRole, valid_to: e.target.value })} disabled={!selectedRoom} style={{ padding: 6, backgroundColor: '#2b2b2b', color: '#fff', border: '1px solid #555' }} />
-              <button onClick={handleCreateRole} disabled={!selectedRoom} style={{ padding: 8, backgroundColor: '#ba68c8', color: '#fff', border: 'none', cursor: selectedRoom ? 'pointer' : 'not-allowed', marginTop: 4, flexShrink: 0 }}>신규 롤 생성</button>
+              </div>
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>적용 시작 일시 (valid_from)</label>
+              <input type="datetime-local" value={newRole.valid_from} onChange={e => setNewRole({ ...newRole, valid_from: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }} />
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>적용 종료 일시 (valid_to - 미입력 시 계속 활성화)</label>
+              <input type="datetime-local" value={newRole.valid_to} onChange={e => setNewRole({ ...newRole, valid_to: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }} />
+              <button onClick={handleCreateRole} disabled={!selectedRoom} className="btn btn-primary" style={{ marginTop: 4, flexShrink: 0 }}>신규 롤 생성</button>
             </div>
           )}
         </div>

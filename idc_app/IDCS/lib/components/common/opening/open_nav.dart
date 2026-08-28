@@ -1,31 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
-/// Box #1, #2: 페이지 이동 박스
+/// 페이지 이동용 리스트 행 (탭 가능한 카드)
 class NavigationBox extends StatelessWidget {
   final String title;
   final VoidCallback onPressed;
+  final IconData icon;
 
-  const NavigationBox({required this.title, required this.onPressed});
+  const NavigationBox({
+    super.key,
+    required this.title,
+    required this.onPressed,
+    this.icon = Icons.chevron_right_rounded,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // 컴포넌트 구분을 위한 가장 기본적인 검은색/회색 선만 적용
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-      ),
-      padding: const EdgeInsets.all(12.0),
-      child: Row(
-        children: [
-          ElevatedButton(
-            onPressed: onPressed,
-            child: const Text('버튼(이동)'),
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onPressed,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.outline),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(title),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Icon(icon, size: 20, color: AppColors.textSecondary),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

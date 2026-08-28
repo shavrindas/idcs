@@ -6,11 +6,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:idcs/components/common/opening/open_nav.dart';
 import 'package:idcs/components/common/login/login_components.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/login/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -117,51 +117,93 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('로그인 페이지')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            StandardLoginBox(
-              emailController: _emailController,
-              passwordController: _passwordController,
-              onLoginPressed: _handleGeneralLogin,
-            ),
-            const SizedBox(height: 16),
-            SocialLoginBox(
-              onSocialLoginPressed: _handleSocialLogin,
-            ),
-            const SizedBox(height: 16),
-            KeepLoginStateBox(
-              isChecked: _keepLogin,
-              onChanged: (bool? value) {
-                setState(() {
-                  _keepLogin = value ?? false;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '계정 생성 페이지로 이동',
-              onPressed: () => context.push('/signup'),
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '아이디 찾기 페이지로 이동',
-              onPressed: () => context.push('/find_id'),
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '비밀번호 찾기 페이지로 이동',
-              onPressed: () => context.push('/find_pw'),
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '오프닝 페이지로 이동',
-              onPressed: () => context.push('/'),
-            ),
-          ],
+      appBar: AppBar(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Text('다시 만나서 반가워요', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 6),
+              Text(
+                '계정 정보를 입력하고 로그인해주세요.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 32),
+
+              StandardLoginBox(
+                emailController: _emailController,
+                passwordController: _passwordController,
+                onLoginPressed: _handleGeneralLogin,
+              ),
+
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  KeepLoginStateBox(
+                    isChecked: _keepLogin,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _keepLogin = value ?? false;
+                      });
+                    },
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/find_pw'),
+                    child: const Text('비밀번호 찾기'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+              SocialLoginBox(
+                onSocialLoginPressed: _handleSocialLogin,
+              ),
+
+              const SizedBox(height: 40),
+
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      '계정이 없으신가요? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push('/signup'),
+                      child: const Text(
+                        '회원가입',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '  ·  ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push('/find_id'),
+                      child: const Text(
+                        '아이디 찾기',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

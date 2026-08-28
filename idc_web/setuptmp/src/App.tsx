@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { ChartMappingPage } from './pages/ChartMappingPage';
 import { ChartViewerPage }  from './pages/ChartViewerPage';
 import { PRIndexingPage }    from './pages/PRIndexingPage';
 import { FacilityManagerPage } from './pages/FacilityManagerPage';
 import { LoginPage } from './pages/LoginPage';
 import { MainPage } from './pages/MainPage';
-import './App.css';
 
 function App() {
   const [user, setUser] = useState<any>(null); // 로그인한 유저 정보 상태
@@ -18,51 +17,82 @@ function App() {
   // 관리자 권한 체크용 상수
   const isAdmin = user && (user.role === 'ADMIN' || user.role === 'DEVELOPER');
 
+  const navLinkStyle = ({ isActive }: { isActive: boolean }) =>
+    `nav-link${isActive ? ' active' : ''}`;
+
   return (
     <Router>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: 10, backgroundColor: '#121212', color: '#ffffff', boxSizing: 'border-box' }}>
-        
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box' }}>
+
         {/* 헤더 */}
-        <header style={{ border: '2px solid #e91e63', padding: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <h2 style={{ margin: 0, color: '#e91e63' }}>IDCool Systems Console</h2>
+        <header
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '14px 24px',
+            borderBottom: '1px solid var(--border)',
+            background: 'var(--surface)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: 'var(--primary)', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 15,
+              }}
+            >
+              ❄
+            </div>
+            <h2 style={{ fontSize: 17 }}>IDCool Systems</h2>
+          </div>
           {user && (
-            <div>
-              <span style={{ marginRight: 15 }}>{user.name} ({user.role})</span>
-              <button onClick={handleLogout} style={{ padding: '5px 10px', cursor: 'pointer' }}>로그아웃</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                {user.name} <span className="chip" style={{ marginLeft: 6 }}>{user.role}</span>
+              </span>
+              <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>
             </div>
           )}
         </header>
 
         {/* 글로벌 네비게이션 바 (로그인한 유저에게만 노출) */}
         {user && (
-          <nav style={{ border: '2px solid #ff9800', padding: 15, marginBottom: 10, display: 'flex', gap: 20, alignItems: 'center' }}>
-            <strong style={{ color: '#ff9800' }}>NAV</strong>
-            
+          <nav
+            style={{
+              display: 'flex', gap: 6, alignItems: 'center',
+              padding: '10px 24px',
+              borderBottom: '1px solid var(--border)',
+              background: 'var(--surface)',
+            }}
+          >
             {isAdmin && (
               <>
-                <Link to="/main" style={{ color: '#ffffff', textDecoration: 'none' }}>[메인 대시보드]</Link>
-                <Link to="/mapping" style={{ color: '#ffffff', textDecoration: 'none' }}>[맵핑 관리자]</Link>
+                <NavLink to="/main" className={navLinkStyle}>메인 대시보드</NavLink>
+                <NavLink to="/mapping" className={navLinkStyle}>맵핑 관리자</NavLink>
               </>
             )}
 
             {/* 유저와 관리자 공통 메뉴 */}
-            <Link to="/viewer" style={{ color: '#ffffff', textDecoration: 'none', fontWeight: !isAdmin ? 'bold' : 'normal' }}>[차트 뷰어]</Link>
-            
+            <NavLink to="/viewer" className={navLinkStyle}>차트 뷰어</NavLink>
+
             {isAdmin && (
               <>
-                <Link to="/indexing" style={{ color: '#ffffff', textDecoration: 'none' }}>[명칭 인덱싱]</Link>
-                <Link to="/facility-manager" style={{ color: '#ffffff', textDecoration: 'none' }}>[시설/호실 관리]</Link>
+                <NavLink to="/indexing" className={navLinkStyle}>명칭 인덱싱</NavLink>
+                <NavLink to="/facility-manager" className={navLinkStyle}>시설/호실 관리</NavLink>
               </>
             )}
           </nav>
         )}
 
         {/* 본문 영역 */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', background: 'var(--bg)' }}>
           <Routes>
             {/* 비로그인 상태일 때 접근 가능한 Route */}
             <Route path="/login" element={<LoginPage onLogin={setUser} />} />
-            
+
             {/* 로그인 상태 체크 */}
             {!user ? (
               <Route path="*" element={<Navigate to="/login" />} />
@@ -77,10 +107,10 @@ function App() {
                     <Route path="/facility-manager" element={<FacilityManagerPage />} />
                   </>
                 )}
-                
+
                 {/* User/Admin 공통 라우트 */}
                 <Route path="/viewer" element={<ChartViewerPage user={user} />} />
-                
+
                 {/* 기본 리다이렉트 (관리자는 메인, 유저는 뷰어로) */}
                 <Route path="*" element={
                   <Navigate to={isAdmin ? "/main" : "/viewer"} />
