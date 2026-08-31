@@ -16,52 +16,58 @@ class FacilityChartPage extends StatefulWidget {
 }
 
 class _FacilityChartPageState extends State<FacilityChartPage> {
-  late DateTime _startTime;
-  late DateTime _endTime;
+  // 1. 필터 상태 (dataType 완전 제거)
+  String _currentScale = '1m';
+  String _currentTimeRange = '1d';
 
+  // 2. 데이터 포인트 선택 상태
   int? _selectedGroupId;
-  List<Map<String, dynamic>> _availableGroups = [];
+  List<Map<String, dynamic>> _availableGroups = []; // _allGroups 변수도 불필요하여 제거
 
+  // 3. 차트 렌더링 상태
   bool _isLoading = false;
   Map<String, dynamic>? _chartData;
-
-  final GlobalKey<ChartCanvasBoxState> _chartCanvasKey = GlobalKey<ChartCanvasBoxState>();
-  bool _isPanMode = true;
 
   @override
   void initState() {
     super.initState();
-    _endTime = DateTime.now();
-    _startTime = _endTime.subtract(const Duration(hours: 12));
     _loadGroupsAndChart();
   }
 
-  String _calculateScale() {
-    final diff = _endTime.difference(_startTime);
-    if (diff.inHours < 3) return '10s';
-    if (diff.inDays < 1) return '1m';
-    if (diff.inDays < 10) return '5m';
-    return '1h';
-  }
-
+  // 1단계: 전체 그룹 목록 조회 (타입 필터링 제거)
   Future<void> _loadGroupsAndChart() async {
     setState(() => _isLoading = true);
+
     try {
-      final groups = await ChartApiService.getChartGroups(int.parse(widget.facilityId), 1);
+      final int roomId = 1; // 임시: 1번 호실 기준
+
+      // 웹 어드민에서 생성된 그룹 리스트 호출
+      final groups = await ChartApiService.getChartGroups(int.parse(widget.facilityId), roomId);
+
       if (mounted) {
         setState(() {
+          // 필터링 없이 바로 화면에 렌더링할 그룹 목록에 할당
           _availableGroups = List<Map<String, dynamic>>.from(groups);
-          bool shouldResetGroup = _selectedGroupId == null || !_availableGroups.any((g) => g['group_id'] == _selectedGroupId);
+
+          // 선택된 그룹이 없거나 기존 선택 그룹이 삭제된 경우, 첫 번째 그룹 자동 선택
+          bool shouldResetGroup = _selectedGroupId == null ||
+              !_availableGroups.any((g) => g['group_id'] == _selectedGroupId);
+
           if (shouldResetGroup && _availableGroups.isNotEmpty) {
             _selectedGroupId = _availableGroups.first['group_id'];
           } else if (_availableGroups.isEmpty) {
             _selectedGroupId = null;
           }
         });
+
+        // 그룹이 선택되었다면 차트 데이터 조회로 넘어감
         if (_selectedGroupId != null) {
           await _fetchChartData();
         } else {
-          setState(() { _chartData = null; _isLoading = false; });
+          setState(() {
+            _chartData = null;
+            _isLoading = false;
+          });
         }
       }
     } catch (e) {
@@ -72,71 +78,51 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
     }
   }
 
+  // 2단계: 선택된 그룹 내부의 role_ids를 추출하여 차트 API 호출
   Future<void> _fetchChartData() async {
     if (_selectedGroupId == null) return;
+
     setState(() => _isLoading = true);
 
     try {
+      final int roomId = 1;
+
       final selectedGroup = _availableGroups.firstWhere((g) => g['group_id'] == _selectedGroupId);
       final List<dynamic> rawRoleIds = selectedGroup['role_ids'] ?? [];
 
-      // 💡 타입 에러 해결: 안전하게 파싱 후 int 타입만 필터링하여 리스트화
       final List<int> roleIdsToFetch = rawRoleIds
-          .map((e) => int.tryParse(e.toString()))
-          .whereType<int>()
+          .where((e) => e != null)
+          .map((e) => e as int)
           .toList();
 
       if (roleIdsToFetch.isEmpty) {
-        setState(() { _chartData = null; _isLoading = false; });
+        setState(() {
+          _chartData = null;
+          _isLoading = false;
+        });
         return;
       }
 
-      final autoScale = _calculateScale();
-
+      // 파라미터에서 dataType 완전 제거됨
       final result = await ChartApiService.getHistoricalData(
         facilityId: int.parse(widget.facilityId),
-        roomId: 1,
-        scale: autoScale,
-        startTime: _startTime,
-        endTime: _endTime,
+        roomId: roomId,
+        scale: _currentScale,
+        timeRange: _currentTimeRange,
         roleIds: roleIdsToFetch,
       );
 
       if (mounted) {
-        setState(() => _chartData = result);
-        _chartCanvasKey.currentState?.resetViewport();
-      }
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('차트 오류: $e')));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _selectDateTime(bool isStart) async {
-    final DateTime initialDate = isStart ? _startTime : _endTime;
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      // 💡 요구사항 반영: 과거 조회 가능 최대 한계치 지정
-      firstDate: DateTime(2025, 1, 1),
-      lastDate: DateTime.now(),
-    );
-    if (pickedDate != null) {
-      final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(initialDate),
-      );
-      if (pickedTime != null && mounted) {
         setState(() {
-          final newDateTime = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, pickedTime.hour, pickedTime.minute);
-          if (isStart) {
-            _startTime = newDateTime;
-          } else {
-            _endTime = newDateTime;
-          }
+          _chartData = result;
         });
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('차트 오류: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -149,38 +135,38 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ChartSearchScopeBox(
-              startTime: _startTime,
-              endTime: _endTime,
-              autoScale: _calculateScale(),
-              onSelectStartTime: () => _selectDateTime(true),
-              onSelectEndTime: () => _selectDateTime(false),
-              onSearch: _fetchChartData,
+            // Box 1
+            ChartFilterBox(
+              // currentDataType: _currentDataType 파라미터 완전 제거
+              currentScale: _currentScale,
+              currentTimeRange: _currentTimeRange,
+              onScaleChanged: (val) => setState(() => _currentScale = val),
+              onTimeRangeChanged: (val) => setState(() => _currentTimeRange = val),
+              onApply: _fetchChartData,
             ),
             const SizedBox(height: 16),
+
+            // Box 2
             ChartSeriesBox(
               availableGroups: _availableGroups,
               selectedGroupId: _selectedGroupId,
               onGroupSelected: (groupId) {
-                setState(() => _selectedGroupId = groupId);
+                setState(() {
+                  _selectedGroupId = groupId;
+                });
                 _fetchChartData();
               },
             ),
             const SizedBox(height: 16),
-            ChartToolBox(
-              isPanMode: _isPanMode,
-              onTogglePanMode: () => setState(() => _isPanMode = !_isPanMode),
-              onResetViewport: () => _chartCanvasKey.currentState?.resetViewport(),
-            ),
+
+            // Box 4
+            const ChartToolBox(),
             const SizedBox(height: 8),
-            // 💡 데이터가 없어도 검색 범위를 알 수 있도록 전달
+
+            // Box 3
             ChartCanvasBox(
-              key: _chartCanvasKey,
               chartData: _chartData,
               isLoading: _isLoading,
-              isPanMode: _isPanMode,
-              searchedStartTime: _startTime,
-              searchedEndTime: _endTime,
             ),
           ],
         ),

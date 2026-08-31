@@ -102,10 +102,9 @@ class _GlobalNavigationBoxState extends State<GlobalNavigationBox> {
 
           NavigationBox(
               title: '메인 색인 페이지로 이동',
-              onPressed: () => context.push('/main_index/${widget.userId}')
+              onPressed: widget.onStateInitialize
           ),
           const SizedBox(height: 8),
-
           NavigationBox(
               title: '메인 알람 페이지로 이동',
               onPressed: () => context.push('/main_alarm/${widget.userId}')

@@ -131,5 +131,3 @@ class MessageHashtag(Base):
 
     message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="CASCADE"), primary_key=True)
     hashtag_id = Column(Integer, ForeignKey("hashtags.hashtag_id", ondelete="CASCADE"), primary_key=True)
-
-
