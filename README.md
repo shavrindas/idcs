@@ -11,6 +11,24 @@ kuchaytirish).
 
 ---
 
+## Bu loyiha kimlar uchun?
+
+Uchta xil odam ishlatadi:
+
+1. **Ombor xodimlari** — telefon ilovasi orqali. Kunlik ishda haroratni tekshiradi,
+   muammo chiqsa signal (alarm) oladi, boshqa xodimlar bilan chat orqali gaplashadi,
+   hisobot (post) yozadi.
+2. **Administratorlar** — veb-sayt orqali. Qaysi ombor/xona/sensor borligini
+   sozlaydi, sensorlarga tushunarli nom beradi, grafiklarni guruhlaydi.
+3. **Tizim yaratuvchi jamoa (dasturchilar)** — hammasini qurayotgan va
+   rivojlantirayotgan jamoa. Siz ham shu jamoadasiz.
+
+Ya'ni bu — "ichki" dastur: tashqi mijozlar uchun emas, balki sovutgich ombor
+kompaniyasining o'z xodimlari va mijozlari (ombor egalari) ishlatishi uchun
+qurilgan.
+
+---
+
 ## Loyiha qismlari (5 ta bo'lim bor)
 
 Loyiha bitta katta papka ichida, lekin aslida 5 ta **mustaqil** kichik loyihadan iborat.
@@ -67,6 +85,57 @@ idc_web    idc_app
 
 Ya'ni: sensor → ombordagi dastur → markaziy server → siz buni veb-saytda yoki
 telefon ilovasida ko'rasiz.
+
+---
+
+## Qanday sahifalar bor va nima uchun?
+
+### 📱 Telefon ilovasi (`idc_app`)
+
+**Kirishdan oldingi sahifalar:**
+| Sahifa | Nima uchun |
+|---|---|
+| Ochilish (Opening) | Ilova ochilganda birinchi ko'rinadigan logo ekrani |
+| Kirish (Login) | Email/parol bilan hisobga kirish |
+| Ro'yxatdan o'tish (Signup) | Yangi hisob ochish |
+| ID topish / Parol tiklash | Hisobni unutib qo'ysangiz tiklash |
+
+**Kirgandan keyingi umumiy sahifalar** (hali qaysi omborni tanlamagan holatda):
+| Sahifa | Nima uchun |
+|---|---|
+| Bosh sahifa (Main Index) | Sizga bog'langan barcha omborlar ro'yxati — shu yerdan birini tanlaysiz |
+| Ombor qo'shish (Facility Register) | Yangi omborni kirish kodi bilan hisobingizga ulash |
+| Umumiy signal (Main Alarm) | Barcha omborlaringizdagi ogohlantirishlar bitta ro'yxatda |
+| Umumiy hisobotlar (Total Board) | Barcha omborlar bo'yicha yozilgan xabarlar |
+| Sozlamalar / Hisobni tahrirlash | Profil ma'lumotlarini o'zgartirish |
+
+**Bitta omborni tanlagandan keyin** — pastda 5 ta doimiy tugma (bottom nav) chiqadi:
+| Sahifa | Nima uchun |
+|---|---|
+| Monitoring | Shu ombordagi xonalar ro'yxati; xonani tanlasangiz jonli harorat/holat va uzoqdan boshqarish tugmalari chiqadi |
+| Chart (Grafik) | Vaqt oralig'ini tanlab, harorat va boshqa ko'rsatkichlarni grafik shaklida ko'rish |
+| Hisobot (Board) | Shu omborga oid yozilgan xabarlar — yangi post yozish/o'qish/tahrirlash |
+| Messenger (Chat) | Shu ombor xodimlari o'rtasidagi chat xonalari |
+| Signal (Alarm) | Shu omborga oid ogohlantirishlar ro'yxati |
+
+**Ichkariroq sahifalar** (ro'yxatdan bittasini bosganda ochiladi):
+| Sahifa | Nima uchun |
+|---|---|
+| Xona nazorat paneli | Bitta xonaning barcha ko'rsatkichlari + uzoqdan boshqarish tugmalari ("제어" belgili kartalar) |
+| Chat xonasi | Bitta suhbatning o'zi, ishtirokchilar ro'yxati bilan |
+| Post ko'rish/yozish/tahrirlash | Bitta xabarning to'liq matni va izohlar |
+
+### 💻 Veb-sayt (`idc_web`)
+
+Bu ko'proq **administrator** uchun mo'ljallangan:
+| Sahifa | Nima uchun |
+|---|---|
+| Kirish (Login) | Hammaga umumiy kirish sahifasi |
+| Bosh boshqaruv paneli (Main) | Admin uchun umumiy ko'rinish (hozircha oddiy, keyin kengayadi) |
+| Xarita/moslashtirish (Chart Mapping) | Qaysi sensorlar birgalikda bitta grafikda ko'rsatilishini sozlash |
+| Grafik ko'ruvchi (Chart Viewer) | Barcha foydalanuvchilar kira oladi — grafiklarni ko'rish |
+| Nomlash (Indexing) | Sensorlarga tushunarli ism va qisqa nom berish (masalan "H_COMP" o'rniga "Kompressor 1") |
+| Ombor/xona boshqaruvi (Facility Manager) | Eng katta boshqaruv sahifasi — yangi ombor, xona, sensor qo'shish/o'chirish/tahrirlash |
 
 ---
 
