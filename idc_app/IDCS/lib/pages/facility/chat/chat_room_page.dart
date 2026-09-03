@@ -149,10 +149,17 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                 itemCount: _participants.length,
                 itemBuilder: (context, index) {
                   final p = _participants[index];
+                  final bool isAdmin = p['role'] != 'USER';
+                  final String name = p['name'] ?? '';
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                      child: Icon(p['role'] == 'USER' ? Icons.person_rounded : Icons.admin_panel_settings_rounded, color: AppColors.primary),
+                      backgroundColor: isAdmin ? AppColors.primary : AppColors.primary.withValues(alpha: 0.12),
+                      child: isAdmin
+                          ? const Icon(Icons.shield_rounded, color: Colors.white, size: 18)
+                          : Text(
+                              name.isNotEmpty ? name.substring(0, 1) : '?',
+                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                            ),
                     ),
                     title: Text('${p['name']} (${p['role']})'),
                   );

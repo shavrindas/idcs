@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../main.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_logo.dart';
 
 import 'package:idcs/components/common/opening/open_nav.dart';
 import 'package:idcs/components/common/opening/open_inj_static.dart';
@@ -27,32 +27,11 @@ class OpeningPage extends StatelessWidget {
               const SizedBox(height: 72),
 
               // 브랜드 로고
-              Center(
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.25),
-                        blurRadius: 24,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.ac_unit_rounded, color: Colors.white, size: 48),
-                ),
-              ),
-              const SizedBox(height: 24),
+              const Center(child: AppMonogram(size: 92)),
+              const SizedBox(height: 28),
 
-              Text(
-                'IDCool Systems',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
+              const Center(child: AppWordmark(fontSize: 26)),
+              const SizedBox(height: 10),
               Text(
                 '냉동창고 실시간 관제 · 모니터링 시스템',
                 textAlign: TextAlign.center,

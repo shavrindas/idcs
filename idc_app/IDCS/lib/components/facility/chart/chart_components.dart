@@ -398,13 +398,14 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
     );
   }
 
+  // 차트 캔버스는 화면의 핵심 콘텐츠이므로 주변 설정 카드보다 한 단계 부각시킨다.
   Widget _buildContainer({required Widget child}) {
     return Container(
       height: 400,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.soft,
       ),
       padding: const EdgeInsets.all(16.0),
       child: child,

@@ -17,6 +17,18 @@ class AppColors {
   static const Color textSecondary = Color(0xFF5B6B73);
 
   static const Color error = Color(0xFFD64545);
+  static const Color warning = Color(0xFFB6791F);
+  static const Color success = Color(0xFF1F8F5F);
+}
+
+class AppShadows {
+  AppShadows._();
+
+  /// 히어로/폼 등 강조가 필요한 표면에만 제한적으로 사용 (리스트 행에는 사용하지 않음)
+  static List<BoxShadow> soft = [
+    BoxShadow(color: AppColors.primary.withValues(alpha: 0.10), blurRadius: 28, offset: const Offset(0, 10)),
+    BoxShadow(color: const Color(0xFF0B1420).withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+  ];
 }
 
 class AppTheme {

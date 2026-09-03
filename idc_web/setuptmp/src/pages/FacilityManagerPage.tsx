@@ -176,6 +176,8 @@ export const FacilityManagerPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, gap: 12, padding: 24, boxSizing: 'border-box' }}>
 
+      <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.3, flexShrink: 0 }}>시설 / 호실 관리</h1>
+
       {/* 1. 상단 하향식 검색바 */}
       <div className="card" style={{ position: 'relative', padding: 8, flexShrink: 0 }}>
         <input
@@ -206,7 +208,7 @@ export const FacilityManagerPage: React.FC = () => {
 
         {/* [1열] 시설 관리 패널 */}
         <div className="card" style={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
-          <h4 style={{ fontSize: 14 }}>시설 관리</h4>
+          <h4 style={{ fontSize: 16, fontWeight: 800 }}>시설 관리</h4>
 
           <select value={selectedFacility} onChange={e => handleFacilityChange(Number(e.target.value))} className="input">
             <option value="">-- [시설 선택] --</option>
@@ -251,7 +253,7 @@ export const FacilityManagerPage: React.FC = () => {
 
         {/* [2열] 호실 트리 및 관리 */}
         <div className="card" style={{ flex: 1.8, minWidth: 340, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
-          <h4 style={{ fontSize: 14 }}>호실 및 포인트 롤 트리</h4>
+          <h4 style={{ fontSize: 16, fontWeight: 800 }}>호실 및 포인트 롤 트리</h4>
 
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             <input type="text" placeholder="새 호실 명칭" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} disabled={!selectedFacility} className="input" style={{ flex: 1, height: 36 }} />
@@ -336,7 +338,7 @@ export const FacilityManagerPage: React.FC = () => {
 
         {/* [3열] 포인트 롤 등록 및 수정 패널 */}
         <div className="card" style={{ flex: 1.2, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
-          <h4 style={{ fontSize: 14, flexShrink: 0 }}>
+          <h4 style={{ fontSize: 16, fontWeight: 800, flexShrink: 0 }}>
             포인트 롤 관리 {selectedRoom ? `(${selectedRoom.name})` : ''}
           </h4>
 
