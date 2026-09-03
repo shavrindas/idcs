@@ -6,6 +6,7 @@ import { PRIndexingPage }    from './pages/PRIndexingPage';
 import { FacilityManagerPage } from './pages/FacilityManagerPage';
 import { LoginPage } from './pages/LoginPage';
 import { MainPage } from './pages/MainPage';
+import { Monogram, Wordmark } from './components/Brand';
 
 function App() {
   const [user, setUser] = useState<any>(null); // 로그인한 유저 정보 상태
@@ -36,17 +37,8 @@ function App() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 32, height: 32, borderRadius: 9,
-                background: 'var(--primary)', color: '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: 15,
-              }}
-            >
-              ❄
-            </div>
-            <h2 style={{ fontSize: 17 }}>IDCool Systems</h2>
+            <Monogram size={32} />
+            <Wordmark size={17} />
           </div>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

@@ -11,6 +11,7 @@ import 'package:idcs/main.dart';
 import 'package:idcs/services/common/login/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/app_logo.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -117,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(title: const AppWordmark(fontSize: 17)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),

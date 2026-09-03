@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
+import { Monogram, Wordmark } from '../components/Brand';
 
 export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -49,18 +50,9 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', flex: 1, gap: 24, padding: 24 }}>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-        <div
-          style={{
-            width: 56, height: 56, borderRadius: 16,
-            background: 'var(--primary)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 26, boxShadow: '0 12px 24px -8px rgba(46,107,239,0.35)',
-          }}
-        >
-          ❄
-        </div>
-        <h1 style={{ fontSize: 20 }}>IDCool Systems Console</h1>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <Monogram size={56} />
+        <div style={{ marginTop: 4 }}><Wordmark size={22} /></div>
         <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>관리자 계정으로 로그인해주세요.</p>
       </div>
 

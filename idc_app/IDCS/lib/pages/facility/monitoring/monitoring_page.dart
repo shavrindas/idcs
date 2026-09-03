@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
-import 'package:idcs/components/indices/main_alarm/main_alarm_components.dart';
+import 'package:idcs/components/indices/main_index/main_index_components.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;

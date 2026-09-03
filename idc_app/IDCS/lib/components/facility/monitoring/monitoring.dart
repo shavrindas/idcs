@@ -17,20 +17,39 @@ class MonitoringCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 제어 가능한(OnConfirm이 있는) 카드는 정적 정보 카드보다 시각적으로 한 단계 부각시킨다.
+    final bool isControl = OnConfirm != null;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: isControl ? AppColors.primary.withValues(alpha: 0.18) : AppColors.outline),
+        boxShadow: isControl ? AppShadows.soft : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.3),
+          Row(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.3),
+              ),
+              if (isControl) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('제어', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 12),
           // 독립된 StatefulWidget으로 개별 Row 생성

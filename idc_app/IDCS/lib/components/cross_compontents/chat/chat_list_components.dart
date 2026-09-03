@@ -78,14 +78,21 @@ class ChatRoomListBox extends StatelessWidget {
         itemBuilder: (context, index) {
           final room = rooms[index];
           final isPinned = room['sort_priority'] < 4;
+          final String roomName = room['room_name'] ?? '';
+          final bool isGroup = room['type'] == 'GROUP';
           return ListTile(
             tileColor: isPinned ? AppColors.primary.withValues(alpha: 0.05) : null,
             leading: Stack(
               clipBehavior: Clip.none,
               children: [
                 CircleAvatar(
-                  backgroundColor: room['type'] == 'FACILITY' ? AppColors.primary : AppColors.textSecondary,
-                  child: Icon(room['type'] == 'GROUP' ? Icons.group_rounded : Icons.person_rounded, color: Colors.white, size: 20),
+                  backgroundColor: room['type'] == 'FACILITY' ? AppColors.primary : AppColors.primaryDark,
+                  child: isGroup
+                      ? const Icon(Icons.group_rounded, color: Colors.white, size: 20)
+                      : Text(
+                          roomName.isNotEmpty ? roomName.substring(0, 1) : '?',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                        ),
                 ),
                 if (isPinned)
                   const Positioned(
@@ -94,7 +101,7 @@ class ChatRoomListBox extends StatelessWidget {
                   ),
               ],
             ),
-            title: Text(room['room_name'], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
+            title: Text(roomName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
             subtitle: Text(
               room['last_message'],
               maxLines: 1,
