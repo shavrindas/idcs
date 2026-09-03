@@ -150,40 +150,52 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('계정 생성 페이지')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            StandardSignupBox(
-              emailController: _emailController,
-              passwordController: _passwordController,
-              nameController: _nameController,
-              phoneController: _phoneController,
-              onSignupPressed: _handleGeneralSignup, // 기존 로직
-            ),
-            const SizedBox(height: 16),
-
-            SocialSignupBox(
-              onSocialSignupPressed: _handleSocialSignup,
-            ),
-
-            // Box #3: _showAppleFallback이 true일 때만 화면에 노출됨
-            if (_showAppleFallback) ...[
-              const SizedBox(height: 16),
-              AppleEmailFallbackBox(
-                fallbackEmailController: _fallbackEmailController,
-                onSubmit: _handleAppleFallbackSubmit,
-                onCancel: () {
-                  setState(() {
-                    _showAppleFallback = false; // 취소 시 다시 닫음
-                    _fallbackEmailController.clear();
-                  });
-                },
+      appBar: AppBar(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Text('계정 만들기', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 6),
+              Text(
+                '아래 정보를 입력하고 계정을 생성해주세요.',
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-            ]
-          ],
+              const SizedBox(height: 32),
+
+              StandardSignupBox(
+                emailController: _emailController,
+                passwordController: _passwordController,
+                nameController: _nameController,
+                phoneController: _phoneController,
+                onSignupPressed: _handleGeneralSignup, // 기존 로직
+              ),
+              const SizedBox(height: 20),
+
+              SocialSignupBox(
+                onSocialSignupPressed: _handleSocialSignup,
+              ),
+
+              // Box #3: _showAppleFallback이 true일 때만 화면에 노출됨
+              if (_showAppleFallback) ...[
+                const SizedBox(height: 16),
+                AppleEmailFallbackBox(
+                  fallbackEmailController: _fallbackEmailController,
+                  onSubmit: _handleAppleFallbackSubmit,
+                  onCancel: () {
+                    setState(() {
+                      _showAppleFallback = false; // 취소 시 다시 닫음
+                      _fallbackEmailController.clear();
+                    });
+                  },
+                ),
+              ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

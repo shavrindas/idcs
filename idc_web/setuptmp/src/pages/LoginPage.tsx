@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { apiService } from '../services/apiService'; // API 서비스 연동 필요
+import { apiService } from '../services/apiService';
 
 export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -23,27 +23,26 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // 실제 API 호출로 대체 (예: await apiService.webLogin(email, password))
-      // 테스트용 Mock 데이터:
-      const mockResponse = {
-        user: {
-            id: 1,
-            email,
-            name: email.includes('admin') ? '관리자' : '일반 유저',
-            role: email.includes('admin') ? 'ADMIN' : 'USER'
-        }
+      const loginRes = await apiService.login(email, password);
+      const profile = await apiService.getUserProfile(loginRes.user_id);
+
+      const user = {
+        id: loginRes.user_id,
+        email,
+        name: profile.name,
+        role: loginRes.role,
       };
 
-      onLogin(mockResponse.user);
+      onLogin(user);
 
       // 권한별 리다이렉트
-      if (mockResponse.user.role === 'ADMIN' || mockResponse.user.role === 'DEVELOPER') {
+      if (user.role === 'ADMIN' || user.role === 'DEVELOPER') {
         navigate('/main');
       } else {
         navigate('/viewer');
       }
-    } catch (error) {
-      alert('로그인 실패');
+    } catch (error: any) {
+      alert(error.message || '로그인 실패');
     }
   };
 

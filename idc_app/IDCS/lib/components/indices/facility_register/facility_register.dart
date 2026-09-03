@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #2: 시설 접근 코드 입력 및 등록 박스
 class FacilityInputBox extends StatelessWidget {
@@ -13,30 +14,48 @@ class FacilityInputBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const SizedBox(width: 100, child: Text('시설 접근 코드', style: TextStyle(color: Colors.amber))),
-              Expanded(
-                child: TextField(
-                  controller: codeController,
-                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
-                ),
-              ),
-            ],
-          ),
+          const Text('시설 등록', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           const SizedBox(height: 12),
-          ElevatedButton(onPressed: onSubmit, child: const Text('버튼(submit) 시설 등록')),
+          TextField(
+            controller: codeController,
+            decoration: const InputDecoration(
+              labelText: '시설 접근 코드',
+              prefixIcon: Icon(Icons.qr_code_outlined),
+            ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton(onPressed: onSubmit, child: const Text('시설 등록')),
           if (collapseMessage.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 2)),
-              child: Text(collapseMessage, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black)),
+              width: double.infinity,
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      collapseMessage,
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ]
         ],
@@ -55,15 +74,19 @@ class FacilityListEditBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('시설 리스트', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+          const Text('등록된 시설', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
           const SizedBox(height: 12),
           if (facilities.isEmpty)
-            const Text('등록된 시설이 없습니다.', style: TextStyle(color: Colors.grey)),
+            const Text('등록된 시설이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
           ...facilities.map((fac) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -71,21 +94,28 @@ class FacilityListEditBox extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-                      child: Text(fac['name']),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.outline),
+                      ),
+                      child: Text(fac['name'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton(
+                  OutlinedButton(
                     onPressed: () => onUnlink(fac['id']),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red[900]),
-                    child: const Text('해제', style: TextStyle(color: Colors.white)),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 44),
+                      foregroundColor: AppColors.error,
+                      side: BorderSide(color: AppColors.error.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text('해제'),
                   ),
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
