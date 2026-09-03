@@ -79,7 +79,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
   }
 
   void onPressed(int facilityId) {
-    context.push('/facility_nav/${widget.userId}/$facilityId');
+    context.push('/facility/${widget.userId}/$facilityId/monitoring');
   }
 
   @override

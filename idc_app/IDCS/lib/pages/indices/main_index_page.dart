@@ -86,7 +86,7 @@ class _MainIndexPageState extends State<MainIndexPage> {
               facilities: _facilities,
               onFacilityPressed: (facilityId) {
                 // 터치 시 시설 라우팅용 nav 페이지로 이동
-                context.push('/facility_nav/${widget.userId}/$facilityId');
+                context.push('/facility/${widget.userId}/$facilityId/monitoring');
               },
             ),
           ],

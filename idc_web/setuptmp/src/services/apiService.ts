@@ -1,11 +1,42 @@
 // const BASE_URL = 'http://127.0.0.1:8000/api';
 // const BASE_URL = 'http://localhost:8000/api';
-const BASE_URL = 'http://192.168.29.159:8000/api';
+// const BASE_URL = 'http://192.168.29.159:8000/api';
+const BASE_URL = 'http://211.55.127.239/api';
 
 
 
 
 export const apiService = {
+  // 인증
+  login: async (email: string, password: string, keepLogin: boolean = false) => {
+    let res: Response;
+    try {
+      res = await fetch(`${BASE_URL}/auth/login/general`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, keep_login: keepLogin }),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      throw new Error(`서버(${BASE_URL})에 연결할 수 없습니다. 백엔드 주소를 확인해주세요.`);
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || '로그인에 실패했습니다.');
+    }
+    return res.json();
+  },
+  getUserProfile: async (userId: number) => {
+    let res: Response;
+    try {
+      res = await fetch(`${BASE_URL}/auth/${userId}/profile`, { signal: AbortSignal.timeout(8000) });
+    } catch {
+      throw new Error(`서버(${BASE_URL})에 연결할 수 없습니다. 백엔드 주소를 확인해주세요.`);
+    }
+    if (!res.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
+    return res.json();
+  },
+
   getFacilities: async () => {
     const res = await fetch(`${BASE_URL}/facilities/1`);
     return res.json();

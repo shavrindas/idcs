@@ -19,7 +19,7 @@ import 'package:idcs/pages/common/login_page.dart';
 import 'package:idcs/pages/common/signup_page.dart';
 import 'package:idcs/pages/common/find_id_page.dart';
 import 'package:idcs/pages/facility/monitoring//monitoring_room.dart';
-import 'package:idcs/pages/facility/facility_temp_nav_page.dart';
+import 'package:idcs/pages/facility/facility_shell_page.dart';
 import 'package:idcs/pages/facility/monitoring/monitoring_page.dart';
 import 'package:idcs/pages/indices/account_edit_page.dart';
 import 'package:idcs/pages/facility/facility_alarm_page.dart';
