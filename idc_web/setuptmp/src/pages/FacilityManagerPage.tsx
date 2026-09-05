@@ -204,7 +204,8 @@ export const FacilityManagerPage: React.FC = () => {
       </div>
 
       {/* 2. 시설/호실/포인트롤 매니저 3단 레이아웃 */}
-      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0 }}>
+      {/* 세 패널의 최소 너비 합이 창 너비보다 커지면 전체 페이지 대신 이 영역만 가로 스크롤되도록 함 */}
+      <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0, overflowX: 'auto' }}>
 
         {/* [1열] 시설 관리 패널 */}
         <div className="card" style={{ flex: 1, minWidth: 260, display: 'flex', flexDirection: 'column', gap: 10, minHeight: 0 }}>
@@ -302,7 +303,7 @@ export const FacilityManagerPage: React.FC = () => {
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            <span className="chip" style={{ fontSize: 10, padding: '1px 6px' }}>{role.short_name || 'N/A'}</span>
+                            <span className="chip" style={{ fontSize: 10, padding: '1px 6px', background: 'var(--surface)' }}>{role.short_name || 'N/A'}</span>
                             <span style={{ fontWeight: 600 }}>{role.display_name || role.role_name}</span>
                             <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>({role.role_name})</span>
                           </div>

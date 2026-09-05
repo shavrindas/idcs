@@ -59,6 +59,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'IDCool Systems Routing',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
       localizationsDelegates: const [
