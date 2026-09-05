@@ -7,73 +7,71 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:idcs/theme/app_theme.dart';
 
-/// Box #1: 차트 검색 스코프 박스 (명시적 기간 설정)
-class ChartSearchScopeBox extends StatelessWidget {
-  final DateTime startTime;
-  final DateTime endTime;
-  final String autoScale; // 자동 계산된 단위를 보여주기 위함
-  final VoidCallback onSelectStartTime;
-  final VoidCallback onSelectEndTime;
-  final VoidCallback onSearch;
+/// Box #1: 차트 필터 박스 (해상도 및 조회 기간 설정)
+class ChartFilterBox extends StatelessWidget {
+  // [수정: 데이터 타입 종속성 해제]
+  // chart_group_table의 구조와 그룹핑이 단일 데이터 타입(temp, gear 등)을 가리지 않고
+  // 복합적인 데이터 포인트 롤을 한 번에 렌더링할 수 있도록 변경되었습니다.
+  // 이에 따라 기존에 존재하던 currentDataType 및 onDataTypeChanged 파라미터를 완전히 제거했습니다.
+  final String currentScale;
+  final String currentTimeRange;
+  final Function(String) onScaleChanged;
+  final Function(String) onTimeRangeChanged;
+  final VoidCallback onApply;
 
-  const ChartSearchScopeBox({
+  const ChartFilterBox({
     super.key,
-    required this.startTime,
-    required this.endTime,
-    required this.autoScale,
-    required this.onSelectStartTime,
-    required this.onSelectEndTime,
-    required this.onSearch,
+    required this.currentScale,
+    required this.currentTimeRange,
+    required this.onScaleChanged,
+    required this.onTimeRangeChanged,
+    required this.onApply,
   });
-
-  String _formatDate(DateTime dt) {
-    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: '조회 기간',
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          '단위: $autoScale',
-          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 11),
-        ),
-      ),
+      title: '조회 조건',
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed: onSelectStartTime,
-              icon: const Icon(Icons.calendar_today_outlined, size: 15),
-              label: Text(_formatDate(startTime), style: const TextStyle(fontSize: 13)),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+            child: DropdownButtonFormField<String>(
+              value: currentScale,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: '해상도'),
+              items: const [
+                DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: (val) { if (val != null) onScaleChanged(val); },
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text('~', style: TextStyle(color: AppColors.textSecondary)),
-          ),
+          const SizedBox(width: 8),
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed: onSelectEndTime,
-              icon: const Icon(Icons.calendar_today_outlined, size: 15),
-              label: Text(_formatDate(endTime), style: const TextStyle(fontSize: 13)),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+            child: DropdownButtonFormField<String>(
+              value: currentTimeRange,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: '조회 기간'),
+              items: const [
+                DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
-            height: 44,
+            height: 58,
             child: ElevatedButton(
-              onPressed: onSearch,
-              style: ElevatedButton.styleFrom(minimumSize: const Size(64, 44)),
-              child: const Text('검색'),
+              onPressed: onApply,
+              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
+              child: const Text('적용'),
             ),
           ),
         ],
@@ -84,8 +82,8 @@ class ChartSearchScopeBox extends StatelessWidget {
 
 /// Box #2: 데이터 포인트(시리즈) 선택 박스
 class ChartSeriesBox extends StatelessWidget {
-  final List<Map<String, dynamic>> availableGroups;
-  final int? selectedGroupId;
+  final List<Map<String, dynamic>> availableGroups; // 이제 개별 role이 아닌 Group 리스트를 받습니다.
+  final int? selectedGroupId; // 라디오 버튼처럼 단일 선택으로 변경 (차트 하나당 한 그룹)
   final Function(int) onGroupSelected;
 
   const ChartSeriesBox({
@@ -129,102 +127,58 @@ class ChartSeriesBox extends StatelessWidget {
 }
 
 /// Box #3: 차트 렌더링 캔버스 영역
-class ChartCanvasBox extends StatefulWidget {
+class ChartCanvasBox extends StatelessWidget {
   final Map<String, dynamic>? chartData;
   final bool isLoading;
-  final bool isPanMode;
-  // 검색 기준 시간을 직접 받아와서 축을 고정시킴
-  final DateTime searchedStartTime;
-  final DateTime searchedEndTime;
 
-  const ChartCanvasBox({
-    super.key,
-    required this.chartData,
-    required this.isLoading,
-    required this.searchedStartTime,
-    required this.searchedEndTime,
-    this.isPanMode = true,
-  });
-
-  @override
-  State<ChartCanvasBox> createState() => ChartCanvasBoxState();
-}
-
-class ChartCanvasBoxState extends State<ChartCanvasBox> {
-  double? _currentMinX;
-  double? _currentMaxX;
-
-  late double _baseMinX;
-  late double _baseMaxX;
-
-  double _lastMinX = 0;
-  double _lastMaxX = 0;
-  double _startFocalPoint = 0;
-
-  void resetViewport() {
-    setState(() {
-      _currentMinX = _baseMinX;
-      _currentMaxX = _baseMaxX;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _calculateBaseBounds();
-  }
-
-  @override
-  void didUpdateWidget(covariant ChartCanvasBox oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.searchedStartTime != oldWidget.searchedStartTime ||
-        widget.searchedEndTime != oldWidget.searchedEndTime ||
-        widget.chartData != oldWidget.chartData) {
-      _calculateBaseBounds();
-    }
-  }
-
-  void _calculateBaseBounds() {
-    // 데이터 속 포인트 시간과 무관하게 검색 기간으로 X축 영역을 완벽히 고정
-    _baseMinX = widget.searchedStartTime.millisecondsSinceEpoch.toDouble();
-    _baseMaxX = widget.searchedEndTime.millisecondsSinceEpoch.toDouble();
-
-    _currentMinX = _baseMinX;
-    _currentMaxX = _baseMaxX;
-  }
-
-  static const List<Color> _seriesColors = [
-    AppColors.primary,
-    Color(0xFFE0575B),
-    Color(0xFF2FAE66),
-    Color(0xFFE0A32E),
-    Color(0xFF9B6BEA),
-    Color(0xFF16A6A6),
-  ];
+  const ChartCanvasBox({super.key, required this.chartData, required this.isLoading});
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isLoading) {
+    if (isLoading) {
       return _buildContainer(child: const Center(child: CircularProgressIndicator()));
     }
 
-    // 데이터가 없어도 에러 메시지를 띄우지 않고 빈 배열로 그리드를 그려주기 위해 안전하게 호출
-    final List<dynamic> datasets = widget.chartData?['data']?['datasets'] ?? [];
-    List<LineChartBarData> lineBars = [];
+    if (chartData == null || chartData!['data']['datasets'] == null || (chartData!['data']['datasets'] as List).isEmpty) {
+      return _buildContainer(
+        child: const Center(
+          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        ),
+      );
+    }
 
+    // [수정] 백엔드에서 data_type을 제거했으므로 해당 변수 추출(String dataType = ...) 구문을 삭제했습니다.
+    final List<dynamic> datasets = chartData!['data']['datasets'];
+
+    List<LineChartBarData> lineBars = [];
+    double minX = double.infinity;
+    double maxX = -double.infinity;
     double minY = double.infinity;
     double maxY = -double.infinity;
 
+    final List<Color> colors = [
+      AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
+    ];
+
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
-      final List<dynamic> dataPoints = ds['data'] ?? [];
+      final List<dynamic> dataPoints = ds['data'];
       List<FlSpot> spots = [];
+
+      // [유저 예상 반영] target_value, target_low_limit 등이 Null일 수 있으므로 파싱 방어 추가
+      // (이 값들은 향후 어노테이션 배경색을 칠할 때 활용될 예정입니다.)
+      final String? rawLow = ds['target_low_limit'];
+      final String? rawHigh = ds['target_high_limit'];
+      final double? targetLow = rawLow != null ? double.tryParse(rawLow) : null;
+      final double? targetHigh = rawHigh != null ? double.tryParse(rawHigh) : null;
 
       for (var point in dataPoints) {
         final DateTime dt = DateTime.parse(point['timestamp']).toLocal();
         final double x = dt.millisecondsSinceEpoch.toDouble();
 
         double y = 0.0;
+
+        // [수정] 전역 dataType 대신 개별 포인트 내부의 key(mean vs status) 존재 여부로 파악합니다.
         if (point.containsKey('mean')) {
           y = (point['mean'] as num?)?.toDouble() ?? 0.0;
         } else if (point.containsKey('status')) {
@@ -232,6 +186,9 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
         }
 
         spots.add(FlSpot(x, y));
+
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
         if (y < minY) minY = y;
         if (y > maxY) maxY = y;
       }
@@ -241,8 +198,8 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: _seriesColors[i % _seriesColors.length],
-            barWidth: 2.4,
+            color: colors[i % colors.length],
+            barWidth: 2,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
@@ -251,7 +208,6 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
       }
     }
 
-    // 데이터가 없어 무한대일 경우 기본 Y축 설정 (빈 공간 렌더링용)
     if (minY == double.infinity || maxY == -double.infinity) {
       minY = 0; maxY = 10;
     } else if (minY == maxY) {
@@ -261,139 +217,78 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
       minY -= padding; maxY += padding;
     }
 
-    Widget chartWidget = LineChart(
-      LineChartData(
-        minX: _currentMinX ?? _baseMinX,
-        maxX: _currentMaxX ?? _baseMaxX,
-        minY: minY,
-        maxY: maxY,
-        lineBarsData: lineBars,
-        clipData: const FlClipData.all(),
-        lineTouchData: LineTouchData(
-          enabled: !widget.isPanMode,
-          handleBuiltInTouches: !widget.isPanMode,
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipItems: (touchedSpots) {
-              return touchedSpots.map((spot) {
-                final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
-                final timeStr = DateFormat('MM-dd HH:mm').format(dt);
-                return LineTooltipItem(
-                  '$timeStr\n${spot.y.toStringAsFixed(1)}',
-                  const TextStyle(color: Colors.white, fontSize: 12),
-                );
-              }).toList();
-            },
-          ),
-        ),
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: true,
-          getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
-          getDrawingVerticalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
-        ),
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              getTitlesWidget: (value, meta) {
-                // 시작/종료 축에는 텍스트가 잘리지 않도록 비움
-                if (value == _baseMinX || value == _baseMaxX) return const SizedBox.shrink();
-                final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    DateFormat('HH:mm').format(dt),
-                    style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                  ),
-                );
-              },
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 40,
-              getTitlesWidget: (value, meta) {
-                return Text(
-                  value.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                );
-              },
-            ),
-          ),
-        ),
-        borderData: FlBorderData(show: true, border: Border.all(color: AppColors.outline)),
-      ),
-    );
-
-    if (widget.isPanMode) {
-      chartWidget = GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onScaleStart: (details) {
-          _lastMinX = _currentMinX ?? _baseMinX;
-          _lastMaxX = _currentMaxX ?? _baseMaxX;
-          _startFocalPoint = details.localFocalPoint.dx;
-        },
-        onScaleUpdate: (details) {
-          setState(() {
-            final double range = _lastMaxX - _lastMinX;
-            final double scale = details.scale;
-
-            final double dx = details.localFocalPoint.dx - _startFocalPoint;
-            final double timeShift = (range / 350) * dx;
-
-            double newMinX = _lastMinX - timeShift;
-            double newMaxX = _lastMaxX - timeShift;
-
-            if (scale != 1.0) {
-              final double newRange = range / scale;
-              final double diff = (range - newRange) / 2;
-              newMinX += diff;
-              newMaxX -= diff;
-            }
-
-            if (newMinX < _baseMinX) {
-              newMaxX += (_baseMinX - newMinX);
-              newMinX = _baseMinX;
-            }
-            if (newMaxX > _baseMaxX) {
-              newMinX -= (newMaxX - _baseMaxX);
-              newMaxX = _baseMaxX;
-            }
-            if (newMinX < _baseMinX) newMinX = _baseMinX;
-            if (newMaxX < newMinX + 60000) newMaxX = newMinX + 60000;
-
-            _currentMinX = newMinX;
-            _currentMaxX = newMaxX;
-          });
-        },
-        child: chartWidget,
+    if (lineBars.isEmpty) {
+      return _buildContainer(
+        child: const Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))),
       );
     }
 
     return _buildContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Text(
-                widget.isPanMode ? '탐색 모드' : '툴팁 모드',
-                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary, fontSize: 12),
+      child: Padding(
+        padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+        child: LineChart(
+          LineChartData(
+            minX: minX,
+            maxX: maxX,
+            minY: minY,
+            maxY: maxY,
+            lineBarsData: lineBars,
+            lineTouchData: LineTouchData(
+              touchTooltipData: LineTouchTooltipData(
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((spot) {
+                    final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
+                    final timeStr = DateFormat('MM-dd HH:mm').format(dt);
+                    return LineTooltipItem(
+                      '$timeStr\n${spot.y.toStringAsFixed(1)}',
+                      const TextStyle(color: Colors.white, fontSize: 12),
+                    );
+                  }).toList();
+                },
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16.0, top: 8.0),
-              child: chartWidget,
             ),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: true,
+              getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
+              getDrawingVerticalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  getTitlesWidget: (value, meta) {
+                    if (value == minX || value == maxX) return const SizedBox.shrink();
+                    final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        DateFormat('HH:mm').format(dt),
+                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    return Text(
+                      value.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                    );
+                  },
+                ),
+              ),
+            ),
+            borderData: FlBorderData(show: false),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -415,49 +310,19 @@ class ChartCanvasBoxState extends State<ChartCanvasBox> {
 
 /// Box #4: 차트 도구 박스 (제어 및 어노테이션 도구)
 class ChartToolBox extends StatelessWidget {
-  final bool isPanMode;
-  final VoidCallback onTogglePanMode;
-  final VoidCallback onResetViewport;
-
-  const ChartToolBox({
-    super.key,
-    required this.isPanMode,
-    required this.onTogglePanMode,
-    required this.onResetViewport,
-  });
+  const ChartToolBox({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.outline),
-      ),
+    return _SectionCard(
+      title: '탐색 도구',
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          IconButton(
-            icon: Icon(Icons.pan_tool_alt_outlined, color: isPanMode ? AppColors.primary : AppColors.textSecondary),
-            onPressed: onTogglePanMode,
-            tooltip: '이동 및 확대 모드',
-          ),
-          IconButton(
-            icon: const Icon(Icons.show_chart_rounded, color: AppColors.textSecondary),
-            onPressed: null,
-            tooltip: '기준선 (비활성)',
-          ),
-          IconButton(
-            icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary),
-            onPressed: null,
-            tooltip: '메모 (비활성)',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: AppColors.textPrimary),
-            onPressed: onResetViewport,
-            tooltip: '시점 초기화',
-          ),
+          const Spacer(),
+          IconButton(icon: const Icon(Icons.pan_tool_outlined, color: AppColors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
+          IconButton(icon: const Icon(Icons.show_chart_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '기준선 (비활성)'),
+          IconButton(icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
+          IconButton(icon: const Icon(Icons.refresh_rounded, color: AppColors.primary), onPressed: () {}, tooltip: '시점 초기화'),
         ],
       ),
     );

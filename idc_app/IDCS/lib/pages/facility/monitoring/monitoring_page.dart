@@ -31,9 +31,9 @@ class _MonitoringPageState extends State<MonitoringPage> {
   Map<String, String> realtempData = {'H_COMP': 'NA', '고내온도_#1': 'NA', '설정값_#1': 'NA', '편차값_#1': 'NA', 'ZERO_#1': 'NA'};
   Map<String, String> deforestData = {'제상용 전자변': 'NA', '제상타임_#1': 'NA', '싸이클_#1': 'NA', '시스템분_#1': 'NA', '시스템시간_#1': 'NA'};
   Map<String, String> emergencyData = {'CINT': 'NA', 'HIGH': 'NA', 'UF/OCR': 'NA', '감금알람': 'NA', '토출온도이상': 'NA', '가스부족': 'NA', '온도센서이상': 'NA', '역상방지이상': 'NA', 'LOW 스위치': 'NA', '과열TIC': 'NA', 'ARLAM': 'NA', 'RESET': 'NA'};
-  Map<String, String> inverterData = {'Hz_#1': 'NA', 'KW_#1': 'NA', '출력전압_#1': 'NA', '출력전류_#1': 'NA', '출력주파수_#1': 'NA'};
+  Map<String, String> inverterData = {'인버터 에러': 'NA', 'Hz_#1': 'NA', 'KW_#1': 'NA', '출력전압_#1': 'NA', '출력전류_#1': 'NA', '출력주파수_#1': 'NA'};
   Map<String, String> equipmentData = {'토출온도_#1': 'NA', '고압_#1': 'NA', '저압_#1': 'NA'};
-  Map<String, String> controlData = {'운전SW': 'NA', '룸온도스위치': 'NA', '방열기 팬 #1': 'NA', '방열기 팬 #2': 'NA', '액 전자변': 'NA', '전자변': 'NA', '쿨러 팬': 'NA', '아날로그TC': 'NA', '쿨러 팬 자동여부': 'NA', '히터정지': 'NA', '초기지연': 'NA', '콤프지연': 'NA', '쿨러지연': 'NA', '수동제상': 'NA', '컴퓨터 S/W': 'NA', '운전시간_#1': 'NA', '운전시간만_#1': 'NA', '초기지연_#1': 'NA', 'H_콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA', '초기지연_#1': 'NA', '콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA'};
+  Map<String, String> controlData = {'운전SW': 'NA', '룸온도스위치': 'NA', '방열기 팬 #1': 'NA', '방열기 팬 #2': 'NA', '액 전자변': 'NA', '전자변': 'NA', '쿨러 팬': 'NA', '아날로그TC': 'NA', '쿨러 팬 자동여부': 'NA', '히터정지': 'NA', '초기지연': 'NA', '콤프지연': 'NA', '쿨러지연': 'NA', '수동제상': 'NA', '컴퓨터 S/W': 'NA', '운전시간_#1': 'NA', '운전시간만_#1': 'NA', '초기지연_#1': 'NA', 'H_콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA'};
   static const Map<String, String> deviceKeyMap = {
     'control_runsw': '운전SW',
     'emergency_cint': 'CINT',
@@ -45,7 +45,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     'emergency_tempsensor': '온도센서이상',
     'emergency_defemg': '역상방지이상',
     'emergency_lowsw': 'LOW 스위치',
-    'control_hottic': '과열TIC',
+    'emergency_hottic': '과열TIC',
     'control_roomtemp': '룸온도스위치',
     'temp_comp': 'H_COMP',
     'control_cffan1': '방열기 팬 #1',
@@ -64,6 +64,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
     'control_mdf': '수동제상',
     'control_sw': '컴퓨터 S/W',
     'emergency_emgreset': 'RESET',
+    'inverter_error': '인버터 에러',
     'equipment_temp1': '토출온도_#1',
     'temp_pv': '고내온도_#1',
     'temp_sv': '설정값_#1',
