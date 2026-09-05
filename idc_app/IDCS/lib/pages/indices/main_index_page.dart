@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/main_index/main_index_components.dart';
-import 'package:idcs/components/indices/global_nav_box.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 
@@ -52,46 +51,37 @@ class _MainIndexPageState extends State<MainIndexPage> {
     }
   }
 
-  // 2. '메인 색인 페이지로 이동' 버튼 클릭 시 상태 초기화 트리거
-  void _initializeState() {
-    // 필요한 데이터들을 다시 불러오거나 상태를 초기값으로 리셋합니다.
-    _fetchUserData();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('메인 색인 페이지 상태가 초기화되었습니다.')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('메인 색인 페이지')),
+      appBar: AppBar(
+        title: const Text('내 시설'),
+        actions: [
+          // 관리자는 웹 콘솔에서 시설을 관리하므로, 코드 등록은 일반 유저에게만 노출
+          if (!_isAdmin)
+            IconButton(
+              icon: const Icon(Icons.add_business_outlined),
+              tooltip: '시설 등록',
+              onPressed: () => context.push('/facility_register/${widget.userId}'),
+            ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator()) // 데이터 로딩 중 처리
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 분리된 공통 네비게이션 박스 적용
-            GlobalNavigationBox(
-              userId: widget.userId,
-              isAdmin: _isAdmin,
-              onStateInitialize: _initializeState, // 초기화 함수 주입
+          : RefreshIndicator(
+              onRefresh: _fetchUserData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16.0),
+                child: IntegratedFacilityBox(
+                  facilities: _facilities,
+                  onFacilityPressed: (facilityId) {
+                    // 터치 시 시설 라우팅용 nav 페이지로 이동
+                    context.push('/facility/${widget.userId}/$facilityId/monitoring');
+                  },
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-
-            // Box #2: 통합 시설 박스 (현재 빈 박스)
-            IntegratedFacilityBox(
-              facilities: _facilities,
-              onFacilityPressed: (facilityId) {
-                // 터치 시 시설 라우팅용 nav 페이지로 이동
-                context.push('/facility/${widget.userId}/$facilityId/monitoring');
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

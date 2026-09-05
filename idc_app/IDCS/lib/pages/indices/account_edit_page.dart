@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
 import 'package:idcs/services/common/user_api_service.dart';
+import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/main.dart'; // AuthService 접근용
 
 class PersonalPage extends StatefulWidget {
   final String userId;
@@ -104,6 +106,11 @@ class _PersonalPageState extends State<PersonalPage> {
     }
   }
 
+  void _handleLogout() {
+    AuthService.setUserId(null);
+    context.go('/login');
+  }
+
   Future<void> _handleSocialLink(String provider) async {
     if (_linkedProviders.contains(provider)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미 $provider 계정과 연동되어 있습니다.')));
@@ -116,7 +123,7 @@ class _PersonalPageState extends State<PersonalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('계정 수정 페이지')),
+      appBar: AppBar(title: const Text('내 정보')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -124,13 +131,53 @@ class _PersonalPageState extends State<PersonalPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1
-            GlobalNavigationBox(
-              userId: widget.userId,
-              isAdmin: _isAdmin,
-              onStateInitialize: _loadInitialData,
+            // 계정 요약 + 로그아웃
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.outline),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _nameController.text.isEmpty ? '이름 없음' : _nameController.text,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.textPrimary),
+                        ),
+                        Text('ID ${widget.userId}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  TextButton(onPressed: _handleLogout, child: const Text('로그아웃')),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
+
+            if (_isAdmin) ...[
+              _AdminLinkCard(
+                title: '통합 소요 기록',
+                icon: Icons.assignment_outlined,
+                onPressed: () => context.push('/total_board/${widget.userId}'),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Box #2
             UsernameEditBox(
@@ -161,6 +208,44 @@ class _PersonalPageState extends State<PersonalPage> {
               onLinkPressed: _handleSocialLink,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 관리자 전용 화면으로 이동하는 카드 (평소엔 탭이 아니라 여기서만 노출)
+class _AdminLinkCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _AdminLinkCard({required this.title, required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary, size: 20),
+            ],
+          ),
         ),
       ),
     );
