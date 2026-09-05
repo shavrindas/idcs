@@ -76,24 +76,62 @@ export const ChartViewerPage: React.FC<ViewerProps> = ({ user }) => {
   const [loadedRangeState, setLoadedRangeState] = useState<{ start: number, end: number } | null>(null);
   const [currentViewStart, setCurrentViewStart] = useState<number | null>(null);
 
+  // useEffect(() => { 
+  //   //apiService.getFacilities().then(res => setFacilities(res.facilities || [])); 
+  //   apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || [])); 
+  // }, [user.id]);
   useEffect(() => { 
-    //apiService.getFacilities().then(res => setFacilities(res.facilities || [])); 
-    apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || [])); 
-  }, [user.id]);
+    apiService.getFacilities().then(res => setFacilities(res.facilities || [])); 
+  }, []);
 
-
+  // useEffect(() => {
+  //   if (selectedFacility) {
+  //     apiService.getRooms(Number(selectedFacility)).then(res => {
+  //       const fetchedRooms = res.rooms || [];
+  //       setRooms(fetchedRooms);
+  //       if (fetchedRooms.length > 0) setSelectedRoom(fetchedRooms[0].id); 
+  //     });
+  //     setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); 
+  //     setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
+  //     loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
+  //   }
+  // }, [selectedFacility]); 
   useEffect(() => {
-    if (selectedFacility) {
-      apiService.getRooms(Number(selectedFacility)).then(res => {
-        const fetchedRooms = res.rooms || [];
-        setRooms(fetchedRooms);
-        if (fetchedRooms.length > 0) setSelectedRoom(fetchedRooms[0].id); 
-      });
-      setSelectedRoom(''); setGroups([]); setAllRoles([]); setSelectedGroupId(''); setCheckedRoles([]); 
-      setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
-      loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
+  if (!selectedFacility) {
+    setRooms([]);
+    setSelectedRoom('');
+    return;
+  }
+
+  // 1. 시설이 변경되었을 때 하위 데이터 먼저 초기화
+  setSelectedRoom('');
+  setRooms([]);
+  setGroups([]);
+  setAllRoles([]);
+  setSelectedGroupId('');
+  setCheckedRoles([]);
+  setChartDataSets([]);
+  setPosts([]);
+  setHiddenPosts([]);
+  setAlarms([]);
+  setSelectedPostViewerIds([]);
+  setInvertedBools([]);
+  loadedRangeRef.current = null;
+  setLoadedRangeState(null);
+  setCurrentViewStart(null);
+
+  // 2. 초기화 완료 후 방 목록 요청
+  apiService.getRooms(Number(selectedFacility)).then(res => {
+    const fetchedRooms = res.rooms || [];
+    setRooms(fetchedRooms);
+    if (fetchedRooms.length > 0) {
+      setSelectedRoom(fetchedRooms[0].id);
     }
-  }, [selectedFacility]); 
+  }).catch(err => {
+    console.error("호실 불러오기 실패:", err);
+  });
+}, [selectedFacility]);
+
 
   useEffect(() => {
     if (selectedFacility && selectedRoom) {

@@ -11,6 +11,7 @@ from config.db import get_db
 from src.models.User import User, UserRole
 from src.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.models.Monitoring import PointRole, RemoteControlLog, BoolLog, TemperatureNumericalLog, EquipmentStaticLog
+from src.models.Chat import ChatRoom, ChatParticipant
 import src.services.alarm as alarm_services
 import json
 import re
@@ -74,6 +75,17 @@ async def register_facility(user_id: int, req: RegisterFacilityRequest, db: Asyn
     new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
     db.add(new_mapping)
     await db.commit()
+
+    # 4. 해당하는 채팅방 가져오기
+    #chatroom_result = await db.excute(select(ChatRoom).where(ChatRoom.facility_id == facility.id))
+
+    # 5. 유저 채팅방 입장
+    
+
+    new_mapping = ChatRoom(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
+    await db.commit()
+
 
     return {"message": "시설이 성공적으로 등록되었습니다.", "facility_name": facility.name}
 
@@ -194,6 +206,8 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
                         iscommit = True
                     if iscommit:
                         await db.commit()
+                    
+                    break
 
             if "datas" in data_dict:
                 #역할 스캔
@@ -213,7 +227,7 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
 
             if "status" in data_dict.keys():
                 if "SUCCESS" in data_dict["status"]:
-                    datas = re.split(r"[._]", data_dict["request_id"])
+                    datas = re.split(r"[.]", data_dict["request_id"])
                     print(datas)
 
                     async for db in get_db():

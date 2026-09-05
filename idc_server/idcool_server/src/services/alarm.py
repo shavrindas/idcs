@@ -2,9 +2,10 @@
 from typing import Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import or_
 from fastapi import Depends
 from config.db import get_db
-from src.models.User import UserFcmToken
+from src.models.User import UserFcmToken, User, UserRole
 from src.models.Facility import FacilityUser, Facility
 from src.models.Monitoring import PointRole, Alarm
 import time
@@ -124,6 +125,7 @@ async def check_roles(facility_id: int, data_dict: Dict[str, str], roles):
                 triggered_alarms.append((k, role))
 
         # 2. 발생 대상이 있을 경우: DB에 Alarm 기록 저장 & FCM 토큰 조회
+        # 관리자는 조건과 관계 없이 가능하게 해야 함
         if triggered_alarms:
             facility_stmt = select(Facility.name).where(Facility.id == facility_id)
             facility_res = await db.execute(facility_stmt)
@@ -154,8 +156,14 @@ async def check_roles(facility_id: int, data_dict: Dict[str, str], roles):
             # 2-2. FCM 토큰 1회 조회 (JOIN)
             stmt_token = (
                 select(UserFcmToken.fcm_token)
-                .join(FacilityUser, FacilityUser.user_id == UserFcmToken.user_id)
-                .where(FacilityUser.facility_id == facility_id)
+                .join(User, User.id == UserFcmToken.user_id)
+                .outerjoin(FacilityUser, FacilityUser.user_id == UserFcmToken.user_id)
+                .where(
+                    or_(
+                        FacilityUser.facility_id == facility_id,
+                        User.role == UserRole.ADMIN,
+                    )           
+                )
                 .distinct()
             )
             res_token = await db.execute(stmt_token)
