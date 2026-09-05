@@ -5,9 +5,15 @@ import 'package:idcs/theme/app_theme.dart';
 class IntegratedFacilityBox extends StatelessWidget {
   final List<dynamic> facilities;
   final Function(int) onFacilityPressed;
+  final String label;
+  final String emptyMessage;
 
   const IntegratedFacilityBox({
-    super.key, required this.facilities, required this.onFacilityPressed
+    super.key,
+    required this.facilities,
+    required this.onFacilityPressed,
+    this.label = '내 시설',
+    this.emptyMessage = '조회할 수 있는 시설이 없습니다.',
   });
 
   @override
@@ -15,9 +21,9 @@ class IntegratedFacilityBox extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          '내 시설',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.4),
         ),
         const SizedBox(height: 10),
 
@@ -34,7 +40,7 @@ class IntegratedFacilityBox extends StatelessWidget {
               children: [
                 Icon(Icons.domain_disabled_outlined, color: AppColors.textSecondary.withValues(alpha: 0.6), size: 28),
                 const SizedBox(height: 8),
-                const Text('조회할 수 있는 시설이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                Text(emptyMessage, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               ],
             ),
           )
