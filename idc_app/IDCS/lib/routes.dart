@@ -83,7 +83,11 @@ final GoRouter appRouter = GoRouter(
           : null,
       routes: [
         StatefulShellRoute.indexedStack(
-          builder: (context, state, navigationShell) => FacilityShellPage(navigationShell: navigationShell),
+          builder: (context, state, navigationShell) => FacilityShellPage(
+            userId: state.pathParameters['userId']!,
+            facilityId: state.pathParameters['facilityId']!,
+            navigationShell: navigationShell,
+          ),
           branches: [
             StatefulShellBranch(routes: [
               GoRoute(
