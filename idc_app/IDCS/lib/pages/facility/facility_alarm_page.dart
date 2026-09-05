@@ -80,7 +80,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text('시설 ID: ${widget.facilityId} 알람 페이지')),
+      appBar: AppBar(title: const Text('알람')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
