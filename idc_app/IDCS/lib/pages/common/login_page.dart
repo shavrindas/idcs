@@ -65,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // 2. 메인 색인 페이지로 라우팅 (이제 리다이렉트에 걸리지 않고 정상 이동!)
-      context.go('/main_index/$userId');
+      context.go('/index/$userId/home');
 
     } catch (e) {
       if (!mounted) return;
@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
         SnackBar(content: Text(result['message'])),
       );
 
-      context.go('/main_index/$userId');
+      context.go('/index/$userId/home');
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

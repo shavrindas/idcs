@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/indices/facility_register/facility_register.dart';
-import 'package:idcs/components/indices/global_nav_box.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 
@@ -86,10 +85,6 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GlobalNavigationBox(
-              userId: widget.userId, isAdmin: _isAdmin, onStateInitialize: _loadData,
-            ),
-            const SizedBox(height: 16),
             FacilityInputBox(
               codeController: _codeController, onSubmit: _handleRegister, collapseMessage: _collapseMessage,
             ),

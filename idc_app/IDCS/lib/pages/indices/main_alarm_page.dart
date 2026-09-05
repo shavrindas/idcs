@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:idcs/components/indices/global_nav_box.dart';
-import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/components/indices/main_alarm/user_alarm_components.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
@@ -15,7 +13,6 @@ class MainAlarmPage extends StatefulWidget {
 }
 
 class _MainAlarmPageState extends State<MainAlarmPage> {
-  bool _isAdmin = false;
   bool _isLoading = true;
   List<dynamic> _alarms = [];
 
@@ -28,7 +25,6 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
   @override
   void initState() {
     super.initState();
-    _loadRole();
     _fetchUserData();
   }
 
@@ -59,21 +55,6 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
         setState(() {
           _isLoading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _loadRole() async {
-    try {
-      final role = await UserApiService.getUserRole(widget.userId);
-      if (mounted) {
-        setState(() {
-          _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
       }
     }
   }
@@ -115,7 +96,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('메인 알람 페이지')),
+      appBar: AppBar(title: const Text('알람')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -123,14 +104,6 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1: 글로벌 네비게이션
-            GlobalNavigationBox(
-              userId: widget.userId,
-              isAdmin: _isAdmin,
-              onStateInitialize: _loadRole,
-            ),
-            const SizedBox(height: 16),
-
             // 검색창 + 필터 드롭다운 레이아웃
             Row(
               children: [

@@ -11,14 +11,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dart';
-import 'package:idcs/components/indices/settings_page.dart';
 import 'package:idcs/pages/common/find_pw_page.dart';
 import 'package:idcs/pages/common/login_page.dart';
 import 'package:idcs/pages/common/signup_page.dart';
 import 'package:idcs/pages/common/find_id_page.dart';
 import 'package:idcs/pages/facility/monitoring//monitoring_room.dart';
 import 'package:idcs/pages/facility/facility_shell_page.dart';
+import 'package:idcs/pages/indices/user_shell_page.dart';
 import 'package:idcs/pages/facility/monitoring/monitoring_page.dart';
 import 'package:idcs/pages/indices/account_edit_page.dart';
 import 'package:idcs/pages/facility/facility_alarm_page.dart';
@@ -34,10 +33,7 @@ import 'package:idcs/pages/facility/chat/facility_chat_list_page.dart';
 import 'package:idcs/pages/facility/chat/chat_room_page.dart';
 import 'package:idcs/pages/facility/chart/facility_chart_page.dart';
 import 'pages/common/opening_page.dart';
-import 'package:idcs/pages/facility/facility_alarm_page.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:idcs/theme/app_theme.dart';
-import 'package:idcs/services/common/fcm_service.dart';
 
 
 part 'config.dart';

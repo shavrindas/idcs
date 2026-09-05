@@ -27,20 +27,48 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/find_pw', builder: (context, state) => const FindPwPage()),
     // GoRoute(path: '/reset_pw', builder: (context, state) => const ResetPwPage()),
 
-    // [main_indices] - 유저 ID 기반
-    GoRoute(path: '/main_index/:userId', builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!)),
+    // [index] - 유저 레벨 3개 섹션(홈/알람/내 정보) 하단 네비게이션 셸.
+    // 시설 셸과 동일한 이유로 상위 라우트가 :userId를 소유하고 브랜치는 상대 경로만 갖는다.
+    GoRoute(
+      path: '/index/:userId',
+      redirect: (context, state) => state.matchedLocation == state.uri.toString()
+          ? '${state.matchedLocation}/home'
+          : null,
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) => UserShellPage(navigationShell: navigationShell),
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'home',
+                builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'alarm',
+                builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!),
+              ),
+            ]),
+          ],
+        ),
+      ],
+    ),
+
+    // 자주 쓰지 않는 화면 - 셸 위로 풀스크린 push (시설 등록: 관리자 제외, 통합 소요기록: 관리자 전용)
     GoRoute(path: '/facility_register/:userId', builder: (context, state) => FacilityRegisterPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/main_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/user_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
     GoRoute(
       path: '/total_board/:userId',
       builder: (context, state) => TotalBoardPage(
         userId: state.pathParameters['userId']!,
       ),
     ),
-    // main_indices/[settings]
-    GoRoute(path: '/settings/:userId', builder: (context, state) => SettingsPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/personal/:userId', builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!)),
 
     // [facility] - 유저 ID & 시설 ID 기반
     // 시설 내부 5개 섹션(모니터링/차트/소요기록/메신저/알람) 하단 네비게이션 셸.
