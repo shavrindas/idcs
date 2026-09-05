@@ -12,7 +12,7 @@ DB_CONFIG = {
     "dbname": "idcool_database_v01",
     "user": "dev",
     "password": "devkey1",
-    "host": "211.55.127.239",
+    "host": "idcool-database-v01",
     "port": "5432"
 }
 
