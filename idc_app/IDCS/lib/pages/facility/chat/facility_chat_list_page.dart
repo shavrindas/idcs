@@ -103,7 +103,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('시설 ${widget.facilityId} 메신저')),
+      appBar: AppBar(title: const Text('메신저')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

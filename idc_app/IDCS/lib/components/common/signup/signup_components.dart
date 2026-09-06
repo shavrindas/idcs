@@ -1,8 +1,9 @@
 // 경로: lib/components/signup/signup_components.dart
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 일반 계정 생성 박스
-class StandardSignupBox extends StatelessWidget {
+class StandardSignupBox extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController nameController;
@@ -19,43 +20,62 @@ class StandardSignupBox extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildInputRow('이메일(필수)', emailController),
-          const SizedBox(height: 8),
-          _buildInputRow('비밀번호(필수)', passwordController, isObscure: true),
-          const SizedBox(height: 8),
-          _buildInputRow('아이디/이름(필수)', nameController),
-          const SizedBox(height: 8),
-          _buildInputRow('전화번호', phoneController),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: onSignupPressed,
-            child: const Text('버튼(submit) 계정 생성'),
-          ),
-        ],
-      ),
-    );
-  }
+  State<StandardSignupBox> createState() => _StandardSignupBoxState();
+}
 
-  Widget _buildInputRow(String label, TextEditingController controller, {bool isObscure = false}) {
-    return Row(
+class _StandardSignupBoxState extends State<StandardSignupBox> {
+  bool _obscurePassword = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(width: 100, child: Text(label, style: const TextStyle(fontSize: 13))),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            obscureText: isObscure,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              isDense: true,
+        TextField(
+          controller: widget.emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: '이메일',
+            prefixIcon: Icon(Icons.mail_outline_rounded),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: widget.passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: '비밀번호',
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                color: AppColors.textSecondary,
+              ),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: widget.nameController,
+          decoration: const InputDecoration(
+            labelText: '이름',
+            prefixIcon: Icon(Icons.badge_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: widget.phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            labelText: '전화번호 (선택)',
+            prefixIcon: Icon(Icons.phone_outlined),
+          ),
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: widget.onSignupPressed,
+          child: const Text('계정 생성'),
         ),
       ],
     );
@@ -70,34 +90,76 @@ class SocialSignupBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          ElevatedButton(
-            onPressed: () => onSocialSignupPressed('google'),
-            style: ElevatedButton.styleFrom(
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(24),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Expanded(child: Divider()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text('또는', style: Theme.of(context).textTheme.bodyMedium),
             ),
-            child: const Text('google'),
+            const Expanded(child: Divider()),
+          ],
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () => onSocialSignupPressed('google'),
+          icon: const _ProviderBadge(
+            label: 'G',
+            background: Color(0xFF4285F4),
           ),
-          ElevatedButton(
-            onPressed: () => onSocialSignupPressed('apple'),
-            style: ElevatedButton.styleFrom(
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(24),
-            ),
-            child: const Text('apple'),
+          label: const Text('Google로 계속하기'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(color: AppColors.outline),
+            alignment: Alignment.centerLeft,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => onSocialSignupPressed('apple'),
+          icon: const _ProviderBadge(
+            label: '',
+            background: Colors.black,
+            icon: Icons.apple,
+          ),
+          label: const Text('Apple로 계속하기'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(color: AppColors.outline),
+            alignment: Alignment.centerLeft,
+          ),
+        ),
+      ],
     );
   }
 }
 
+class _ProviderBadge extends StatelessWidget {
+  final String label;
+  final Color background;
+  final IconData? icon;
+
+  const _ProviderBadge({required this.label, required this.background, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 22,
+      height: 22,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+      child: icon != null
+          ? Icon(icon, size: 14, color: Colors.white)
+          : Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+    );
+  }
+}
 
 /// Box #3: 애플 로그인 이메일 누락 시 방어 팝업(콜랩스 박스)
 class AppleEmailFallbackBox extends StatelessWidget {
@@ -115,39 +177,38 @@ class AppleEmailFallbackBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.orangeAccent), // 방어 코드/입력 요청 의미
-        color: Colors.orange.withOpacity(0.05),
+        color: const Color(0xFFE0A32E).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0A32E).withValues(alpha: 0.35)),
       ),
-      padding: const EdgeInsets.all(12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            '애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrange,
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(width: 80, child: Text('이메일', style: TextStyle(fontSize: 13))),
+              const Icon(Icons.info_outline_rounded, color: Color(0xFFE0A32E), size: 20),
+              const SizedBox(width: 10),
               Expanded(
-                child: TextField(
-                  controller: fallbackEmailController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    hintText: 'example@domain.com',
-                  ),
+                child: Text(
+                  '애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.4),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+          TextField(
+            controller: fallbackEmailController,
+            decoration: const InputDecoration(
+              labelText: '이메일',
+              hintText: 'name@example.com',
+              prefixIcon: Icon(Icons.mail_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -155,7 +216,7 @@ class AppleEmailFallbackBox extends StatelessWidget {
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: onSubmit,
-                child: const Text('입력 완료 및 계정 생성'),
+                child: const Text('입력 완료'),
               ),
             ],
           ),

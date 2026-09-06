@@ -129,7 +129,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('시설 ${widget.facilityId} 데이터 차트')),
+      appBar: AppBar(title: const Text('데이터 차트')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

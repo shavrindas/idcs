@@ -34,7 +34,7 @@ class AuthInjectionBox extends StatelessWidget {
               AuthService.setUserId(userIdToInject);
 
               // 2. GoRouter를 활용하여 메인 색인 페이지로 이동 (id 파라미터 전달)
-              context.go('/main_index/$userIdToInject');
+              context.go('/index/$userIdToInject/home');
             },
             child: const Text('버튼(이동)'),
           ),

@@ -42,7 +42,7 @@ class CustomAuthInjectionBoxState extends State<CustomAuthInjectionBox> {
                 AuthService.setUserId(id);
 
                 // 2. 입력받은 id를 파라미터로 하여 메인 색인 페이지로 이동
-                context.go('/main_index/$id');
+                context.go('/index/$id/home');
               } else {
                 // 숫자가 아니거나 비어있을 경우 경고창
                 ScaffoldMessenger.of(context).showSnackBar(

@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'dart:math';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 차트 필터 박스 (해상도 및 조회 기간 설정)
 class ChartFilterBox extends StatelessWidget {
@@ -30,67 +30,49 @@ class ChartFilterBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return _SectionCard(
+      title: '조회 조건',
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Box 1: 데이터 스코프 필터', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
-          const SizedBox(height: 12),
-
-          // [수정: 데이터 타입 종속성 해제]
-          // 기존 데이터 타입 선택 드롭다운이 있던 위치입니다.
-          // 데이터 타입 구분이 사라졌으므로, 해상도와 조회 기간을 한 줄(Row)로 병합하여 UI를 간소화했습니다.
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: currentScale,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: '해상도',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
-                  ],
-                  onChanged: (val) { if (val != null) onScaleChanged(val); },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: currentTimeRange,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: '조회 기간',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
-                    DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
-                  ],
-                  onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: onApply,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                child: const Text('적용'),
-              ),
-            ],
+          Expanded(
+            child: DropdownButtonFormField<String>(
+              value: currentScale,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: '해상도'),
+              items: const [
+                DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: (val) { if (val != null) onScaleChanged(val); },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: DropdownButtonFormField<String>(
+              value: currentTimeRange,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: '조회 기간'),
+              items: const [
+                DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
+                DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
+              ],
+              onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 58,
+            child: ElevatedButton(
+              onPressed: onApply,
+              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
+              child: const Text('적용'),
+            ),
           ),
         ],
       ),
@@ -113,37 +95,38 @@ class ChartSeriesBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Box 2: 데이터 포인트 그룹 선택', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: availableGroups.map((group) {
-              final isSelected = selectedGroupId == group['group_id'];
-              return ChoiceChip(
-                label: Text(group['group_name']),
-                selected: isSelected,
-                onSelected: (bool selected) {
-                  if (selected) onGroupSelected(group['group_id']);
-                },
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+    return _SectionCard(
+      title: '데이터 그룹',
+      child: availableGroups.isEmpty
+          ? const Text('등록된 그룹이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))
+          : Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: availableGroups.map((group) {
+                final isSelected = selectedGroupId == group['group_id'];
+                return ChoiceChip(
+                  label: Text(group['group_name']),
+                  selected: isSelected,
+                  onSelected: (bool selected) {
+                    if (selected) onGroupSelected(group['group_id']);
+                  },
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  selectedColor: AppColors.primary,
+                  backgroundColor: AppColors.background,
+                  side: BorderSide(color: isSelected ? AppColors.primary : AppColors.outline),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                );
+              }).toList(),
+            ),
     );
   }
 }
 
-
 /// Box #3: 차트 렌더링 캔버스 영역
-
 class ChartCanvasBox extends StatelessWidget {
   final Map<String, dynamic>? chartData;
   final bool isLoading;
@@ -157,7 +140,11 @@ class ChartCanvasBox extends StatelessWidget {
     }
 
     if (chartData == null || chartData!['data']['datasets'] == null || (chartData!['data']['datasets'] as List).isEmpty) {
-      return _buildContainer(child: const Center(child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: Colors.grey))));
+      return _buildContainer(
+        child: const Center(
+          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        ),
+      );
     }
 
     // [수정] 백엔드에서 data_type을 제거했으므로 해당 변수 추출(String dataType = ...) 구문을 삭제했습니다.
@@ -170,7 +157,7 @@ class ChartCanvasBox extends StatelessWidget {
     double maxY = -double.infinity;
 
     final List<Color> colors = [
-      Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal
+      AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
     ];
 
     for (int i = 0; i < datasets.length; i++) {
@@ -231,93 +218,91 @@ class ChartCanvasBox extends StatelessWidget {
     }
 
     if (lineBars.isEmpty) {
-      return _buildContainer(child: const Center(child: Text('유효한 그래프 데이터가 없습니다.')));
+      return _buildContainer(
+        child: const Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+      );
     }
 
     return _buildContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('Box 3: 차트 캔버스 영역', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-          const Divider(),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16.0, top: 16.0),
-              child: LineChart(
-                LineChartData(
-                  minX: minX,
-                  maxX: maxX,
-                  minY: minY,
-                  maxY: maxY,
-                  lineBarsData: lineBars,
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
-                          final timeStr = DateFormat('MM-dd HH:mm').format(dt);
-                          return LineTooltipItem(
-                            '$timeStr\n${spot.y.toStringAsFixed(1)}',
-                            const TextStyle(color: Colors.white, fontSize: 12),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: true,
-                    getDrawingHorizontalLine: (value) => const FlLine(color: Colors.black12, strokeWidth: 1),
-                    getDrawingVerticalLine: (value) => const FlLine(color: Colors.black12, strokeWidth: 1),
-                  ),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          if (value == minX || value == maxX) return const SizedBox.shrink();
-                          final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              DateFormat('HH:mm').format(dt),
-                              style: const TextStyle(fontSize: 10, color: Colors.black54),
-                            ),
-                          );
-                        },
+      child: Padding(
+        padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+        child: LineChart(
+          LineChartData(
+            minX: minX,
+            maxX: maxX,
+            minY: minY,
+            maxY: maxY,
+            lineBarsData: lineBars,
+            lineTouchData: LineTouchData(
+              touchTooltipData: LineTouchTooltipData(
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((spot) {
+                    final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
+                    final timeStr = DateFormat('MM-dd HH:mm').format(dt);
+                    return LineTooltipItem(
+                      '$timeStr\n${spot.y.toStringAsFixed(1)}',
+                      const TextStyle(color: Colors.white, fontSize: 12),
+                    );
+                  }).toList();
+                },
+              ),
+            ),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: true,
+              getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
+              getDrawingVerticalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  getTitlesWidget: (value, meta) {
+                    if (value == minX || value == maxX) return const SizedBox.shrink();
+                    final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        DateFormat('HH:mm').format(dt),
+                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
                       ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toStringAsFixed(1),
-                            style: const TextStyle(fontSize: 10, color: Colors.black54),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: true, border: Border.all(color: Colors.black26)),
+                    );
+                  },
+                ),
+              ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    return Text(
+                      value.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                    );
+                  },
                 ),
               ),
             ),
+            borderData: FlBorderData(show: false),
           ),
-        ],
+        ),
       ),
     );
   }
 
+  // 차트 캔버스는 화면의 핵심 콘텐츠이므로 주변 설정 카드보다 한 단계 부각시킨다.
   Widget _buildContainer({required Widget child}) {
     return Container(
       height: 400,
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.soft,
+      ),
+      padding: const EdgeInsets.all(16.0),
       child: child,
     );
   }
@@ -329,17 +314,49 @@ class ChartToolBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+    return _SectionCard(
+      title: '탐색 도구',
       child: Row(
         children: [
-          const Text('Box 4: 도구 ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
           const Spacer(),
-          IconButton(icon: const Icon(Icons.pan_tool), onPressed: null, tooltip: '이동 (비활성)'),
-          IconButton(icon: const Icon(Icons.show_chart), onPressed: null, tooltip: '기준선 (비활성)'),
-          IconButton(icon: const Icon(Icons.text_fields), onPressed: null, tooltip: '메모 (비활성)'),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: () {}, tooltip: '시점 초기화'),
+          IconButton(icon: const Icon(Icons.pan_tool_outlined, color: AppColors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
+          IconButton(icon: const Icon(Icons.show_chart_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '기준선 (비활성)'),
+          IconButton(icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
+          IconButton(icon: const Icon(Icons.refresh_rounded, color: AppColors.primary), onPressed: () {}, tooltip: '시점 초기화'),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+  final Widget? trailing;
+
+  const _SectionCard({required this.title, required this.child, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
         ],
       ),
     );

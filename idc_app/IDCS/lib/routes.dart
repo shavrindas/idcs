@@ -27,37 +27,119 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/find_pw', builder: (context, state) => const FindPwPage()),
     // GoRoute(path: '/reset_pw', builder: (context, state) => const ResetPwPage()),
 
-    // [main_indices] - 유저 ID 기반
-    GoRoute(path: '/main_index/:userId', builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!)),
+    // [index] - 유저 레벨 3개 섹션(홈/알람/내 정보) 하단 네비게이션 셸.
+    // 시설 셸과 동일한 이유로 상위 라우트가 :userId를 소유하고 브랜치는 상대 경로만 갖는다.
+    GoRoute(
+      path: '/index/:userId',
+      redirect: (context, state) => state.matchedLocation == state.uri.toString()
+          ? '${state.matchedLocation}/home'
+          : null,
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) => UserShellPage(navigationShell: navigationShell),
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'home',
+                builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'alarm',
+                builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!),
+              ),
+            ]),
+          ],
+        ),
+      ],
+    ),
+
+    // 자주 쓰지 않는 화면 - 셸 위로 풀스크린 push (시설 등록: 관리자 제외, 통합 소요기록: 관리자 전용)
     GoRoute(path: '/facility_register/:userId', builder: (context, state) => FacilityRegisterPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/main_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/user_alarm/:userId', builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!)),
     GoRoute(
       path: '/total_board/:userId',
       builder: (context, state) => TotalBoardPage(
         userId: state.pathParameters['userId']!,
       ),
     ),
-    // main_indices/[settings]
-    GoRoute(path: '/settings/:userId', builder: (context, state) => SettingsPage(userId: state.pathParameters['userId']!)),
-    GoRoute(path: '/personal/:userId', builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!)),
 
     // [facility] - 유저 ID & 시설 ID 기반
-    GoRoute(path: '/facility_nav/:userId/:facilityId', builder: (context, state) => FacilityTempNavPage(userId: state.pathParameters['userId']!, facilityId: state.pathParameters['facilityId']!,)),
-
-
-
-
-    // 1. 시설 소요 기록 목록 페이지
+    // 시설 내부 5개 섹션(모니터링/차트/소요기록/메신저/알람) 하단 네비게이션 셸.
+    // go_router 제약상 브랜치 라우트 자체는 파라미터를 가질 수 없으므로,
+    // userId/facilityId는 상위 라우트가 소유하고 브랜치는 상대 경로(monitoring, chart 등)만 갖는다.
     GoRoute(
-      path: '/facility_board/:userId/:facilityId',
-      builder: (context, state) => FacilityBoardPage(
-        userId: state.pathParameters['userId']!,
-        facilityId: state.pathParameters['facilityId']!,
-      ),
+      path: '/facility/:userId/:facilityId',
+      // 하위 라우트(monitoring/chart/board/chat/alarm) 없이 이 경로만 단독으로
+      // 방문되는 경우는 없으므로(항상 구체적 탭 경로로 이동) 별도 redirect는 두지 않는다.
+      redirect: (context, state) => state.matchedLocation == state.uri.toString()
+          ? '${state.matchedLocation}/monitoring'
+          : null,
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) => FacilityShellPage(
+            userId: state.pathParameters['userId']!,
+            facilityId: state.pathParameters['facilityId']!,
+            navigationShell: navigationShell,
+          ),
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'monitoring',
+                builder: (context, state) => MonitoringRoom(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'chart',
+                builder: (context, state) => FacilityChartPage(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'board',
+                builder: (context, state) => FacilityBoardPage(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'chat',
+                builder: (context, state) => FacilityChatListPage(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'alarm',
+                builder: (context, state) => FacilityAlarmPage(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+          ],
+        ),
+      ],
     ),
 
-    // 2. 게시글 상세 페이지
+    // 1. 게시글 상세 페이지
     GoRoute(
       path: '/post_detail/:userId/:postId',
       builder: (context, state) => PostDetailPage(
@@ -86,7 +168,7 @@ final GoRouter appRouter = GoRouter(
 
     //여기서부터는 모니터링 관련
     //--------------------------------------------------------------------------------
-    // [facility_monitoring]
+    // [facility_monitoring] - 호실 상세(라이브 제어판). 셸 위로 풀스크린 push.
     GoRoute(
       path: '/facility_monitoring/:userId/:facilityId/:roomId',
       builder: (context, state) => MonitoringPage(
@@ -95,36 +177,9 @@ final GoRouter appRouter = GoRouter(
         roomId: state.pathParameters['roomId']!,
       ),
     ),
-
-    // [facility_room]
-    GoRoute(
-      path: '/facility_room/:userId/:facilityId',
-      builder: (context, state) => MonitoringRoom(
-        userId: state.pathParameters['userId']!,
-        facilityId: state.pathParameters['facilityId']!,
-      ),
-    ),
     //모니터링 끝-------------------------------------------------------------------
 
-    //알람 관련-------------------------------------------------------------------
-    // 1. 시설 알람 페이지
-    GoRoute(
-      path: '/facility_alarm/:userId/:facilityId',
-      builder: (context, state) => FacilityAlarmPage(
-        userId: state.pathParameters['userId']!,
-        facilityId: state.pathParameters['facilityId']!,
-      ),
-    ),
-
-    //알람 끝-------------------------------------------------------------------
-    // facility_chat
-    GoRoute(
-      path: '/chat_list/:userId/:facilityId',
-      builder: (context, state) => FacilityChatListPage(
-        userId: state.pathParameters['userId']!,
-        facilityId: state.pathParameters['facilityId']!,
-      ),
-    ),
+    // [chat_room] - 채팅방 상세. 셸 위로 풀스크린 push.
     GoRoute(
       path: '/chat_room/:userId/:roomId',
       builder: (context, state) => ChatRoomPage(
@@ -132,16 +187,6 @@ final GoRouter appRouter = GoRouter(
         roomId: int.parse(state.pathParameters['roomId']!),
       ),
     ),
-
-
-    GoRoute(
-      path: '/facility_chart/:userId/:facilityId',
-      builder: (context, state) => FacilityChartPage(
-        userId: state.pathParameters['userId']!,
-        facilityId: state.pathParameters['facilityId']!,
-      ),
-    ),
-
 
   ],
 );

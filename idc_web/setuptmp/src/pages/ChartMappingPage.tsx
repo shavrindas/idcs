@@ -119,7 +119,7 @@ export const ChartMappingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flex: 1, minHeight: 0, height: '100%', gap: 10 }}>
+    <div style={{ display: 'flex', flex: 1, minHeight: 0, height: '100%', gap: 12, padding: 24, boxSizing: 'border-box' }}>
       <LeftPanel
         facilities={facilities}
         rooms={rooms}
