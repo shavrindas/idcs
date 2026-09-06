@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:idcs/components/common/opening/open_nav.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/components/indices/main_index/main_index_components.dart';
 
@@ -50,21 +49,26 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('시설 ID: ${widget.facilityId} 라우팅')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            IntegratedFacilityBox(
-              facilities: _rooms,
-              onFacilityPressed: (roomId) {
-                // 터치 시 시설 라우팅용 nav 페이지로 이동
-                context.push('/facility_monitoring/${widget.userId}/${widget.facilityId}/$roomId');
-              }),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: const Text('호실 선택'), centerTitle: true),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  IntegratedFacilityBox(
+                    label: '호실 목록',
+                    emptyMessage: '등록된 호실이 없습니다.',
+                    facilities: _rooms,
+                    onFacilityPressed: (roomId) {
+                      // 터치 시 호실 상세 제어판으로 이동
+                      context.push('/facility_monitoring/${widget.userId}/${widget.facilityId}/$roomId');
+                    },
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

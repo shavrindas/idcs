@@ -83,7 +83,7 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('시설 ${widget.facilityId} 소요 기록')),
+      appBar: AppBar(title: const Text('소요 기록')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

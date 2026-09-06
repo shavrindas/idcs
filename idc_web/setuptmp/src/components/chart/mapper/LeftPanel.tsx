@@ -48,50 +48,37 @@ export const LeftPanel: React.FC<Props> = ({
         key={role.role_id}
         draggable
         onDragStart={(e) => onDragStart(e, role)}
+        className="card"
         style={{
-          border: '1px solid #999',
-          padding: 8,
-          marginBottom: 5,
+          padding: '8px 10px',
+          marginBottom: 6,
           cursor: 'grab',
-          backgroundColor: '#ff8a80',
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
+          gap: 8,
         }}
       >
-        {/* 약어 배지 영역 */}
-        <span
-          style={{
-            fontSize: '11px',
-            backgroundColor: '#333',
-            color: '#fff',
-            padding: '2px 4px',
-            borderRadius: '4px',
-          }}
-        >
-          {badgeLabel}
-        </span>
-        {/* 풀네임(디스플레이명) 영역 */}
-        <span>{roleLabel}</span>
+        <span className="chip">{badgeLabel}</span>
+        <span style={{ fontSize: 13 }}>{roleLabel}</span>
       </div>
     );
   };
 
   return (
     <div
+      className="card"
       style={{
-        border: '2px solid red',
         flex: 1,
         minHeight: 0,
-        padding: 10,
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
+        gap: 12,
       }}
     >
       <select
         value={selectedFacility || ''}
         onChange={(e) => onFacilityChange(Number(e.target.value))}
+        className="input"
       >
         <option value="">시설 선택</option>
         {facilities.map((f) => (
@@ -101,28 +88,30 @@ export const LeftPanel: React.FC<Props> = ({
         ))}
       </select>
 
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 10 }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 12 }}>
         {/* 0호실 (공용) 영역 */}
         <div
           style={{
-            border: '1px solid #333',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
             flex: 1,
             minHeight: 0,
-            padding: 10,
+            padding: 12,
             overflowY: 'auto',
           }}
         >
-          <h4>0호실 (공용)</h4>
+          <p className="label" style={{ marginBottom: 10 }}>0호실 (공용)</p>
           {visibleRoom0Roles.map((role) => renderRoleItem(role))}
         </div>
 
         {/* 개별 호실 영역 */}
         <div
           style={{
-            border: '1px solid #333',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
             flex: 1,
             minHeight: 0,
-            padding: 10,
+            padding: 12,
             display: 'flex',
             flexDirection: 'column',
             gap: 10,
@@ -131,6 +120,7 @@ export const LeftPanel: React.FC<Props> = ({
           <select
             value={selectedRoom || ''}
             onChange={(e) => onRoomChange(Number(e.target.value))}
+            className="input"
           >
             <option value="">호실 선택</option>
             {rooms.map((r) => (

@@ -4,6 +4,7 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 제목 입력 및 이미지 첨부 제어 박스
 class PostInputBox extends StatelessWidget {
@@ -19,26 +20,27 @@ class PostInputBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextField(
             controller: titleController,
-            decoration: const InputDecoration(
-              labelText: '제목',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
+            decoration: const InputDecoration(labelText: '제목'),
           ),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: OutlinedButton.icon(
               onPressed: onImageAttach,
-              icon: const Icon(Icons.image, size: 18),
+              icon: const Icon(Icons.image_outlined, size: 18),
               label: const Text('이미지 첨부'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
             ),
           ),
         ],
@@ -56,24 +58,29 @@ class QuillEditorBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           // 툴바 영역
           Container(
-            color: Colors.grey.shade100,
+            color: AppColors.background,
             padding: const EdgeInsets.all(4.0),
             child: quill.QuillSimpleToolbar(
               controller: quillController,
               config: const quill.QuillSimpleToolbarConfig(),
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, color: AppColors.outline),
           // 에디터 영역 (고정 높이 부여 후 자체 스크롤 비활성화 위임)
           Container(
             height: 400,
             padding: const EdgeInsets.all(12.0),
-            color: Colors.white,
+            color: AppColors.surface,
             child: quill.QuillEditor(
               controller: quillController,
               focusNode: FocusNode(),
@@ -102,16 +109,9 @@ class SubmitBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: ElevatedButton(
-        onPressed: onSubmit,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-        child: Text(buttonLabel, style: const TextStyle(fontSize: 16)),
-      ),
+    return ElevatedButton(
+      onPressed: onSubmit,
+      child: Text(buttonLabel),
     );
   }
 }
