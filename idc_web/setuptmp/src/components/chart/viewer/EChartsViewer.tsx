@@ -48,7 +48,7 @@ const generatePostSegments = (validPosts: any[]) => {
 // ==========================================
 // 1. 수치형 데이터 전용 메인 차트
 // ==========================================
-export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick, onDataZoomPan, loadedRange }) => {
+export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick, onDataZoomPan: _onDataZoomPan, loadedRange }) => {
   useEffect(() => {
     if (echartsRef && echartsRef.current) {
       const instance = echartsRef.current.getEchartsInstance();
@@ -78,7 +78,7 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
         if (ds.target_low_limit != null) markLineData.push({ yAxis: Number(ds.target_low_limit), name: 'Low', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
         if (ds.target_high_limit != null) markLineData.push({ yAxis: Number(ds.target_high_limit), name: 'High', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
         if (markLineData.length > 0) {
-          seriesItem.markLine = { data: markLineData, symbol: 'none', label: { show: true, position: 'start', distance: [10, -10], formatter: '{b}: {c}', color: color, fontSize: 11, backgroundColor: 'rgba(30, 30, 30, 0.7)', padding: [2, 4], borderRadius: 2 } };
+          seriesItem.markLine = { data: markLineData, symbol: 'none', label: { show: true, position: 'start', distance: [10, -10], formatter: '{b}: {c}', color: color, fontSize: 11, backgroundColor: 'rgba(255, 255, 255, 0.92)', padding: [2, 4], borderRadius: 2 } };
         }
       }
       return seriesItem;
@@ -96,20 +96,20 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
       const combinedTitle = seg.activePosts.map((p: any) => p.title).join('\n');
       const postIds = seg.activePosts.map((p: any) => p.id);
       return [
-        { xAxis: seg.st, postIds: postIds, itemStyle: { color: 'rgba(255, 0, 0, 0.05)' }, label: { show: true, position: 'insideTop', formatter: combinedTitle, color: '#ff4d4f', fontWeight: 'bold', fontSize: 12, backgroundColor: 'rgba(20,20,20,0.8)', padding: [4, 8], borderRadius: 4, lineHeight: 18 } },
+        { xAxis: seg.st, postIds: postIds, itemStyle: { color: 'rgba(214, 69, 69, 0.06)' }, label: { show: true, position: 'insideTop', formatter: combinedTitle, color: '#d64545', fontWeight: 'bold', fontSize: 12, backgroundColor: 'rgba(255,255,255,0.9)', padding: [4, 8], borderRadius: 4, lineHeight: 18 } },
         { xAxis: seg.et }
       ];
     });
 
     const globalLines: any[] = [];
     validPosts.forEach(p => {
-      globalLines.push({ xAxis: p.st, label: { show: true, position: 'end', formatter: formatShortTime(p.st), color: '#ff4d4f', fontSize: 10 }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
-      globalLines.push({ xAxis: p.et, label: { show: true, position: 'end', formatter: formatShortTime(p.et), color: '#ff4d4f', fontSize: 10 }, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 } });
+      globalLines.push({ xAxis: p.st, label: { show: true, position: 'end', formatter: formatShortTime(p.st), color: '#d64545', fontSize: 10 }, lineStyle: { type: 'solid', color: '#d64545', width: 2 } });
+      globalLines.push({ xAxis: p.et, label: { show: true, position: 'end', formatter: formatShortTime(p.et), color: '#d64545', fontSize: 10 }, lineStyle: { type: 'solid', color: '#d64545', width: 2 } });
     });
     alarms.forEach(a => {
       const time = new Date(a.timestamp).getTime();
-      globalLines.push({ xAxis: time, label: { show: true, position: 'end', formatter: formatShortTime(time), color: 'cyan', fontSize: 10 }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
-      globalLines.push({ xAxis: time, label: { show: true, position: 'start', formatter: a.alarm_name, color: 'cyan', fontSize: 10 }, lineStyle: { type: 'dashed', color: 'cyan', width: 2 } });
+      globalLines.push({ xAxis: time, label: { show: true, position: 'end', formatter: formatShortTime(time), color: '#0891b2', fontSize: 10 }, lineStyle: { type: 'dashed', color: '#0891b2', width: 2 } });
+      globalLines.push({ xAxis: time, label: { show: true, position: 'start', formatter: a.alarm_name, color: '#0891b2', fontSize: 10 }, lineStyle: { type: 'dashed', color: '#0891b2', width: 2 } });
     });
 
     const annotationSeries: any = { name: 'GlobalAnnotations', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [], markArea: { silent: false, data: postAreas }, markLine: { silent: false, symbol: ['none', 'none'], z: 10, data: globalLines } };
@@ -131,11 +131,11 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
         type: 'time', 
         min: loadedRange?.start, 
         max: loadedRange?.end,
-        axisLabel: { show: false }, 
-        axisTick: { show: false }, 
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } } 
+        axisLabel: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb' } }
       },
-      yAxis: { type: 'value', name: '수치 (Main)', splitLine: { show: showGrid, lineStyle: { color: '#333' } }, scale: true },
+      yAxis: { type: 'value', name: '수치 (Main)', splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb' } }, scale: true },
       dataZoom: [{ type: 'inside', filterMode: 'empty' }],
       series: seriesData
     }; 
@@ -183,17 +183,17 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
     const globalLines: any[] = [];
     
     validPosts.forEach(p => {
-      globalLines.push({ xAxis: p.st, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
-      globalLines.push({ xAxis: p.et, lineStyle: { type: 'solid', color: '#ff4d4f', width: 2 }, label: { show: false } });
+      globalLines.push({ xAxis: p.st, lineStyle: { type: 'solid', color: '#d64545', width: 2 }, label: { show: false } });
+      globalLines.push({ xAxis: p.et, lineStyle: { type: 'solid', color: '#d64545', width: 2 }, label: { show: false } });
     });
     alarms.forEach(a => {
       const time = new Date(a.timestamp).getTime();
-      globalLines.push({ xAxis: time, lineStyle: { type: 'dashed', color: 'cyan', width: 2 }, label: { show: false } });
+      globalLines.push({ xAxis: time, lineStyle: { type: 'dashed', color: '#0891b2', width: 2 }, label: { show: false } });
     });
 
     const annotationSeries: any = {
       name: 'GlobalAnnotationsSub', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [],
-      markArea: { silent: true, data: segments.map(seg => [ { xAxis: seg.st, itemStyle: { color: 'rgba(255,0,0,0.05)' } }, { xAxis: seg.et } ])},
+      markArea: { silent: true, data: segments.map(seg => [ { xAxis: seg.st, itemStyle: { color: 'rgba(214,69,69,0.06)' } }, { xAxis: seg.et } ])},
       markLine: { symbol: ['none', 'none'], z: 10, silent: true, data: globalLines }
     };
     seriesData.push(annotationSeries);
@@ -209,13 +209,13 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
     return {
       tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
       grid: { left: 60, right: 50, top: 10, bottom: 25 },
-      xAxis: { 
-        type: 'time', 
-        min: loadedRange?.start, 
+      xAxis: {
+        type: 'time',
+        min: loadedRange?.start,
         max: loadedRange?.end,
-        splitLine: { show: showGrid, lineStyle: { color: '#333' } } 
+        splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb' } }
       },
-      yAxis: { type: 'category', name: '상태 (Sub)', data: boolCategories.length > 0 ? boolCategories : ['데이터 없음'], splitLine: { show: showGrid, lineStyle: { color: '#444', type: 'dashed' } }, axisLabel: { color: '#ccc', fontSize: 10 } },
+      yAxis: { type: 'category', name: '상태 (Sub)', data: boolCategories.length > 0 ? boolCategories : ['데이터 없음'], splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb', type: 'dashed' } }, axisLabel: { color: '#5b6b73', fontSize: 10 } },
       dataZoom: [{ type: 'inside', filterMode: 'empty' }, { type: 'slider', bottom: 0, height: 20, filterMode: 'empty' }],
       series: seriesData
     }; 

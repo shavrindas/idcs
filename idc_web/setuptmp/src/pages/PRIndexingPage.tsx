@@ -10,7 +10,7 @@ export const PRIndexingPage: React.FC = () => {
 
   const [selectedFacility, setSelectedFacility] = useState<number | ''>('');
   const [selectedRoom, setSelectedRoom] = useState<number | ''>('');
-  
+
   // 편집 버퍼 상태
   const [editMap, setEditMap] = useState<{ [roleId: number]: { display_name: string; short_name: string } }>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +39,7 @@ export const PRIndexingPage: React.FC = () => {
       const res = await apiService.getPointRoles(facId, roomId);
       const fetchedRoles: Role[] = res.roles || [];
       setRoles(fetchedRoles);
-      
+
       const initialEdits: any = {};
       fetchedRoles.forEach(r => {
         initialEdits[r.role_id] = {
@@ -110,7 +110,7 @@ export const PRIndexingPage: React.FC = () => {
   // 전체 수정 저장
   const handleSaveAll = async () => {
     if (!selectedFacility || !selectedRoom) return alert('시설과 호실을 먼저 선택하세요.');
-    
+
     const payload = roles.map(r => ({
       role_id: r.role_id,
       display_name: editMap[r.role_id]?.display_name || '',
@@ -127,16 +127,17 @@ export const PRIndexingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, gap: 10, padding: 10, boxSizing: 'border-box' }}>
-      
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, gap: 12, padding: 24, boxSizing: 'border-box' }}>
+
       {/* 상단 컨트롤 바: 선택 + 검색 + 저장 */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', backgroundColor: '#222', padding: 12, borderRadius: 4, border: '1px solid #333' }}>
-        
+      <div className="card" style={{ display: 'flex', gap: 10, alignItems: 'center', padding: 14 }}>
+
         {/* 시설 / 호실 선택 드롭다운 */}
         <select
           value={selectedFacility}
           onChange={(e) => handleFacilitySelect(Number(e.target.value))}
-          style={{ padding: '8px 12px', backgroundColor: '#333', color: '#fff', border: '1px solid #555' }}
+          className="input"
+          style={{ width: 180 }}
         >
           <option value="">-- 시설 선택 --</option>
           {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -146,7 +147,8 @@ export const PRIndexingPage: React.FC = () => {
           value={selectedRoom}
           onChange={(e) => handleRoomSelect(Number(e.target.value))}
           disabled={!selectedFacility}
-          style={{ padding: '8px 12px', backgroundColor: '#333', color: '#fff', border: '1px solid #555' }}
+          className="input"
+          style={{ width: 180 }}
         >
           <option value="">-- 호실 선택 --</option>
           {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -156,19 +158,24 @@ export const PRIndexingPage: React.FC = () => {
         <div style={{ position: 'relative', flex: 1 }}>
           <input
             type="text"
-            placeholder="시설 -> 호실 -> 포인트롤 검색 후 Enter"
+            placeholder="시설 → 호실 → 포인트롤 검색 후 Enter"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSearchSubmit(); }}
-            style={{ width: '100%', padding: 8, backgroundColor: '#333', color: '#fff', border: '1px solid #555', boxSizing: 'border-box' }}
+            className="input"
           />
           {suggestions.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#2b2b2b', border: '1px solid #555', zIndex: 10 }}>
+            <div
+              className="card"
+              style={{ position: 'absolute', top: '110%', left: 0, right: 0, zIndex: 10, padding: 6 }}
+            >
               {suggestions.map((sug, i) => (
                 <div
                   key={i}
                   onClick={() => handleApplySuggestion(sug)}
-                  style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #444', color: '#82b1ff' }}
+                  style={{ padding: '8px 10px', cursor: 'pointer', borderRadius: 8, color: 'var(--primary)', fontSize: 13, fontWeight: 600 }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-bg)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   {sug.label}
                 </div>
@@ -181,16 +188,7 @@ export const PRIndexingPage: React.FC = () => {
         <button
           onClick={handleSaveAll}
           disabled={roles.length === 0 || isLoading}
-          style={{
-            padding: '8px 20px',
-            backgroundColor: '#4caf50',
-            color: '#fff',
-            fontWeight: 'bold',
-            border: 'none',
-            borderRadius: 4,
-            cursor: roles.length === 0 ? 'not-allowed' : 'pointer',
-            opacity: roles.length === 0 ? 0.5 : 1
-          }}
+          className="btn btn-primary"
         >
           수정 확인
         </button>
