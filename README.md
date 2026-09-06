@@ -176,3 +176,9 @@ qo'shiladi.
 Loyihaning to'liq texnik tavsifi — qaysi papkada nima bor, qanday ishga tushiriladi
 — `CLAUDE.md` faylida yozilgan (shu papkaning ichida). Bu fayl ko'proq
 dasturchilar/AI yordamchi uchun batafsilroq yozilgan.
+
+## Bitiruv loyihasi hujjatlari kerak bo'lsa
+
+Universitet talab qiladigan rasmiy hujjatlar (시스템 정의서, 프로젝트관리계획서, 스프린트
+백로그 va h.k.) — har biri nima uchun ekanligi va IDCS uchun nima yozish kerakligi
+`BITIRUV_HUJJATLARI.md` faylida yozilgan.
