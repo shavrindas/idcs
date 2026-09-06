@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class FacilityAlarmPage extends StatefulWidget {
   final String userId;
@@ -79,7 +80,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text('시설 ID: ${widget.facilityId} 알람 페이지')),
+      appBar: AppBar(title: const Text('알람')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -87,7 +88,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 💡 Row로 검색창과 드롭다운을 가로 배치
+            // 검색창과 드롭다운을 가로 배치
             Row(
               children: [
                 // 1. 검색 입력창
@@ -97,10 +98,10 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                     decoration: InputDecoration(
                       // 선택된 필터 기준에 따라 힌트 문구 변경
                       hintText: _searchTarget == 'name' ? '알람 명으로 검색...' : '룸 이름으로 검색...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
+                        icon: const Icon(Icons.clear_rounded, size: 20),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -109,14 +110,6 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                         },
                       )
                           : null,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 12,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
                       isDense: true,
                     ),
                     onChanged: (value) {
@@ -130,16 +123,17 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
 
                 // 2. 오른쪽 필터 선택 드롭다운
                 Container(
-                  height: 42,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.surface,
+                    border: Border.all(color: AppColors.outline),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _searchTarget,
-                      icon: const Icon(Icons.arrow_drop_down, size: 20),
+                      icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
                       isDense: true,
                       items: const [
                         DropdownMenuItem(
