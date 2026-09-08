@@ -109,8 +109,29 @@ async def get_chart_data(
     await fetch_and_map("equipment_static_logs", "AVG(setnum) AS mean", static_roles, {"mean": "mean"})
     await fetch_and_map("bool_logs", "BOOL_OR(status_value) AS status", bool_roles, {"status": "status"})
 
+    # 5. 조회 중인 포인트롤에 걸린 알람을 같은 기간으로 함께 조회 (그래프 위에 발생 시점 표시용)
+    alarm_query = text("""
+        SELECT alarm_id, role_id, alarm_name, severity, timestamp
+        FROM alarms
+        WHERE role_id = ANY(:role_ids)
+          AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+          AND timestamp <= CAST(:latest_time AS timestamptz)
+        ORDER BY timestamp ASC
+    """.format(range_interval=range_interval))
+    alarm_rows = await db.execute(alarm_query, {"role_ids": target_roles, "latest_time": latest_time})
+    alarms = [
+        {
+            "alarm_id": row.alarm_id,
+            "role_id": row.role_id,
+            "alarm_name": row.alarm_name,
+            "severity": row.severity,
+            "timestamp": row.timestamp.isoformat(),
+        }
+        for row in alarm_rows.fetchall()
+    ]
+
     return {
         "status": "success",
         "meta": {"facility_id": facility_id, "room_id": room_id, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
-        "data": {"datasets": list(datasets_map.values())}
+        "data": {"datasets": list(datasets_map.values()), "alarms": alarms}
     }

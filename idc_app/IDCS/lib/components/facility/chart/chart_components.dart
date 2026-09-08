@@ -155,6 +155,7 @@ class ChartCanvasBox extends StatelessWidget {
 
     // [수정] 백엔드에서 data_type을 제거했으므로 해당 변수 추출(String dataType = ...) 구문을 삭제했습니다.
     final List<dynamic> datasets = chartData!['data']['datasets'];
+    final List<dynamic> alarms = chartData!['data']['alarms'] ?? [];
 
     List<LineChartBarData> lineBars = [];
     List<HorizontalLine> targetLines = [];
@@ -226,6 +227,33 @@ class ChartCanvasBox extends StatelessWidget {
             if (targetHigh > maxY) maxY = targetHigh;
           }
         }
+      }
+    }
+
+    // 조회 기간 안에서 발생한 알람을 세로 점선으로 표시해, 수치 변화와 알람 발생 시점을 한눈에 대조할 수 있게 한다.
+    List<VerticalLine> alarmLines = [];
+    if (minX != double.infinity && maxX != -double.infinity) {
+      for (final a in alarms) {
+        final DateTime? ts = DateTime.tryParse(a['timestamp']?.toString() ?? '')?.toLocal();
+        if (ts == null) continue;
+        final double x = ts.millisecondsSinceEpoch.toDouble();
+        if (x < minX || x > maxX) continue;
+        final String name = a['alarm_name']?.toString() ?? '알람';
+        alarmLines.add(
+          VerticalLine(
+            x: x,
+            color: AppColors.error.withValues(alpha: 0.7),
+            strokeWidth: 1.5,
+            dashArray: [4, 4],
+            label: VerticalLineLabel(
+              show: true,
+              alignment: Alignment.topLeft,
+              padding: const EdgeInsets.only(left: 4, bottom: 2),
+              style: const TextStyle(fontSize: 10, color: AppColors.error, fontWeight: FontWeight.w700),
+              labelResolver: (line) => name,
+            ),
+          ),
+        );
       }
     }
 
@@ -308,7 +336,7 @@ class ChartCanvasBox extends StatelessWidget {
               ),
             ),
             borderData: FlBorderData(show: false),
-            extraLinesData: ExtraLinesData(horizontalLines: targetLines),
+            extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
           ),
         ),
       ),
