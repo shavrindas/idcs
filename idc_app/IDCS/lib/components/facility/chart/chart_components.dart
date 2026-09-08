@@ -130,8 +130,14 @@ class ChartSeriesBox extends StatelessWidget {
 class ChartCanvasBox extends StatelessWidget {
   final Map<String, dynamic>? chartData;
   final bool isLoading;
+  final bool showTargetLines;
 
-  const ChartCanvasBox({super.key, required this.chartData, required this.isLoading});
+  const ChartCanvasBox({
+    super.key,
+    required this.chartData,
+    required this.isLoading,
+    this.showTargetLines = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +157,7 @@ class ChartCanvasBox extends StatelessWidget {
     final List<dynamic> datasets = chartData!['data']['datasets'];
 
     List<LineChartBarData> lineBars = [];
+    List<HorizontalLine> targetLines = [];
     double minX = double.infinity;
     double maxX = -double.infinity;
     double minY = double.infinity;
@@ -164,9 +171,10 @@ class ChartCanvasBox extends StatelessWidget {
       final ds = datasets[i];
       final List<dynamic> dataPoints = ds['data'];
       List<FlSpot> spots = [];
+      final Color seriesColor = colors[i % colors.length];
 
-      // [유저 예상 반영] target_value, target_low_limit 등이 Null일 수 있으므로 파싱 방어 추가
-      // (이 값들은 향후 어노테이션 배경색을 칠할 때 활용될 예정입니다.)
+      // target_value, target_low_limit 등은 Null일 수 있으므로 파싱 방어 추가.
+      // 데이터 자체 범위와 무관하게 "안전 기준선"을 그리는 데 사용한다.
       final String? rawLow = ds['target_low_limit'];
       final String? rawHigh = ds['target_high_limit'];
       final double? targetLow = rawLow != null ? double.tryParse(rawLow) : null;
@@ -198,13 +206,26 @@ class ChartCanvasBox extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: colors[i % colors.length],
+            color: seriesColor,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
         );
+
+        if (showTargetLines) {
+          if (targetLow != null) {
+            targetLines.add(_targetLine(targetLow, seriesColor, '하한 ${targetLow.toStringAsFixed(1)}'));
+            if (targetLow < minY) minY = targetLow;
+            if (targetLow > maxY) maxY = targetLow;
+          }
+          if (targetHigh != null) {
+            targetLines.add(_targetLine(targetHigh, seriesColor, '상한 ${targetHigh.toStringAsFixed(1)}'));
+            if (targetHigh < minY) minY = targetHigh;
+            if (targetHigh > maxY) maxY = targetHigh;
+          }
+        }
       }
     }
 
@@ -287,8 +308,26 @@ class ChartCanvasBox extends StatelessWidget {
               ),
             ),
             borderData: FlBorderData(show: false),
+            extraLinesData: ExtraLinesData(horizontalLines: targetLines),
           ),
         ),
+      ),
+    );
+  }
+
+  // 기준선(안전 범위 상/하한)을 시리즈와 같은 색의 점선으로 표시한다.
+  HorizontalLine _targetLine(double y, Color color, String label) {
+    return HorizontalLine(
+      y: y,
+      color: color.withValues(alpha: 0.6),
+      strokeWidth: 1.5,
+      dashArray: [6, 4],
+      label: HorizontalLineLabel(
+        show: true,
+        alignment: Alignment.topRight,
+        padding: const EdgeInsets.only(right: 4, bottom: 2),
+        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
+        labelResolver: (line) => label,
       ),
     );
   }
@@ -310,7 +349,14 @@ class ChartCanvasBox extends StatelessWidget {
 
 /// Box #4: 차트 도구 박스 (제어 및 어노테이션 도구)
 class ChartToolBox extends StatelessWidget {
-  const ChartToolBox({super.key});
+  final bool showTargetLines;
+  final ValueChanged<bool> onToggleTargetLines;
+
+  const ChartToolBox({
+    super.key,
+    required this.showTargetLines,
+    required this.onToggleTargetLines,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +366,14 @@ class ChartToolBox extends StatelessWidget {
         children: [
           const Spacer(),
           IconButton(icon: const Icon(Icons.pan_tool_outlined, color: AppColors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
-          IconButton(icon: const Icon(Icons.show_chart_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '기준선 (비활성)'),
+          IconButton(
+            icon: Icon(
+              Icons.show_chart_rounded,
+              color: showTargetLines ? AppColors.primary : AppColors.textSecondary,
+            ),
+            onPressed: () => onToggleTargetLines(!showTargetLines),
+            tooltip: showTargetLines ? '기준선 숨기기' : '기준선 표시',
+          ),
           IconButton(icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
           IconButton(icon: const Icon(Icons.refresh_rounded, color: AppColors.primary), onPressed: () {}, tooltip: '시점 초기화'),
         ],
