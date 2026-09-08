@@ -126,6 +126,114 @@ class ChartSeriesBox extends StatelessWidget {
   }
 }
 
+/// 시리즈 색상 팔레트. 통계 박스와 캔버스가 같은 순서로 순회하므로 항상 같은 색이 매칭된다.
+const List<Color> chartSeriesColors = [
+  AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
+];
+
+/// 조회된 구간의 최소/평균/최대값을 시리즈별로 요약해서 보여주는 박스.
+/// 그래프를 눈으로 훑지 않아도 한눈에 수치 요약을 볼 수 있게 한다.
+class ChartStatsBox extends StatelessWidget {
+  final Map<String, dynamic>? chartData;
+
+  const ChartStatsBox({super.key, required this.chartData});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<dynamic> datasets = chartData?['data']?['datasets'] ?? [];
+    if (datasets.isEmpty) return const SizedBox.shrink();
+
+    final List<_SeriesStat> stats = [];
+    for (int i = 0; i < datasets.length; i++) {
+      final ds = datasets[i];
+      final List<dynamic> points = ds['data'] ?? [];
+      if (points.isEmpty) continue;
+
+      double sum = 0;
+      int count = 0;
+      double? minVal;
+      double? maxVal;
+
+      for (final p in points) {
+        // 온도/기어처럼 집계된 min/max가 있으면 그것을, 없으면(정적/불리언) mean·status만 사용.
+        final double? mean = (p['mean'] as num?)?.toDouble();
+        final double? pMin = (p['min'] as num?)?.toDouble() ?? mean;
+        final double? pMax = (p['max'] as num?)?.toDouble() ?? mean;
+        final double? statusVal = p.containsKey('status') ? (p['status'] == true ? 1.0 : 0.0) : null;
+
+        final double? value = mean ?? statusVal;
+        if (value != null) {
+          sum += value;
+          count++;
+        }
+        if (pMin != null) minVal = (minVal == null) ? pMin : (pMin < minVal ? pMin : minVal);
+        if (pMax != null) maxVal = (maxVal == null) ? pMax : (pMax > maxVal ? pMax : maxVal);
+        if (statusVal != null) {
+          minVal = (minVal == null) ? statusVal : (statusVal < minVal ? statusVal : minVal);
+          maxVal = (maxVal == null) ? statusVal : (statusVal > maxVal ? statusVal : maxVal);
+        }
+      }
+
+      if (count == 0 && minVal == null) continue;
+
+      stats.add(_SeriesStat(
+        name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
+        color: chartSeriesColors[i % chartSeriesColors.length],
+        min: minVal,
+        avg: count > 0 ? sum / count : null,
+        max: maxVal,
+      ));
+    }
+
+    if (stats.isEmpty) return const SizedBox.shrink();
+
+    return _SectionCard(
+      title: '구간 요약',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: stats.map((s) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(s.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
+              ),
+              _statChip('최소', s.min),
+              const SizedBox(width: 6),
+              _statChip('평균', s.avg),
+              const SizedBox(width: 6),
+              _statChip('최대', s.max),
+            ],
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _statChip(String label, double? value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        '$label ${value != null ? value.toStringAsFixed(1) : '-'}',
+        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _SeriesStat {
+  final String name;
+  final Color color;
+  final double? min;
+  final double? avg;
+  final double? max;
+
+  _SeriesStat({required this.name, required this.color, this.min, this.avg, this.max});
+}
+
 /// Box #3: 차트 렌더링 캔버스 영역
 class ChartCanvasBox extends StatelessWidget {
   final Map<String, dynamic>? chartData;
@@ -164,9 +272,7 @@ class ChartCanvasBox extends StatelessWidget {
     double minY = double.infinity;
     double maxY = -double.infinity;
 
-    final List<Color> colors = [
-      AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
-    ];
+    final List<Color> colors = chartSeriesColors;
 
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
