@@ -4,6 +4,7 @@ import { ChartMappingPage } from './pages/ChartMappingPage';
 import { ChartViewerPage }  from './pages/ChartViewerPage';
 import { PRIndexingPage }    from './pages/PRIndexingPage';
 import { FacilityManagerPage } from './pages/FacilityManagerPage';
+import { RoomComparePage } from './pages/RoomComparePage';
 import { LoginPage } from './pages/LoginPage';
 import { MainPage } from './pages/MainPage';
 import { Monogram, Wordmark } from './components/Brand';
@@ -74,6 +75,7 @@ function App() {
               <>
                 <NavLink to="/indexing" className={navLinkStyle}>명칭 인덱싱</NavLink>
                 <NavLink to="/facility-manager" className={navLinkStyle}>시설/호실 관리</NavLink>
+                <NavLink to="/compare" className={navLinkStyle}>호실 비교</NavLink>
               </>
             )}
           </nav>
@@ -97,6 +99,7 @@ function App() {
                     <Route path="/mapping" element={<ChartMappingPage />} />
                     <Route path="/indexing" element={<PRIndexingPage />} />
                     <Route path="/facility-manager" element={<FacilityManagerPage />} />
+                    <Route path="/compare" element={<RoomComparePage />} />
                   </>
                 )}
 
