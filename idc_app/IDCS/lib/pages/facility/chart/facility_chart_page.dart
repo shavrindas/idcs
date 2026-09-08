@@ -173,6 +173,9 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
               isLoading: _isLoading,
               showTargetLines: _showTargetLines,
             ),
+            const SizedBox(height: 16),
+
+            ChartStatsBox(chartData: _chartData),
           ],
         ),
       ),
