@@ -85,6 +85,19 @@ export const apiService = {
     return res.json();
   },
 
+  // 호실 비교 (같은 시설의 여러 호실에서 동일 role_name 값 겹쳐보기)
+  getComparableRoles: async (facilityId: number) => {
+    const res = await fetch(`${BASE_URL}/chart/compare/${facilityId}/available-roles`);
+    if (!res.ok) throw new Error('비교 가능한 항목을 불러오지 못했습니다.');
+    return res.json();
+  },
+  getCompareData: async (facilityId: number, roleName: string, scale: string, timeRange: string) => {
+    const url = `${BASE_URL}/chart/compare/${facilityId}?role_name=${encodeURIComponent(roleName)}&scale=${scale}&time_range=${timeRange}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('비교 데이터를 불러오지 못했습니다.');
+    return res.json();
+  },
+
   // 소요기록 블랙리스트 추가/제거 API
   hidePostFromGroup: async (groupId: number, postId: number) => {
     const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}/hide-post/${postId}`, { method: 'POST' });
