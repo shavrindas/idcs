@@ -54,6 +54,31 @@ jadval qilib): muammo → qaysi funksiya bilan yechilgan → savol matni. Shunda
 "foydalanuvchilar mamnun" emas, balki **"aytilgan muammo → qurilgan yechim → tasdiqlangan"**
 degan yopiq zanjir bo'ladi.
 
+### IDCool aytgan real muammolar → yechim → savol
+
+**Muammo 1 — doimiy kuzatuv zarurati**
+IDCool'da doim kimdir monitor oldida o'tirib kuzatib turishi kerak edi, chunki muammo chiqsa ham
+telefonga hech qanday xabar kelmasdi.
+→ Yechim: ilova muammoni avtomatik aniqlab, push-xabar (FCM) yuboradi (알람 funksiyasi).
+→ Savol: *"이제 화면을 계속 지켜보지 않아도, 문제가 생기면 알림으로 바로 알 수 있을 것 같습니까?"* (1-5)
+
+**Muammo 2 — mijoz bilan aloqa (KakaoTalk/qo'ng'iroq) qiyin va takrorlanuvchi**
+Mijozlar bilan KakaoTalk yoki telefon orqali gaplashilardi — uskuna/tugmani tushuntirish qiyin edi,
+chunki mijozning texnik tushunchasi yo'q, va ko'p savollar bir-biriga o'xshab takrorlanardi.
+→ Yechim: sitting/alarmga bog'langan chat va board — tushuntirish yozib qoladi, grafik orqali
+vaziyat ko'rgazmali ko'rsatiladi (og'zaki tushuntirishdan ko'ra tushunarli).
+→ Savol: *"전화로 설명 듣는 것보다, 화면을 보면서 대화하는 게 이해하기 쉬울 것 같습니까?"* (1-5)
+→ Savol: *"같은 설명을 여러 번 반복하지 않아도 될 것 같습니까?"* (게시판 관련, 1-5)
+
+**Muammo 3 — mijozning texnik bilimi yo'q, uskuna/terminal tushunarsiz**
+Mijozlar texnik bilimga ega emas, shuning uchun ko'p terminal/uskuna ko'rsatkichlari ular uchun
+umuman tushunarsiz edi.
+→ Yechim: murakkab uskuna ko'rsatkichlari o'rniga, mijoz ham tushuna oladigan oddiy holat
+(정상/이상) va sodda tugmalar bilan almashtirildi — mijoz oddiy nosozlikni o'zi ko'rib, hatto
+o'zi tuzata oladi (customer self-service).
+→ Savol: *"화면의 정보나 버튼이 이해하기 쉬웠습니까?"* (1-5)
+→ Savol: *"간단한 문제라면, 전화하지 않고 스스로 확인하거나 해결할 수 있을 것 같습니까?"* (1-5)
+
 2차 uchun qo'shimcha:
 - Real ilovani (yoki demo hisobni) 5-10 daqiqa sinab ko'rishlarini so'rash mumkin (V2 da tayyorroq bo'lgani uchun)
 - Har bir asosiy ekran/funksiya uchun alohida savol (chart, alarm, chat, monitoring)
