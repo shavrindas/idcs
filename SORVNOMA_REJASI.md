@@ -1,0 +1,74 @@
+# Foydalanuvchi baholash so'rovnomasi — reja
+
+Bu fayl — IDCS loyihasini real foydalanuvchilar (IDCool va uning mijozlari, masalan 다온)
+orqali baholashni tashkillashtirish rejasi. Ikki bosqichli: **1차 (hozir, yengil)** va
+**2차 (V2 tugagach, jiddiy)**.
+
+## 1. Kimdan so'raymiz — ikki xil auditoriya
+
+Ular bir xil savolga qiziqmaydi, shuning uchun ikkita qisqa variant kerak:
+
+| Auditoriya | Nimaga qiziqadi | Vaqt imkoniyati |
+|---|---|---|
+| **IDCool xodimlari** (admin/veb ishlatuvchilar) | Ko'p sittingni boshqarish, mijoz bilan aloqa, vaqt tejash | Yaxshi — ular loyihaga yaqin |
+| **Sitting mijozlari** (masalan 다온) — ilova ishlatuvchilar | Tushunarli-mi, alarm foydalimi, IDCool bilan aloqa osonmi | Kam — band, uzoq so'rovga vaqt yo'q |
+
+**Muhim qoida**: mijozlarga (다온 kabi) og'ir/uzun narsa yubormang. Ularga faqat **1 daqiqalik,
+bosish bilan javob beriladigan** variant yuboriladi (pastda 1차 qismida).
+
+## 2. Taqsimlash usuli (mijozlar band bo'lgani uchun)
+
+- **IDCool o'zi vositachi bo'lsin** — mijozga sizdan emas, ular ishonadigan IDCool'dan so'rov kelsin (masalan texnik xizmatga borganda 2 daqiqa ko'rsatib, link tashlab ketishadi).
+- Ilovani o'rnatishni/sinab ko'rishni so'ramang — **30-60 soniyalik qisqa video yoki 3-4 ta skrinshot** yuboriladi, shunga reaksiya so'raladi.
+- Google Forms (yoki shunga o'xshash) — faqat bosish, yozish shart emas.
+- **3-5 ta real javob** yetarli — katta statistik namuna shart emas, bu bitiruv loyihasi uchun.
+
+## 3. 1차 so'rovnoma — hozir, yengil (~1 daqiqa)
+
+### IDCool xodimlari uchun (5 ta savol, 1-5 ball)
+
+1. 여러 시설을 한 곳에서 관리하는 게 이전보다 편해졌다고 생각하십니까?
+2. 고객과의 소통(채팅/게시판)이 실제로 도움이 될 것 같습니까?
+3. 이상 상황(알람)을 더 빠르게 확인할 수 있을 것 같습니까?
+4. 화면 구성이 이해하기 쉬웠습니까?
+5. 전체적으로 이 시스템이 실제 업무에 도움이 될 것 같습니까?
+
++ 1 ta ochiq savol (majburiy emas): 가장 아쉬운 점이 있다면 무엇입니까?
+
+### Sitting mijozi (다온 va h.k.) uchun — juda qisqa (3 ta savol, 1-5 ball, video/skrinshot ko'rgandan keyin)
+
+1. 화면을 보고 무슨 정보인지 쉽게 이해되셨습니까?
+2. 문제가 생겼을 때 이렇게 바로 알림을 받으면 도움이 될 것 같습니까?
+3. IDCool과 이 앱으로 소통하는 게 편할 것 같습니까?
+
+## 4. 2차 so'rovnoma — V2 tugagach, jiddiy
+
+V2 tayyor bo'lganda, savollarni **IDCool aytgan aniq muammolarga bog'lab** kengaytiring.
+Har bir funksiya uchun format bir xil:
+
+> "IDCool avval [X muammosi]ni aytgan edi. Biz buni [Y funksiya] bilan hal qilishga harakat qildik.
+> Sizningcha bu yordam berdimi?" (1-5 ball)
+
+Bu formatni to'ldirish uchun, avval IDCool aytgan har bir real muammoni yozib chiqing (masalan
+jadval qilib): muammo → qaysi funksiya bilan yechilgan → savol matni. Shunda natija shunchaki
+"foydalanuvchilar mamnun" emas, balki **"aytilgan muammo → qurilgan yechim → tasdiqlangan"**
+degan yopiq zanjir bo'ladi.
+
+2차 uchun qo'shimcha:
+- Real ilovani (yoki demo hisobni) 5-10 daqiqa sinab ko'rishlarini so'rash mumkin (V2 da tayyorroq bo'lgani uchun)
+- Har bir asosiy ekran/funksiya uchun alohida savol (chart, alarm, chat, monitoring)
+
+## 5. Baholashni qanday o'lchash kerak
+
+- Har bir savol — 1-5 ball (Likert scale).
+- **Funksiya bo'yicha o'rtacha**: bir funksiyaga tegishli savollarni o'rtachasini oling (masalan "aloqa" bo'yicha 2-3 savol bo'lsa, ularning o'rtachasi = "aloqa funksiyasi bahosi").
+- **Umumiy natija**: barcha savollarning o'rtachasi.
+- Hisobotda shunday yozing: *"N kishidan M tasi X funksiyani 4/5 va undan yuqori baholadi"* — bu D07 hujjatidagi "기능구현범위" formulasiga o'xshab, **raqam bilan isbotlanadigan** natija beradi.
+- Ochiq savol javoblarini (agar bo'lsa) 1-2 ta to'g'ridan-to'g'ri iqtibos sifatida hisobotga qo'shing — bu raqamdan ko'ra ko'proq ishonch uyg'otadi.
+
+## 6. Keyingi qadam
+
+- [ ] IDCool aytgan real muammolar ro'yxatini yozib chiqish (2차 savollar uchun kerak)
+- [ ] 1차 so'rovnomani Google Forms qilib tayyorlash
+- [ ] IDCool orqali 다온ga (va boshqa mumkin bo'lgan sittinglarga) yuborish
+- [ ] Natijalarni yig'ib, D07/D08 hujjatlariga qo'shish

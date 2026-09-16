@@ -5,6 +5,9 @@ Bu fayl — 충북대학교 소프트웨어학과 bitiruv loyihasi (졸업작품
 **aynan IDCS loyihasi uchun** nima yozish kerakligi shu yerda yozilgan — keyingi safar so'ralganda
 shu faylni o'qib javob berish mumkin.
 
+Real foydalanuvchilardan (IDCool, 다온 va h.k.) baholash olish rejasi — so'rovnoma savollari,
+qanday taqsimlash, natijani qanday o'lchash — alohida `SORVNOMA_REJASI.md` faylida.
+
 ## Umumiy tartib
 
 | # | Hujjat | Necha marta yoziladi | Qisqacha maqsad |
