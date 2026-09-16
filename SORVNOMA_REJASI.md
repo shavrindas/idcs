@@ -83,7 +83,7 @@ o'zi tuzata oladi (customer self-service).
 - Real ilovani (yoki demo hisobni) 5-10 daqiqa sinab ko'rishlarini so'rash mumkin (V2 da tayyorroq bo'lgani uchun)
 - Har bir asosiy ekran/funksiya uchun alohida savol (chart, alarm, chat, monitoring)
 
-## 5. Legacy Compare — eski usul bilan solishtirish (5 ta savol)
+## 5. Legacy Compare (1) — qo'lda ish jarayoni bilan solishtirish (5 ta savol)
 
 Bu — yuqoridagi 3 ta muammoni **to'g'ridan-to'g'ri "eski vs yangi"** shaklida so'raydi. Har bir
 savol 1 (eski usul ancha yaxshi edi) dan 5 (yangi usul ancha yaxshi) gacha baholanadi, 3 — "farqi yo'q".
@@ -108,7 +108,29 @@ Bu savollar javobi poster'da **"eski usul → yangi usul" o'zgarish grafigi** si
 kuchli ko'rinadi (masalan har bir savol uchun bitta ustun, 3 chizig'idan — o'rtadan — qanchalik
 uzoqlashganini ko'rsatib).
 
-## 6. Baholashni qanday o'lchash kerak
+## 6. Legacy Compare (2) — IDCool'ning eski dasturi (legacy software) bilan solishtirish
+
+Bu — yuqoridagisidan farqli: "qo'lda ish" bilan emas, **IDCool oldin ishlatgan/ishlatayotgan eski
+dastur** bilan solishtiradi. Do'stlaringiz taklif qilgan 4 ta mavzuni 5 ta aniq savolga aylantirdim
+(qism bo'yicha: 앱/웹/서버). Har biri 1 (레거시가 더 나음) — 5 (새 시스템이 훨씬 나음) shkalada.
+
+1. **(앱) 알람 전달** — *"레거시 시스템과 비교했을 때, 이 앱의 알람이 더 직접적이고 빠르게 전달된다고 생각하십니까?"*
+
+2. **(웹) 차트 사용성** — *"레거시 시스템과 비교했을 때, 새 시스템의 차트가 더 사용하기 편리합니까?"*
+
+3. **(웹) 제어 애니메이션** — *"장비를 켜고 끌 때 애니메이션으로 상태를 보여주는 것이, 이해하는 데 더 도움이 됐습니까?"*
+   ⚠️ Faqat shu animatsiya funksiyasi haqiqatan qurilgan bo'lsa so'raladigan savol — hali qurilmagan
+   bo'lsa, bu savolni olib tashlang yoki "shunday funksiya bo'lsa foydali bo'ladimi?" deb so'rang.
+
+4. **(서버) 연결 안정성** — *"레거시 시스템과 비교했을 때, 인터넷 연결이 더 안정적이라고 느끼셨습니까?"*
+
+5. **(서버) 연결 끊김 알림** — *"레거시 시스템과 비교했을 때, 연결이 끊겼을 때 더 확실하게 알려준다고 생각하십니까?"*
+
+Bu bo'lim texnik jamoa (IDCool xodimlari) uchun mos — chunki legacy dasturni chuqur bilgan odam
+kerak. Sitting mijozlariga (다온 kabi) bu savollarni bermang, ular legacy dasturni ko'rmagan bo'lishi
+mumkin.
+
+## 7. Baholashni qanday o'lchash kerak
 
 - Har bir savol — 1-5 ball (Likert scale).
 - **Funksiya bo'yicha o'rtacha**: bir funksiyaga tegishli savollarni o'rtachasini oling (masalan "aloqa" bo'yicha 2-3 savol bo'lsa, ularning o'rtachasi = "aloqa funksiyasi bahosi").
@@ -116,7 +138,7 @@ uzoqlashganini ko'rsatib).
 - Hisobotda shunday yozing: *"N kishidan M tasi X funksiyani 4/5 va undan yuqori baholadi"* — bu D07 hujjatidagi "기능구현범위" formulasiga o'xshab, **raqam bilan isbotlanadigan** natija beradi.
 - Ochiq savol javoblarini (agar bo'lsa) 1-2 ta to'g'ridan-to'g'ri iqtibos sifatida hisobotga qo'shing — bu raqamdan ko'ra ko'proq ishonch uyg'otadi.
 
-## 7. Keyingi qadam
+## 8. Keyingi qadam
 
 - [ ] IDCool aytgan real muammolar ro'yxatini yozib chiqish (2차 savollar uchun kerak)
 - [ ] 1차 so'rovnomani Google Forms qilib tayyorlash
