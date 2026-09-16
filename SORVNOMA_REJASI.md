@@ -83,7 +83,32 @@ o'zi tuzata oladi (customer self-service).
 - Real ilovani (yoki demo hisobni) 5-10 daqiqa sinab ko'rishlarini so'rash mumkin (V2 da tayyorroq bo'lgani uchun)
 - Har bir asosiy ekran/funksiya uchun alohida savol (chart, alarm, chat, monitoring)
 
-## 5. Baholashni qanday o'lchash kerak
+## 5. Legacy Compare — eski usul bilan solishtirish (5 ta savol)
+
+Bu — yuqoridagi 3 ta muammoni **to'g'ridan-to'g'ri "eski vs yangi"** shaklida so'raydi. Har bir
+savol 1 (eski usul ancha yaxshi edi) dan 5 (yangi usul ancha yaxshi) gacha baholanadi, 3 — "farqi yo'q".
+
+1. *"사람이 계속 화면을 지켜보던 예전 방식과 비교했을 때, 자동 알림 방식이 얼마나 낫다고 생각하십니까?"*
+   (Muammo 1 — doimiy kuzatuv bilan solishtirish)
+
+2. *"카카오톡·전화로 설명하던 예전 방식과 비교했을 때, 앱 안에서 대화하고 기록이 남는 방식이 얼마나 낫습니까?"*
+   (Muammo 2 — aloqa usuli bilan solishtirish)
+
+3. *"장비 화면을 직접 봐야 했던 예전 방식과 비교했을 때, 쉬운 문구로 상태를 보는 방식이 얼마나 이해하기 쉽습니까?"*
+   (Muammo 3 — tushunarlilik bilan solishtirish)
+
+4. *"예전 방식과 비교했을 때, 문제를 알아차리고 해결하는 데 걸리는 시간이 얼마나 줄어들 것 같습니까?"*
+   (Umumiy — tezlik)
+
+5. *"전체적으로, 예전 방식 대신 이 시스템을 계속 사용하고 싶으십니까?"*
+   (Umumiy — almashtirishga tayyormisiz)
+
+Birinchi 3 tasi aynan yuqoridagi 3 ta real muammoga bog'langan, oxirgi 2 tasi — umumlashtiruvchi.
+Bu savollar javobi poster'da **"eski usul → yangi usul" o'zgarish grafigi** sifatida chizilsa juda
+kuchli ko'rinadi (masalan har bir savol uchun bitta ustun, 3 chizig'idan — o'rtadan — qanchalik
+uzoqlashganini ko'rsatib).
+
+## 6. Baholashni qanday o'lchash kerak
 
 - Har bir savol — 1-5 ball (Likert scale).
 - **Funksiya bo'yicha o'rtacha**: bir funksiyaga tegishli savollarni o'rtachasini oling (masalan "aloqa" bo'yicha 2-3 savol bo'lsa, ularning o'rtachasi = "aloqa funksiyasi bahosi").
@@ -91,7 +116,7 @@ o'zi tuzata oladi (customer self-service).
 - Hisobotda shunday yozing: *"N kishidan M tasi X funksiyani 4/5 va undan yuqori baholadi"* — bu D07 hujjatidagi "기능구현범위" formulasiga o'xshab, **raqam bilan isbotlanadigan** natija beradi.
 - Ochiq savol javoblarini (agar bo'lsa) 1-2 ta to'g'ridan-to'g'ri iqtibos sifatida hisobotga qo'shing — bu raqamdan ko'ra ko'proq ishonch uyg'otadi.
 
-## 6. Keyingi qadam
+## 7. Keyingi qadam
 
 - [ ] IDCool aytgan real muammolar ro'yxatini yozib chiqish (2차 savollar uchun kerak)
 - [ ] 1차 so'rovnomani Google Forms qilib tayyorlash
