@@ -27,6 +27,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   // 3. 차트 렌더링 상태
   bool _isLoading = false;
   Map<String, dynamic>? _chartData;
+  bool _showTargetLines = true;
 
   @override
   void initState() {
@@ -160,14 +161,21 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             const SizedBox(height: 16),
 
             // Box 4
-            const ChartToolBox(),
+            ChartToolBox(
+              showTargetLines: _showTargetLines,
+              onToggleTargetLines: (val) => setState(() => _showTargetLines = val),
+            ),
             const SizedBox(height: 8),
 
             // Box 3
             ChartCanvasBox(
               chartData: _chartData,
               isLoading: _isLoading,
+              showTargetLines: _showTargetLines,
             ),
+            const SizedBox(height: 16),
+
+            ChartStatsBox(chartData: _chartData),
           ],
         ),
       ),
