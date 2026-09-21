@@ -1,9 +1,9 @@
 // const BASE_URL = 'http://127.0.0.1:8000/api';
 // const BASE_URL = 'http://localhost:8000/api';
 // const BASE_URL = 'http://192.168.29.159:8000/api';
-const BASE_URL = 'http://211.55.127.239/api';
-
-
+// const BASE_URL = 'http://211.55.127.239/api';
+const BASE_URL = 'http://192.168.29.159:8900/api/v1/serviceweb';
+// const BASE_URL = 'http://127.0.0.1:8900/api';
 
 
 export const apiService = {
