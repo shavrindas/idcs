@@ -16,6 +16,12 @@ class RoomStatusType(str, enum.Enum):
     NOT_OPERATING = "NOT_OPERATING"
 
 
+class NodeStatusType(str, enum.Enum):
+    ONLINE = "ONLINE"
+    OFFLINE = "OFFLINE"
+    ERROR = "ERROR"
+    MAINTENANCE = "MAINTENANCE"
+
 class FacilityUser(Base):
     __tablename__ = "facility_users"
 
@@ -44,6 +50,7 @@ class Facility(Base):
 
     # 관계 정의 (메모리에 실제 로드되는 FacilityRoom과의 관계만 유지)
     rooms = relationship("FacilityRoom", back_populates="facility", cascade="all, delete-orphan")
+    nodes = relationship("FacilityNode", back_populates="facility", cascade="all, delete-orphan")
 
 
 class FacilityRoom(Base):
@@ -76,3 +83,24 @@ class FacilityRoom(Base):
 #     valid_from = Column(Date, nullable=False)
 #     valid_to = Column(Date, nullable=True)
 #     is_current = Column(Boolean, nullable=False, default=True)
+
+
+
+
+class FacilityNode(Base):
+    __tablename__ = "facility_nodes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False, index=True)
+    node_code = Column(String(100), unique=True, nullable=False)
+    node_name = Column(String(150), nullable=False)
+    api_key_hash = Column(String(255), nullable=False)
+    allowed_ip_cidr = Column(String(50), nullable=True)
+    status = Column(Enum(NodeStatusType, name="node_status_type"), nullable=False, default=NodeStatusType.OFFLINE, index=True)
+    firmware_version = Column(String(50), nullable=True)
+    last_heartbeat_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    facility = relationship("Facility", back_populates="nodes")
