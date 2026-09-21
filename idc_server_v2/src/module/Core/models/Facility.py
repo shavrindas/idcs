@@ -7,7 +7,7 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, Date, Enum, DateTime, func, ForeignKey, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
-from config.db import Base
+from src.config.database import Base
 # ===============================================================
 
 class RoomStatusType(str, enum.Enum):
@@ -49,7 +49,7 @@ class Facility(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     rooms = relationship("FacilityRoom", back_populates="facility", cascade="all, delete-orphan")
-
+    nodes = relationship("FacilityNode", back_populates="facility", cascade="all, delete-orphan")
 
 class FacilityRoom(Base):
     __tablename__ = "facilities_room_table"
