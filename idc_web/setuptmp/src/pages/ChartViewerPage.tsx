@@ -8,6 +8,7 @@ import { ScopingPanel } from '../components/chart/viewer/panels/ScopingPanel';
 import { PostViewerPanel } from '../components/chart/viewer/panels/PostViewerPanel';
 import { MappingActivePanel } from '../components/chart/viewer/panels/MappingActivePanel';
 import { BlacklistPanel } from '../components/chart/viewer/panels/BlacklistPanel';
+import { ChartStatsPanel } from '../components/chart/viewer/panels/ChartStatsPanel';
 import { CHART_SCOPING_CONFIG} from '../constants/chartConfig'; 
 import type{ ChartMode, ChartScale } from '../constants/chartConfig'; 
 import { apiService } from '../services/apiService';
@@ -395,6 +396,7 @@ export const ChartViewerPage: React.FC<ViewerProps> = ({ user }) => {
           <SmartOmniboxPanel input={omniboxInput} suggestions={omniboxSuggestions} isChartLoading={isChartLoading} onInputChange={setOmniboxInput} onSubmit={handleOmniboxSubmit} onSelect={handleOmniboxSelect} />
           <ScopingPanel mode={mode} scale={scale} facilities={facilities} rooms={rooms} selectedFacility={selectedFacility} selectedRoom={selectedRoom} isChartLoading={isChartLoading} onModeToggle={handleModeToggle} onScaleChange={setScale} onFacilityChange={setSelectedFacility} onRoomChange={setSelectedRoom} onQuickTime={handleQuickTimeSelect} onQuickDay={handleQuickDaySelect} />
           <PostViewerPanel selectedPostIds={selectedPostViewerIds} posts={posts} selectedGroupId={selectedGroupId} onHidePost={handleHidePost} />
+          <ChartStatsPanel datasets={mainDataSets} roleColors={roleColors} />
         </div>
       </div>
 
