@@ -126,12 +126,126 @@ class ChartSeriesBox extends StatelessWidget {
   }
 }
 
+/// 시리즈 색상 팔레트. 통계 박스와 캔버스가 같은 순서로 순회하므로 항상 같은 색이 매칭된다.
+const List<Color> chartSeriesColors = [
+  AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
+];
+
+/// 조회된 구간의 최소/평균/최대값을 시리즈별로 요약해서 보여주는 박스.
+/// 그래프를 눈으로 훑지 않아도 한눈에 수치 요약을 볼 수 있게 한다.
+class ChartStatsBox extends StatelessWidget {
+  final Map<String, dynamic>? chartData;
+
+  const ChartStatsBox({super.key, required this.chartData});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<dynamic> datasets = chartData?['data']?['datasets'] ?? [];
+    if (datasets.isEmpty) return const SizedBox.shrink();
+
+    final List<_SeriesStat> stats = [];
+    for (int i = 0; i < datasets.length; i++) {
+      final ds = datasets[i];
+      final List<dynamic> points = ds['data'] ?? [];
+      if (points.isEmpty) continue;
+
+      double sum = 0;
+      int count = 0;
+      double? minVal;
+      double? maxVal;
+
+      for (final p in points) {
+        // 온도/기어처럼 집계된 min/max가 있으면 그것을, 없으면(정적/불리언) mean·status만 사용.
+        final double? mean = (p['mean'] as num?)?.toDouble();
+        final double? pMin = (p['min'] as num?)?.toDouble() ?? mean;
+        final double? pMax = (p['max'] as num?)?.toDouble() ?? mean;
+        final double? statusVal = p.containsKey('status') ? (p['status'] == true ? 1.0 : 0.0) : null;
+
+        final double? value = mean ?? statusVal;
+        if (value != null) {
+          sum += value;
+          count++;
+        }
+        if (pMin != null) minVal = (minVal == null) ? pMin : (pMin < minVal ? pMin : minVal);
+        if (pMax != null) maxVal = (maxVal == null) ? pMax : (pMax > maxVal ? pMax : maxVal);
+        if (statusVal != null) {
+          minVal = (minVal == null) ? statusVal : (statusVal < minVal ? statusVal : minVal);
+          maxVal = (maxVal == null) ? statusVal : (statusVal > maxVal ? statusVal : maxVal);
+        }
+      }
+
+      if (count == 0 && minVal == null) continue;
+
+      stats.add(_SeriesStat(
+        name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
+        color: chartSeriesColors[i % chartSeriesColors.length],
+        min: minVal,
+        avg: count > 0 ? sum / count : null,
+        max: maxVal,
+      ));
+    }
+
+    if (stats.isEmpty) return const SizedBox.shrink();
+
+    return _SectionCard(
+      title: '구간 요약',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: stats.map((s) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(s.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
+              ),
+              _statChip('최소', s.min),
+              const SizedBox(width: 6),
+              _statChip('평균', s.avg),
+              const SizedBox(width: 6),
+              _statChip('최대', s.max),
+            ],
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _statChip(String label, double? value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        '$label ${value != null ? value.toStringAsFixed(1) : '-'}',
+        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _SeriesStat {
+  final String name;
+  final Color color;
+  final double? min;
+  final double? avg;
+  final double? max;
+
+  _SeriesStat({required this.name, required this.color, this.min, this.avg, this.max});
+}
+
 /// Box #3: 차트 렌더링 캔버스 영역
 class ChartCanvasBox extends StatelessWidget {
   final Map<String, dynamic>? chartData;
   final bool isLoading;
+  final bool showTargetLines;
 
-  const ChartCanvasBox({super.key, required this.chartData, required this.isLoading});
+  const ChartCanvasBox({
+    super.key,
+    required this.chartData,
+    required this.isLoading,
+    this.showTargetLines = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -149,24 +263,25 @@ class ChartCanvasBox extends StatelessWidget {
 
     // [수정] 백엔드에서 data_type을 제거했으므로 해당 변수 추출(String dataType = ...) 구문을 삭제했습니다.
     final List<dynamic> datasets = chartData!['data']['datasets'];
+    final List<dynamic> alarms = chartData!['data']['alarms'] ?? [];
 
     List<LineChartBarData> lineBars = [];
+    List<HorizontalLine> targetLines = [];
     double minX = double.infinity;
     double maxX = -double.infinity;
     double minY = double.infinity;
     double maxY = -double.infinity;
 
-    final List<Color> colors = [
-      AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
-    ];
+    final List<Color> colors = chartSeriesColors;
 
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
       final List<dynamic> dataPoints = ds['data'];
       List<FlSpot> spots = [];
+      final Color seriesColor = colors[i % colors.length];
 
-      // [유저 예상 반영] target_value, target_low_limit 등이 Null일 수 있으므로 파싱 방어 추가
-      // (이 값들은 향후 어노테이션 배경색을 칠할 때 활용될 예정입니다.)
+      // target_value, target_low_limit 등은 Null일 수 있으므로 파싱 방어 추가.
+      // 데이터 자체 범위와 무관하게 "안전 기준선"을 그리는 데 사용한다.
       final String? rawLow = ds['target_low_limit'];
       final String? rawHigh = ds['target_high_limit'];
       final double? targetLow = rawLow != null ? double.tryParse(rawLow) : null;
@@ -198,11 +313,51 @@ class ChartCanvasBox extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: colors[i % colors.length],
+            color: seriesColor,
             barWidth: 2,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
+          ),
+        );
+
+        if (showTargetLines) {
+          if (targetLow != null) {
+            targetLines.add(_targetLine(targetLow, seriesColor, '하한 ${targetLow.toStringAsFixed(1)}'));
+            if (targetLow < minY) minY = targetLow;
+            if (targetLow > maxY) maxY = targetLow;
+          }
+          if (targetHigh != null) {
+            targetLines.add(_targetLine(targetHigh, seriesColor, '상한 ${targetHigh.toStringAsFixed(1)}'));
+            if (targetHigh < minY) minY = targetHigh;
+            if (targetHigh > maxY) maxY = targetHigh;
+          }
+        }
+      }
+    }
+
+    // 조회 기간 안에서 발생한 알람을 세로 점선으로 표시해, 수치 변화와 알람 발생 시점을 한눈에 대조할 수 있게 한다.
+    List<VerticalLine> alarmLines = [];
+    if (minX != double.infinity && maxX != -double.infinity) {
+      for (final a in alarms) {
+        final DateTime? ts = DateTime.tryParse(a['timestamp']?.toString() ?? '')?.toLocal();
+        if (ts == null) continue;
+        final double x = ts.millisecondsSinceEpoch.toDouble();
+        if (x < minX || x > maxX) continue;
+        final String name = a['alarm_name']?.toString() ?? '알람';
+        alarmLines.add(
+          VerticalLine(
+            x: x,
+            color: AppColors.error.withValues(alpha: 0.7),
+            strokeWidth: 1.5,
+            dashArray: [4, 4],
+            label: VerticalLineLabel(
+              show: true,
+              alignment: Alignment.topLeft,
+              padding: const EdgeInsets.only(left: 4, bottom: 2),
+              style: const TextStyle(fontSize: 10, color: AppColors.error, fontWeight: FontWeight.w700),
+              labelResolver: (line) => name,
+            ),
           ),
         );
       }
@@ -287,8 +442,26 @@ class ChartCanvasBox extends StatelessWidget {
               ),
             ),
             borderData: FlBorderData(show: false),
+            extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
           ),
         ),
+      ),
+    );
+  }
+
+  // 기준선(안전 범위 상/하한)을 시리즈와 같은 색의 점선으로 표시한다.
+  HorizontalLine _targetLine(double y, Color color, String label) {
+    return HorizontalLine(
+      y: y,
+      color: color.withValues(alpha: 0.6),
+      strokeWidth: 1.5,
+      dashArray: [6, 4],
+      label: HorizontalLineLabel(
+        show: true,
+        alignment: Alignment.topRight,
+        padding: const EdgeInsets.only(right: 4, bottom: 2),
+        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
+        labelResolver: (line) => label,
       ),
     );
   }
@@ -310,7 +483,14 @@ class ChartCanvasBox extends StatelessWidget {
 
 /// Box #4: 차트 도구 박스 (제어 및 어노테이션 도구)
 class ChartToolBox extends StatelessWidget {
-  const ChartToolBox({super.key});
+  final bool showTargetLines;
+  final ValueChanged<bool> onToggleTargetLines;
+
+  const ChartToolBox({
+    super.key,
+    required this.showTargetLines,
+    required this.onToggleTargetLines,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +500,14 @@ class ChartToolBox extends StatelessWidget {
         children: [
           const Spacer(),
           IconButton(icon: const Icon(Icons.pan_tool_outlined, color: AppColors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
-          IconButton(icon: const Icon(Icons.show_chart_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '기준선 (비활성)'),
+          IconButton(
+            icon: Icon(
+              Icons.show_chart_rounded,
+              color: showTargetLines ? AppColors.primary : AppColors.textSecondary,
+            ),
+            onPressed: () => onToggleTargetLines(!showTargetLines),
+            tooltip: showTargetLines ? '기준선 숨기기' : '기준선 표시',
+          ),
           IconButton(icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
           IconButton(icon: const Icon(Icons.refresh_rounded, color: AppColors.primary), onPressed: () {}, tooltip: '시점 초기화'),
         ],
