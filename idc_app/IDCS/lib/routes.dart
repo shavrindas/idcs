@@ -14,6 +14,11 @@ final GoRouter appRouter = GoRouter(
     if (!loggedIn && !allowedPaths.contains(path)) {
       return '/login';
     }
+
+    // 로그인이 유지된 상태면 스플래시/로그인 화면을 건너뛰고 바로 홈으로 보낸다.
+    if (loggedIn && (path == '/' || path == '/login')) {
+      return '/index/${AuthService.getCurrentUserId()}/home';
+    }
     return null;
   },
 
