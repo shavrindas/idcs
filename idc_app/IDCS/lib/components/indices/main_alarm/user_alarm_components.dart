@@ -30,9 +30,6 @@ class UserAlarmBox extends StatelessWidget {
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final alarm = alarms[index];
-        final bool hasAlarm = false;
-
-        final rawTime = alarm['timestamp']?.toString() ?? '';
         final int facilityId = alarm['facility_id'] is int
             ? alarm['facility_id']
             : int.tryParse(alarm['facility_id']?.toString() ?? '0') ?? 0;
@@ -40,8 +37,8 @@ class UserAlarmBox extends StatelessWidget {
         return AlarmRow(
           title: alarm['alarm_name'] ?? '알람 이름 없음',
           subtitle: '${alarm['facility_name'] ?? '시설 이름 없음'} · ${alarm['room_name'] ?? '룸 이름 없음'}',
-          timestamp: rawTime,
-          hasAlarm: hasAlarm,
+          timestamp: formatAlarmTime(alarm['timestamp']?.toString() ?? ''),
+          isActive: isAlarmActive(alarm),
           onTap: () => onFacilityPressed(facilityId),
         );
       },
