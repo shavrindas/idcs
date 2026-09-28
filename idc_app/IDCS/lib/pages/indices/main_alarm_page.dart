@@ -96,7 +96,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('알람')),
+      appBar: AppBar(title: const Text('전체 알람')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
