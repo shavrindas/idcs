@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/chart/chart_components.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
 
 class FacilityChartPage extends StatefulWidget {
   final String userId;
@@ -20,11 +21,15 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   String _currentScale = '1m';
   String _currentTimeRange = '1d';
 
-  // 2. 데이터 포인트 선택 상태
+  // 2. 조회 대상 호실 상태
+  List<dynamic> _rooms = [];
+  int? _selectedRoomId;
+
+  // 3. 데이터 포인트 선택 상태
   int? _selectedGroupId;
   List<Map<String, dynamic>> _availableGroups = []; // _allGroups 변수도 불필요하여 제거
 
-  // 3. 차트 렌더링 상태
+  // 4. 차트 렌더링 상태
   bool _isLoading = false;
   Map<String, dynamic>? _chartData;
   bool _showTargetLines = true;
@@ -32,16 +37,48 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   @override
   void initState() {
     super.initState();
-    _loadGroupsAndChart();
+    _loadRooms();
+  }
+
+  // 0단계: 시설의 호실 목록 조회 후 첫 호실을 기본 선택한다.
+  // (예전에는 호실이 1번으로 고정되어 있어 1번 호실이 없는 시설에서는 차트가 아예 뜨지 않았다)
+  Future<void> _loadRooms() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+
+      if (!mounted) return;
+      setState(() {
+        _rooms = rooms;
+        _selectedRoomId = rooms.isEmpty
+            ? null
+            : (rooms.first['id'] is int
+                ? rooms.first['id']
+                : int.tryParse(rooms.first['id'].toString()));
+      });
+
+      if (_selectedRoomId != null) {
+        await _loadGroupsAndChart();
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('호실 조회 오류: $e')));
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   // 1단계: 전체 그룹 목록 조회 (타입 필터링 제거)
   Future<void> _loadGroupsAndChart() async {
+    final int? roomId = _selectedRoomId;
+    if (roomId == null) return;
+
     setState(() => _isLoading = true);
 
     try {
-      final int roomId = 1; // 임시: 1번 호실 기준
-
       // 웹 어드민에서 생성된 그룹 리스트 호출
       final groups = await ChartApiService.getChartGroups(int.parse(widget.facilityId), roomId);
 
@@ -81,13 +118,12 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
 
   // 2단계: 선택된 그룹 내부의 role_ids를 추출하여 차트 API 호출
   Future<void> _fetchChartData() async {
-    if (_selectedGroupId == null) return;
+    final int? roomId = _selectedRoomId;
+    if (_selectedGroupId == null || roomId == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final int roomId = 1;
-
       final selectedGroup = _availableGroups.firstWhere((g) => g['group_id'] == _selectedGroupId);
       final List<dynamic> rawRoleIds = selectedGroup['role_ids'] ?? [];
 
@@ -144,6 +180,16 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
               onScaleChanged: (val) => setState(() => _currentScale = val),
               onTimeRangeChanged: (val) => setState(() => _currentTimeRange = val),
               onApply: _fetchChartData,
+              rooms: _rooms,
+              selectedRoomId: _selectedRoomId,
+              onRoomChanged: (roomId) {
+                setState(() {
+                  _selectedRoomId = roomId;
+                  _chartData = null;
+                });
+                // 호실이 바뀌면 그 호실에 등록된 그룹부터 다시 불러와야 한다.
+                _loadGroupsAndChart();
+              },
             ),
             const SizedBox(height: 16),
 

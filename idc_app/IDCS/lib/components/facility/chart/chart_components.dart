@@ -19,6 +19,11 @@ class ChartFilterBox extends StatelessWidget {
   final Function(String) onTimeRangeChanged;
   final VoidCallback onApply;
 
+  /// 조회 대상 호실. 예전에는 1번 호실로 고정되어 있어 다른 호실에서는 차트가 아예 뜨지 않았다.
+  final List<dynamic> rooms;
+  final int? selectedRoomId;
+  final Function(int) onRoomChanged;
+
   const ChartFilterBox({
     super.key,
     required this.currentScale,
@@ -26,53 +31,74 @@ class ChartFilterBox extends StatelessWidget {
     required this.onScaleChanged,
     required this.onTimeRangeChanged,
     required this.onApply,
+    required this.rooms,
+    required this.selectedRoomId,
+    required this.onRoomChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
       title: '조회 조건',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              value: currentScale,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: '해상도'),
-              items: const [
-                DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
-              ],
-              onChanged: (val) { if (val != null) onScaleChanged(val); },
-            ),
+          DropdownButtonFormField<int>(
+            value: selectedRoomId,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: '호실'),
+            items: rooms
+                .map((room) => DropdownMenuItem<int>(
+                      value: room['id'] is int ? room['id'] : int.tryParse(room['id'].toString()),
+                      child: Text(room['name']?.toString() ?? '이름 없는 호실', overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: (val) { if (val != null) onRoomChanged(val); },
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              value: currentTimeRange,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: '조회 기간'),
-              items: const [
-                DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
-              ],
-              onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            height: 58,
-            child: ElevatedButton(
-              onPressed: onApply,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
-              child: const Text('적용'),
-            ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: currentScale,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '해상도'),
+                  items: const [
+                    DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
+                  ],
+                  onChanged: (val) { if (val != null) onScaleChanged(val); },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: currentTimeRange,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '조회 기간'),
+                  items: const [
+                    DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
+                  ],
+                  onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 58,
+                child: ElevatedButton(
+                  onPressed: onApply,
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
+                  child: const Text('적용'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
