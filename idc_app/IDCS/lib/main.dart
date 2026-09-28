@@ -37,6 +37,7 @@ import 'package:idcs/theme/app_theme.dart';
 
 
 part 'config.dart';
+part 'auth_service.dart';
 part 'routes.dart';
 
 void main() async {
