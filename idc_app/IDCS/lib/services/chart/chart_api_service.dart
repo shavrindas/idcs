@@ -19,13 +19,8 @@ class ChartApiService {
     required String timeRange,
     required List<int> roleIds, // 필수로 변경
   }) async {
-    String urlStr = '$_baseUrl/$facilityId/$roomId?scale=$scale&time_range=$timeRange&role_ids=${roleIds.join(',')}';
-    final url = Uri.parse(urlStr);
-    final response = await http.get(url);
-
-    if (roleIds != null && roleIds.isNotEmpty) {
-      urlStr += '&role_ids=${roleIds.join(',')}';
-    }
+    final urlStr = '$_baseUrl/$facilityId/$roomId?scale=$scale&time_range=$timeRange&role_ids=${roleIds.join(',')}';
+    final response = await http.get(Uri.parse(urlStr));
 
     final String responseBody = utf8.decode(response.bodyBytes);
 
