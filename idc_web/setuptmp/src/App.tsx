@@ -104,7 +104,7 @@ function App() {
                 )}
 
                 {/* User/Admin 공통 라우트 */}
-                <Route path="/viewer" element={<ChartViewerPage user={user} />} />
+                <Route path="/viewer" element={<ChartViewerPage />} />
 
                 {/* 기본 리다이렉트 (관리자는 메인, 유저는 뷰어로) */}
                 <Route path="*" element={
