@@ -190,6 +190,23 @@ class ChartSeriesBox extends StatelessWidget {
               directMode ? '표시할 항목을 고르세요' : '이 그룹에 묶인 항목',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
             ),
+            // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
+            if (visibleRoleIds.length > _readableSeriesLimit) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 14, color: AppColors.warning),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      '${visibleRoleIds.length}개를 한 번에 그리면 알아보기 어렵습니다. '
+                      '$_readableSeriesLimit개 이하를 권합니다.',
+                      style: const TextStyle(fontSize: 12, color: AppColors.warning),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 168),
@@ -243,6 +260,96 @@ class ChartSeriesBox extends StatelessWidget {
     );
   }
 }
+
+/// 한 차트에 이 개수를 넘게 그리면 선이 서로 가려 추세를 읽기 어렵다.
+const int _readableSeriesLimit = 6;
+
+/// 차트 위에 붙는 범례. 어떤 선이 어떤 항목인지 차트 안에서 바로 알 수 있게 한다.
+/// 색 표시만으로는 부족하므로 선 모양(실선/파선/점선)도 함께 그린다.
+class _ChartLegend extends StatelessWidget {
+  final List<String> names;
+  final List<List<int>?> dashes;
+  final List<Color> colors;
+
+  const _ChartLegend({required this.names, required this.dashes, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    if (names.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 4,
+        children: List.generate(names.length, (i) {
+          final color = colors[i % colors.length];
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomPaint(
+                size: const Size(18, 2),
+                painter: _LegendLinePainter(color: color, dash: dashes[i]),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                names[i],
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// 범례의 선 미리보기. 차트에 그려지는 것과 같은 파선 패턴을 재현한다.
+class _LegendLinePainter extends CustomPainter {
+  final Color color;
+  final List<int>? dash;
+
+  _LegendLinePainter({required this.color, required this.dash});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    final y = size.height / 2;
+    if (dash == null) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      return;
+    }
+
+    double x = 0;
+    int i = 0;
+    while (x < size.width) {
+      final len = dash![i % dash!.length].toDouble();
+      if (i.isEven) {
+        canvas.drawLine(Offset(x, y), Offset((x + len).clamp(0, size.width), y), paint);
+      }
+      x += len;
+      i++;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LegendLinePainter old) => old.color != color || old.dash != dash;
+}
+
+/// 시리즈별 선 모양. 색을 못 쓰는 상황(색각 이상, 흑백 인쇄)에서도 구분되게 한다.
+/// null이면 실선.
+const List<List<int>?> _seriesDashPatterns = [
+  null,        // 실선
+  [6, 3],      // 파선
+  [2, 3],      // 점선
+  [10, 3, 2, 3], // 일점쇄선
+  [8, 4],
+  [3, 2, 8, 2],
+];
 
 /// 시리즈 색상 팔레트. 통계 박스와 캔버스가 같은 순서로 순회하므로 항상 같은 색이 매칭된다.
 const List<Color> chartSeriesColors = [
@@ -385,6 +492,9 @@ class ChartCanvasBox extends StatelessWidget {
 
     List<LineChartBarData> lineBars = [];
     List<HorizontalLine> targetLines = [];
+    // 범례와 툴팁에서 쓸 시리즈 이름/선 모양 (lineBars와 같은 순서)
+    final List<String> seriesNames = [];
+    final List<List<int>?> seriesDashes = [];
     double minX = double.infinity;
     double maxX = -double.infinity;
     double minY = double.infinity;
@@ -427,6 +537,12 @@ class ChartCanvasBox extends StatelessWidget {
       }
 
       if (spots.isNotEmpty) {
+        // 색만으로 시리즈를 구분하면 색각 이상이나 흑백 출력(포스터·인쇄)에서 구분이 안 된다.
+        // 실선/파선/점선을 함께 돌려 색 없이도 구분되게 한다.
+        seriesNames.add(ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}');
+        final dash = _seriesDashPatterns[i % _seriesDashPatterns.length];
+        seriesDashes.add(dash);
+
         lineBars.add(
           LineChartBarData(
             spots: spots,
@@ -434,6 +550,7 @@ class ChartCanvasBox extends StatelessWidget {
             color: seriesColor,
             barWidth: 2,
             isStrokeCapRound: true,
+            dashArray: dash,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
@@ -497,7 +614,12 @@ class ChartCanvasBox extends StatelessWidget {
     }
 
     return _buildContainer(
-      child: Padding(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ChartLegend(names: seriesNames, dashes: seriesDashes, colors: colors),
+          Expanded(
+            child: Padding(
         padding: const EdgeInsets.only(right: 16.0, top: 8.0),
         child: LineChart(
           LineChartData(
@@ -512,8 +634,10 @@ class ChartCanvasBox extends StatelessWidget {
                   return touchedSpots.map((spot) {
                     final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
                     final timeStr = DateFormat('MM-dd HH:mm').format(dt);
+                    // 여러 선이 겹칠 때 어느 시리즈의 값인지 알 수 없어 이름을 함께 보여준다.
+                    final name = spot.barIndex < seriesNames.length ? seriesNames[spot.barIndex] : '';
                     return LineTooltipItem(
-                      '$timeStr\n${spot.y.toStringAsFixed(1)}',
+                      '$name\n$timeStr\n${spot.y.toStringAsFixed(1)}',
                       const TextStyle(color: Colors.white, fontSize: 12),
                     );
                   }).toList();
@@ -563,6 +687,9 @@ class ChartCanvasBox extends StatelessWidget {
             extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
           ),
         ),
+            ),
+          ),
+        ],
       ),
     );
   }
