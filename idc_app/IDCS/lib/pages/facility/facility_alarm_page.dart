@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dart';
+import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 
@@ -26,6 +27,9 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
 
   // 💡 검색 필터 기준 상태 변수 추가 ('name' 또는 'room')
   String _searchTarget = 'name';
+
+  AlarmStatusFilter _statusFilter = AlarmStatusFilter.all;
+  bool _grouped = true;
 
   @override
   void initState() {
@@ -66,7 +70,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredAlarms = _alarms.where((alarm) {
+    final searchedAlarms = filterAlarmsByStatus(_alarms, _statusFilter).where((alarm) {
       final query = _searchQuery.toLowerCase();
       if (query.isEmpty) return true;
 
@@ -78,6 +82,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
         return name.contains(query);
       }
     }).toList();
+
+    // 묶어서 보기가 꺼져 있으면 건마다 count 1로 그대로 보여준다.
+    final displayAlarms = _grouped
+        ? groupAlarms(searchedAlarms)
+        : searchedAlarms.map((a) => GroupedAlarm(a, 1)).toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('알람')),
@@ -157,11 +166,19 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+
+            AlarmFilterBar(
+              statusFilter: _statusFilter,
+              onStatusChanged: (val) => setState(() => _statusFilter = val),
+              grouped: _grouped,
+              onGroupedChanged: (val) => setState(() => _grouped = val),
+            ),
+            const SizedBox(height: 8),
 
             // 3. 필터링된 알람 데이터 전달
             FacilityAlarmBox(
-              alarms: filteredAlarms,
+              alarms: displayAlarms,
               isSearching: _searchQuery.isNotEmpty,
             ),
           ],

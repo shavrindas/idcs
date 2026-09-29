@@ -3,7 +3,7 @@ import 'package:idcs/components/shared/alarm_row.dart';
 
 /// Box #2: 통합 알람 박스 (순수 목록 표시 및 이벤트 전달)
 class UserAlarmBox extends StatelessWidget {
-  final List<dynamic> alarms;
+  final List<GroupedAlarm> alarms;
   final Function(int) onFacilityPressed;
   final bool isSearching;
 
@@ -29,7 +29,7 @@ class UserAlarmBox extends StatelessWidget {
       itemCount: alarms.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final alarm = alarms[index];
+        final alarm = alarms[index].alarm;
         final int facilityId = alarm['facility_id'] is int
             ? alarm['facility_id']
             : int.tryParse(alarm['facility_id']?.toString() ?? '0') ?? 0;
@@ -39,6 +39,7 @@ class UserAlarmBox extends StatelessWidget {
           subtitle: '${alarm['facility_name'] ?? '시설 이름 없음'} · ${alarm['room_name'] ?? '룸 이름 없음'}',
           timestamp: formatAlarmTime(alarm['timestamp']?.toString() ?? ''),
           isActive: isAlarmActive(alarm),
+          count: alarms[index].count,
           onTap: () => onFacilityPressed(facilityId),
         );
       },
