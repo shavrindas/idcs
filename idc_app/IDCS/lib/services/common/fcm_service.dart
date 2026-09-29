@@ -6,6 +6,75 @@ import 'package:idcs/firebase_options.dart';
 import 'package:idcs/main.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:idcs/services/common/alarm/alarm_settings.dart';
+
+// 안드로이드는 채널을 한 번 만들면 소리/진동 설정을 나중에 바꿀 수 없다.
+// 그래서 조합별로 채널을 미리 만들어 두고, 알림을 띄울 때 설정에 맞는 채널을 고른다.
+const List<AndroidNotificationChannel> alarmChannels = [
+  AndroidNotificationChannel('alarm_sound_vibe', '알람 (소리+진동)',
+      description: '소리와 진동을 모두 사용하는 알람', importance: Importance.max, playSound: true, enableVibration: true),
+  AndroidNotificationChannel('alarm_sound', '알람 (소리만)',
+      description: '소리만 사용하는 알람', importance: Importance.max, playSound: true, enableVibration: false),
+  AndroidNotificationChannel('alarm_vibe', '알람 (진동만)',
+      description: '진동만 사용하는 알람', importance: Importance.max, playSound: false, enableVibration: true),
+  AndroidNotificationChannel('alarm_silent', '알람 (무음)',
+      description: '소리와 진동 없이 표시만 하는 알람', importance: Importance.max, playSound: false, enableVibration: false),
+];
+
+AndroidNotificationChannel _channelFor(AlarmSettings s) {
+  if (s.sound && s.vibration) return alarmChannels[0];
+  if (s.sound) return alarmChannels[1];
+  if (s.vibration) return alarmChannels[2];
+  return alarmChannels[3];
+}
+
+NotificationDetails _detailsFor(AlarmSettings s) {
+  final channel = _channelFor(s);
+  return NotificationDetails(
+    android: AndroidNotificationDetails(
+      channel.id,
+      channel.name,
+      channelDescription: channel.description,
+      icon: '@mipmap/ic_launcher',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: s.sound,
+      enableVibration: s.vibration,
+      // 잠금화면에서 내용을 숨길지 여부
+      visibility: s.showOnLockScreen ? NotificationVisibility.public : NotificationVisibility.private,
+    ),
+  );
+}
+
+/// 알람을 띄우고, '다시 알림'이 켜져 있으면 뒤이어 재알림을 예약한다.
+Future<void> showAlarmNotification(
+  FlutterLocalNotificationsPlugin plugin,
+  String title,
+  String body,
+) async {
+  final settings = await AlarmSettings.load();
+  final details = _detailsFor(settings);
+  final baseId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+  await plugin.show(baseId, title, body, details);
+
+  if (settings.repeatMinutes <= 0) return;
+
+  // 확인하지 못했을 때를 대비한 재알림. 무한 반복은 알림 폭탄이 되므로 횟수를 제한한다.
+  for (int i = 1; i <= AlarmSettings.maxRepeatCount; i++) {
+    await plugin.zonedSchedule(
+      baseId + i,
+      title,
+      '$body (다시 알림 $i/${AlarmSettings.maxRepeatCount})',
+      tz.TZDateTime.now(tz.local).add(Duration(minutes: settings.repeatMinutes * i)),
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+}
 
 // 🔥 최상단 백그라운드 핸들러 (앱이 백그라운드/종료 상태일 때 처리)
 @pragma('vm:entry-point')
@@ -19,26 +88,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   const AndroidInitializationSettings initSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
   await localNotifications.initialize(const InitializationSettings(android: initSettingsAndroid));
 
+  // 백그라운드는 별도 isolate라 앱에서 초기화한 타임존 정보가 없다.
+  tz_data.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
+
   String title = message.notification?.title ?? message.data['title'] ?? '';
   String body = message.notification?.body ?? message.data['body'] ?? '';
 
   if (title.isNotEmpty || body.isNotEmpty) {
-    await localNotifications.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'high_importance_channel',
-          '고중요 알림',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-          playSound: true,
-          enableVibration: true,
-        ),
-      ),
-    );
+    await showAlarmNotification(localNotifications, title, body);
   }
 }
 
@@ -52,16 +110,11 @@ class FcmService {
   static final FlutterLocalNotificationsPlugin _localNotifications =
   FlutterLocalNotificationsPlugin();
 
-  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'high_importance_channel',
-    '고중요 알림',
-    description: '이 채널은 중요한 알림을 위해 사용됩니다.',
-    importance: Importance.max,
-    playSound: true,
-    enableVibration: true,
-  );
-
   static Future<void> initialize() async {
+    // 다시 알림 예약에 필요. 앱이 한국 기준으로 동작하므로 서울로 고정한다.
+    tz_data.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
+
     // 💡 1. 백그라운드 핸들러 선제 등록 (경고 로그 방지)
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
@@ -92,8 +145,10 @@ class FcmService {
 
       if (androidPlugin != null) {
         await androidPlugin.requestNotificationsPermission();
-        await androidPlugin.deleteNotificationChannel(_channel.id);
-        await androidPlugin.createNotificationChannel(_channel);
+        // 소리/진동 조합별 채널을 모두 등록해 두고, 알림을 띄울 때 설정에 맞는 것을 고른다.
+        for (final channel in alarmChannels) {
+          await androidPlugin.createNotificationChannel(channel);
+        }
       }
 
       // 💡 5. 포그라운드 메시지 수신 리스너
@@ -106,23 +161,7 @@ class FcmService {
         String body = message.notification?.body ?? message.data['body'] ?? '';
 
         try {
-          await _localNotifications.show(
-            DateTime.now().millisecondsSinceEpoch ~/ 1000,
-            title,
-            body,
-            NotificationDetails(
-              android: AndroidNotificationDetails(
-                _channel.id,
-                _channel.name,
-                channelDescription: _channel.description,
-                icon: '@mipmap/ic_launcher',
-                importance: Importance.max,
-                priority: Priority.high,
-                playSound: true,
-                enableVibration: true,
-              ),
-            ),
-          );
+          await showAlarmNotification(_localNotifications, title, body);
           print("✅ 로컬 알림 show() 정상 실행 완료");
         } catch (e) {
           print("❌ 로컬 알림 show() 실행 중 에러 발생: $e");
