@@ -74,6 +74,7 @@ final GoRouter appRouter = GoRouter(
         userId: state.pathParameters['userId']!,
       ),
     ),
+    GoRoute(path: '/alarm_settings', builder: (context, state) => const AlarmSettingsPage()),
 
     // [facility] - 유저 ID & 시설 ID 기반
     // 시설 내부 5개 섹션(모니터링/차트/소요기록/메신저/알람) 하단 네비게이션 셸.
