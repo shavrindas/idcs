@@ -145,7 +145,7 @@ class AlarmRow extends StatelessWidget {
                                   ),
                                   child: Text(
                                     '×$count',
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: accent),
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
                                   ),
                                 ),
                               ],
@@ -167,11 +167,11 @@ class AlarmRow extends StatelessWidget {
                       children: [
                         Text(
                           isActive ? '진행중' : '종료',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: accent),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
                         ),
                         if (timestamp.isNotEmpty) ...[
                           const SizedBox(height: 3),
-                          Text(timestamp, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          Text(timestamp, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         ],
                       ],
                     ),
@@ -289,7 +289,7 @@ class _OccurrenceRow extends StatelessWidget {
             ),
             Text(
               active ? '진행중' : '종료',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
             ),
           ],
         ),
@@ -347,7 +347,6 @@ class AlarmFilterBar extends StatelessWidget {
       selectedColor: AppColors.primary,
       backgroundColor: AppColors.background,
       side: BorderSide(color: selected ? AppColors.primary : AppColors.outline),
-      visualDensity: VisualDensity.compact,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
     );
   }

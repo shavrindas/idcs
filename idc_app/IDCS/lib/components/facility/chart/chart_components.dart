@@ -214,7 +214,6 @@ class ChartSeriesBox extends StatelessWidget {
                       selectedColor: AppColors.primary.withValues(alpha: 0.12),
                       backgroundColor: AppColors.background,
                       side: BorderSide(color: checked ? AppColors.primary : AppColors.outline),
-                      visualDensity: VisualDensity.compact,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                     );
                   }).toList(),
@@ -337,7 +336,7 @@ class ChartStatsBox extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
       child: Text(
         '$label ${value != null ? value.toStringAsFixed(1) : '-'}',
-        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -474,7 +473,7 @@ class ChartCanvasBox extends StatelessWidget {
               show: true,
               alignment: Alignment.topLeft,
               padding: const EdgeInsets.only(left: 4, bottom: 2),
-              style: const TextStyle(fontSize: 10, color: AppColors.error, fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w700),
               labelResolver: (line) => name,
             ),
           ),
@@ -541,7 +540,7 @@ class ChartCanvasBox extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         DateFormat('HH:mm').format(dt),
-                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                       ),
                     );
                   },
@@ -554,7 +553,7 @@ class ChartCanvasBox extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     return Text(
                       value.toStringAsFixed(1),
-                      style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     );
                   },
                 ),
@@ -579,7 +578,7 @@ class ChartCanvasBox extends StatelessWidget {
         show: true,
         alignment: Alignment.topRight,
         padding: const EdgeInsets.only(right: 4, bottom: 2),
-        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
+        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700),
         labelResolver: (line) => label,
       ),
     );

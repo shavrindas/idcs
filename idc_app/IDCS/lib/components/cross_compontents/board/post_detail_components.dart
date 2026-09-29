@@ -170,7 +170,7 @@ class CommentBox extends StatelessWidget {
                 title: Text(comment['content'] ?? '', style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
                 subtitle: Text(
                   '${comment['creator_name']} · ${comment['created_at']}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 trailing: (isCreator || isAdmin)
                     ? IconButton(

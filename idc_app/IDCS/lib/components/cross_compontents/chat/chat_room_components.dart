@@ -72,7 +72,7 @@ class ChatMessageListBox extends StatelessWidget {
                     if (!isMine)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2, left: 4),
-                        child: Text('User ${msg['user_id']}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        child: Text('User ${msg['user_id']}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                       ),
 
                     Container(
@@ -122,7 +122,7 @@ class ChatMessageListBox extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
-                      child: Text(msg['created_at'] ?? '', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      child: Text(msg['created_at'] ?? '', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ),
                   ],
                 ),
