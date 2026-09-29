@@ -89,7 +89,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     // 묶어서 보기가 꺼져 있으면 건마다 count 1로 그대로 보여준다.
     final displayAlarms = _grouped
         ? groupAlarms(searchedAlarms)
-        : searchedAlarms.map((a) => GroupedAlarm(a, 1)).toList();
+        : searchedAlarms.map((a) => GroupedAlarm([a])).toList();
 
     // 선택된 필터 기준에 따른 힌트 문구
     String getHintText() {
