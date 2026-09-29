@@ -191,12 +191,14 @@ class BoardListAndPagingBox extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
+              tooltip: '첫 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: const Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: AppColors.textSecondary),
               onPressed: currentPage > 1 ? () => onPageChanged(1) : null,
             ),
             IconButton(
+              tooltip: '이전 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textSecondary),
@@ -231,12 +233,14 @@ class BoardListAndPagingBox extends StatelessWidget {
 
             const SizedBox(width: 4),
             IconButton(
+              tooltip: '다음 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textSecondary),
               onPressed: endPage < safeTotalPages ? () => onPageChanged(endPage + 1) : null,
             ),
             IconButton(
+              tooltip: '마지막 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: AppColors.textSecondary),

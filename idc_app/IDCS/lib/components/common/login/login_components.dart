@@ -44,6 +44,7 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
             labelText: '비밀번호',
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
+              tooltip: '비밀번호 표시',
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 color: AppColors.textSecondary,

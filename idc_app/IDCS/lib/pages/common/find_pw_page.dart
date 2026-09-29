@@ -323,6 +323,7 @@ class _FindPwPageState extends State<FindPwPage> {
         suffixIcon: onToggleObscure == null
             ? null
             : IconButton(
+              tooltip: '비밀번호 표시',
                 icon: Icon(
                   isObscure! ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                   color: AppColors.textSecondary,
