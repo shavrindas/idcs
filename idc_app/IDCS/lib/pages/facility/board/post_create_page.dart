@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:image_picker/image_picker.dart';
 import 'package:idcs/components/cross_compontents/board/post_editor_components.dart.dart';
 import 'package:idcs/services/board/board_api_service.dart';
 
@@ -42,11 +43,23 @@ class _PostCreatePageState extends State<PostCreatePage> {
   }
 
   Future<void> _handleImageAttach() async {
-    final dummyImageUrl = "https://dummyimage.com/600x400/000/fff&text=Preview";
-    final index = _quillController.selection.baseOffset;
-    final length = _quillController.selection.extentOffset - index;
-    _quillController.replaceText(index, length, quill.BlockEmbed.image(dummyImageUrl), null);
-    _uploadedImageIds.add(999);
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    try {
+      final uploaded = await BoardApiService.uploadImage(
+        bytes: await picked.readAsBytes(),
+        filename: picked.name,
+      );
+
+      final index = _quillController.selection.baseOffset;
+      final length = _quillController.selection.extentOffset - index;
+      _quillController.replaceText(index, length, quill.BlockEmbed.image(uploaded.imageUrl), null);
+      _uploadedImageIds.add(uploaded.imageId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미지 첨부 실패: $e')));
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -60,7 +73,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
     try {
       await BoardApiService.createPost(
         userId: widget.userId,
-        boardId: int.parse(widget.facilityId),
+        facilityId: int.parse(widget.facilityId),
         title: _titleController.text,
         contentJson: contentJson,
         imageIds: _uploadedImageIds,
