@@ -46,7 +46,7 @@ class MonitoringCard extends StatelessWidget {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('제어', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                  child: const Text('제어', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
                 ),
               ],
             ],

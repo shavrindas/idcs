@@ -11,14 +11,21 @@ class AppColors {
 
   static const Color background = Color(0xFFF5F8FA);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color outline = Color(0xFFDCE4E8);
+
+  /// 카드/구분선용 장식 테두리. 흰 배경 대비 1.29:1이라 거의 보이지 않던 것을 1.6:1로 올렸다.
+  static const Color outline = Color(0xFFC0CED6);
+
+  /// 입력창·컨트롤의 경계선. 이런 요소는 장식이 아니라서 대비 3:1을 지켜야 한다.
+  static const Color outlineStrong = Color(0xFF7B99A8);
 
   static const Color textPrimary = Color(0xFF16232A);
   static const Color textSecondary = Color(0xFF5B6B73);
 
-  static const Color error = Color(0xFFD64545);
-  static const Color warning = Color(0xFFB6791F);
-  static const Color success = Color(0xFF1F8F5F);
+  // 상태 색상은 작은 글씨(11~13px)에 쓰이므로 흰 배경 대비 4.5:1을 넘겨야 한다.
+  // 기존 값은 각각 4.38 / 3.66 / 4.08로 기준에 못 미쳤다.
+  static const Color error = Color(0xFFD54141);
+  static const Color warning = Color(0xFFA26B1C);
+  static const Color success = Color(0xFF1D875A);
 }
 
 class AppShadows {
@@ -117,11 +124,11 @@ class AppTheme {
         hintStyle: const TextStyle(color: AppColors.textSecondary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.outline),
+          borderSide: const BorderSide(color: AppColors.outlineStrong),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.outline),
+          borderSide: const BorderSide(color: AppColors.outlineStrong),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -159,7 +166,7 @@ class AppTheme {
         height: 64,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
             color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondary,
           ),
