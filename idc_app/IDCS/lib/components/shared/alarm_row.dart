@@ -1,8 +1,50 @@
 // 경로: lib/components/shared/alarm_row.dart
-// 명세: 알람 목록 행 — user_alarm/facility_alarm 두 화면에서 공유
+// 명세: 알람 목록 행과 목록 가공(상태 필터·반복 묶음) — user_alarm/facility_alarm 두 화면에서 공유
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:idcs/theme/app_theme.dart';
+
+/// 알람 목록 상태 필터.
+enum AlarmStatusFilter { all, active, ended }
+
+/// 반복 발생한 알람을 한 줄로 묶은 결과. [count]가 1이면 묶이지 않은 단일 알람이다.
+class GroupedAlarm {
+  final dynamic alarm;
+  final int count;
+
+  const GroupedAlarm(this.alarm, this.count);
+}
+
+/// 진행 여부로 목록을 거른다.
+List<dynamic> filterAlarmsByStatus(List<dynamic> alarms, AlarmStatusFilter filter) {
+  switch (filter) {
+    case AlarmStatusFilter.all:
+      return alarms;
+    case AlarmStatusFilter.active:
+      return alarms.where(isAlarmActive).toList();
+    case AlarmStatusFilter.ended:
+      return alarms.where((a) => !isAlarmActive(a)).toList();
+  }
+}
+
+/// 같은 지점(role_id)에서 같은 이름으로 반복 발생한 알람을 한 줄로 묶는다.
+/// 서버가 최신순으로 내려주므로 먼저 만난 건을 대표로 두고 건수만 센다.
+List<GroupedAlarm> groupAlarms(List<dynamic> alarms) {
+  final Map<String, int> counts = {};
+  final Map<String, dynamic> representatives = {};
+  final List<String> order = [];
+
+  for (final alarm in alarms) {
+    final key = '${alarm['role_id']}|${alarm['alarm_name']}';
+    if (!representatives.containsKey(key)) {
+      representatives[key] = alarm;
+      order.add(key);
+    }
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+
+  return order.map((key) => GroupedAlarm(representatives[key], counts[key]!)).toList();
+}
 
 /// 알람이 아직 진행 중인지 판단한다.
 /// DB의 severity는 point_role_table에 해당 컬럼이 없어 항상 'a'로 저장되므로
@@ -130,6 +172,61 @@ class AlarmRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 상태 필터 칩과 '묶어서 보기' 토글. 두 알람 화면이 함께 쓴다.
+class AlarmFilterBar extends StatelessWidget {
+  final AlarmStatusFilter statusFilter;
+  final ValueChanged<AlarmStatusFilter> onStatusChanged;
+  final bool grouped;
+  final ValueChanged<bool> onGroupedChanged;
+
+  const AlarmFilterBar({
+    super.key,
+    required this.statusFilter,
+    required this.onStatusChanged,
+    required this.grouped,
+    required this.onGroupedChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Wrap(
+            spacing: 6,
+            children: [
+              _chip('전체', AlarmStatusFilter.all),
+              _chip('진행중', AlarmStatusFilter.active),
+              _chip('종료', AlarmStatusFilter.ended),
+            ],
+          ),
+        ),
+        const Text('묶어서 보기', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        Switch(value: grouped, onChanged: onGroupedChanged),
+      ],
+    );
+  }
+
+  Widget _chip(String label, AlarmStatusFilter value) {
+    final selected = statusFilter == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onStatusChanged(value),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: selected ? Colors.white : AppColors.textPrimary,
+      ),
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.background,
+      side: BorderSide(color: selected ? AppColors.primary : AppColors.outline),
+      visualDensity: VisualDensity.compact,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
     );
   }
 }
