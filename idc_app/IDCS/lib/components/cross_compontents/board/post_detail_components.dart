@@ -174,6 +174,7 @@ class CommentBox extends StatelessWidget {
                 ),
                 trailing: (isCreator || isAdmin)
                     ? IconButton(
+                      tooltip: '댓글 삭제',
                   icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
                   onPressed: () => onDelete(comment['comment_id']),
                 )

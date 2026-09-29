@@ -8,11 +8,7 @@ class FacilityAlarmPage extends StatefulWidget {
   final String userId;
   final String facilityId;
 
-  const FacilityAlarmPage({
-    super.key,
-    required this.userId,
-    required this.facilityId,
-  });
+  const FacilityAlarmPage({super.key, required this.userId, required this.facilityId});
 
   @override
   State<FacilityAlarmPage> createState() => _FacilityAlarmPageState();
@@ -55,9 +51,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('권한 조회 실패: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('권한 조회 실패: $e')));
       }
     } finally {
       if (mounted) {
@@ -92,98 +86,103 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       appBar: AppBar(title: const Text('알람')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 검색창과 드롭다운을 가로 배치
-            Row(
-              children: [
-                // 1. 검색 입력창
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      // 선택된 필터 기준에 따라 힌트 문구 변경
-                      hintText: _searchTarget == 'name' ? '알람 명으로 검색...' : '룸 이름으로 검색...',
-                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 20),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            _searchQuery = '';
-                          });
-                        },
-                      )
-                          : null,
-                      isDense: true,
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
+          : CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // 검색창과 드롭다운을 가로 배치
+                        Row(
+                          children: [
+                            // 1. 검색 입력창
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  // 선택된 필터 기준에 따라 힌트 문구 변경
+                                  hintText: _searchTarget == 'name' ? '알람 명으로 검색...' : '룸 이름으로 검색...',
+                                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                                  suffixIcon: _searchQuery.isNotEmpty
+                                      ? IconButton(
+                                        tooltip: '검색어 지우기',
+                                          icon: const Icon(Icons.clear_rounded, size: 20),
+                                          onPressed: () {
+                                            setState(() {
+                                              _searchController.clear();
+                                              _searchQuery = '';
+                                            });
+                                          },
+                                        )
+                                      : null,
+                                  isDense: true,
+                                ),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _searchQuery = value;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
 
-                // 2. 오른쪽 필터 선택 드롭다운
-                Container(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border.all(color: AppColors.outline),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _searchTarget,
-                      icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
-                      isDense: true,
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'name',
-                          child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                            // 2. 오른쪽 필터 선택 드롭다운
+                            Container(
+                              height: 52,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                border: Border.all(color: AppColors.outline),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _searchTarget,
+                                  icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
+                                  isDense: true,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'name',
+                                      child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'room',
+                                      child: Text('룸 ID', style: TextStyle(fontSize: 14)),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _searchTarget = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        DropdownMenuItem(
-                          value: 'room',
-                          child: Text('룸 ID', style: TextStyle(fontSize: 14)),
+                        const SizedBox(height: 8),
+
+                        AlarmFilterBar(
+                          statusFilter: _statusFilter,
+                          onStatusChanged: (val) => setState(() => _statusFilter = val),
+                          grouped: _grouped,
+                          onGroupedChanged: (val) => setState(() => _grouped = val),
                         ),
                       ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _searchTarget = value;
-                          });
-                        }
-                      },
                     ),
                   ),
+                ),
+                // 3. 필터링된 알람 데이터 전달
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  sliver: FacilityAlarmBox(alarms: displayAlarms, isSearching: _searchQuery.isNotEmpty),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-
-            AlarmFilterBar(
-              statusFilter: _statusFilter,
-              onStatusChanged: (val) => setState(() => _statusFilter = val),
-              grouped: _grouped,
-              onGroupedChanged: (val) => setState(() => _grouped = val),
-            ),
-            const SizedBox(height: 8),
-
-            // 3. 필터링된 알람 데이터 전달
-            FacilityAlarmBox(
-              alarms: displayAlarms,
-              isSearching: _searchQuery.isNotEmpty,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

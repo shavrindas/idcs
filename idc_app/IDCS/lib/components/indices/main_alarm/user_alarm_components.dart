@@ -17,15 +17,17 @@ class UserAlarmBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (alarms.isEmpty) {
-      return EmptyListState(
-        icon: Icons.notifications_off_outlined,
-        message: isSearching ? '검색 결과가 없습니다.' : '조회할 수 있는 알람이 없습니다.',
+      return SliverToBoxAdapter(
+        child: EmptyListState(
+          icon: Icons.notifications_off_outlined,
+          message: isSearching ? '검색 결과가 없습니다.' : '조회할 수 있는 알람이 없습니다.',
+        ),
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    // 알람은 계속 쌓여서 한 유저에 100건이 넘는다. shrinkWrap을 쓰면 화면 밖까지
+    // 전부 미리 만들어지므로, 보이는 만큼만 만드는 Sliver 목록으로 둔다.
+    return SliverList.separated(
       itemCount: alarms.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {

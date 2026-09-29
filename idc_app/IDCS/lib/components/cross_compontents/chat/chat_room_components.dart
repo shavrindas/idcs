@@ -20,6 +20,7 @@ class ChatRoomHeaderBox extends StatelessWidget {
         children: [
           Text(roomName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
           IconButton(
+            tooltip: '메뉴',
             icon: const Icon(Icons.menu_rounded, color: AppColors.textSecondary),
             onPressed: onMenuPressed,
             constraints: const BoxConstraints(), padding: EdgeInsets.zero,
@@ -185,6 +186,7 @@ class ChatInputBox extends StatelessWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: '닫기',
                     icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
                     onPressed: onCancelReply,
                     constraints: const BoxConstraints(),
@@ -198,6 +200,7 @@ class ChatInputBox extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
+                  tooltip: '첨부',
                   icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.textSecondary),
                   onPressed: () {},
                 ),
@@ -214,6 +217,7 @@ class ChatInputBox extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: '보내기',
                   icon: const Icon(Icons.send_rounded, color: AppColors.primary),
                   onPressed: onSend,
                 ),

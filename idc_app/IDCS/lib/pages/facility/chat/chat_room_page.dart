@@ -124,6 +124,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
             : const Text('채팅방'),
         actions: [
           IconButton(
+            tooltip: '닫기',
             icon: Icon(_isSearchMode ? Icons.close_rounded : Icons.search_rounded),
             onPressed: () {
               setState(() {
