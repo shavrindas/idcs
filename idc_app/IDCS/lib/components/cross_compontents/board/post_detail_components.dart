@@ -4,10 +4,14 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 게시글 본문 렌더링 박스 (읽기 전용 에디터 포함)
-class PostContentBox extends StatelessWidget {
+///
+/// FocusNode/ScrollController는 build()가 아니라 State가 들고 있어야 한다.
+/// build()에서 만들면 다시 그릴 때마다 새로 생성되어 스크롤 위치가 초기화된다.
+class PostContentBox extends StatefulWidget {
   final Map<String, dynamic> post;
   final quill.QuillController quillController;
 
@@ -18,7 +22,23 @@ class PostContentBox extends StatelessWidget {
   });
 
   @override
+  State<PostContentBox> createState() => _PostContentBoxState();
+}
+
+class _PostContentBoxState extends State<PostContentBox> {
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -46,12 +66,14 @@ class PostContentBox extends StatelessWidget {
           const Divider(height: 28, color: AppColors.outline),
           // 읽기 전용 Quill Editor 영역
           quill.QuillEditor(
-            controller: quillController,
-            focusNode: FocusNode(),
-            scrollController: ScrollController(),
-            config: const quill.QuillEditorConfig(
+            controller: widget.quillController,
+            focusNode: _focusNode,
+            scrollController: _scrollController,
+            config: quill.QuillEditorConfig(
               showCursor: false,
               autoFocus: false,
+              // 본문에 들어간 이미지를 그리려면 extensions의 빌더가 필요하다.
+              embedBuilders: FlutterQuillEmbeds.editorBuilders(),
             ),
           ),
         ],

@@ -4,6 +4,7 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 제목 입력 및 이미지 첨부 제어 박스
@@ -50,10 +51,28 @@ class PostInputBox extends StatelessWidget {
 }
 
 /// Box #2: 에디터 툴바 및 작성 영역 박스
-class QuillEditorBox extends StatelessWidget {
+///
+/// FocusNode/ScrollController를 build() 안에서 만들면 화면이 다시 그려질 때마다
+/// 새로 생성되어 입력 도중 포커스와 스크롤 위치가 날아간다. State가 들고 있어야 한다.
+class QuillEditorBox extends StatefulWidget {
   final quill.QuillController quillController;
 
   const QuillEditorBox({super.key, required this.quillController});
+
+  @override
+  State<QuillEditorBox> createState() => _QuillEditorBoxState();
+}
+
+class _QuillEditorBoxState extends State<QuillEditorBox> {
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +90,7 @@ class QuillEditorBox extends StatelessWidget {
             color: AppColors.background,
             padding: const EdgeInsets.all(4.0),
             child: quill.QuillSimpleToolbar(
-              controller: quillController,
+              controller: widget.quillController,
               config: const quill.QuillSimpleToolbarConfig(),
             ),
           ),
@@ -82,11 +101,12 @@ class QuillEditorBox extends StatelessWidget {
             padding: const EdgeInsets.all(12.0),
             color: AppColors.surface,
             child: quill.QuillEditor(
-              controller: quillController,
-              focusNode: FocusNode(),
-              scrollController: ScrollController(),
-              config: const quill.QuillEditorConfig(
-                // 자체 스크롤을 막고 부모의 SingleChildScrollView에 의존하게 할 때 유용 (v11 방식)
+              controller: widget.quillController,
+              focusNode: _focusNode,
+              scrollController: _scrollController,
+              config: quill.QuillEditorConfig(
+                // 이미지 블록은 본체가 그리지 못해 extensions의 빌더를 넘겨야 한다.
+                embedBuilders: FlutterQuillEmbeds.editorBuilders(),
               ),
             ),
           ),
