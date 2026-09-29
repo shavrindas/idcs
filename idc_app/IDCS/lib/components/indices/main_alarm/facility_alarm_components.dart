@@ -27,14 +27,12 @@ class FacilityAlarmBox extends StatelessWidget {
       itemCount: alarms.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final alarm = alarms[index].alarm;
+        final group = alarms[index];
 
-        return AlarmRow(
-          title: alarm['alarm_name'] ?? '알람 이름 없음',
-          subtitle: alarm['room_name'] ?? '호실 이름 없음',
-          timestamp: formatAlarmTime(alarm['timestamp']?.toString() ?? ''),
-          isActive: isAlarmActive(alarm),
-          count: alarms[index].count,
+        return GroupedAlarmTile(
+          group: group,
+          title: group.alarm['alarm_name'] ?? '알람 이름 없음',
+          subtitle: group.alarm['room_name'] ?? '호실 이름 없음',
         );
       },
     );

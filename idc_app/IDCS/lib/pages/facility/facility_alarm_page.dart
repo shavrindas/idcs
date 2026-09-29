@@ -86,7 +86,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
     // 묶어서 보기가 꺼져 있으면 건마다 count 1로 그대로 보여준다.
     final displayAlarms = _grouped
         ? groupAlarms(searchedAlarms)
-        : searchedAlarms.map((a) => GroupedAlarm(a, 1)).toList();
+        : searchedAlarms.map((a) => GroupedAlarm([a])).toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('알람')),

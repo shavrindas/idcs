@@ -7,12 +7,17 @@ import 'package:idcs/theme/app_theme.dart';
 /// 알람 목록 상태 필터.
 enum AlarmStatusFilter { all, active, ended }
 
-/// 반복 발생한 알람을 한 줄로 묶은 결과. [count]가 1이면 묶이지 않은 단일 알람이다.
+/// 반복 발생한 알람을 한 줄로 묶은 결과.
+/// [members]는 최신순이며, 펼쳤을 때 개별 발생 건을 보여주는 데 쓴다.
 class GroupedAlarm {
-  final dynamic alarm;
-  final int count;
+  final List<dynamic> members;
 
-  const GroupedAlarm(this.alarm, this.count);
+  const GroupedAlarm(this.members);
+
+  /// 목록에 대표로 보여줄 건 (가장 최근 발생).
+  dynamic get alarm => members.first;
+
+  int get count => members.length;
 }
 
 /// 진행 여부로 목록을 거른다.
@@ -30,20 +35,19 @@ List<dynamic> filterAlarmsByStatus(List<dynamic> alarms, AlarmStatusFilter filte
 /// 같은 지점(role_id)에서 같은 이름으로 반복 발생한 알람을 한 줄로 묶는다.
 /// 서버가 최신순으로 내려주므로 먼저 만난 건을 대표로 두고 건수만 센다.
 List<GroupedAlarm> groupAlarms(List<dynamic> alarms) {
-  final Map<String, int> counts = {};
-  final Map<String, dynamic> representatives = {};
+  final Map<String, List<dynamic>> groups = {};
   final List<String> order = [];
 
   for (final alarm in alarms) {
     final key = '${alarm['role_id']}|${alarm['alarm_name']}';
-    if (!representatives.containsKey(key)) {
-      representatives[key] = alarm;
+    if (!groups.containsKey(key)) {
+      groups[key] = [];
       order.add(key);
     }
-    counts[key] = (counts[key] ?? 0) + 1;
+    groups[key]!.add(alarm);
   }
 
-  return order.map((key) => GroupedAlarm(representatives[key], counts[key]!)).toList();
+  return order.map((key) => GroupedAlarm(groups[key]!)).toList();
 }
 
 /// 알람이 아직 진행 중인지 판단한다.
@@ -73,6 +77,10 @@ class AlarmRow extends StatelessWidget {
   final int count;
   final VoidCallback? onTap;
 
+  /// 묶인 건을 펼칠 수 있는 행이면 화살표를 보여준다.
+  final bool isExpandable;
+  final bool isExpanded;
+
   const AlarmRow({
     super.key,
     required this.title,
@@ -81,6 +89,8 @@ class AlarmRow extends StatelessWidget {
     required this.isActive,
     this.count = 1,
     this.onTap,
+    this.isExpandable = false,
+    this.isExpanded = false,
   });
 
   @override
@@ -165,11 +175,123 @@ class AlarmRow extends StatelessWidget {
                         ],
                       ],
                     ),
+                    if (isExpandable)
+                      Icon(
+                        isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 묶인 알람 한 덩어리. 2건 이상이면 눌러서 개별 발생 건을 펼쳐볼 수 있다.
+class GroupedAlarmTile extends StatefulWidget {
+  final GroupedAlarm group;
+  final String title;
+
+  /// 대표 행에 보여줄 부제 (시설·호실 등).
+  final String subtitle;
+
+  /// 개별 건을 눌렀을 때 동작. 묶이지 않은 단일 알람의 탭에도 쓰인다.
+  final void Function(dynamic alarm)? onAlarmTap;
+
+  const GroupedAlarmTile({
+    super.key,
+    required this.group,
+    required this.title,
+    required this.subtitle,
+    this.onAlarmTap,
+  });
+
+  @override
+  State<GroupedAlarmTile> createState() => _GroupedAlarmTileState();
+}
+
+class _GroupedAlarmTileState extends State<GroupedAlarmTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final group = widget.group;
+    final isGrouped = group.count > 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AlarmRow(
+          title: widget.title,
+          subtitle: widget.subtitle,
+          timestamp: formatAlarmTime(group.alarm['timestamp']?.toString() ?? ''),
+          isActive: isAlarmActive(group.alarm),
+          count: group.count,
+          isExpandable: isGrouped,
+          isExpanded: _expanded,
+          // 묶인 행은 펼치기/접기, 단일 행은 원래 동작을 그대로 한다.
+          onTap: isGrouped
+              ? () => setState(() => _expanded = !_expanded)
+              : (widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(group.alarm)),
+        ),
+        if (_expanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 14, top: 6),
+            child: Column(
+              children: group.members
+                  .map((alarm) => _OccurrenceRow(
+                        alarm: alarm,
+                        onTap: widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(alarm),
+                      ))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// 펼쳤을 때 보이는 개별 발생 건 한 줄.
+class _OccurrenceRow extends StatelessWidget {
+  final dynamic alarm;
+  final VoidCallback? onTap;
+
+  const _OccurrenceRow({required this.alarm, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final active = isAlarmActive(alarm);
+    final color = active ? AppColors.error : AppColors.textSecondary;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                formatAlarmTime(alarm['timestamp']?.toString() ?? ''),
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ),
+            Text(
+              active ? '진행중' : '종료',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+            ),
+          ],
         ),
       ),
     );
