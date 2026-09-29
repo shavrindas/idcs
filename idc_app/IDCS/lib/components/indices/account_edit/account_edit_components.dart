@@ -135,6 +135,9 @@ class SocialLinkBox extends StatelessWidget {
     required this.onLinkPressed,
   });
 
+  bool _isLinked(String provider) =>
+      linkedProviders.any((p) => p.toString().toLowerCase() == provider);
+
   @override
   Widget build(BuildContext context) {
     return _EditCard(
@@ -142,42 +145,124 @@ class SocialLinkBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => onLinkPressed('google'),
-                  icon: Container(
-                    width: 20, height: 20,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: Color(0xFF4285F4), shape: BoxShape.circle),
-                    child: const Text('G', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                  ),
-                  label: const Text('Google'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => onLinkPressed('apple'),
-                  icon: Container(
-                    width: 20, height: 20,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                    child: const Icon(Icons.apple, color: Colors.white, size: 13),
-                  ),
-                  label: const Text('Apple'),
-                ),
-              ),
-            ],
-          ),
-          if (linkedProviders.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              '연동됨: ${linkedProviders.join(', ')}',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          _ProviderRow(
+            label: 'Google',
+            isLinked: _isLinked('google'),
+            onPressed: () => onLinkPressed('google'),
+            badge: Container(
+              width: 22,
+              height: 22,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Color(0xFF4285F4), shape: BoxShape.circle),
+              child: const Text('G', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
-          ],
+          ),
+          const SizedBox(height: 8),
+          _ProviderRow(
+            label: 'Apple',
+            isLinked: _isLinked('apple'),
+            onPressed: () => onLinkPressed('apple'),
+            badge: Container(
+              width: 22,
+              height: 22,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+              child: const Icon(Icons.apple, color: Colors.white, size: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 프로바이더 한 줄. 이미 연동된 계정은 '연동됨'으로 표시하고 버튼을 없앤다.
+class _ProviderRow extends StatelessWidget {
+  final String label;
+  final bool isLinked;
+  final Widget badge;
+  final VoidCallback onPressed;
+
+  const _ProviderRow({
+    required this.label,
+    required this.isLinked,
+    required this.badge,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Row(
+        children: [
+          badge,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            ),
+          ),
+          if (isLinked)
+            Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 17),
+                const SizedBox(width: 5),
+                const Text(
+                  '연동됨',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success),
+                ),
+              ],
+            )
+          else
+            TextButton(onPressed: onPressed, child: const Text('연동하기')),
+        ],
+      ),
+    );
+  }
+}
+
+/// 계정 탈퇴 박스. 되돌릴 수 없는 동작이라 다른 카드와 분리해 경고색으로 표시한다.
+class WithdrawBox extends StatelessWidget {
+  final VoidCallback onWithdraw;
+
+  const WithdrawBox({super.key, required this.onWithdraw});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            '계정 탈퇴',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.error),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '탈퇴하면 계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: onWithdraw,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+            ),
+            child: const Text('계정 탈퇴'),
+          ),
         ],
       ),
     );
