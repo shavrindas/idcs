@@ -112,42 +112,135 @@ class ChartSeriesBox extends StatelessWidget {
   final int? selectedGroupId; // 라디오 버튼처럼 단일 선택으로 변경 (차트 하나당 한 그룹)
   final Function(int) onGroupSelected;
 
+  /// 그룹과 상관없이 호실의 항목을 직접 고르는 모드.
+  final bool directMode;
+  final VoidCallback onDirectModeSelected;
+
+  /// 호실에 등록된 전체 포인트 롤. 그룹 API는 이름을 주지 않아 따로 받아 맞춘다.
+  final List<dynamic> roles;
+
+  /// 지금 차트에 그릴 롤. 그룹을 고르면 그룹의 롤로 채워지고, 여기서 개별로 끄고 켤 수 있다.
+  final Set<int> visibleRoleIds;
+  final Function(int, bool) onRoleToggled;
+
   const ChartSeriesBox({
     super.key,
     required this.availableGroups,
     required this.selectedGroupId,
     required this.onGroupSelected,
+    required this.directMode,
+    required this.onDirectModeSelected,
+    required this.roles,
+    required this.visibleRoleIds,
+    required this.onRoleToggled,
   });
+
+  int? _roleId(dynamic role) =>
+      role['role_id'] is int ? role['role_id'] : int.tryParse(role['role_id'].toString());
+
+  /// 체크박스로 보여줄 항목. 그룹 모드면 그룹에 묶인 것만, 직접 선택이면 전체.
+  List<dynamic> get _shownRoles {
+    if (directMode) return roles;
+
+    final group = availableGroups.where((g) => g['group_id'] == selectedGroupId).firstOrNull;
+    if (group == null) return const [];
+
+    final groupRoleIds = (group['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
+    return roles.where((r) => groupRoleIds.contains(_roleId(r))).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final shown = _shownRoles;
+
     return _SectionCard(
       title: '데이터 그룹',
-      child: availableGroups.isEmpty
-          ? const Text('등록된 그룹이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))
-          : Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: availableGroups.map((group) {
-                final isSelected = selectedGroupId == group['group_id'];
-                return ChoiceChip(
-                  label: Text(group['group_name']),
-                  selected: isSelected,
-                  onSelected: (bool selected) {
-                    if (selected) onGroupSelected(group['group_id']);
-                  },
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  selectedColor: AppColors.primary,
-                  backgroundColor: AppColors.background,
-                  side: BorderSide(color: isSelected ? AppColors.primary : AppColors.outline),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                );
-              }).toList(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (availableGroups.isEmpty && !directMode)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Text('등록된 그룹이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
             ),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: [
+              ...availableGroups.map((group) {
+                final isSelected = !directMode && selectedGroupId == group['group_id'];
+                return _chip(
+                  label: group['group_name'],
+                  selected: isSelected,
+                  onSelected: () => onGroupSelected(group['group_id']),
+                );
+              }),
+              _chip(
+                label: '직접 선택',
+                selected: directMode,
+                onSelected: onDirectModeSelected,
+              ),
+            ],
+          ),
+          if (shown.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: AppColors.outline),
+            const SizedBox(height: 10),
+            Text(
+              directMode ? '표시할 항목을 고르세요' : '이 그룹에 묶인 항목',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 168),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: shown.map((role) {
+                    final id = _roleId(role);
+                    final checked = id != null && visibleRoleIds.contains(id);
+                    return FilterChip(
+                      label: Text(role['role_name']?.toString() ?? '이름 없음'),
+                      selected: checked,
+                      onSelected: id == null ? null : (val) => onRoleToggled(id, val),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: checked ? AppColors.primary : AppColors.textSecondary,
+                      ),
+                      showCheckmark: true,
+                      checkmarkColor: AppColors.primary,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.12),
+                      backgroundColor: AppColors.background,
+                      side: BorderSide(color: checked ? AppColors.primary : AppColors.outline),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _chip({required String label, required bool selected, required VoidCallback onSelected}) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (val) { if (val) onSelected(); },
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : AppColors.textPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.background,
+      side: BorderSide(color: selected ? AppColors.primary : AppColors.outline),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 }

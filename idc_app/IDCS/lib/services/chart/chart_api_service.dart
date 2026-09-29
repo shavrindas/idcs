@@ -36,6 +36,20 @@ class ChartApiService {
       }
     }
   }
+  /// 호실에 등록된 포인트 롤(측정 항목) 목록. 그룹 API는 role_id만 주고 이름을 주지 않아
+  /// 그룹에 어떤 항목이 묶여 있는지 보여주려면 이 목록과 맞춰봐야 한다.
+  static Future<List<dynamic>> getPointRoles(int facilityId, int roomId) async {
+    final url = Uri.parse('$_mappingUrl/roles/$facilityId/$roomId');
+    final response = await http.get(url);
+    final String responseBody = utf8.decode(response.bodyBytes);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(responseBody)['roles'] ?? [];
+    } else {
+      throw Exception('포인트 롤 목록을 불러오는데 실패했습니다.');
+    }
+  }
+
   static Future<List<dynamic>> getChartGroups(int facilityId, int roomId) async {
     final url = Uri.parse('$_mappingUrl/groups/$facilityId/$roomId');
     final response = await http.get(url);
