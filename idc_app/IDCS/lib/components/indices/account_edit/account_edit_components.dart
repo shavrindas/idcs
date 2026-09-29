@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// Box #2: 아이디(username) 수정 박스
 class UsernameEditBox extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback onSubmit;
+  final Future<void> Function() onSubmit;
 
   const UsernameEditBox({super.key, required this.controller, required this.onSubmit});
 
@@ -20,7 +21,7 @@ class UsernameEditBox extends StatelessWidget {
             decoration: const InputDecoration(prefixIcon: Icon(Icons.badge_outlined)),
           ),
           const SizedBox(height: 14),
-          ElevatedButton(onPressed: onSubmit, child: const Text('이름 저장')),
+          AsyncActionButton(label: '이름 저장', onPressed: onSubmit),
         ],
       ),
     );
@@ -30,7 +31,7 @@ class UsernameEditBox extends StatelessWidget {
 /// Box #3: 전화번호 수정 박스
 class PhoneEditBox extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback onSubmit;
+  final Future<void> Function() onSubmit;
 
   const PhoneEditBox({super.key, required this.controller, required this.onSubmit});
 
@@ -47,7 +48,7 @@ class PhoneEditBox extends StatelessWidget {
             decoration: const InputDecoration(prefixIcon: Icon(Icons.phone_outlined)),
           ),
           const SizedBox(height: 14),
-          ElevatedButton(onPressed: onSubmit, child: const Text('전화번호 저장')),
+          AsyncActionButton(label: '전화번호 저장', onPressed: onSubmit),
         ],
       ),
     );
@@ -59,7 +60,7 @@ class PasswordEditBox extends StatefulWidget {
   final TextEditingController currentPwController;
   final TextEditingController newPwController;
   final String collapseMessage;
-  final VoidCallback onSubmit;
+  final Future<void> Function() onSubmit;
 
   const PasswordEditBox({
     super.key,
@@ -119,7 +120,7 @@ class _PasswordEditBoxState extends State<PasswordEditBox> {
             ),
           ],
           const SizedBox(height: 14),
-          ElevatedButton(onPressed: widget.onSubmit, child: const Text('비밀번호 변경')),
+          AsyncActionButton(label: '비밀번호 변경', onPressed: widget.onSubmit),
         ],
       ),
     );

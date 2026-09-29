@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 일반 로그인 박스 (이메일/비밀번호 입력 + 제출)
 class StandardLoginBox extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
-  final VoidCallback onLoginPressed;
+  final Future<void> Function() onLoginPressed;
 
   const StandardLoginBox({
     super.key,
@@ -54,10 +55,7 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
           ),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: widget.onLoginPressed,
-          child: const Text('로그인'),
-        ),
+        AsyncActionButton(label: '로그인', onPressed: widget.onLoginPressed),
       ],
     );
   }
