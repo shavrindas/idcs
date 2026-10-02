@@ -73,8 +73,8 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
         title: Text(_facilityName ?? '시설 ${widget.facilityId}'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: context.colors.surface,
+        foregroundColor: context.colors.textPrimary,
       ),
       body: widget.navigationShell,
       bottomNavigationBar: NavigationBar(

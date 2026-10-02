@@ -118,7 +118,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
             ? TextField(
           controller: _searchController,
           decoration: const InputDecoration(hintText: '메시지 검색...', border: InputBorder.none, filled: false),
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: context.colors.textPrimary),
           onSubmitted: (val) => _loadMessages(keyword: val),
         )
             : const Text('채팅방'),
@@ -141,9 +141,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       endDrawer: Drawer(
         child: Column(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: AppColors.primary),
-              child: Center(child: Text('참여중인 유저 목록', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700))),
+            DrawerHeader(
+              decoration: BoxDecoration(color: context.colors.primary),
+              child: Center(child: Text('참여중인 유저 목록', style: TextStyle(color: context.colors.onPrimary, fontSize: 18, fontWeight: FontWeight.w700))),
             ),
             Expanded(
               child: ListView.builder(
@@ -154,12 +154,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
                   final String name = p['name'] ?? '';
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: isAdmin ? AppColors.primary : AppColors.primary.withValues(alpha: 0.12),
+                      backgroundColor: isAdmin ? context.colors.primary : context.colors.primary.withValues(alpha: 0.12),
                       child: isAdmin
-                          ? const Icon(Icons.shield_rounded, color: Colors.white, size: 18)
+                          ? Icon(Icons.shield_rounded, color: context.colors.onPrimary, size: 18)
                           : Text(
                               name.isNotEmpty ? name.substring(0, 1) : '?',
-                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700),
+                              style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700),
                             ),
                     ),
                     title: Text('${p['name']} (${p['role']})'),
