@@ -21,11 +21,15 @@ class IntegratedFacilityBox extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.4),
-        ),
-        const SizedBox(height: 10),
+        // An empty label means the screen already names this section in its app bar.
+        if (label.isNotEmpty) ...[
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.4),
+          ),
+          const SizedBox(height: 10),
+        ],
 
         if (facilities.isEmpty)
           Container(
