@@ -191,11 +191,11 @@ class _FindPwPageState extends State<FindPwPage> {
                             const SizedBox(height: 10),
                             Row(
                               children: [
-                                Icon(Icons.timer_outlined, size: 16, color: AppColors.textSecondary),
+                                Icon(Icons.timer_outlined, size: 16, color: context.colors.textSecondary),
                                 const SizedBox(width: 6),
                                 Text(
                                   '남은 시간 ${_formatTime(_remainingSeconds)}',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                                  style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                                 ),
                               ],
                             ),
@@ -271,9 +271,9 @@ class _FindPwPageState extends State<FindPwPage> {
     return Container(
       padding: const EdgeInsets.all(18.0),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isActive ? AppColors.primary : AppColors.outline, width: isActive ? 1.4 : 1),
+        border: Border.all(color: isActive ? context.colors.primary : context.colors.outline, width: isActive ? 1.4 : 1),
       ),
       child: Opacity(
         opacity: isActive || isDone ? 1.0 : 0.5,
@@ -286,7 +286,7 @@ class _FindPwPageState extends State<FindPwPage> {
                 const SizedBox(width: 10),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                 ),
               ],
             ),
@@ -301,7 +301,7 @@ class _FindPwPageState extends State<FindPwPage> {
   Widget _buildMessage(String message) {
     return Text(
       message,
-      style: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
+      style: TextStyle(color: context.colors.primary, fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
     );
   }
 
@@ -323,9 +323,10 @@ class _FindPwPageState extends State<FindPwPage> {
         suffixIcon: onToggleObscure == null
             ? null
             : IconButton(
+              tooltip: '비밀번호 표시',
                 icon: Icon(
                   isObscure! ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
                 onPressed: onToggleObscure,
               ),
@@ -344,10 +345,10 @@ class _StepBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color background = isDone
-        ? AppColors.primary
+        ? context.colors.primary
         : isActive
-            ? AppColors.primary
-            : AppColors.outline;
+            ? context.colors.primary
+            : context.colors.outline;
 
     return Container(
       width: 24,
@@ -355,13 +356,13 @@ class _StepBadge extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(color: background, shape: BoxShape.circle),
       child: isDone
-          ? const Icon(Icons.check, size: 14, color: Colors.white)
+          ? Icon(Icons.check, size: 14, color: context.colors.onPrimary)
           : Text(
               '$number',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: isActive ? Colors.white : AppColors.textSecondary,
+                color: isActive ? context.colors.onPrimary : context.colors.textSecondary,
               ),
             ),
     );

@@ -30,9 +30,9 @@ class BoardHeaderBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -40,7 +40,7 @@ class BoardHeaderBox extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
               if (onCreatePost != null)
                 ElevatedButton.icon(
                   onPressed: onCreatePost,
@@ -57,13 +57,13 @@ class BoardHeaderBox extends StatelessWidget {
                 height: 48,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.outline),
+                  border: Border.all(color: context.colors.outline),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedSearchType,
-                    icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
+                    icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
                     isDense: true,
                     items: const [
                       DropdownMenuItem(value: 'all', child: Text('전체')),
@@ -127,9 +127,9 @@ class BoardListAndPagingBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppShadows.soft,
+        boxShadow: context.colors.softShadow,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -141,13 +141,13 @@ class BoardListAndPagingBox extends StatelessWidget {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : posts.isEmpty
-                ? const Center(
-                    child: Text('등록된 포스트가 없습니다.', style: TextStyle(color: AppColors.textSecondary)),
+                ? Center(
+                    child: Text('등록된 포스트가 없습니다.', style: TextStyle(color: context.colors.textSecondary)),
                   )
                 : ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount: posts.length,
-              separatorBuilder: (context, index) => const Divider(height: 1, color: AppColors.outline),
+              separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.outline),
               itemBuilder: (context, index) {
                 final post = posts[index];
                 return ListTile(
@@ -155,28 +155,28 @@ class BoardListAndPagingBox extends StatelessWidget {
                     post.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                   subtitle: Text(
                     '[${post.facilityName}] 작성자: ${post.creatorName}',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                   ),
-                  trailing: const Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textSecondary),
+                  trailing: Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textSecondary),
                   onTap: () => onPostTapped(post.postId),
                 );
               },
             ),
           ),
-          const Divider(height: 1, color: AppColors.outline),
+          Divider(height: 1, color: context.colors.outline),
 
           // Box #3: 페이징 영역
-          _buildPagingControl(),
+          _buildPagingControl(context),
         ],
       ),
     );
   }
 
-  Widget _buildPagingControl() {
+  Widget _buildPagingControl(BuildContext context) {
     final int blockSize = 5;
     final int currentBlock = ((currentPage - 1) ~/ blockSize);
     final int startPage = currentBlock * blockSize + 1;
@@ -191,15 +191,17 @@ class BoardListAndPagingBox extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
+              tooltip: '첫 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
-              icon: const Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: AppColors.textSecondary),
+              icon: Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: context.colors.textSecondary),
               onPressed: currentPage > 1 ? () => onPageChanged(1) : null,
             ),
             IconButton(
+              tooltip: '이전 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
-              icon: const Icon(Icons.chevron_left_rounded, size: 18, color: AppColors.textSecondary),
+              icon: Icon(Icons.chevron_left_rounded, size: 18, color: context.colors.textSecondary),
               onPressed: startPage > 1 ? () => onPageChanged(startPage - 1) : null,
             ),
             const SizedBox(width: 4),
@@ -214,13 +216,13 @@ class BoardListAndPagingBox extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary : Colors.transparent,
+                    color: isActive ? context.colors.primary : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     '$pageNum',
                     style: TextStyle(
-                      color: isActive ? Colors.white : AppColors.textPrimary,
+                      color: isActive ? context.colors.onPrimary : context.colors.textPrimary,
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                       fontSize: 13,
                     ),
@@ -231,15 +233,17 @@ class BoardListAndPagingBox extends StatelessWidget {
 
             const SizedBox(width: 4),
             IconButton(
+              tooltip: '다음 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
-              icon: const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textSecondary),
+              icon: Icon(Icons.chevron_right_rounded, size: 18, color: context.colors.textSecondary),
               onPressed: endPage < safeTotalPages ? () => onPageChanged(endPage + 1) : null,
             ),
             IconButton(
+              tooltip: '마지막 페이지',
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
-              icon: const Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: AppColors.textSecondary),
+              icon: Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: context.colors.textSecondary),
               onPressed: currentPage < safeTotalPages ? () => onPageChanged(safeTotalPages) : null,
             ),
           ],

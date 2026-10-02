@@ -5,15 +5,23 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
 
+    <!-- 💡 알람 '다시 알림' 예약용. 기기가 절전 상태여도 정해진 시각에 울리게 한다. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- 재부팅 후에도 예약된 다시 알림이 유지되도록 한다 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:label="idcs"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
         <!-- 💡 2. FCM 백그라운드 기본 알림 채널 지정 (application 태그 내부) -->
+        <!-- 소리/진동 조합별로 채널이 나뉘어 있어(fcm_service.dart의 alarmChannels),
+             시스템이 직접 띄우는 경우의 기본값으로 소리+진동 채널을 쓴다 -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="high_importance_channel" />
+            android:value="alarm_sound_vibe" />
 
         <activity
             android:name=".MainActivity"

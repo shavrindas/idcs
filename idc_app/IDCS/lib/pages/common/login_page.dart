@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
       // 1. AuthService에 발급받은 user_id 저장 (이 시점에 isLoggedIn이 true가 됨)
       final userId = result['user_id'];
-      AuthService.setUserId(userId);
+      await AuthService.setUserId(userId, persist: _keepLogin);
 
       // [비동기 컨텍스트 방어 로직] 화면이 파괴되지 않았는지 확인
       if (!mounted) return;
@@ -98,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       final userId = result['user_id'];
-      AuthService.setUserId(userId);
+      await AuthService.setUserId(userId, persist: _keepLogin);
 
       if (!mounted) return;
 
@@ -109,6 +109,7 @@ class _LoginPageState extends State<LoginPage> {
       context.go('/index/$userId/home');
 
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
@@ -177,10 +178,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () => context.push('/signup'),
-                      child: const Text(
+                      child: Text(
                         '회원가입',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -191,10 +192,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () => context.push('/find_id'),
-                      child: const Text(
+                      child: Text(
                         '아이디 찾기',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

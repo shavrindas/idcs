@@ -73,4 +73,17 @@ class UserApiService {
     if (response.statusCode == 200) return data['message'];
     throw Exception(data['detail'] ?? '비밀번호 수정에 실패했습니다.');
   }
+
+  /// 계정 탈퇴. 서버에서 CASCADE로 연동 계정/시설 소속 정보까지 함께 삭제된다.
+  static Future<String> withdraw(String userId) async {
+    final url = Uri.parse('$_baseUrl/withdraw');
+    final response = await http.delete(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_id': int.parse(userId)}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw Exception(data['detail'] ?? '계정 탈퇴에 실패했습니다.');
+  }
 }

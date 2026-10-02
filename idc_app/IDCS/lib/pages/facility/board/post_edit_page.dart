@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:image_picker/image_picker.dart';
 import 'package:idcs/components/cross_compontents/board/post_editor_components.dart.dart';
 import 'package:idcs/services/board/board_api_service.dart';
 
@@ -76,7 +77,26 @@ class _PostEditPageState extends State<PostEditPage> {
   }
 
   Future<void> _handleImageAttach() async {
-    // TODO: 이미지 업로드 서비스 연동
+    final controller = _quillController;
+    if (controller == null) return;
+
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    try {
+      final uploaded = await BoardApiService.uploadImage(
+        bytes: await picked.readAsBytes(),
+        filename: picked.name,
+      );
+
+      final index = controller.selection.baseOffset;
+      final length = controller.selection.extentOffset - index;
+      controller.replaceText(index, length, quill.BlockEmbed.image(uploaded.imageUrl), null);
+      _newImageIds.add(uploaded.imageId);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미지 첨부 실패: $e')));
+    }
   }
 
   Future<void> _handleSubmit() async {

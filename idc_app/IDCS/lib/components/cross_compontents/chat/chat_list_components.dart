@@ -13,14 +13,14 @@ class ChatRoomControlBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Row(
         children: [
-          const Expanded(
-            child: Text('채팅방 관리', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Expanded(
+            child: Text('채팅방 관리', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
           ),
           ElevatedButton.icon(
             onPressed: onCreateGroup,
@@ -49,15 +49,15 @@ class ChatRoomListBox extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 32),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.outline),
+          border: Border.all(color: context.colors.outline),
         ),
         child: Column(
           children: [
-            Icon(Icons.chat_bubble_outline_rounded, color: AppColors.textSecondary.withValues(alpha: 0.6), size: 28),
+            Icon(Icons.chat_bubble_outline_rounded, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
             const SizedBox(height: 8),
-            const Text('참여 중인 채팅방이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            Text('참여 중인 채팅방이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           ],
         ),
       );
@@ -65,54 +65,54 @@ class ChatRoomListBox extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       clipBehavior: Clip.antiAlias,
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: rooms.length,
-        separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.outline),
+        separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.outline),
         itemBuilder: (context, index) {
           final room = rooms[index];
           final isPinned = room['sort_priority'] < 4;
           final String roomName = room['room_name'] ?? '';
           final bool isGroup = room['type'] == 'GROUP';
           return ListTile(
-            tileColor: isPinned ? AppColors.primary.withValues(alpha: 0.05) : null,
+            tileColor: isPinned ? context.colors.primary.withValues(alpha: 0.05) : null,
             leading: Stack(
               clipBehavior: Clip.none,
               children: [
                 CircleAvatar(
-                  backgroundColor: room['type'] == 'FACILITY' ? AppColors.primary : AppColors.primaryDark,
+                  backgroundColor: room['type'] == 'FACILITY' ? context.colors.primary : context.colors.primaryDark,
                   child: isGroup
-                      ? const Icon(Icons.group_rounded, color: Colors.white, size: 20)
+                      ? Icon(Icons.group_rounded, color: context.colors.onPrimary, size: 20)
                       : Text(
                           roomName.isNotEmpty ? roomName.substring(0, 1) : '?',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                          style: TextStyle(color: context.colors.onPrimary, fontWeight: FontWeight.w700, fontSize: 15),
                         ),
                 ),
                 if (isPinned)
-                  const Positioned(
+                  Positioned(
                     right: -2, bottom: -2,
-                    child: Icon(Icons.push_pin_rounded, size: 14, color: AppColors.error),
+                    child: Icon(Icons.push_pin_rounded, size: 14, color: context.colors.error),
                   ),
               ],
             ),
-            title: Text(roomName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
+            title: Text(roomName, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
             subtitle: Text(
               room['last_message'],
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
             ),
             trailing: room['unread_count'] > 0
                 ? CircleAvatar(
-                    radius: 11,
-                    backgroundColor: AppColors.error,
-                    child: Text('${room['unread_count']}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+                    radius: 13,
+                    backgroundColor: context.colors.error,
+                    child: Text('${room['unread_count']}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
                   )
                 : null,
             onTap: () => onRoomTapped(room['room_id']),

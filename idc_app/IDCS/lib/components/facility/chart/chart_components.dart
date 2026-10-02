@@ -19,6 +19,11 @@ class ChartFilterBox extends StatelessWidget {
   final Function(String) onTimeRangeChanged;
   final VoidCallback onApply;
 
+  /// 조회 대상 호실. 예전에는 1번 호실로 고정되어 있어 다른 호실에서는 차트가 아예 뜨지 않았다.
+  final List<dynamic> rooms;
+  final int? selectedRoomId;
+  final Function(int) onRoomChanged;
+
   const ChartFilterBox({
     super.key,
     required this.currentScale,
@@ -26,53 +31,74 @@ class ChartFilterBox extends StatelessWidget {
     required this.onScaleChanged,
     required this.onTimeRangeChanged,
     required this.onApply,
+    required this.rooms,
+    required this.selectedRoomId,
+    required this.onRoomChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
       title: '조회 조건',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              value: currentScale,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: '해상도'),
-              items: const [
-                DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
-              ],
-              onChanged: (val) { if (val != null) onScaleChanged(val); },
-            ),
+          DropdownButtonFormField<int>(
+            value: selectedRoomId,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: '호실'),
+            items: rooms
+                .map((room) => DropdownMenuItem<int>(
+                      value: room['id'] is int ? room['id'] : int.tryParse(room['id'].toString()),
+                      child: Text(room['name']?.toString() ?? '이름 없는 호실', overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: (val) { if (val != null) onRoomChanged(val); },
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              value: currentTimeRange,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: '조회 기간'),
-              items: const [
-                DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
-                DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
-              ],
-              onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            height: 58,
-            child: ElevatedButton(
-              onPressed: onApply,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
-              child: const Text('적용'),
-            ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: currentScale,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '해상도'),
+                  items: const [
+                    DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
+                  ],
+                  onChanged: (val) { if (val != null) onScaleChanged(val); },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: currentTimeRange,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: '조회 기간'),
+                  items: const [
+                    DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
+                  ],
+                  onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 58,
+                child: ElevatedButton(
+                  onPressed: onApply,
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
+                  child: const Text('적용'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -86,50 +112,248 @@ class ChartSeriesBox extends StatelessWidget {
   final int? selectedGroupId; // 라디오 버튼처럼 단일 선택으로 변경 (차트 하나당 한 그룹)
   final Function(int) onGroupSelected;
 
+  /// 그룹과 상관없이 호실의 항목을 직접 고르는 모드.
+  final bool directMode;
+  final VoidCallback onDirectModeSelected;
+
+  /// 호실에 등록된 전체 포인트 롤. 그룹 API는 이름을 주지 않아 따로 받아 맞춘다.
+  final List<dynamic> roles;
+
+  /// 지금 차트에 그릴 롤. 그룹을 고르면 그룹의 롤로 채워지고, 여기서 개별로 끄고 켤 수 있다.
+  final Set<int> visibleRoleIds;
+  final Function(int, bool) onRoleToggled;
+
   const ChartSeriesBox({
     super.key,
     required this.availableGroups,
     required this.selectedGroupId,
     required this.onGroupSelected,
+    required this.directMode,
+    required this.onDirectModeSelected,
+    required this.roles,
+    required this.visibleRoleIds,
+    required this.onRoleToggled,
   });
+
+  int? _roleId(dynamic role) =>
+      role['role_id'] is int ? role['role_id'] : int.tryParse(role['role_id'].toString());
+
+  /// 체크박스로 보여줄 항목. 그룹 모드면 그룹에 묶인 것만, 직접 선택이면 전체.
+  List<dynamic> get _shownRoles {
+    if (directMode) return roles;
+
+    final group = availableGroups.where((g) => g['group_id'] == selectedGroupId).firstOrNull;
+    if (group == null) return const [];
+
+    final groupRoleIds = (group['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
+    return roles.where((r) => groupRoleIds.contains(_roleId(r))).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final shown = _shownRoles;
+
     return _SectionCard(
       title: '데이터 그룹',
-      child: availableGroups.isEmpty
-          ? const Text('등록된 그룹이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))
-          : Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: availableGroups.map((group) {
-                final isSelected = selectedGroupId == group['group_id'];
-                return ChoiceChip(
-                  label: Text(group['group_name']),
-                  selected: isSelected,
-                  onSelected: (bool selected) {
-                    if (selected) onGroupSelected(group['group_id']);
-                  },
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  selectedColor: AppColors.primary,
-                  backgroundColor: AppColors.background,
-                  side: BorderSide(color: isSelected ? AppColors.primary : AppColors.outline),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                );
-              }).toList(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (availableGroups.isEmpty && !directMode)
+            Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Text('등록된 그룹이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
             ),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: [
+              ...availableGroups.map((group) {
+                final isSelected = !directMode && selectedGroupId == group['group_id'];
+                return _chip(context,
+                  label: group['group_name'],
+                  selected: isSelected,
+                  onSelected: () => onGroupSelected(group['group_id']),
+                );
+              }),
+              _chip(context,
+                label: '직접 선택',
+                selected: directMode,
+                onSelected: onDirectModeSelected,
+              ),
+            ],
+          ),
+          if (shown.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Divider(height: 1, color: context.colors.outline),
+            const SizedBox(height: 10),
+            Text(
+              directMode ? '표시할 항목을 고르세요' : '이 그룹에 묶인 항목',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
+            ),
+            // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
+            if (visibleRoleIds.length > _readableSeriesLimit) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 14, color: context.colors.warning),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      '${visibleRoleIds.length}개를 한 번에 그리면 알아보기 어렵습니다. '
+                      '$_readableSeriesLimit개 이하를 권합니다.',
+                      style: TextStyle(fontSize: 12, color: context.colors.warning),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 168),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: shown.map((role) {
+                    final id = _roleId(role);
+                    final checked = id != null && visibleRoleIds.contains(id);
+                    return FilterChip(
+                      label: Text(role['role_name']?.toString() ?? '이름 없음'),
+                      selected: checked,
+                      onSelected: id == null ? null : (val) => onRoleToggled(id, val),
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: checked ? context.colors.primary : context.colors.textSecondary,
+                      ),
+                      showCheckmark: true,
+                      checkmarkColor: context.colors.primary,
+                      selectedColor: context.colors.primary.withValues(alpha: 0.12),
+                      backgroundColor: context.colors.background,
+                      side: BorderSide(color: checked ? context.colors.primary : context.colors.outline),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(BuildContext context, {required String label, required bool selected, required VoidCallback onSelected}) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (val) { if (val) onSelected(); },
+      labelStyle: TextStyle(
+        color: selected ? context.colors.onPrimary : context.colors.textPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
+      selectedColor: context.colors.primary,
+      backgroundColor: context.colors.background,
+      side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 }
 
-/// 시리즈 색상 팔레트. 통계 박스와 캔버스가 같은 순서로 순회하므로 항상 같은 색이 매칭된다.
-const List<Color> chartSeriesColors = [
-  AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
+/// 한 차트에 이 개수를 넘게 그리면 선이 서로 가려 추세를 읽기 어렵다.
+const int _readableSeriesLimit = 6;
+
+/// 차트 위에 붙는 범례. 어떤 선이 어떤 항목인지 차트 안에서 바로 알 수 있게 한다.
+/// 색 표시만으로는 부족하므로 선 모양(실선/파선/점선)도 함께 그린다.
+class _ChartLegend extends StatelessWidget {
+  final List<String> names;
+  final List<List<int>?> dashes;
+  final List<Color> colors;
+
+  const _ChartLegend({required this.names, required this.dashes, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    if (names.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 4,
+        children: List.generate(names.length, (i) {
+          final color = colors[i % colors.length];
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomPaint(
+                size: const Size(18, 2),
+                painter: _LegendLinePainter(color: color, dash: dashes[i]),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                names[i],
+                style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: FontWeight.w600),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// 범례의 선 미리보기. 차트에 그려지는 것과 같은 파선 패턴을 재현한다.
+class _LegendLinePainter extends CustomPainter {
+  final Color color;
+  final List<int>? dash;
+
+  _LegendLinePainter({required this.color, required this.dash});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    final y = size.height / 2;
+    if (dash == null) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      return;
+    }
+
+    double x = 0;
+    int i = 0;
+    while (x < size.width) {
+      final len = dash![i % dash!.length].toDouble();
+      if (i.isEven) {
+        canvas.drawLine(Offset(x, y), Offset((x + len).clamp(0, size.width), y), paint);
+      }
+      x += len;
+      i++;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LegendLinePainter old) => old.color != color || old.dash != dash;
+}
+
+/// 시리즈별 선 모양. 색을 못 쓰는 상황(색각 이상, 흑백 인쇄)에서도 구분되게 한다.
+/// null이면 실선.
+const List<List<int>?> _seriesDashPatterns = [
+  null,        // 실선
+  [6, 3],      // 파선
+  [2, 3],      // 점선
+  [10, 3, 2, 3], // 일점쇄선
+  [8, 4],
+  [3, 2, 8, 2],
 ];
+
+// 시리즈 색상 팔레트는 테마마다 달라야 해서(어두운 배경에서 진한 색이 안 보인다)
+// AppPalette.chartSeries로 옮겼다. 통계 박스와 캔버스가 같은 순서로 순회하므로
+// 항상 같은 색이 매칭된다.
 
 /// 조회된 구간의 최소/평균/최대값을 시리즈별로 요약해서 보여주는 박스.
 /// 그래프를 눈으로 훑지 않아도 한눈에 수치 요약을 볼 수 있게 한다.
@@ -178,7 +402,7 @@ class ChartStatsBox extends StatelessWidget {
 
       stats.add(_SeriesStat(
         name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
-        color: chartSeriesColors[i % chartSeriesColors.length],
+        color: context.colors.chartSeries[i % context.colors.chartSeries.length],
         min: minVal,
         avg: count > 0 ? sum / count : null,
         max: maxVal,
@@ -198,13 +422,13 @@ class ChartStatsBox extends StatelessWidget {
               Container(width: 8, height: 8, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(s.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
+                child: Text(s.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary), overflow: TextOverflow.ellipsis),
               ),
-              _statChip('최소', s.min),
+              _statChip(context, '최소', s.min),
               const SizedBox(width: 6),
-              _statChip('평균', s.avg),
+              _statChip(context, '평균', s.avg),
               const SizedBox(width: 6),
-              _statChip('최대', s.max),
+              _statChip(context, '최대', s.max),
             ],
           ),
         )).toList(),
@@ -212,13 +436,13 @@ class ChartStatsBox extends StatelessWidget {
     );
   }
 
-  Widget _statChip(String label, double? value) {
+  Widget _statChip(BuildContext context, String label, double? value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: context.colors.background, borderRadius: BorderRadius.circular(8)),
       child: Text(
         '$label ${value != null ? value.toStringAsFixed(1) : '-'}',
-        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -250,13 +474,13 @@ class ChartCanvasBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return _buildContainer(child: const Center(child: CircularProgressIndicator()));
+      return _buildContainer(context, child: const Center(child: CircularProgressIndicator()));
     }
 
     if (chartData == null || chartData!['data']['datasets'] == null || (chartData!['data']['datasets'] as List).isEmpty) {
-      return _buildContainer(
-        child: const Center(
-          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      return _buildContainer(context,
+        child: Center(
+          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         ),
       );
     }
@@ -267,12 +491,15 @@ class ChartCanvasBox extends StatelessWidget {
 
     List<LineChartBarData> lineBars = [];
     List<HorizontalLine> targetLines = [];
+    // 범례와 툴팁에서 쓸 시리즈 이름/선 모양 (lineBars와 같은 순서)
+    final List<String> seriesNames = [];
+    final List<List<int>?> seriesDashes = [];
     double minX = double.infinity;
     double maxX = -double.infinity;
     double minY = double.infinity;
     double maxY = -double.infinity;
 
-    final List<Color> colors = chartSeriesColors;
+    final List<Color> colors = context.colors.chartSeries;
 
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
@@ -309,6 +536,12 @@ class ChartCanvasBox extends StatelessWidget {
       }
 
       if (spots.isNotEmpty) {
+        // 색만으로 시리즈를 구분하면 색각 이상이나 흑백 출력(포스터·인쇄)에서 구분이 안 된다.
+        // 실선/파선/점선을 함께 돌려 색 없이도 구분되게 한다.
+        seriesNames.add(ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}');
+        final dash = _seriesDashPatterns[i % _seriesDashPatterns.length];
+        seriesDashes.add(dash);
+
         lineBars.add(
           LineChartBarData(
             spots: spots,
@@ -316,6 +549,7 @@ class ChartCanvasBox extends StatelessWidget {
             color: seriesColor,
             barWidth: 2,
             isStrokeCapRound: true,
+            dashArray: dash,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(show: false),
           ),
@@ -348,14 +582,14 @@ class ChartCanvasBox extends StatelessWidget {
         alarmLines.add(
           VerticalLine(
             x: x,
-            color: AppColors.error.withValues(alpha: 0.7),
+            color: context.colors.error.withValues(alpha: 0.7),
             strokeWidth: 1.5,
             dashArray: [4, 4],
             label: VerticalLineLabel(
               show: true,
               alignment: Alignment.topLeft,
               padding: const EdgeInsets.only(left: 4, bottom: 2),
-              style: const TextStyle(fontSize: 10, color: AppColors.error, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 12, color: context.colors.error, fontWeight: FontWeight.w700),
               labelResolver: (line) => name,
             ),
           ),
@@ -373,13 +607,18 @@ class ChartCanvasBox extends StatelessWidget {
     }
 
     if (lineBars.isEmpty) {
-      return _buildContainer(
-        child: const Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+      return _buildContainer(context,
+        child: Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13))),
       );
     }
 
-    return _buildContainer(
-      child: Padding(
+    return _buildContainer(context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ChartLegend(names: seriesNames, dashes: seriesDashes, colors: colors),
+          Expanded(
+            child: Padding(
         padding: const EdgeInsets.only(right: 16.0, top: 8.0),
         child: LineChart(
           LineChartData(
@@ -394,8 +633,10 @@ class ChartCanvasBox extends StatelessWidget {
                   return touchedSpots.map((spot) {
                     final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
                     final timeStr = DateFormat('MM-dd HH:mm').format(dt);
+                    // 여러 선이 겹칠 때 어느 시리즈의 값인지 알 수 없어 이름을 함께 보여준다.
+                    final name = spot.barIndex < seriesNames.length ? seriesNames[spot.barIndex] : '';
                     return LineTooltipItem(
-                      '$timeStr\n${spot.y.toStringAsFixed(1)}',
+                      '$name\n$timeStr\n${spot.y.toStringAsFixed(1)}',
                       const TextStyle(color: Colors.white, fontSize: 12),
                     );
                   }).toList();
@@ -405,8 +646,8 @@ class ChartCanvasBox extends StatelessWidget {
             gridData: FlGridData(
               show: true,
               drawVerticalLine: true,
-              getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
-              getDrawingVerticalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
+              getDrawingHorizontalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
+              getDrawingVerticalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
             ),
             titlesData: FlTitlesData(
               topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -422,7 +663,7 @@ class ChartCanvasBox extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         DateFormat('HH:mm').format(dt),
-                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                       ),
                     );
                   },
@@ -435,7 +676,7 @@ class ChartCanvasBox extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     return Text(
                       value.toStringAsFixed(1),
-                      style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                     );
                   },
                 ),
@@ -445,6 +686,9 @@ class ChartCanvasBox extends StatelessWidget {
             extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
           ),
         ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -460,20 +704,20 @@ class ChartCanvasBox extends StatelessWidget {
         show: true,
         alignment: Alignment.topRight,
         padding: const EdgeInsets.only(right: 4, bottom: 2),
-        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
+        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700),
         labelResolver: (line) => label,
       ),
     );
   }
 
   // 차트 캔버스는 화면의 핵심 콘텐츠이므로 주변 설정 카드보다 한 단계 부각시킨다.
-  Widget _buildContainer({required Widget child}) {
+  Widget _buildContainer(BuildContext context, {required Widget child}) {
     return Container(
       height: 400,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppShadows.soft,
+        boxShadow: context.colors.softShadow,
       ),
       padding: const EdgeInsets.all(16.0),
       child: child,
@@ -499,17 +743,17 @@ class ChartToolBox extends StatelessWidget {
       child: Row(
         children: [
           const Spacer(),
-          IconButton(icon: const Icon(Icons.pan_tool_outlined, color: AppColors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
+          IconButton(icon: Icon(Icons.pan_tool_outlined, color: context.colors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
           IconButton(
             icon: Icon(
               Icons.show_chart_rounded,
-              color: showTargetLines ? AppColors.primary : AppColors.textSecondary,
+              color: showTargetLines ? context.colors.primary : context.colors.textSecondary,
             ),
             onPressed: () => onToggleTargetLines(!showTargetLines),
             tooltip: showTargetLines ? '기준선 숨기기' : '기준선 표시',
           ),
-          IconButton(icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
-          IconButton(icon: const Icon(Icons.refresh_rounded, color: AppColors.primary), onPressed: () {}, tooltip: '시점 초기화'),
+          IconButton(icon: Icon(Icons.text_fields_rounded, color: context.colors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
+          IconButton(icon: Icon(Icons.refresh_rounded, color: context.colors.primary), onPressed: () {}, tooltip: '시점 초기화'),
         ],
       ),
     );
@@ -528,9 +772,9 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -538,7 +782,7 @@ class _SectionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
               if (trailing != null) trailing!,
             ],
           ),

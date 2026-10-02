@@ -46,6 +46,12 @@ dependencies:
   intl: ^0.20.2
   shared_preferences: ^2.5.5
   flutter_local_notifications: ^17.0.0
+  # 알람 '다시 알림' 예약에 필요 (flutter_local_notifications의 zonedSchedule)
+  timezone: ^0.9.2
+  # 게시글 이미지 첨부
+  image_picker: ^1.1.2
+  # flutter_quill 본체는 이미지 블록을 그리지 못한다. 렌더링용 embed 빌더 제공
+  flutter_quill_extensions: ^11.0.0
 
 # firebase_core_web 3.11.0에 웹 컴파일 오류가 있어 정상 동작하는 버전으로 고정
 dependency_overrides:

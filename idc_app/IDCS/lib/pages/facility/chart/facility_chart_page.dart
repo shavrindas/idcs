@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/chart/chart_components.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
 
 class FacilityChartPage extends StatefulWidget {
   final String userId;
@@ -20,11 +21,24 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   String _currentScale = '1m';
   String _currentTimeRange = '1d';
 
-  // 2. 데이터 포인트 선택 상태
+  // 2. 조회 대상 호실 상태
+  List<dynamic> _rooms = [];
+  int? _selectedRoomId;
+
+  // 3. 데이터 포인트 선택 상태
   int? _selectedGroupId;
   List<Map<String, dynamic>> _availableGroups = []; // _allGroups 변수도 불필요하여 제거
 
-  // 3. 차트 렌더링 상태
+  /// 호실의 전체 포인트 롤. 그룹에 어떤 항목이 묶여 있는지 이름으로 보여주는 데 쓴다.
+  List<dynamic> _roles = [];
+
+  /// 실제로 차트에 그릴 롤. 그룹을 고르면 채워지고, 개별로 끄고 켤 수 있다.
+  Set<int> _visibleRoleIds = {};
+
+  /// 그룹과 무관하게 항목을 직접 고르는 모드.
+  bool _directMode = false;
+
+  // 4. 차트 렌더링 상태
   bool _isLoading = false;
   Map<String, dynamic>? _chartData;
   bool _showTargetLines = true;
@@ -32,23 +46,61 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   @override
   void initState() {
     super.initState();
-    _loadGroupsAndChart();
+    _loadRooms();
+  }
+
+  // 0단계: 시설의 호실 목록 조회 후 첫 호실을 기본 선택한다.
+  // (예전에는 호실이 1번으로 고정되어 있어 1번 호실이 없는 시설에서는 차트가 아예 뜨지 않았다)
+  Future<void> _loadRooms() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+
+      if (!mounted) return;
+      setState(() {
+        _rooms = rooms;
+        _selectedRoomId = rooms.isEmpty
+            ? null
+            : (rooms.first['id'] is int
+                ? rooms.first['id']
+                : int.tryParse(rooms.first['id'].toString()));
+      });
+
+      if (_selectedRoomId != null) {
+        await _loadGroupsAndChart();
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('호실 조회 오류: $e')));
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   // 1단계: 전체 그룹 목록 조회 (타입 필터링 제거)
   Future<void> _loadGroupsAndChart() async {
+    final int? roomId = _selectedRoomId;
+    if (roomId == null) return;
+
     setState(() => _isLoading = true);
 
     try {
-      final int roomId = 1; // 임시: 1번 호실 기준
-
-      // 웹 어드민에서 생성된 그룹 리스트 호출
-      final groups = await ChartApiService.getChartGroups(int.parse(widget.facilityId), roomId);
+      // 웹 어드민에서 생성된 그룹 리스트와, 호실의 전체 포인트 롤을 함께 불러온다.
+      // 그룹 API는 role_id만 주기 때문에 이름을 보여주려면 롤 목록이 필요하다.
+      final facilityId = int.parse(widget.facilityId);
+      final results = await Future.wait([
+        ChartApiService.getChartGroups(facilityId, roomId),
+        ChartApiService.getPointRoles(facilityId, roomId),
+      ]);
 
       if (mounted) {
         setState(() {
           // 필터링 없이 바로 화면에 렌더링할 그룹 목록에 할당
-          _availableGroups = List<Map<String, dynamic>>.from(groups);
+          _availableGroups = List<Map<String, dynamic>>.from(results[0]);
+          _roles = results[1];
 
           // 선택된 그룹이 없거나 기존 선택 그룹이 삭제된 경우, 첫 번째 그룹 자동 선택
           bool shouldResetGroup = _selectedGroupId == null ||
@@ -59,10 +111,11 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
           } else if (_availableGroups.isEmpty) {
             _selectedGroupId = null;
           }
+
+          _visibleRoleIds = _directMode ? _allRoleIds() : _roleIdsOfGroup(_selectedGroupId);
         });
 
-        // 그룹이 선택되었다면 차트 데이터 조회로 넘어감
-        if (_selectedGroupId != null) {
+        if (_visibleRoleIds.isNotEmpty) {
           await _fetchChartData();
         } else {
           setState(() {
@@ -79,22 +132,49 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
     }
   }
 
-  // 2단계: 선택된 그룹 내부의 role_ids를 추출하여 차트 API 호출
+  Set<int> _allRoleIds() => _roles
+      .map((r) => r['role_id'] is int ? r['role_id'] as int : int.tryParse(r['role_id'].toString()))
+      .whereType<int>()
+      .toSet();
+
+  Set<int> _roleIdsOfGroup(int? groupId) {
+    final group = _availableGroups.where((g) => g['group_id'] == groupId).firstOrNull;
+    return (group?['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
+  }
+
+  void _selectGroup(int groupId) {
+    setState(() {
+      _directMode = false;
+      _selectedGroupId = groupId;
+      _visibleRoleIds = _roleIdsOfGroup(groupId);
+    });
+    _fetchChartData();
+  }
+
+  void _enterDirectMode() {
+    // 호실의 모든 항목을 한꺼번에 켜면(42개까지 나온다) 눈금 범위가 뭉개져 차트를 읽을 수 없다.
+    // 그래서 보고 있던 선택을 그대로 두고, 목록만 전체로 펼친다.
+    setState(() => _directMode = true);
+  }
+
+  void _toggleRole(int roleId, bool visible) {
+    setState(() {
+      final next = Set<int>.from(_visibleRoleIds);
+      visible ? next.add(roleId) : next.remove(roleId);
+      _visibleRoleIds = next;
+    });
+    _fetchChartData();
+  }
+
+  // 2단계: 선택된 항목(role_ids)으로 차트 API 호출
   Future<void> _fetchChartData() async {
-    if (_selectedGroupId == null) return;
+    final int? roomId = _selectedRoomId;
+    if (roomId == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final int roomId = 1;
-
-      final selectedGroup = _availableGroups.firstWhere((g) => g['group_id'] == _selectedGroupId);
-      final List<dynamic> rawRoleIds = selectedGroup['role_ids'] ?? [];
-
-      final List<int> roleIdsToFetch = rawRoleIds
-          .where((e) => e != null)
-          .map((e) => e as int)
-          .toList();
+      final List<int> roleIdsToFetch = _visibleRoleIds.toList();
 
       if (roleIdsToFetch.isEmpty) {
         setState(() {
@@ -144,6 +224,16 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
               onScaleChanged: (val) => setState(() => _currentScale = val),
               onTimeRangeChanged: (val) => setState(() => _currentTimeRange = val),
               onApply: _fetchChartData,
+              rooms: _rooms,
+              selectedRoomId: _selectedRoomId,
+              onRoomChanged: (roomId) {
+                setState(() {
+                  _selectedRoomId = roomId;
+                  _chartData = null;
+                });
+                // 호실이 바뀌면 그 호실에 등록된 그룹부터 다시 불러와야 한다.
+                _loadGroupsAndChart();
+              },
             ),
             const SizedBox(height: 16),
 
@@ -151,12 +241,12 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ChartSeriesBox(
               availableGroups: _availableGroups,
               selectedGroupId: _selectedGroupId,
-              onGroupSelected: (groupId) {
-                setState(() {
-                  _selectedGroupId = groupId;
-                });
-                _fetchChartData();
-              },
+              onGroupSelected: _selectGroup,
+              directMode: _directMode,
+              onDirectModeSelected: _enterDirectMode,
+              roles: _roles,
+              visibleRoleIds: _visibleRoleIds,
+              onRoleToggled: _toggleRole,
             ),
             const SizedBox(height: 16),
 

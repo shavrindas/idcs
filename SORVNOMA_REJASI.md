@@ -126,6 +126,14 @@ dastur** bilan solishtiradi. Do'stlaringiz taklif qilgan 4 ta mavzuni 5 ta aniq 
 
 5. **(서버) 연결 끊김 알림** — *"레거시 시스템과 비교했을 때, 연결이 끊겼을 때 더 확실하게 알려준다고 생각하십니까?"*
 
+6. **(앱) 여러 시설 관리** — *"레거시 시스템과 비교했을 때, 계정 하나로 여러 시설을 관리하는 게 더 편리합니까?"*
+
+7. **(웹) 시설/호실 관리** — *"레거시 시스템과 비교했을 때, 시설이나 호실 정보를 추가·수정하는 게 더 쉬워졌습니까?"*
+
+8. **(서버) 데이터 조회 기간** — *"레거시 시스템과 비교했을 때, 지난 데이터를 확인할 수 있는 기간(예: 7일, 15일)이 더 유용합니까?"*
+
+9. **(전체) 디자인/신뢰감** — *"레거시 시스템과 비교했을 때, 화면 디자인이 더 신뢰가 가고 전문적으로 느껴집니까?"*
+
 Bu bo'lim texnik jamoa (IDCool xodimlari) uchun mos — chunki legacy dasturni chuqur bilgan odam
 kerak. Sitting mijozlariga (다온 kabi) bu savollarni bermang, ular legacy dasturni ko'rmagan bo'lishi
 mumkin.
