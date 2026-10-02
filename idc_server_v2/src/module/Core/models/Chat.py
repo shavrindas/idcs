@@ -5,7 +5,7 @@
 import enum
 from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import relationship
-from config.db import Base
+from src.config.database import Base
 
 
 class ChatRoomType(str, enum.Enum):
