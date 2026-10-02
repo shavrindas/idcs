@@ -47,9 +47,10 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
             labelText: '비밀번호',
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
+              tooltip: '비밀번호 표시',
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
@@ -112,8 +113,8 @@ class SocialSignupBox extends StatelessWidget {
           ),
           label: const Text('Google로 계속하기'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
+            foregroundColor: context.colors.textPrimary,
+            side: BorderSide(color: context.colors.outline),
             alignment: Alignment.centerLeft,
           ),
         ),
@@ -127,8 +128,8 @@ class SocialSignupBox extends StatelessWidget {
           ),
           label: const Text('Apple로 계속하기'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
+            foregroundColor: context.colors.textPrimary,
+            side: BorderSide(color: context.colors.outline),
             alignment: Alignment.centerLeft,
           ),
         ),
@@ -152,10 +153,10 @@ class _ProviderBadge extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(color: background, shape: BoxShape.circle),
       child: icon != null
-          ? Icon(icon, size: 14, color: Colors.white)
+          ? Icon(icon, size: 14, color: context.colors.onPrimary)
           : Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+              style: TextStyle(color: context.colors.onPrimary, fontSize: 13, fontWeight: FontWeight.w700),
             ),
     );
   }
@@ -194,7 +195,7 @@ class AppleEmailFallbackBox extends StatelessWidget {
               Expanded(
                 child: Text(
                   '애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary, height: 1.4),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary, height: 1.4),
                 ),
               ),
             ],

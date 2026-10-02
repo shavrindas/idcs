@@ -2,7 +2,13 @@
 # 경로 : src/controllers/board/board_controller.py
 # 명세 : 보드(게시판) 관련 API 컨트롤러 (현재 스코프: 리스트 조회)
 # ===============================================================
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File
+import io
+import os
+import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File, Request
+from PIL import Image
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +20,10 @@ router = APIRouter(prefix="/board", tags=["Board"])
 
 # --- Pydantic Schemas ---
 class PostCreateReq(BaseModel):
-    board_id: int
+    # board_id가 아니라 facility_id를 받는다. 앱은 시설 화면에서 글을 쓰는데
+    # board_id와 facility_id가 항상 같지는 않아(예: board 6 = facility 8)
+    # 앱이 시설 ID를 board_id로 보내면 엉뚱한 게시판에 쓰이거나 FK 오류가 난다.
+    facility_id: int
     title: str
     content: str
     image_ids: List[int] = []  # URL 배열 대신, 사전 업로드된 이미지 ID 배열을 받음
@@ -217,23 +226,81 @@ async def get_post_detail(post_id: int, user_id: int, db: AsyncSession = Depends
 # ===============================================================
 # [S/bp-09] 에디터용 이미지 사전 업로드 (Pre-upload) API 명세
 # ===============================================================
+MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10MB
+MAX_IMAGE_WIDTH = 1920
+# Pillow 포맷명 -> 저장 확장자
+ALLOWED_IMAGE_FORMATS = {"JPEG": "jpg", "PNG": "png", "GIF": "gif", "WEBP": "webp"}
+
+
 @router.post("/image/upload")
 async def upload_post_image(
-    file: UploadFile = File(...), 
+    request: Request,
+    file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db)
 ):
+    """에디터에서 쓸 이미지를 먼저 올려두고(post_id=NULL) image_id와 URL을 돌려준다.
+
+    글을 저장할 때 create_post/update_post가 image_ids를 받아 post_id를 채운다.
     """
-    [명세 구현 예정 내용]
-    1. 용량 검증 (10MB 이하)
-    2. 이미지 메타데이터(Width, Height) 추출 및 Min Scale(200px) / Max Scale(1920px) 리사이징 로직 (Pillow 사용)
-    3. 스토리지 (로컬 or S3) 저장 로직 ([YYYY/MM/DD]/[UUID].[ext])
-    4. post_images 테이블에 post_id=NULL 로 INSERT 후 image_id 및 image_url 반환
-    """
-    # 더미 응답 (통합 전 프론트엔드 테스트용)
+    raw = await file.read()
+
+    if not raw:
+        raise HTTPException(status_code=400, detail="빈 파일입니다.")
+    if len(raw) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="이미지는 10MB 이하만 올릴 수 있습니다.")
+
+    # 확장자가 아니라 실제 내용으로 이미지인지 판단한다.
+    try:
+        image = Image.open(io.BytesIO(raw))
+        image.verify()
+        image = Image.open(io.BytesIO(raw))
+    except Exception:
+        raise HTTPException(status_code=400, detail="이미지 파일이 아닙니다.")
+
+    if image.format not in ALLOWED_IMAGE_FORMATS:
+        raise HTTPException(status_code=400, detail=f"지원하지 않는 이미지 형식입니다. ({image.format})")
+
+    extension = ALLOWED_IMAGE_FORMATS[image.format]
+
+    # 휴대폰 사진은 폭이 4000px를 넘기도 해서, 긴 쪽을 기준으로 줄여 저장한다.
+    if image.width > MAX_IMAGE_WIDTH:
+        ratio = MAX_IMAGE_WIDTH / image.width
+        image = image.convert("RGB") if image.format == "JPEG" else image
+        image = image.resize((MAX_IMAGE_WIDTH, round(image.height * ratio)))
+
+    # [YYYY/MM/DD]/[UUID].[ext] 구조로 저장해 한 폴더에 파일이 몰리지 않게 한다.
+    today = datetime.now().strftime("%Y/%m/%d")
+    directory = os.path.join("uploads", today)
+    os.makedirs(directory, exist_ok=True)
+
+    filename = f"{uuid.uuid4().hex}.{extension}"
+    save_path = os.path.join(directory, filename)
+    image.save(save_path)
+
+    file_size = os.path.getsize(save_path)
+    # 앱/웹이 어느 호스트로 접속했든 그대로 쓸 수 있도록 절대 URL로 돌려준다.
+    image_url = f"{str(request.base_url).rstrip('/')}/uploads/{today}/{filename}"
+
+    insert_query = text("""
+        INSERT INTO post_images (post_id, image_url, original_name, file_size, width, height, aspect_ratio)
+        VALUES (NULL, :image_url, :original_name, :file_size, :width, :height, :aspect_ratio)
+        RETURNING image_id
+    """)
+    result = await db.execute(insert_query, {
+        "image_url": image_url,
+        "original_name": file.filename or filename,
+        "file_size": file_size,
+        "width": image.width,
+        "height": image.height,
+        "aspect_ratio": round(image.width / image.height, 2) if image.height else 1,
+    })
+    image_id = result.scalar()
+    await db.commit()
+
     return {
         "status": "success",
-        "image_id": 999, 
-        "image_url": "https://dummyimage.com/600x400/000/fff&text=Preview"
+        "image_id": image_id,
+        "image_url": image_url,
     }
 
 
@@ -242,6 +309,15 @@ async def upload_post_image(
 # ===============================================================
 @router.post("/post")
 async def create_post(user_id: int, req: PostCreateReq, db: AsyncSession = Depends(get_db)):
+    # 0. 시설에 연결된 게시판 찾기
+    board_res = await db.execute(
+        text("SELECT board_id FROM boards WHERE facility_id = :facility_id"),
+        {"facility_id": req.facility_id}
+    )
+    board_id = board_res.scalar()
+    if board_id is None:
+        raise HTTPException(status_code=404, detail="이 시설에는 아직 게시판이 없습니다.")
+
     # 1. 포스트 삽입
     query = text("""
         INSERT INTO posts (board_id, creator_id, updater_id, title, content)
@@ -249,9 +325,9 @@ async def create_post(user_id: int, req: PostCreateReq, db: AsyncSession = Depen
         RETURNING post_id
     """)
     result = await db.execute(query, {
-        "board_id": req.board_id, 
-        "user_id": user_id, 
-        "title": req.title, 
+        "board_id": board_id,
+        "user_id": user_id,
+        "title": req.title,
         "content": req.content
     })
     new_post_id = result.scalar()

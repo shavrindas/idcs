@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/theme_controller.dart';
 import 'package:idcs/main.dart'; // AuthService 접근용
 
 class PersonalPage extends StatefulWidget {
@@ -23,6 +24,9 @@ class _PersonalPageState extends State<PersonalPage> {
   bool _isAdmin = false;
   bool _isLoading = true;
   List<dynamic> _linkedProviders = [];
+
+  /// 소셜로만 가입한 계정은 비밀번호가 없어 변경 UI를 숨긴다.
+  bool _hasPassword = true;
   String _pwCollapseMessage = '';
 
   @override
@@ -50,9 +54,10 @@ class _PersonalPageState extends State<PersonalPage> {
       if (mounted) {
         setState(() {
           _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
-          _nameController.text = profile['name'];
-          _phoneController.text = profile['phone_number'];
+          _nameController.text = profile['name'] ?? '';
+          _phoneController.text = profile['phone_number'] ?? '';
           _linkedProviders = profile['linked_providers'] ?? [];
+          _hasPassword = profile['has_password'] ?? true;
         });
       }
     } catch (e) {
@@ -65,8 +70,11 @@ class _PersonalPageState extends State<PersonalPage> {
   Future<void> _handleUpdateName() async {
     try {
       final msg = await UserApiService.updateName(widget.userId, _nameController.text.trim());
+      if (!mounted) return;
+      setState(() {}); // 상단 프로필 카드에 바뀐 이름을 바로 반영
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
@@ -74,8 +82,10 @@ class _PersonalPageState extends State<PersonalPage> {
   Future<void> _handleUpdatePhone() async {
     try {
       final msg = await UserApiService.updatePhone(widget.userId, _phoneController.text.trim());
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
@@ -95,6 +105,7 @@ class _PersonalPageState extends State<PersonalPage> {
 
     try {
       final msg = await UserApiService.updatePassword(widget.userId, currentPw, newPw);
+      if (!mounted) return;
       setState(() {
         _pwCollapseMessage = '성공적으로 변경되었습니다.';
         _currentPwController.clear();
@@ -106,9 +117,41 @@ class _PersonalPageState extends State<PersonalPage> {
     }
   }
 
-  void _handleLogout() {
-    AuthService.setUserId(null);
+  Future<void> _handleLogout() async {
+    await AuthService.setUserId(null);
+    if (!mounted) return;
     context.go('/login');
+  }
+
+  Future<void> _handleWithdraw() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('정말 탈퇴하시겠습니까?'),
+        content: const Text('계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
+            child: const Text('탈퇴하기'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final msg = await UserApiService.withdraw(widget.userId);
+      await AuthService.setUserId(null);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      context.go('/login');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   Future<void> _handleSocialLink(String provider) async {
@@ -135,9 +178,9 @@ class _PersonalPageState extends State<PersonalPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.outline),
+                border: Border.all(color: context.colors.outline),
               ),
               child: Row(
                 children: [
@@ -145,11 +188,11 @@ class _PersonalPageState extends State<PersonalPage> {
                     width: 42,
                     height: 42,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: context.colors.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.person_rounded, color: AppColors.primary, size: 22),
+                    child: Icon(Icons.person_rounded, color: context.colors.primary, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -158,9 +201,9 @@ class _PersonalPageState extends State<PersonalPage> {
                       children: [
                         Text(
                           _nameController.text.isEmpty ? '이름 없음' : _nameController.text,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.textPrimary),
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: context.colors.textPrimary),
                         ),
-                        Text('ID ${widget.userId}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('ID ${widget.userId}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                       ],
                     ),
                   ),
@@ -193,20 +236,34 @@ class _PersonalPageState extends State<PersonalPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box #4
-            PasswordEditBox(
-              currentPwController: _currentPwController,
-              newPwController: _newPwController,
-              collapseMessage: _pwCollapseMessage,
-              onSubmit: _handleUpdatePassword,
-            ),
-            const SizedBox(height: 16),
+            // Box #4 — 소셜로만 가입한 계정은 비밀번호 자체가 없으므로 숨긴다
+            if (_hasPassword) ...[
+              PasswordEditBox(
+                currentPwController: _currentPwController,
+                newPwController: _newPwController,
+                collapseMessage: _pwCollapseMessage,
+                onSubmit: _handleUpdatePassword,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Box #5
             SocialLinkBox(
               linkedProviders: _linkedProviders,
               onLinkPressed: _handleSocialLink,
             ),
+            const SizedBox(height: 16),
+
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: ThemeController.mode,
+              builder: (context, mode, _) => ThemeModeBox(
+                current: mode,
+                onChanged: ThemeController.set,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            WithdrawBox(onWithdraw: _handleWithdraw),
           ],
         ),
       ),
@@ -225,7 +282,7 @@ class _AdminLinkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -234,16 +291,16 @@ class _AdminLinkCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            border: Border.all(color: context.colors.primary.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.primary, size: 20),
+              Icon(icon, color: context.colors.primary, size: 20),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary)),
+                child: Text(title, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary, size: 20),
+              Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary, size: 20),
             ],
           ),
         ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 일반 로그인 박스 (이메일/비밀번호 입력 + 제출)
 class StandardLoginBox extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
-  final VoidCallback onLoginPressed;
+  final Future<void> Function() onLoginPressed;
 
   const StandardLoginBox({
     super.key,
@@ -44,19 +45,17 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
             labelText: '비밀번호',
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
+              tooltip: '비밀번호 표시',
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: widget.onLoginPressed,
-          child: const Text('로그인'),
-        ),
+        AsyncActionButton(label: '로그인', onPressed: widget.onLoginPressed),
       ],
     );
   }
@@ -92,8 +91,8 @@ class SocialLoginBox extends StatelessWidget {
           ),
           label: const Text('Google로 계속하기'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
+            foregroundColor: context.colors.textPrimary,
+            side: BorderSide(color: context.colors.outline),
             alignment: Alignment.centerLeft,
           ),
         ),
@@ -107,8 +106,8 @@ class SocialLoginBox extends StatelessWidget {
           ),
           label: const Text('Apple로 계속하기'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
+            foregroundColor: context.colors.textPrimary,
+            side: BorderSide(color: context.colors.outline),
             alignment: Alignment.centerLeft,
           ),
         ),
@@ -132,10 +131,10 @@ class _ProviderBadge extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(color: background, shape: BoxShape.circle),
       child: icon != null
-          ? Icon(icon, size: 14, color: Colors.white)
+          ? Icon(icon, size: 14, color: context.colors.onPrimary)
           : Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+              style: TextStyle(color: context.colors.onPrimary, fontSize: 13, fontWeight: FontWeight.w700),
             ),
     );
   }

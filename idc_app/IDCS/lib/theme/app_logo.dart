@@ -17,14 +17,14 @@ class AppMonogram extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.28),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primaryLight, AppColors.primaryDark],
+          colors: [context.colors.primaryLight, context.colors.primaryDark],
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.28),
+            color: context.colors.primary.withValues(alpha: 0.28),
             blurRadius: size * 0.32,
             offset: Offset(0, size * 0.14),
           ),
@@ -60,11 +60,11 @@ class AppWordmark extends StatelessWidget {
           fontSize: fontSize,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.3,
-          color: baseColor ?? AppColors.textPrimary,
+          color: baseColor ?? context.colors.textPrimary,
         ),
-        children: const [
+        children: [
           TextSpan(text: 'ID'),
-          TextSpan(text: 'Cool', style: TextStyle(color: AppColors.primary)),
+          TextSpan(text: 'Cool', style: TextStyle(color: context.colors.primary)),
         ],
       ),
     );

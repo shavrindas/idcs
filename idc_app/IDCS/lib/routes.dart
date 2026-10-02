@@ -14,6 +14,11 @@ final GoRouter appRouter = GoRouter(
     if (!loggedIn && !allowedPaths.contains(path)) {
       return '/login';
     }
+
+    // 로그인이 유지된 상태면 스플래시/로그인 화면을 건너뛰고 바로 홈으로 보낸다.
+    if (loggedIn && (path == '/' || path == '/login')) {
+      return '/index/${AuthService.getCurrentUserId()}/home';
+    }
     return null;
   },
 
@@ -69,6 +74,7 @@ final GoRouter appRouter = GoRouter(
         userId: state.pathParameters['userId']!,
       ),
     ),
+    GoRoute(path: '/alarm_settings', builder: (context, state) => const AlarmSettingsPage()),
 
     // [facility] - 유저 ID & 시설 ID 기반
     // 시설 내부 5개 섹션(모니터링/차트/소요기록/메신저/알람) 하단 네비게이션 셸.

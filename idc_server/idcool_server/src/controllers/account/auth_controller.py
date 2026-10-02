@@ -500,7 +500,11 @@ async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
     return {
         "name": user.name,
         "phone_number": user.phone_number or "",
-        "linked_providers": linked_providers # 예: ['google', 'apple']
+        "linked_providers": linked_providers, # 예: ['google', 'apple']
+        # 소셜로만 가입한 계정은 비밀번호가 없다. 앱에서 비밀번호 변경 UI를
+        # 숨길지 판단하는 데 쓴다. (연동 여부만으로는 판단할 수 없다 —
+        # 일반 가입 후 소셜을 추가로 연동한 계정은 비밀번호가 그대로 있다)
+        "has_password": user.password is not None
     }
 
 @router.put("/{user_id}/name", status_code=status.HTTP_200_OK)
