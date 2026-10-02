@@ -1,5 +1,6 @@
 import '../../../main.dart';
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #3, #4: 고정 ID 권한 주입 박스
 
@@ -23,7 +24,7 @@ class AuthInjectionBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
+        border: Border.all(color: context.colors.outline),
       ),
       padding: const EdgeInsets.all(12.0),
       child: Row(
