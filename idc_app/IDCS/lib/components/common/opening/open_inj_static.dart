@@ -1,15 +1,10 @@
-import '../../../main.dart';
-import 'package:flutter/material.dart';
-import 'package:idcs/theme/app_theme.dart';
-
-/// Box #3, #4: 고정 ID 권한 주입 박스
-
 // 경로 : lib/components/common/opening/open_inj_static.dart
+// 명세 : Box #3, #4 — 고정 ID 권한 주입 박스 (DEBUG 전용 개발자 도구)
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // GoRouter 추가
+import 'package:go_router/go_router.dart';
+import 'package:idcs/theme/app_theme.dart';
 import '../../../main.dart';
 
-/// Box #3, #4: 고정 ID 권한 주입 박스
 class AuthInjectionBox extends StatelessWidget {
   final String title;
   final int userIdToInject;

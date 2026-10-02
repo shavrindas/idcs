@@ -1,14 +1,10 @@
-import '../../../main.dart';
-import 'package:flutter/material.dart';
-import 'package:idcs/theme/app_theme.dart';
-
-/// Box #5: 텍스트 박스 입력형 권한 주입 박스
 // 경로 : lib/components/common/opening/open_inj_text.dart
+// 명세 : 직접 입력한 ID로 권한을 주입하는 박스 (DEBUG 전용 개발자 도구)
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // GoRouter 추가
+import 'package:go_router/go_router.dart';
+import 'package:idcs/theme/app_theme.dart';
 import '../../../main.dart';
 
-/// Box #5: 텍스트 박스 입력형 권한 주입 박스
 class CustomAuthInjectionBox extends StatefulWidget {
   const CustomAuthInjectionBox({super.key});
 
