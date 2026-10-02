@@ -23,7 +23,7 @@ class IntegratedFacilityBox extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.4),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.4),
         ),
         const SizedBox(height: 10),
 
@@ -32,15 +32,15 @@ class IntegratedFacilityBox extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 32),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.outline),
+              border: Border.all(color: context.colors.outline),
             ),
             child: Column(
               children: [
-                Icon(Icons.domain_disabled_outlined, color: AppColors.textSecondary.withValues(alpha: 0.6), size: 28),
+                Icon(Icons.domain_disabled_outlined, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
                 const SizedBox(height: 8),
-                Text(emptyMessage, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                Text(emptyMessage, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
               ],
             ),
           )
@@ -61,7 +61,7 @@ class IntegratedFacilityBox extends StatelessWidget {
               final bool hasAlarm = index % 2 == 0; // 임시: 짝수 인덱스에만 알람 표시
 
               return Material(
-                color: AppColors.surface,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
@@ -69,7 +69,7 @@ class IntegratedFacilityBox extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.outline),
+                      border: Border.all(color: context.colors.outline),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Stack(
@@ -78,7 +78,7 @@ class IntegratedFacilityBox extends StatelessWidget {
                           child: Text(
                             fac['name'],
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 13),
+                            style: TextStyle(fontWeight: FontWeight.w600, color: context.colors.textPrimary, fontSize: 13),
                           ),
                         ),
                         if (hasAlarm)
@@ -89,9 +89,9 @@ class IntegratedFacilityBox extends StatelessWidget {
                               width: 9,
                               height: 9,
                               decoration: BoxDecoration(
-                                color: AppColors.error,
+                                color: context.colors.error,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.surface, width: 1.5),
+                                border: Border.all(color: context.colors.surface, width: 1.5),
                               ),
                             ),
                           ),

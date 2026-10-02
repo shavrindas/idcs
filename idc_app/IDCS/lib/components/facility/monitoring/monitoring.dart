@@ -24,10 +24,10 @@ class MonitoringCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isControl ? AppColors.primary.withValues(alpha: 0.18) : AppColors.outline),
-        boxShadow: isControl ? AppShadows.soft : null,
+        border: Border.all(color: isControl ? context.colors.primary.withValues(alpha: 0.18) : context.colors.outline),
+        boxShadow: isControl ? context.colors.softShadow : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -36,17 +36,17 @@ class MonitoringCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.3),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3),
               ),
               if (isControl) ...[
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: context.colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('제어', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                  child: Text('제어', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.primary)),
                 ),
               ],
             ],
@@ -113,13 +113,13 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               key: ValueKey(widget.value), // 실시간 값이 변할 때 텍스트 업데이트
               initialValue: widget.value,
               readOnly: true,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
               decoration: InputDecoration(
                 labelText: widget.label,
-                labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                labelStyle: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-                fillColor: AppColors.background,
+                fillColor: context.colors.background,
               ),
             ),
           ),

@@ -50,10 +50,10 @@ class _AsyncActionButtonState extends State<AsyncActionButton> {
         style: widget.style,
         child: _running
             // 비활성 배경은 옅은 회색이라 흰색 스피너는 보이지 않는다.
-            ? const SizedBox(
+            ? SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary),
               )
             : Text(widget.label),
       ),

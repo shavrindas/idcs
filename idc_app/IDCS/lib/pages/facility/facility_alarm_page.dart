@@ -133,14 +133,14 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                               height: 52,
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                border: Border.all(color: AppColors.outline),
+                                color: context.colors.surface,
+                                border: Border.all(color: context.colors.outline),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _searchTarget,
-                                  icon: const Icon(Icons.expand_more_rounded, size: 20, color: AppColors.textSecondary),
+                                  icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
                                   isDense: true,
                                   items: const [
                                     DropdownMenuItem(

@@ -178,10 +178,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () => context.push('/signup'),
-                      child: const Text(
+                      child: Text(
                         '회원가입',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -192,10 +192,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () => context.push('/find_id'),
-                      child: const Text(
+                      child: Text(
                         '아이디 찾기',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

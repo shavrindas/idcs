@@ -10,18 +10,18 @@ class ChatRoomHeaderBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.outline)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        border: Border(bottom: BorderSide(color: context.colors.outline)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(roomName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text(roomName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
           IconButton(
             tooltip: '메뉴',
-            icon: const Icon(Icons.menu_rounded, color: AppColors.textSecondary),
+            icon: Icon(Icons.menu_rounded, color: context.colors.textSecondary),
             onPressed: onMenuPressed,
             constraints: const BoxConstraints(), padding: EdgeInsets.zero,
           ),
@@ -42,13 +42,13 @@ class ChatMessageListBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (messages.isEmpty) {
-      return const Center(
-        child: Text('메시지가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      return Center(
+        child: Text('메시지가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
       );
     }
 
     return Container(
-      color: AppColors.background,
+      color: context.colors.background,
       child: ListView.builder(
         reverse: true,
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -73,14 +73,14 @@ class ChatMessageListBox extends StatelessWidget {
                     if (!isMine)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2, left: 4),
-                        child: Text('User ${msg['user_id']}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        child: Text('User ${msg['user_id']}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                       ),
 
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: isMine ? AppColors.primary : AppColors.surface,
-                        border: isMine ? null : Border.all(color: AppColors.outline),
+                        color: isMine ? context.colors.primary : context.colors.surface,
+                        border: isMine ? null : Border.all(color: context.colors.outline),
                         borderRadius: BorderRadius.circular(16).copyWith(
                           bottomRight: isMine ? const Radius.circular(4) : null,
                           bottomLeft: !isMine ? const Radius.circular(4) : null,
@@ -95,11 +95,11 @@ class ChatMessageListBox extends StatelessWidget {
                               margin: const EdgeInsets.only(bottom: 6),
                               padding: const EdgeInsets.only(left: 8),
                               decoration: BoxDecoration(
-                                border: Border(left: BorderSide(color: isMine ? Colors.white70 : AppColors.textSecondary, width: 2)),
+                                border: Border(left: BorderSide(color: isMine ? context.colors.onPrimary.withValues(alpha: 0.7) : context.colors.textSecondary, width: 2)),
                               ),
                               child: Text(
                                 msg['parent_content'],
-                                style: TextStyle(fontSize: 12, color: isMine ? Colors.white70 : AppColors.textSecondary),
+                                style: TextStyle(fontSize: 12, color: isMine ? context.colors.onPrimary.withValues(alpha: 0.7) : context.colors.textSecondary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -108,12 +108,12 @@ class ChatMessageListBox extends StatelessWidget {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (isPinned) Icon(Icons.push_pin_rounded, size: 13, color: isMine ? Colors.white : AppColors.error),
+                              if (isPinned) Icon(Icons.push_pin_rounded, size: 13, color: isMine ? context.colors.onPrimary : context.colors.error),
                               if (isPinned) const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
                                   msg['content'],
-                                  style: TextStyle(fontSize: 14, color: isMine ? Colors.white : AppColors.textPrimary),
+                                  style: TextStyle(fontSize: 14, color: isMine ? context.colors.onPrimary : context.colors.textPrimary),
                                 ),
                               ),
                             ],
@@ -123,7 +123,7 @@ class ChatMessageListBox extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
-                      child: Text(msg['created_at'] ?? '', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      child: Text(msg['created_at'] ?? '', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                     ),
                   ],
                 ),
@@ -163,31 +163,31 @@ class ChatInputBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.outline)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.outline)),
       ),
       child: Column(
         children: [
           if (replyingTo != null)
             Container(
-              color: AppColors.background,
+              color: context.colors.background,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.reply_rounded, size: 16, color: AppColors.textSecondary),
+                  Icon(Icons.reply_rounded, size: 16, color: context.colors.textSecondary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '답장: ${replyingTo!['content']}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
                     ),
                   ),
                   IconButton(
                     tooltip: '닫기',
-                    icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textSecondary),
+                    icon: Icon(Icons.close_rounded, size: 16, color: context.colors.textSecondary),
                     onPressed: onCancelReply,
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -201,7 +201,7 @@ class ChatInputBox extends StatelessWidget {
               children: [
                 IconButton(
                   tooltip: '첨부',
-                  icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.textSecondary),
+                  icon: Icon(Icons.add_circle_outline_rounded, color: context.colors.textSecondary),
                   onPressed: () {},
                 ),
                 Expanded(
@@ -218,7 +218,7 @@ class ChatInputBox extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: '보내기',
-                  icon: const Icon(Icons.send_rounded, color: AppColors.primary),
+                  icon: Icon(Icons.send_rounded, color: context.colors.primary),
                   onPressed: onSend,
                 ),
               ],

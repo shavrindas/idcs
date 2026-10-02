@@ -76,10 +76,10 @@ class _AlarmSettingsPageState extends State<AlarmSettingsPage> {
                 _SettingsCard(
                   title: '다시 알림',
                   children: [
-                    const Text(
+                    Text(
                       '알람을 확인하지 못했을 때 설정한 간격으로 최대 '
                       '${AlarmSettings.maxRepeatCount}번까지 다시 알려줍니다.',
-                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 12),
                     Wrap(
@@ -93,11 +93,11 @@ class _AlarmSettingsPageState extends State<AlarmSettingsPage> {
                           labelStyle: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: selected ? Colors.white : AppColors.textPrimary,
+                            color: selected ? context.colors.onPrimary : context.colors.textPrimary,
                           ),
-                          selectedColor: AppColors.primary,
-                          backgroundColor: AppColors.background,
-                          side: BorderSide(color: selected ? AppColors.primary : AppColors.outline),
+                          selectedColor: context.colors.primary,
+                          backgroundColor: context.colors.background,
+                          side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         );
                       }).toList(),
@@ -105,10 +105,10 @@ class _AlarmSettingsPageState extends State<AlarmSettingsPage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   '이 설정은 이 기기에만 적용됩니다.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                 ),
               ],
             ),
@@ -127,16 +127,16 @@ class _SettingsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
           ),
           const SizedBox(height: 8),
           ...children,

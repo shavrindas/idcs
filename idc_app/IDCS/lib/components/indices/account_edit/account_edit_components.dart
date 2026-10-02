@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/theme_controller.dart';
 
 /// Box #2: 아이디(username) 수정 박스
 class UsernameEditBox extends StatelessWidget {
@@ -93,7 +94,7 @@ class _PasswordEditBoxState extends State<PasswordEditBox> {
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 tooltip: '비밀번호 표시',
-                icon: Icon(_obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.textSecondary),
+                icon: Icon(_obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: context.colors.textSecondary),
                 onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
               ),
             ),
@@ -107,7 +108,7 @@ class _PasswordEditBoxState extends State<PasswordEditBox> {
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 tooltip: '비밀번호 표시',
-                icon: Icon(_obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.textSecondary),
+                icon: Icon(_obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: context.colors.textSecondary),
                 onPressed: () => setState(() => _obscureNew = !_obscureNew),
               ),
             ),
@@ -116,7 +117,7 @@ class _PasswordEditBoxState extends State<PasswordEditBox> {
             const SizedBox(height: 10),
             Text(
               widget.collapseMessage,
-              style: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(color: context.colors.primary, fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ],
           const SizedBox(height: 14),
@@ -199,7 +200,7 @@ class _ProviderRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Row(
         children: [
@@ -208,23 +209,62 @@ class _ProviderRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
             ),
           ),
           if (isLinked)
             Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 17),
+                Icon(Icons.check_circle_rounded, color: context.colors.success, size: 17),
                 const SizedBox(width: 5),
-                const Text(
+                Text(
                   '연동됨',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.success),
                 ),
               ],
             )
           else
             TextButton(onPressed: onPressed, child: const Text('연동하기')),
         ],
+      ),
+    );
+  }
+}
+
+/// 화면 테마(밝게/어둡게/시스템 설정) 선택 박스.
+class ThemeModeBox extends StatelessWidget {
+  final ThemeMode current;
+  final ValueChanged<ThemeMode> onChanged;
+
+  const ThemeModeBox({super.key, required this.current, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _EditCard(
+      title: '화면 테마',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: ThemeMode.values.map((mode) {
+          final selected = current == mode;
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            onTap: () => onChanged(mode),
+            leading: Icon(
+              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+              color: selected ? context.colors.primary : context.colors.textSecondary,
+              size: 20,
+            ),
+            title: Text(
+              ThemeController.labelOf(mode),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: context.colors.textPrimary,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -241,28 +281,28 @@ class WithdrawBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+        border: Border.all(color: context.colors.error.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             '계정 탈퇴',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.error),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.error),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '탈퇴하면 계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: onWithdraw,
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.error,
-              side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+              foregroundColor: context.colors.error,
+              side: BorderSide(color: context.colors.error.withValues(alpha: 0.5)),
             ),
             child: const Text('계정 탈퇴'),
           ),
@@ -283,14 +323,14 @@ class _EditCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
           const SizedBox(height: 12),
           child,
         ],

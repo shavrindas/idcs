@@ -48,7 +48,7 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
               tooltip: '비밀번호 표시',
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
@@ -91,8 +91,8 @@ class SocialLoginBox extends StatelessWidget {
           ),
           label: const Text('Google로 계속하기'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
+            foregroundColor: context.colors.textPrimary,
+            side: BorderSide(color: context.colors.outline),
             alignment: Alignment.centerLeft,
           ),
         ),
@@ -106,8 +106,8 @@ class SocialLoginBox extends StatelessWidget {
           ),
           label: const Text('Apple로 계속하기'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
+            foregroundColor: context.colors.textPrimary,
+            side: BorderSide(color: context.colors.outline),
             alignment: Alignment.centerLeft,
           ),
         ),
@@ -131,10 +131,10 @@ class _ProviderBadge extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(color: background, shape: BoxShape.circle),
       child: icon != null
-          ? Icon(icon, size: 14, color: Colors.white)
+          ? Icon(icon, size: 14, color: context.colors.onPrimary)
           : Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+              style: TextStyle(color: context.colors.onPrimary, fontSize: 13, fontWeight: FontWeight.w700),
             ),
     );
   }

@@ -45,19 +45,19 @@ class FindIdBox extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.06),
+              color: context.colors.primary.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+              border: Border.all(color: context.colors.primary.withValues(alpha: 0.25)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
+                Icon(Icons.info_outline_rounded, color: context.colors.primary, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     resultMessage,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.w600,
                       height: 1.4,
                     ),

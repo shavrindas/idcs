@@ -95,10 +95,10 @@ class AlarmRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accent = isActive ? AppColors.error : AppColors.textSecondary.withValues(alpha: 0.4);
+    final Color accent = isActive ? context.colors.error : context.colors.textSecondary.withValues(alpha: 0.4);
 
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -107,7 +107,7 @@ class AlarmRow extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.outline),
+            border: Border.all(color: context.colors.outline),
           ),
           // 좌측 색상 바는 Stack으로 높이를 맞춘다. IntrinsicHeight를 쓰면 텍스트 높이
           // 반올림 때문에 1px 오버플로가 생긴다.
@@ -127,10 +127,10 @@ class AlarmRow extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   title,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
+                                    color: context.colors.textPrimary,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -154,7 +154,7 @@ class AlarmRow extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             subtitle,
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -171,7 +171,7 @@ class AlarmRow extends StatelessWidget {
                         ),
                         if (timestamp.isNotEmpty) ...[
                           const SizedBox(height: 3),
-                          Text(timestamp, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          Text(timestamp, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                         ],
                       ],
                     ),
@@ -179,7 +179,7 @@ class AlarmRow extends StatelessWidget {
                       Icon(
                         isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
                         size: 20,
-                        color: AppColors.textSecondary,
+                        color: context.colors.textSecondary,
                       ),
                   ],
                 ),
@@ -266,7 +266,7 @@ class _OccurrenceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = isAlarmActive(alarm);
-    final color = active ? AppColors.error : AppColors.textSecondary;
+    final color = active ? context.colors.error : context.colors.textSecondary;
 
     return InkWell(
       onTap: onTap,
@@ -284,7 +284,7 @@ class _OccurrenceRow extends StatelessWidget {
             Expanded(
               child: Text(
                 formatAlarmTime(alarm['timestamp']?.toString() ?? ''),
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
               ),
             ),
             Text(
@@ -321,19 +321,19 @@ class AlarmFilterBar extends StatelessWidget {
           child: Wrap(
             spacing: 6,
             children: [
-              _chip('전체', AlarmStatusFilter.all),
-              _chip('진행중', AlarmStatusFilter.active),
-              _chip('종료', AlarmStatusFilter.ended),
+              _chip(context, '전체', AlarmStatusFilter.all),
+              _chip(context, '진행중', AlarmStatusFilter.active),
+              _chip(context, '종료', AlarmStatusFilter.ended),
             ],
           ),
         ),
-        const Text('묶어서 보기', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        Text('묶어서 보기', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
         Switch(value: grouped, onChanged: onGroupedChanged),
       ],
     );
   }
 
-  Widget _chip(String label, AlarmStatusFilter value) {
+  Widget _chip(BuildContext context, String label, AlarmStatusFilter value) {
     final selected = statusFilter == value;
     return ChoiceChip(
       label: Text(label),
@@ -342,11 +342,11 @@ class AlarmFilterBar extends StatelessWidget {
       labelStyle: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: selected ? Colors.white : AppColors.textPrimary,
+        color: selected ? context.colors.onPrimary : context.colors.textPrimary,
       ),
-      selectedColor: AppColors.primary,
-      backgroundColor: AppColors.background,
-      side: BorderSide(color: selected ? AppColors.primary : AppColors.outline),
+      selectedColor: context.colors.primary,
+      backgroundColor: context.colors.background,
+      side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
     );
   }
@@ -365,15 +365,15 @@ class EmptyListState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         children: [
-          Icon(icon, color: AppColors.textSecondary.withValues(alpha: 0.6), size: 28),
+          Icon(icon, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
           const SizedBox(height: 8),
-          Text(message, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          Text(message, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         ],
       ),
     );

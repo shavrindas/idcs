@@ -159,9 +159,9 @@ class ChartSeriesBox extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (availableGroups.isEmpty && !directMode)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(bottom: 8),
-              child: Text('등록된 그룹이 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              child: Text('등록된 그룹이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
             ),
           Wrap(
             spacing: 8.0,
@@ -169,13 +169,13 @@ class ChartSeriesBox extends StatelessWidget {
             children: [
               ...availableGroups.map((group) {
                 final isSelected = !directMode && selectedGroupId == group['group_id'];
-                return _chip(
+                return _chip(context,
                   label: group['group_name'],
                   selected: isSelected,
                   onSelected: () => onGroupSelected(group['group_id']),
                 );
               }),
-              _chip(
+              _chip(context,
                 label: '직접 선택',
                 selected: directMode,
                 onSelected: onDirectModeSelected,
@@ -184,24 +184,24 @@ class ChartSeriesBox extends StatelessWidget {
           ),
           if (shown.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Divider(height: 1, color: AppColors.outline),
+            Divider(height: 1, color: context.colors.outline),
             const SizedBox(height: 10),
             Text(
               directMode ? '표시할 항목을 고르세요' : '이 그룹에 묶인 항목',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
             ),
             // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
             if (visibleRoleIds.length > _readableSeriesLimit) ...[
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, size: 14, color: AppColors.warning),
+                  Icon(Icons.info_outline_rounded, size: 14, color: context.colors.warning),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       '${visibleRoleIds.length}개를 한 번에 그리면 알아보기 어렵습니다. '
                       '$_readableSeriesLimit개 이하를 권합니다.',
-                      style: const TextStyle(fontSize: 12, color: AppColors.warning),
+                      style: TextStyle(fontSize: 12, color: context.colors.warning),
                     ),
                   ),
                 ],
@@ -224,13 +224,13 @@ class ChartSeriesBox extends StatelessWidget {
                       labelStyle: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: checked ? AppColors.primary : AppColors.textSecondary,
+                        color: checked ? context.colors.primary : context.colors.textSecondary,
                       ),
                       showCheckmark: true,
-                      checkmarkColor: AppColors.primary,
-                      selectedColor: AppColors.primary.withValues(alpha: 0.12),
-                      backgroundColor: AppColors.background,
-                      side: BorderSide(color: checked ? AppColors.primary : AppColors.outline),
+                      checkmarkColor: context.colors.primary,
+                      selectedColor: context.colors.primary.withValues(alpha: 0.12),
+                      backgroundColor: context.colors.background,
+                      side: BorderSide(color: checked ? context.colors.primary : context.colors.outline),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                     );
                   }).toList(),
@@ -243,19 +243,19 @@ class ChartSeriesBox extends StatelessWidget {
     );
   }
 
-  Widget _chip({required String label, required bool selected, required VoidCallback onSelected}) {
+  Widget _chip(BuildContext context, {required String label, required bool selected, required VoidCallback onSelected}) {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
       onSelected: (val) { if (val) onSelected(); },
       labelStyle: TextStyle(
-        color: selected ? Colors.white : AppColors.textPrimary,
+        color: selected ? context.colors.onPrimary : context.colors.textPrimary,
         fontWeight: FontWeight.w600,
         fontSize: 13,
       ),
-      selectedColor: AppColors.primary,
-      backgroundColor: AppColors.background,
-      side: BorderSide(color: selected ? AppColors.primary : AppColors.outline),
+      selectedColor: context.colors.primary,
+      backgroundColor: context.colors.background,
+      side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
@@ -294,7 +294,7 @@ class _ChartLegend extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 names[i],
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: FontWeight.w600),
               ),
             ],
           );
@@ -351,10 +351,9 @@ const List<List<int>?> _seriesDashPatterns = [
   [3, 2, 8, 2],
 ];
 
-/// 시리즈 색상 팔레트. 통계 박스와 캔버스가 같은 순서로 순회하므로 항상 같은 색이 매칭된다.
-const List<Color> chartSeriesColors = [
-  AppColors.primary, AppColors.error, AppColors.success, AppColors.warning, AppColors.primaryDark, Colors.teal,
-];
+// 시리즈 색상 팔레트는 테마마다 달라야 해서(어두운 배경에서 진한 색이 안 보인다)
+// AppPalette.chartSeries로 옮겼다. 통계 박스와 캔버스가 같은 순서로 순회하므로
+// 항상 같은 색이 매칭된다.
 
 /// 조회된 구간의 최소/평균/최대값을 시리즈별로 요약해서 보여주는 박스.
 /// 그래프를 눈으로 훑지 않아도 한눈에 수치 요약을 볼 수 있게 한다.
@@ -403,7 +402,7 @@ class ChartStatsBox extends StatelessWidget {
 
       stats.add(_SeriesStat(
         name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
-        color: chartSeriesColors[i % chartSeriesColors.length],
+        color: context.colors.chartSeries[i % context.colors.chartSeries.length],
         min: minVal,
         avg: count > 0 ? sum / count : null,
         max: maxVal,
@@ -423,13 +422,13 @@ class ChartStatsBox extends StatelessWidget {
               Container(width: 8, height: 8, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(s.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
+                child: Text(s.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary), overflow: TextOverflow.ellipsis),
               ),
-              _statChip('최소', s.min),
+              _statChip(context, '최소', s.min),
               const SizedBox(width: 6),
-              _statChip('평균', s.avg),
+              _statChip(context, '평균', s.avg),
               const SizedBox(width: 6),
-              _statChip('최대', s.max),
+              _statChip(context, '최대', s.max),
             ],
           ),
         )).toList(),
@@ -437,13 +436,13 @@ class ChartStatsBox extends StatelessWidget {
     );
   }
 
-  Widget _statChip(String label, double? value) {
+  Widget _statChip(BuildContext context, String label, double? value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: context.colors.background, borderRadius: BorderRadius.circular(8)),
       child: Text(
         '$label ${value != null ? value.toStringAsFixed(1) : '-'}',
-        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -475,13 +474,13 @@ class ChartCanvasBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return _buildContainer(child: const Center(child: CircularProgressIndicator()));
+      return _buildContainer(context, child: const Center(child: CircularProgressIndicator()));
     }
 
     if (chartData == null || chartData!['data']['datasets'] == null || (chartData!['data']['datasets'] as List).isEmpty) {
-      return _buildContainer(
-        child: const Center(
-          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      return _buildContainer(context,
+        child: Center(
+          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         ),
       );
     }
@@ -500,7 +499,7 @@ class ChartCanvasBox extends StatelessWidget {
     double minY = double.infinity;
     double maxY = -double.infinity;
 
-    final List<Color> colors = chartSeriesColors;
+    final List<Color> colors = context.colors.chartSeries;
 
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
@@ -583,14 +582,14 @@ class ChartCanvasBox extends StatelessWidget {
         alarmLines.add(
           VerticalLine(
             x: x,
-            color: AppColors.error.withValues(alpha: 0.7),
+            color: context.colors.error.withValues(alpha: 0.7),
             strokeWidth: 1.5,
             dashArray: [4, 4],
             label: VerticalLineLabel(
               show: true,
               alignment: Alignment.topLeft,
               padding: const EdgeInsets.only(left: 4, bottom: 2),
-              style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 12, color: context.colors.error, fontWeight: FontWeight.w700),
               labelResolver: (line) => name,
             ),
           ),
@@ -608,12 +607,12 @@ class ChartCanvasBox extends StatelessWidget {
     }
 
     if (lineBars.isEmpty) {
-      return _buildContainer(
-        child: const Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+      return _buildContainer(context,
+        child: Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13))),
       );
     }
 
-    return _buildContainer(
+    return _buildContainer(context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -647,8 +646,8 @@ class ChartCanvasBox extends StatelessWidget {
             gridData: FlGridData(
               show: true,
               drawVerticalLine: true,
-              getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
-              getDrawingVerticalLine: (value) => const FlLine(color: AppColors.outline, strokeWidth: 1),
+              getDrawingHorizontalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
+              getDrawingVerticalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
             ),
             titlesData: FlTitlesData(
               topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -664,7 +663,7 @@ class ChartCanvasBox extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         DateFormat('HH:mm').format(dt),
-                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                       ),
                     );
                   },
@@ -677,7 +676,7 @@ class ChartCanvasBox extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     return Text(
                       value.toStringAsFixed(1),
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                     );
                   },
                 ),
@@ -712,13 +711,13 @@ class ChartCanvasBox extends StatelessWidget {
   }
 
   // 차트 캔버스는 화면의 핵심 콘텐츠이므로 주변 설정 카드보다 한 단계 부각시킨다.
-  Widget _buildContainer({required Widget child}) {
+  Widget _buildContainer(BuildContext context, {required Widget child}) {
     return Container(
       height: 400,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppShadows.soft,
+        boxShadow: context.colors.softShadow,
       ),
       padding: const EdgeInsets.all(16.0),
       child: child,
@@ -744,17 +743,17 @@ class ChartToolBox extends StatelessWidget {
       child: Row(
         children: [
           const Spacer(),
-          IconButton(icon: const Icon(Icons.pan_tool_outlined, color: AppColors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
+          IconButton(icon: Icon(Icons.pan_tool_outlined, color: context.colors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
           IconButton(
             icon: Icon(
               Icons.show_chart_rounded,
-              color: showTargetLines ? AppColors.primary : AppColors.textSecondary,
+              color: showTargetLines ? context.colors.primary : context.colors.textSecondary,
             ),
             onPressed: () => onToggleTargetLines(!showTargetLines),
             tooltip: showTargetLines ? '기준선 숨기기' : '기준선 표시',
           ),
-          IconButton(icon: const Icon(Icons.text_fields_rounded, color: AppColors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
-          IconButton(icon: const Icon(Icons.refresh_rounded, color: AppColors.primary), onPressed: () {}, tooltip: '시점 초기화'),
+          IconButton(icon: Icon(Icons.text_fields_rounded, color: context.colors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
+          IconButton(icon: Icon(Icons.refresh_rounded, color: context.colors.primary), onPressed: () {}, tooltip: '시점 초기화'),
         ],
       ),
     );
@@ -773,9 +772,9 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -783,7 +782,7 @@ class _SectionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+              Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
               if (trailing != null) trailing!,
             ],
           ),

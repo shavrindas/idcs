@@ -24,9 +24,9 @@ class PostInputBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,28 +79,28 @@ class _QuillEditorBoxState extends State<QuillEditorBox> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outline),
+        border: Border.all(color: context.colors.outline),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           // 툴바 영역
           Container(
-            color: AppColors.background,
+            color: context.colors.background,
             padding: const EdgeInsets.all(4.0),
             child: quill.QuillSimpleToolbar(
               controller: widget.quillController,
               config: const quill.QuillSimpleToolbarConfig(),
             ),
           ),
-          const Divider(height: 1, color: AppColors.outline),
+          Divider(height: 1, color: context.colors.outline),
           // 에디터 영역 (고정 높이 부여 후 자체 스크롤 비활성화 위임)
           Container(
             height: 400,
             padding: const EdgeInsets.all(12.0),
-            color: AppColors.surface,
+            color: context.colors.surface,
             child: quill.QuillEditor(
               controller: widget.quillController,
               focusNode: _focusNode,

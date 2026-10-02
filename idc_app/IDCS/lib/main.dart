@@ -37,7 +37,7 @@ import 'package:idcs/pages/facility/chat/chat_room_page.dart';
 import 'package:idcs/pages/facility/chart/facility_chart_page.dart';
 import 'pages/common/opening_page.dart';
 import 'package:idcs/theme/app_theme.dart';
-
+import 'package:idcs/theme/theme_controller.dart';
 
 part 'config.dart';
 part 'auth_service.dart';
@@ -55,6 +55,9 @@ void main() async {
     await FcmService.initialize();
   }
 
+  // 저장된 테마 선택값 복원 (config.dart는 .gitignore 대상이라 여기서 호출한다)
+  await ThemeController.load();
+
   runApp(const MyApp());
 }
 
@@ -63,21 +66,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'IDCool Systems Routing',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        FlutterQuillLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('ko', 'KR'),
-        Locale('en', 'US'),
-      ],
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.mode,
+      builder: (context, themeMode, _) => MaterialApp.router(
+        title: 'IDCool Systems Routing',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: themeMode,
+        routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          FlutterQuillLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
+      ),
     );
   }
 }
