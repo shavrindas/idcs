@@ -103,16 +103,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('전체 알람'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: '알람 설정',
-            onPressed: () => context.push('/alarm_settings'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('전체 알람')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(

@@ -1,5 +1,6 @@
 import '../../../main.dart';
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #5: 텍스트 박스 입력형 권한 주입 박스
 // 경로 : lib/components/common/opening/open_inj_text.dart
@@ -28,7 +29,7 @@ class CustomAuthInjectionBoxState extends State<CustomAuthInjectionBox> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
+        border: Border.all(color: context.colors.outline),
       ),
       padding: const EdgeInsets.all(12.0),
       child: Row(

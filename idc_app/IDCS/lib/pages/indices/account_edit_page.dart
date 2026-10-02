@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
-import 'package:idcs/theme/theme_controller.dart';
 import 'package:idcs/main.dart'; // AuthService 접근용
 
 class PersonalPage extends StatefulWidget {
@@ -213,8 +212,17 @@ class _PersonalPageState extends State<PersonalPage> {
             ),
             const SizedBox(height: 16),
 
+            // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
+            _LinkCard(
+              title: '설정',
+              subtitle: '화면 테마, 알람 소리·진동',
+              icon: Icons.settings_outlined,
+              onPressed: () => context.push('/settings'),
+            ),
+            const SizedBox(height: 16),
+
             if (_isAdmin) ...[
-              _AdminLinkCard(
+              _LinkCard(
                 title: '통합 소요 기록',
                 icon: Icons.assignment_outlined,
                 onPressed: () => context.push('/total_board/${widget.userId}'),
@@ -254,15 +262,6 @@ class _PersonalPageState extends State<PersonalPage> {
             ),
             const SizedBox(height: 16),
 
-            ValueListenableBuilder<ThemeMode>(
-              valueListenable: ThemeController.mode,
-              builder: (context, mode, _) => ThemeModeBox(
-                current: mode,
-                onChanged: ThemeController.set,
-              ),
-            ),
-            const SizedBox(height: 16),
-
             WithdrawBox(onWithdraw: _handleWithdraw),
           ],
         ),
@@ -271,13 +270,14 @@ class _PersonalPageState extends State<PersonalPage> {
   }
 }
 
-/// 관리자 전용 화면으로 이동하는 카드 (평소엔 탭이 아니라 여기서만 노출)
-class _AdminLinkCard extends StatelessWidget {
+/// 다른 화면으로 넘어가는 줄 카드 (설정, 관리자 전용 통합 소요 기록 등)
+class _LinkCard extends StatelessWidget {
   final String title;
+  final String? subtitle;
   final IconData icon;
   final VoidCallback onPressed;
 
-  const _AdminLinkCard({required this.title, required this.icon, required this.onPressed});
+  const _LinkCard({required this.title, this.subtitle, required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -291,14 +291,24 @@ class _AdminLinkCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.colors.primary.withValues(alpha: 0.3)),
+            border: Border.all(color: context.colors.outline),
           ),
           child: Row(
             children: [
               Icon(icon, color: context.colors.primary, size: 20),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(title, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(subtitle!, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                    ],
+                  ],
+                ),
               ),
               Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary, size: 20),
             ],

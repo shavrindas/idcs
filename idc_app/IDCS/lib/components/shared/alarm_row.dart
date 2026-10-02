@@ -244,10 +244,12 @@ class _GroupedAlarmTileState extends State<GroupedAlarmTile> {
             padding: const EdgeInsets.only(left: 14, top: 6),
             child: Column(
               children: group.members
-                  .map((alarm) => _OccurrenceRow(
-                        alarm: alarm,
-                        onTap: widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(alarm),
-                      ))
+                  .map(
+                    (alarm) => _OccurrenceRow(
+                      alarm: alarm,
+                      onTap: widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(alarm),
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -336,6 +338,7 @@ class AlarmFilterBar extends StatelessWidget {
   Widget _chip(BuildContext context, String label, AlarmStatusFilter value) {
     final selected = statusFilter == value;
     return ChoiceChip(
+      showCheckmark: false,
       label: Text(label),
       selected: selected,
       onSelected: (_) => onStatusChanged(value),

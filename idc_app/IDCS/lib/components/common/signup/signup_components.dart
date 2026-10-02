@@ -180,9 +180,9 @@ class AppleEmailFallbackBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFFE0A32E).withValues(alpha: 0.08),
+        color: context.colors.warning.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0A32E).withValues(alpha: 0.35)),
+        border: Border.all(color: context.colors.warning.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -190,7 +190,7 @@ class AppleEmailFallbackBox extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline_rounded, color: Color(0xFFE0A32E), size: 20),
+              Icon(Icons.info_outline_rounded, color: context.colors.warning, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(

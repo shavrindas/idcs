@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
-import 'package:idcs/theme/theme_controller.dart';
 
 /// Box #2: 아이디(username) 수정 박스
 class UsernameEditBox extends StatelessWidget {
@@ -226,45 +225,6 @@ class _ProviderRow extends StatelessWidget {
           else
             TextButton(onPressed: onPressed, child: const Text('연동하기')),
         ],
-      ),
-    );
-  }
-}
-
-/// 화면 테마(밝게/어둡게/시스템 설정) 선택 박스.
-class ThemeModeBox extends StatelessWidget {
-  final ThemeMode current;
-  final ValueChanged<ThemeMode> onChanged;
-
-  const ThemeModeBox({super.key, required this.current, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return _EditCard(
-      title: '화면 테마',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: ThemeMode.values.map((mode) {
-          final selected = current == mode;
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            onTap: () => onChanged(mode),
-            leading: Icon(
-              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
-              color: selected ? context.colors.primary : context.colors.textSecondary,
-              size: 20,
-            ),
-            title: Text(
-              ThemeController.labelOf(mode),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: context.colors.textPrimary,
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }
