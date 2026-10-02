@@ -4,8 +4,7 @@
 # ===============================================================
 from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, ForeignKey, func
 from sqlalchemy.orm import relationship
-from config.db import Base
-
+from src.config.database import Base
 class Board(Base):
     __tablename__ = "boards"
 
