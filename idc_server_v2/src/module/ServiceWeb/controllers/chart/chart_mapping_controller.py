@@ -3,7 +3,7 @@ from typing import List
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from config.db import get_db
+from src.config.database import get_db
 
 router = APIRouter(prefix="/chart-mapping", tags=["Chart Mapping"])
 
