@@ -1,0 +1,4603 @@
+=== [idc22] ROUTES MERGE ===
+
+=== FILE LIST ===
+C:\Users\ynham\Desktop\idcV2\.env
+C:\Users\ynham\Desktop\idcV2\.testbat\.env.center_fac
+C:\Users\ynham\Desktop\idcV2\.testbat\.env.center_only
+C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_b
+C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_c
+C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_d
+C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_daon
+C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_1.bat
+C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_2.bat
+C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_2_.bat
+C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_3.bat
+C:\Users\ynham\Desktop\idcV2\run.bat
+C:\Users\ynham\Desktop\idcV2\src\app.py
+C:\Users\ynham\Desktop\idcV2\src\config\database.py
+C:\Users\ynham\Desktop\idcV2\src\config\firebase.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\controllers\logic.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Board.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Chat.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Facility.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Monitoring.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\models\User.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\router.py
+C:\Users\ynham\Desktop\idcV2\src\module\Core\security.py
+C:\Users\ynham\Desktop\idcV2\src\module\CServer\controllers\sys_auth_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\CServer\router.py
+C:\Users\ynham\Desktop\idcV2\src\module\FServer\controllers\connection_manager.py
+C:\Users\ynham\Desktop\idcV2\src\module\FServer\router.py
+C:\Users\ynham\Desktop\idcV2\src\module\module_router.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\alarm_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\auth_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\board_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\chart_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\chat_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\facility_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\router.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\alarm_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\auth_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\board_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\chart_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\chart_mapping_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\chat_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\facility_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\node_manage_controller.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\router.py
+C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\webui\index.html
+C:\Users\ynham\Desktop\idcV2\update.bat
+
+=== FILE TREE ===
+
+[p1] C:\Users\ynham\Desktop\idcV2
+└── idcV2
+    ├── .env
+    ├── .testbat
+    │   ├── .env.center_fac
+    │   ├── .env.center_only
+    │   ├── .env.fac_b
+    │   ├── .env.fac_c
+    │   ├── .env.fac_d
+    │   ├── .env.fac_daon
+    │   ├── test_scenario_1.bat
+    │   ├── test_scenario_2.bat
+    │   ├── test_scenario_2_.bat
+    │   └── test_scenario_3.bat
+    ├── run.bat
+    ├── src
+    │   ├── app.py
+    │   ├── config
+    │   │   ├── database.py
+    │   │   └── firebase.py
+    │   └── module
+    │       ├── CServer
+    │       │   ├── controllers
+    │       │   │   └── sys_auth_controller.py
+    │       │   └── router.py
+    │       ├── Core
+    │       │   ├── controllers
+    │       │   │   └── logic.py
+    │       │   ├── models
+    │       │   │   ├── Board.py
+    │       │   │   ├── Chat.py
+    │       │   │   ├── Facility.py
+    │       │   │   ├── Monitoring.py
+    │       │   │   └── User.py
+    │       │   ├── router.py
+    │       │   └── security.py
+    │       ├── FServer
+    │       │   ├── controllers
+    │       │   │   └── connection_manager.py
+    │       │   └── router.py
+    │       ├── ServiceApp
+    │       │   ├── controllers
+    │       │   │   ├── alarm_controller.py
+    │       │   │   ├── auth_controller.py
+    │       │   │   ├── board_controller.py
+    │       │   │   ├── chart_controller.py
+    │       │   │   ├── chat_controller.py
+    │       │   │   └── facility_controller.py
+    │       │   └── router.py
+    │       ├── ServiceWeb
+    │       │   ├── controllers
+    │       │   │   ├── alarm_controller.py
+    │       │   │   ├── auth_controller.py
+    │       │   │   ├── board_controller.py
+    │       │   │   ├── chart_controller.py
+    │       │   │   ├── chart_mapping_controller.py
+    │       │   │   ├── chat_controller.py
+    │       │   │   ├── facility_controller.py
+    │       │   │   └── node_manage_controller.py
+    │       │   ├── router.py
+    │       │   └── webui
+    │       │       └── index.html
+    │       └── module_router.py
+    └── update.bat
+
+=== FILE CONTENTS ===
+
+======================================================================
+■ File : .env
+■ Path : C:\Users\ynham\Desktop\idcV2\.env
+======================================================================
+
+ENABLE_CENTER_SERVER=true
+ENABLE_FACILITY_SERVER=true
+ENABLE_SERVICE_WEB=true
+ENABLE_SERVICE_APP=true
+NODE_CODE=NODE_CENTER_01
+
+SYSTEM_SECRET_KEY=idcool_cserver_jwt_secret_key_prod_v2_9a8fbc12de
+
+======================================================================
+■ File : .env.center_fac
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\.env.center_fac
+======================================================================
+
+ENABLE_CENTER_SERVER=true
+ENABLE_FACILITY_SERVER=true
+ENABLE_SERVICE_WEB=true
+ENABLE_SERVICE_APP=true
+NODE_CODE=NODE_CENTER_01
+CENTER_API_URL=http://127.0.0.1:8900/api/v1/cserver/sys-auth/login
+CENTER_WS_URL=ws://127.0.0.1:8900/api/v1/cserver/data-stream
+SYSTEM_SECRET_KEY=idcool_cserver_jwt_secret_key_prod_v2_9a8fbc12dedeconn8901
+
+======================================================================
+■ File : .env.center_only
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\.env.center_only
+======================================================================
+
+ENABLE_CENTER_SERVER=true
+ENABLE_FACILITY_SERVER=false
+ENABLE_SERVICE_WEB=true
+ENABLE_SERVICE_APP=true
+NODE_CODE=NODE_CENTER_01
+SYSTEM_SECRET_KEY=idcool_cserver_jwt_secret_key_prod_v2_9a8fbc12de
+
+======================================================================
+■ File : .env.fac_b
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_b
+======================================================================
+
+ENABLE_CENTER_SERVER=false
+ENABLE_FACILITY_SERVER=true
+ENABLE_SERVICE_WEB=false
+ENABLE_SERVICE_APP=false
+
+CENTER_API_URL=http://127.0.0.1:8900/api/v1/cserver/sys-auth/login
+CENTER_WS_URL=ws://127.0.0.1:8900/api/v1/cserver/data-stream
+
+
+NODE_CODE=TestNode_A
+API_KEY=idk_live_4FXEWl8Hy4U7DrMxROVAptgvI0SeHp73w70t0g4stC8
+
+======================================================================
+■ File : .env.fac_c
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_c
+======================================================================
+
+ENABLE_CENTER_SERVER=false
+ENABLE_FACILITY_SERVER=true
+ENABLE_SERVICE_WEB=false
+ENABLE_SERVICE_APP=false
+
+CENTER_API_URL=http://127.0.0.1:8900/api/v1/cserver/sys-auth/login
+CENTER_WS_URL=ws://127.0.0.1:8900/api/v1/cserver/data-stream
+
+
+NODE_CODE=TestNode_B
+API_KEY=idk_live_lXcnNFSFOWBR66YYLURMHq85zOv8mcDyOlfUi2FGdKA
+
+======================================================================
+■ File : .env.fac_d
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_d
+======================================================================
+
+ENABLE_CENTER_SERVER=false
+ENABLE_FACILITY_SERVER=true
+ENABLE_SERVICE_WEB=false
+ENABLE_SERVICE_APP=false
+
+CENTER_API_URL=http://127.0.0.1:8900/api/v1/cserver/sys-auth/login
+CENTER_WS_URL=ws://127.0.0.1:8900/api/v1/cserver/data-stream
+
+
+NODE_CODE=FAC1Node_A
+API_KEY=idk_live_mLasC2Uo-ablDmph7I2foYc8DHweToEiF0L_6S44-fE
+
+======================================================================
+■ File : .env.fac_daon
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\.env.fac_daon
+======================================================================
+
+ENABLE_CENTER_SERVER=false
+ENABLE_FACILITY_SERVER=true
+ENABLE_SERVICE_WEB=false
+ENABLE_SERVICE_APP=false
+
+CENTER_API_URL=http://127.0.0.1:8900/api/v1/cserver/sys-auth/login
+CENTER_WS_URL=ws://127.0.0.1:8900/api/v1/cserver/data-stream
+
+NODE_CODE=DAON_Node_A
+API_KEY=idk_live_dgmEc9aDr-pVyAPuyJTSV7oKHDr8xm-wZLxdPTxCYOM
+
+======================================================================
+■ File : test_scenario_1.bat
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_1.bat
+======================================================================
+
+@echo off
+@REM   echo [Scenario 1] 중앙+시설(Node A, 8900) - 시설(Node B, 8901)
+echo [Scenario 1] Center+Facility(Node A, 8900) - Facility(Node B, 8901)
+start "Node A (Center+Fac)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8900 --env-file .testbat\.env.center_fac --reload"
+timeout /t 3 /nobreak > nul
+start "Node B (Facility B)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8901 --env-file .testbat\.env.fac_b --reload"
+
+======================================================================
+■ File : test_scenario_2.bat
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_2.bat
+======================================================================
+
+@echo off
+@REM  echo [Scenario 2] 중앙(Node A, 8900) - 시설B(8901) - 시설C(8902)
+echo [Scenario 2] Center(Node A, 8900) - Facility B(8901) - Facility C(8902)
+start "Node A (Center Only)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8900 --env-file .testbat\.env.center_only --reload"
+timeout /t 3 /nobreak > nul
+start "Node B (Facility B)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8901 --env-file .testbat\.env.fac_b --reload"
+start "Node C (Facility C)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8902 --env-file .testbat\.env.fac_c --reload"
+
+======================================================================
+■ File : test_scenario_2_.bat
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_2_.bat
+======================================================================
+
+@echo off
+@REM  echo [Scenario 2] 중앙(Node A, 8900) - 시설B(8901) - 시설C(8902)
+echo [Scenario 2] Center(Node A, 8900) - Facility B(8901) - Facility C(8902)
+start "Node A (Center Only)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8900 --env-file .testbat\.env.center_only --reload"
+timeout /t 3 /nobreak > nul
+start "Node B (Facility B)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8901 --env-file .testbat\.env.fac_b --reload"
+start "Node C (Facility C)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8902 --env-file .testbat\.env.fac_c --reload"
+start "Node D (Facility D)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8903 --env-file .testbat\.env.fac_d --reload"
+start "Node DAON (Facility DAON)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8904 --env-file .testbat\.env.fac_daon --reload"
+
+======================================================================
+■ File : test_scenario_3.bat
+■ Path : C:\Users\ynham\Desktop\idcV2\.testbat\test_scenario_3.bat
+======================================================================
+
+@echo off
+@REM  echo [Scenario 3] 중앙 단독(Web, App 활성화)
+echo [Scenario 3] Center Only(Web, App Active)
+start "Node A (Center Only)" cmd /k "uvicorn src.app:app --host 0.0.0.0 --port 8900 --env-file .testbat\.env.center_only --reload"
+
+======================================================================
+■ File : run.bat
+■ Path : C:\Users\ynham\Desktop\idcV2\run.bat
+======================================================================
+
+
+
+======================================================================
+■ File : app.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\app.py
+======================================================================
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+from src.config.database import engine
+from src.module.Core.models.User import User, ExternalProvider
+from src.module.Core.models.Facility import Facility, FacilityRoom, FacilityUser
+import os
+import asyncio
+import firebase_admin
+from firebase_admin import credentials
+from src.module.module_router import api_router
+from src.module.FServer.controllers.connection_manager import fserver_conn_manager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("LOG[STARTUP] : IDCool Server is starting up...")
+    
+    bg_task = None
+    if os.getenv("ENABLE_FACILITY_SERVER", "false").lower() == "true":
+        bg_task = asyncio.create_task(fserver_conn_manager.maintain_connection())
+    yield
+
+    
+    print("LOG[SHUTDOWN] : Shutting down IDCool Server...")
+    if bg_task:
+        bg_task.cancel()
+    await engine.dispose()
+
+app = FastAPI(
+    title="IDCool Systems API",
+    description="IDCool Systems 서버 백엔드 API",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # 개발 단계이므로 전체 허용
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
+app.include_router(api_router, prefix="/api/v1")
+
+@app.get("/")
+def root():
+    return {"message": "Server is running"}
+
+======================================================================
+■ File : database.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\config\database.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/config/database.py
+# 명세 : 데이터베이스 연결 및 세션 관리 설정
+# ===============================================================
+import os
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
+# ===============================================================
+
+# [Database configuration]
+DB_CONFIG = {
+    "dbname": "idcool_database_v01",
+    "user": "dev",
+    "password": "devkey1",
+    "host": "211.55.127.239",
+    "port": "5432"
+}
+
+# ===============================================================
+
+SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    SQLALCHEMY_DATABASE_URL
+)
+
+# 비동기 엔진 생성
+engine = create_async_engine(DATABASE_URL, echo=True)
+
+# 세션 팩토리 생성
+AsyncSessionLocal = sessionmaker(
+    bind=engine, 
+    class_=AsyncSession, 
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+# FastAPI 의존성 주입을 위한 DB 세션 함수
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+
+======================================================================
+■ File : firebase.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\config\firebase.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/config/firebase.py
+# 명세 : Firebase Admin SDK 초기화 및 FCM 전송 설정
+# ===============================================================
+import os
+import asyncio
+from firebase_admin import messaging
+
+async def send_multicast_fcm(tokens: list[str], title: str, body: str):
+    if not tokens:
+        return
+
+    message = messaging.MulticastMessage(
+        data={
+            "title": str(title),
+            "body": str(body),
+        },
+        tokens=tokens,
+        android=messaging.AndroidConfig(
+            priority='high',
+        ),
+    )
+    
+    response = await asyncio.to_thread(messaging.send_each_for_multicast, message)
+    print(f"[FCM 다중 전송] 성공: {response.success_count}건, 실패: {response.failure_count}건")
+
+======================================================================
+■ File : logic.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\controllers\logic.py
+======================================================================
+
+
+
+# 중앙 서버 - 시설 노드 간 인증
+# 시스템 간 계정 시스템 
+
+# .env 에 맞도록 시스템 config 설정 적용 
+
+
+======================================================================
+■ File : Board.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Board.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/Core/models/Board.py
+# 명세 : 게시판, 게시글, 댓글 및 이미지 첨부파일 모델 정의
+# ===============================================================
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, ForeignKey, func
+from sqlalchemy.orm import relationship
+from src.config.database import Base
+class Board(Base):
+    __tablename__ = "boards"
+
+    board_id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    facility_name = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 정의
+    facility = relationship("Facility")
+    posts = relationship("Post", back_populates="board", cascade="all, delete-orphan")
+
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    post_id = Column(Integer, primary_key=True, autoincrement=True)
+    board_id = Column(Integer, ForeignKey("boards.board_id", ondelete="CASCADE"), nullable=False)
+    creator_id = Column(Integer, ForeignKey("user_table.id"), nullable=False)
+    updater_id = Column(Integer, ForeignKey("user_table.id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 관계 정의
+    board = relationship("Board", back_populates="posts")
+    creator = relationship("User", foreign_keys=[creator_id])
+    updater = relationship("User", foreign_keys=[updater_id])
+    
+    images = relationship("PostImage", back_populates="post", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+
+
+class PostImage(Base):
+    __tablename__ = "post_images"
+
+    image_id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(Integer, ForeignKey("posts.post_id", ondelete="CASCADE"), nullable=True) # 임시 저장 허용을 위해 nullable=True
+    image_url = Column(String(512), nullable=False)
+    original_name = Column(String(255), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
+    aspect_ratio = Column(Numeric(4, 2), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 정의
+    post = relationship("Post", back_populates="images")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    comment_id = Column(Integer, primary_key=True, autoincrement=True)
+    post_id = Column(Integer, ForeignKey("posts.post_id", ondelete="CASCADE"), nullable=False)
+    creator_id = Column(Integer, ForeignKey("user_table.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 관계 정의
+    post = relationship("Post", back_populates="comments")
+    creator = relationship("User")
+
+======================================================================
+■ File : Chat.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Chat.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/Core/models/Chat.py
+# 명세 : 채팅방, 메시지, 즐겨찾기, 핀 및 해시태그 모델 정의
+# ===============================================================
+import enum
+from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy.orm import relationship
+from src.config.database import Base
+
+
+class ChatRoomType(str, enum.Enum):
+    DIRECT = "DIRECT"
+    GROUP = "GROUP"
+    FACILITY = "FACILITY"
+
+
+class MessageType(str, enum.Enum):
+    TEXT = "TEXT"
+    IMAGE = "IMAGE"
+    FILE = "FILE"
+
+
+class ChatRoom(Base):
+    __tablename__ = "chatrooms"
+
+    room_id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=True) 
+    room_name = Column(String(150), nullable=False)
+    type = Column(Enum(ChatRoomType, name="chatroom_type"), nullable=False, default=ChatRoomType.GROUP)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 정의
+    facility = relationship("Facility")
+    participants = relationship("ChatParticipant", back_populates="room", cascade="all, delete-orphan")
+    messages = relationship("Message", back_populates="room", cascade="all, delete-orphan")
+
+
+class ChatParticipant(Base):
+    __tablename__ = "chatparticipants"
+
+    participant_id = Column(Integer, primary_key=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_read_message_id = Column(Integer, default=0)
+    unread_count = Column(Integer, nullable=False, default=0)
+
+    # 관계 정의
+    room = relationship("ChatRoom", back_populates="participants")
+    user = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("room_id", "user_id", name="uq_room_user"),
+    )
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    message_id = Column(Integer, primary_key=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+    message_type = Column(Enum(MessageType, name="message_type"), nullable=False, default=MessageType.TEXT)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    parent_message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="SET NULL"), nullable=True)
+
+    # 관계 정의
+    room = relationship("ChatRoom", back_populates="messages")
+    user = relationship("User")
+    
+    # 자가 참조 (Self-referential) 관계 구성 (답글 기능)
+    parent = relationship("Message", remote_side=[message_id], back_populates="replies")
+    replies = relationship("Message", back_populates="parent", cascade="all, delete-orphan")
+
+    # 다대다 해시태그 매핑
+    hashtags = relationship(
+        "Hashtag",
+        secondary="message_hashtags",
+        back_populates="messages"
+    )
+
+
+class MessageFav(Base):
+    __tablename__ = "messages_fav"
+
+    fav_id = Column(Integer, primary_key=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False) # 👈 유저 식별자 추가
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 정의
+    room = relationship("ChatRoom")
+    user = relationship("User")
+
+    __table_args__ = (
+        UniqueConstraint("room_id", "user_id", name="uq_user_room_fav"),
+    )
+
+
+class MessagePin(Base):
+    __tablename__ = "messages_pin"
+
+    pin_id = Column(Integer, primary_key=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("chatrooms.room_id", ondelete="CASCADE"), nullable=False) # 👈 빠른 조회용 room_id 역정규화 추가
+    message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False) # 👈 고정한 주체(관리자) 식별자 추가
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 관계 정의
+    room = relationship("ChatRoom")
+    message = relationship("Message")
+    user = relationship("User")
+
+
+class Hashtag(Base):
+    __tablename__ = "hashtags"
+
+    hashtag_id = Column(Integer, primary_key=True, autoincrement=True)
+    tag_name = Column(String(100), nullable=False, unique=True)
+
+    messages = relationship(
+        "Message",
+        secondary="message_hashtags",
+        back_populates="hashtags"
+    )
+
+
+class MessageHashtag(Base):
+    __tablename__ = "message_hashtags"
+
+    message_id = Column(Integer, ForeignKey("messages.message_id", ondelete="CASCADE"), primary_key=True)
+    hashtag_id = Column(Integer, ForeignKey("hashtags.hashtag_id", ondelete="CASCADE"), primary_key=True)
+
+======================================================================
+■ File : Facility.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Facility.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/Core/models/Facility.py
+# 명세 : Facility 관련 데이터 모델 정의
+# ===============================================================
+import enum
+from sqlalchemy import (
+    Column, Integer, String, Boolean, Date, Enum, DateTime, func, ForeignKey, UniqueConstraint
+)
+from sqlalchemy.orm import relationship
+from src.config.database import Base
+# ===============================================================
+
+class RoomStatusType(str, enum.Enum):
+    OPERATING = "OPERATING"
+    MAINTENANCE = "MAINTENANCE"
+    NOT_OPERATING = "NOT_OPERATING"
+
+
+class NodeStatusType(str, enum.Enum):
+    ONLINE = "ONLINE"
+    OFFLINE = "OFFLINE"
+    ERROR = "ERROR"
+    MAINTENANCE = "MAINTENANCE"
+
+
+class FacilityUser(Base):
+    __tablename__ = "facility_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("facility_id", "user_id", name="uq_facility_user"),
+    )
+
+
+class Facility(Base):
+    __tablename__ = "facilities_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    access_code = Column(String(50), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    rooms = relationship("FacilityRoom", back_populates="facility", cascade="all, delete-orphan")
+    nodes = relationship("FacilityNode", back_populates="facility", cascade="all, delete-orphan")
+
+class FacilityRoom(Base):
+    __tablename__ = "facilities_room_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    status = Column(Enum(RoomStatusType, name="room_status_type"), nullable=False, default=RoomStatusType.OPERATING)
+    operation_start_date = Column(Date, nullable=True)
+    operation_end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    facility = relationship("Facility", back_populates="rooms")
+
+#26.7.23 추가  
+#26.8.02 제거 (중복 제거)  Monitoring.py 에서 참조
+#
+# class PointRole(Base):
+#     __tablename__ = "point_role_table"
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+#     room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
+#     role_name = Column(String(150), nullable=False)
+#     target_value = Column(String(255), nullable=True)
+#     target_low_limit = Column(String(255), nullable=True)
+#     target_high_limit = Column(String(255), nullable=True)
+#     valid_from = Column(Date, nullable=False)
+#     valid_to = Column(Date, nullable=True)
+#     is_current = Column(Boolean, nullable=False, default=True)
+
+
+class FacilityNode(Base):
+    __tablename__ = "facility_nodes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False, index=True)
+    node_code = Column(String(100), unique=True, nullable=False)
+    node_name = Column(String(150), nullable=False)
+    api_key_hash = Column(String(255), nullable=False)
+    allowed_ip_cidr = Column(String(50), nullable=True)
+    status = Column(Enum(NodeStatusType, name="node_status_type"), nullable=False, default=NodeStatusType.OFFLINE, index=True)
+    firmware_version = Column(String(50), nullable=True)
+    last_heartbeat_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    facility = relationship("Facility", back_populates="nodes")
+
+======================================================================
+■ File : Monitoring.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\models\Monitoring.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/Core/models/Monitoring.py
+# 명세 : 포인트 역할, 각종 계측 로그 및 알람 관련 데이터 모델 정의
+# ===============================================================
+from sqlalchemy import (
+    Column, Integer, String, Boolean, DateTime, REAL, Interval, 
+    ForeignKey, UniqueConstraint, Index, CHAR, func
+)
+
+from sqlalchemy.orm import relationship
+from src.config.database import Base
+class PointRole(Base):
+    __tablename__ = "point_role_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
+    role_name = Column(String(150), nullable=False)
+    target_value = Column(String(255), nullable=True)
+    target_low_limit = Column(String(255), nullable=True)
+    target_high_limit = Column(String(255), nullable=True)
+    valid_from = Column(DateTime(timezone=True), nullable=False)
+    valid_to = Column(DateTime(timezone=True), nullable=True)
+    is_current = Column(Boolean, nullable=False, default=True)
+
+    # Relationship
+    facility = relationship("Facility")
+    room = relationship("FacilityRoom")
+
+    # is_current가 True인 대상에 대해서만 유일성을 보장하는 부분 인덱스(Partial Index) 모사
+    # (SQLAlchemy 내에서 PostgreSQL partial index 선언)
+    __table_args__ = (
+        Index(
+            "uq_point_role_current", 
+            "facility_id", "room_id", "role_name", 
+            unique=True, 
+            postgresql_where=(is_current == True)
+        ),
+    )
+
+
+# ---------------------------------------------------------------
+# TimescaleDB 하이퍼테이블 로그 영역 (기본 복합키나 단방향 관계 매핑 지원)
+# ---------------------------------------------------------------
+
+class TemperatureNumericalLog(Base):
+    __tablename__ = "temperature_numerical_logs"
+
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), primary_key=True, nullable=False)
+    timestamp = Column(DateTime(timezone=True), primary_key=True, nullable=False)
+    temp_min = Column(REAL, nullable=False)
+    temp_max = Column(REAL, nullable=False)
+    temp_mean = Column(REAL, nullable=False)
+    temp_stdev = Column(REAL, nullable=True)
+    sample_count = Column(Integer, nullable=False)
+
+    role = relationship("PointRole")
+
+
+class GearNumericalLog(Base):
+    __tablename__ = "gear_numerical_logs"
+
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), primary_key=True, nullable=False)
+    timestamp = Column(DateTime(timezone=True), primary_key=True, nullable=False)
+    gear_min = Column(REAL, nullable=False)
+    gear_max = Column(REAL, nullable=False)
+    gear_mean = Column(REAL, nullable=False)
+    gear_stdev = Column(REAL, nullable=True)
+    sample_count = Column(Integer, nullable=False)
+
+    role = relationship("PointRole")
+
+
+class BoolLog(Base):
+    __tablename__ = "bool_logs"
+
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), primary_key=True, nullable=False)
+    timestamp = Column(DateTime(timezone=True), primary_key=True, nullable=False)
+    status_value = Column(Boolean, nullable=False)
+
+    role = relationship("PointRole")
+
+
+class EquipmentStaticLog(Base):
+    __tablename__ = "equipment_static_logs"
+
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), primary_key=True, nullable=False)
+    timestamp = Column(DateTime(timezone=True), primary_key=True, nullable=False)
+    setnum = Column(Integer, nullable=False)
+
+    role = relationship("PointRole")
+
+
+# ---------------------------------------------------------------
+# 제어 및 알림 영역
+# ---------------------------------------------------------------
+
+# 향후 수정 예정
+class RemoteControlLog(Base):
+    __tablename__ = "remote_control_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), nullable=False)
+    timestamp = Column(DateTime(timezone=True), primary_key=True, nullable=False)
+    control_value = Column(String(255), nullable=False)
+
+    role = relationship("PointRole")
+
+# 향후 적용 예정 
+# class RemoteControlLog(Base):
+#     __tablename__ = "remote_control_logs"
+#     id = Column(Integer, primary_key=True, autoincrement=True)  # 단일 PK로 변경
+#     role_id = Column(Integer, ForeignKey("point_role_table.id"), nullable=False)
+#     timestamp = Column(DateTime(timezone=True), nullable=False)
+#     control_value = Column(String(255), nullable=False)
+#     # [추가된 필드]
+#     user_id = Column(Integer, ForeignKey("user_table.id", ondelete="SET NULL"), nullable=True)
+#     node_id = Column(Integer, ForeignKey("facility_nodes.id", ondelete="SET NULL"), nullable=True)
+#     previous_value = Column(String(255), nullable=True)
+#     is_authorized = Column(Boolean, nullable=False, default=True)
+#     role = relationship("PointRole")
+#     user = relationship("User")
+#     node = relationship("FacilityNode")
+
+
+class Alarm(Base):
+    __tablename__ = "alarms"
+
+    alarm_id = Column(Integer, primary_key=True, autoincrement=True)
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), nullable=False)
+    alarm_name = Column(String(150), nullable=False)
+    severity = Column(CHAR(1), nullable=False) # CHECK(severity IN ('a', 'b', 'c', 'd', 'e', 'f'))
+    timestamp = Column(DateTime(timezone=True), primary_key=True, nullable=False)
+    is_triggered = Column(Boolean, nullable=False, default=False)
+    
+    reset_timeout_interval = Column(Interval, server_default="48 hours")
+    end_time = Column(DateTime(timezone=True), nullable=True)
+    is_admin_reset = Column(Boolean, nullable=False, default=False)
+    admin_reset_remaining_time = Column(Interval, nullable=True)
+
+    role = relationship("PointRole")
+
+
+
+# ---------------------------------------------------------------
+# 차트 그룹 및 매핑 영역
+# ---------------------------------------------------------------
+
+class ChartGroup(Base):
+    __tablename__ = "chart_group_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
+    room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
+    group_name = Column(String(150), nullable=False)
+    data_type = Column(String(50), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # 다대다(N:M) 관계 설정 (PointRole 모델과 양방향 참조)
+    roles = relationship(
+        "PointRole",
+        secondary="chart_group_mapping",
+        backref="chart_groups",
+        lazy="selectin"
+    )
+
+class ChartGroupMapping(Base):
+    __tablename__ = "chart_group_mapping"
+
+    group_id = Column(Integer, ForeignKey("chart_group_table.id", ondelete="CASCADE"), primary_key=True)
+    role_id = Column(Integer, ForeignKey("point_role_table.id", ondelete="CASCADE"), primary_key=True)
+
+
+
+======================================================================
+■ File : User.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\models\User.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/Core/models/User.py
+# 명세 : User 계정 및 권한(Role) 관련 데이터 모델 정의
+# ===============================================================
+import enum
+from sqlalchemy import Column, Integer, String, Enum, DateTime, func, ForeignKey
+from sqlalchemy.orm import relationship
+from src.config.database import Base
+# ===============================================================
+
+class UserRole(str, enum.Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+    DEVELOPER = "DEVELOPER"
+
+
+class User(Base):
+    __tablename__ = "user_table"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password = Column(String(255), nullable=True)
+    name = Column(String(100), nullable=False)
+    role = Column(Enum(UserRole, name="user_role"), nullable=False, default=UserRole.USER)
+    phone_number = Column(String(20), nullable=True)
+    
+    # 타임존을 포함하는 생성일, 수정일 (자동 갱신)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    external_providers = relationship("ExternalProvider", back_populates="user", cascade="all, delete-orphan")
+
+
+    # 역참조 맵핑 
+
+    fcm_tokens = relationship("UserFcmToken", back_populates="user", cascade="all, delete-orphan")
+
+    facilities = relationship(
+        "Facility",
+        secondary="facility_users",
+        primaryjoin="User.id == facility_users.c.user_id",
+        secondaryjoin="Facility.id == facility_users.c.facility_id",
+        viewonly=True # 다대다 조회 목적
+    )
+
+
+class ExternalProvider(Base):
+    __tablename__ = "external_providers"
+
+    external_provider_id = Column(Integer, primary_key=True, autoincrement=True)
+    account_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+    provider = Column(String(50), nullable=False) # 'google' or 'apple' 제한
+    provider_id = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="external_providers")
+
+
+class UserFcmToken(Base):
+    __tablename__ = "user_fcm_token"
+
+    fcm_token = Column(String(500), primary_key=True)
+    user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="fcm_tokens")
+
+
+    
+
+======================================================================
+■ File : router.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\router.py
+======================================================================
+
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/")
+def get_module1_items():
+    return {"message": "Module 1 Root"}
+
+@router.get("/{item_id}")
+def get_module1_item(item_id: int):
+    return {"module": 1, "item_id": item_id}
+
+======================================================================
+■ File : security.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\Core\security.py
+======================================================================
+
+# =================================================
+#  경로 : src/module/Core/security.py
+#  설명 : 토큰 발급과 검증을 담당하는 공통 보안 유틸리티입니다.
+# =================================================
+
+import jwt
+import os
+import secrets
+import hashlib
+from datetime import datetime, timedelta, timezone
+
+API_KEY_PREFIX = "idk_live_"
+
+# 운영 환경 변수에서 로드 (미설정 시 즉시 에러 발생)
+SYSTEM_SECRET_KEY = os.getenv("SYSTEM_SECRET_KEY")
+if not SYSTEM_SECRET_KEY:
+    # 테스트/개발 환경 편의를 위한 경고 겸 기본 fallback을 두거나, 엄격하게 예외 처리
+    # raise RuntimeError("CRITICAL: SYSTEM_SECRET_KEY 환경 변수가 설정되지 않았습니다.")
+    SYSTEM_SECRET_KEY = "idcool_system_super_secret_key_v2_secure_32bytes_min"
+
+
+ALGORITHM = "HS256"
+
+
+def create_system_token(node_id: int, facility_id: int, expires_delta: timedelta = timedelta(hours=6)):
+    """시스템(FServer) 접속용 JWT 발급"""
+    expire = datetime.now(timezone.utc) + expires_delta
+    payload = {
+        "sub": str(node_id),
+        "facility_id": facility_id,
+        "type": "system",
+        "exp": expire
+    }
+    return jwt.encode(payload, SYSTEM_SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_system_token(token: str):
+    """X-System-Token 검증 로직"""
+    try:
+        payload = jwt.decode(token, SYSTEM_SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "system":
+            return None
+        return payload
+    except jwt.ExpiredSignatureError:
+        return "EXPIRED"
+    except jwt.InvalidTokenError:
+        return None
+
+def generate_facility_api_key() -> tuple[str, str]:
+    """(원문 API Key, DB 저장용 해시값) 생성"""
+    raw_secret = secrets.token_urlsafe(32)
+    raw_key = f"{API_KEY_PREFIX}{raw_secret}"
+    key_hash = hash_api_key(raw_key)
+    return raw_key, key_hash
+
+def hash_api_key(raw_key: str) -> str:
+    """API Key SHA-256 해싱"""
+    return hashlib.sha256(raw_key.encode()).hexdigest()
+
+======================================================================
+■ File : sys_auth_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\CServer\controllers\sys_auth_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/CServer/controllers/sys_auth_controller.py
+# 명세 : 시스템 대 시스템 인증 및 스트리밍 컨트롤러
+
+
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import func
+from pydantic import BaseModel
+
+from src.config.database import get_db, AsyncSessionLocal
+from src.module.Core.models.Facility import FacilityNode
+from src.module.Core.security import create_system_token, verify_system_token, hash_api_key
+
+router = APIRouter(prefix="/sys-auth", tags=["System Authentication"])
+stream_router = APIRouter(tags=["System Stream"])
+
+class SystemLoginReq(BaseModel):
+    node_code: str
+    api_key: str
+
+@router.post("/login")
+async def system_login(req: SystemLoginReq, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(FacilityNode).where(FacilityNode.node_code == req.node_code))
+    node = result.scalars().first()
+    
+    if not node or not node.is_active:
+        raise HTTPException(status_code=401, detail="유효하지 않은 시설 노드입니다.")
+    
+    if node.api_key_hash != hash_api_key(req.api_key):
+        raise HTTPException(status_code=401, detail="API Key가 일치하지 않습니다.")
+
+    token = create_system_token(node_id=node.id, facility_id=node.facility_id)
+    
+    node.status = "ONLINE"
+    node.last_heartbeat_at = func.now()
+    await db.commit()
+    
+    return {
+        "access_token": token, 
+        "token_type": "bearer", 
+        "facility_id": node.facility_id,
+        "node_id": node.id
+    }
+
+@stream_router.websocket("/data-stream/{facility_id}")
+async def facility_data_stream(websocket: WebSocket, facility_id: int):
+    token = websocket.headers.get("X-System-Token") or websocket.query_params.get("token")
+    await websocket.accept()
+
+    if not token:
+        await websocket.close(code=4001, reason="토큰이 없습니다.")
+        return
+
+    payload = verify_system_token(token)
+    if payload == "EXPIRED" or not payload or int(payload.get("facility_id", -1)) != int(facility_id):
+        await websocket.close(code=4001, reason="유효하지 않거나 만료된 시스템 토큰입니다.")
+        return
+
+    node_id = int(payload.get("sub"))
+    print(f"[CServer] 시설({facility_id}) 시스템 노드(ID: {node_id}) 연결 성공 및 스트리밍 시작")
+    
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # FServer가 정상 종료 전 던지는 메시지 감지
+            if data == "__SHUTDOWN__":
+                print(f"[CServer] 시설({facility_id}) 노드(ID: {node_id}) 정상 종료 통보 수신")
+                break
+    except WebSocketDisconnect:
+        print(f"[CServer] 시설({facility_id}) 시스템 연결 단절됨")
+    finally:
+        # 단절 감지 즉시 DB 상태를 OFFLINE으로 변경
+        # async with AsyncSessionLocal() as session:
+        #     result = await session.execute(select(FacilityNode).where(FacilityNode.id == node_id))
+        #     target_node = result.scalars().first()
+        #     if target_node:
+        #         target_node.status = "OFFLINE"
+        #         await session.commit()
+
+        async with AsyncSessionLocal() as session:
+                result = await session.execute(select(FacilityNode).where(FacilityNode.id == node_id))
+                target_node = result.scalars().first()
+                if target_node:
+                    target_node.last_heartbeat_at = func.now()
+                    await session.commit()
+
+            # print(f"받은 데이터: {data}")
+                print(f"[CServer] 노드(ID: {node_id}) 상태를 OFFLINE으로 갱신 완료")
+
+======================================================================
+■ File : router.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\CServer\router.py
+======================================================================
+
+# C:\Users\ynham\Desktop\idcV2\src\module\CServer\router.py
+
+from fastapi import APIRouter
+from src.module.CServer.controllers.sys_auth_controller import router as sys_auth_router
+from src.module.CServer.controllers.sys_auth_controller import stream_router
+
+router = APIRouter()
+
+# 1. HTTP 인증 엔드포인트 (/api/v1/cserver/sys-auth/login)
+router.include_router(sys_auth_router)
+
+# 2. WebSocket 스트림 엔드포인트 (/api/v1/cserver/data-stream/{facility_id})
+router.include_router(stream_router)
+
+======================================================================
+■ File : connection_manager.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\FServer\controllers\connection_manager.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/FServer/controllers/connection_manager.py
+# 명세 : FServer에서 중앙 CServer와의 연결을 관리하는 모듈
+# ===============================================================
+
+import asyncio
+import aiohttp
+import websockets
+import json
+import os
+
+CENTER_API_URL = os.getenv("CENTER_API_URL", "http://127.0.0.1:8900/api/v1/cserver/sys-auth/login")
+CENTER_WS_URL = os.getenv("CENTER_WS_URL", "ws://127.0.0.1:8900/api/v1/cserver/data-stream")
+NODE_CODE = os.getenv("NODE_CODE", "NODE_001")
+API_KEY = os.getenv("API_KEY", "dummy_api_key_123")
+
+class FacilityConnectionManager:
+    def __init__(self):
+        self.token = None
+        self.facility_id = None
+        self.is_connected = False
+        self.active_ws = None
+        
+    async def authenticate(self):
+        async with aiohttp.ClientSession() as session:
+            try:
+                print(f"[FServer] 중앙 계정 시스템 인증 시도... ({NODE_CODE})")
+                async with session.post(CENTER_API_URL, json={
+                    "node_code": NODE_CODE,
+                    "api_key": API_KEY
+                }) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.token = data["access_token"]
+                        self.facility_id = data["facility_id"]
+                        print(f"[FServer] 시스템 인증 완료! 위임 토큰 발급됨 (Facility ID: {self.facility_id})")
+                        return True
+                    else:
+                        print(f"[FServer] 인증 실패: HTTP {resp.status}")
+                        return False
+            except Exception as e:
+                print(f"[FServer] 인증 서버 접근 불가: {e}")
+                return False
+
+    async def maintain_connection(self):
+        while True:
+            if not self.token:
+                success = await self.authenticate()
+                if not success:
+                    await asyncio.sleep(3)
+                    continue
+
+            headers = {"X-System-Token": self.token}
+            ws_url = f"{CENTER_WS_URL}/{self.facility_id}?token={self.token}"
+            
+            try:
+                print(f"🔄 [FServer] 중앙 데이터 스트리밍 연결 시도 중... ({ws_url})")
+                try:
+                    ws_ctx = websockets.connect(ws_url, additional_headers=headers)
+                except TypeError:
+                    ws_ctx = websockets.connect(ws_url, extra_headers=headers)
+
+                async with ws_ctx as ws:
+                    self.active_ws = ws
+                    self.is_connected = True
+                    print(f"[FServer] 중앙 시스템과 데이터 연결 확립 (Facility ID: {self.facility_id})")
+                    
+                    while True:
+                        dummy_payload = {"status": "OK", "temp_pv": 24.5} 
+                        await ws.send(json.dumps(dummy_payload))
+                        await asyncio.sleep(1)
+                        
+            except websockets.exceptions.ConnectionClosed as e:
+                self.is_connected = False
+                self.active_ws = None
+                print(f"[FServer] 통신 단절 (Code: {e.code}, Reason: {e.reason})")
+                if e.code == 4001:
+                    print("[FServer] 시스템 토큰 만료됨. 재인증을 요청합니다.")
+                    self.token = None 
+            except asyncio.CancelledError:
+                # Lifespan 종료 시 호출
+                await self.graceful_shutdown()
+                break
+            except Exception as e:
+                self.is_connected = False
+                self.active_ws = None
+                print(f"[FServer] 예상치 못한 네트워크 에러: {e}")
+            
+            await asyncio.sleep(3)
+
+    async def graceful_shutdown(self):
+        """프로세스 종료 시 중앙에 정상 종료를 알림"""
+        if self.active_ws and not self.active_ws.closed:
+            try:
+                print("[FServer] 중앙 서버에 정상 종료 통보 전송 중...")
+                await self.active_ws.send("__SHUTDOWN__")
+                await self.active_ws.close()
+            except Exception:
+                pass
+        self.is_connected = False
+
+fserver_conn_manager = FacilityConnectionManager()
+
+======================================================================
+■ File : router.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\FServer\router.py
+======================================================================
+
+from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.get("/")
+def get_module1_items():
+    return {"message": "Module 1 Root"}
+
+@router.get("/{item_id}")
+def get_module1_item(item_id: int):
+    return {"module": 1, "item_id": item_id}
+
+======================================================================
+■ File : module_router.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\module_router.py
+======================================================================
+
+import os
+from fastapi import APIRouter
+from src.module.Core.router import router as core_router
+from src.module.CServer.router import router as cserver_router
+from src.module.FServer.router import router as fserver_router
+from src.module.ServiceApp.router import router as serviceapp_router  
+from src.module.ServiceWeb.router import router as serviceweb_router
+
+api_router = APIRouter()
+
+# 하위 모듈 라우터들을 등록
+
+
+api_router.include_router(core_router,       prefix="/core",        tags=["Core"])
+
+if os.getenv("ENABLE_CENTER_SERVER", "false").lower() == "true":
+    api_router.include_router(cserver_router, prefix="/cserver", tags=["CServer"])
+
+if os.getenv("ENABLE_FACILITY_SERVER", "false").lower() == "true":
+    api_router.include_router(fserver_router, prefix="/fserver", tags=["FServer"])
+
+if os.getenv("ENABLE_SERVICE_APP", "false").lower() == "true":
+    api_router.include_router(serviceapp_router, prefix="/serviceapp", tags=["ServiceApp"])
+
+if os.getenv("ENABLE_SERVICE_WEB", "false").lower() == "true":
+    api_router.include_router(serviceweb_router, prefix="/serviceweb", tags=["ServiceWeb"])
+
+======================================================================
+■ File : alarm_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\alarm_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/ServiceApp/controllers/alarm_controller.py
+# 명세 : 알람 관련 API 엔드포인트 정의
+# ===============================================================
+
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import APIRouter, Depends, HTTPException
+from src.config.database import get_db
+from src.module.Core.models.User import UserFcmToken
+from src.module.Core.models.Facility import  FacilityUser, Facility, FacilityRoom
+from src.module.Core.models.Monitoring import PointRole, Alarm
+
+router = APIRouter(prefix="/alarms", tags=["Alarms"])
+
+class RegistTokenRequest(BaseModel):
+    fcm_token: str
+    user_id: int
+
+@router.post('/register')
+async def registToken(user_in: RegistTokenRequest, db: AsyncSession = Depends(get_db)):
+    """Box #1: FCM 토큰 등록 (비동기 처리)"""
+    
+    # 1. 중복 등록 확인
+    mapping_result = await db.execute(
+        select(UserFcmToken).where(UserFcmToken.fcm_token == user_in.fcm_token)
+    )
+    existing_token = mapping_result.scalars().first()
+
+    # 이미 동일한 토큰이 등록된 경우
+    if existing_token:
+        # 소유 유저가 바뀌었을 가능성이 있으므로 user_id 업데이트 후 저장
+        if existing_token.user_id != user_in.user_id:
+            existing_token.user_id = user_in.user_id
+            await db.commit()
+            return {"message": "기존 토큰의 사용자 정보가 갱신되었습니다.", "user_id": user_in.user_id}
+        
+        return {"message": "이미 등록된 토큰입니다.", "user_id": user_in.user_id}
+
+    new_token = UserFcmToken(
+        fcm_token=user_in.fcm_token, 
+        user_id=user_in.user_id
+    )
+    
+    db.add(new_token)
+    await db.commit()
+
+    return {"message": "토큰이 성공적으로 등록되었습니다.", "user_id": new_token.user_id}
+
+
+
+@router.get("/{user_id}")
+async def get_alarms_for_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(
+            Alarm, 
+            PointRole.facility_id, 
+            Facility.name.label("facility_name"), 
+            FacilityRoom.id.label("room_id"), 
+            FacilityRoom.name.label("room_name")
+        )
+        .join(PointRole, Alarm.role_id == PointRole.id)
+        .join(FacilityUser, FacilityUser.facility_id == PointRole.facility_id)
+        .join(Facility, Facility.id == FacilityUser.facility_id)
+        .join(FacilityRoom, PointRole.room_id == FacilityRoom.id)
+        .where(
+            FacilityUser.user_id == user_id,
+            PointRole.is_current == True
+        )
+        .order_by(Alarm.timestamp.desc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    alarms_with_facility = []
+    for alarm, facility_id, facility_name, room_id, room_name in rows:
+        alarm_dict = {
+            column.name: getattr(alarm, column.name)
+            for column in alarm.__table__.columns
+        }
+        alarm_dict.update({
+            'facility_id': facility_id,
+            'facility_name': facility_name,
+            'room_id': room_id,
+            'room_name': room_name
+        })
+        alarms_with_facility.append(alarm_dict)
+
+    return {'alarms': alarms_with_facility}
+
+
+@router.get("/facility/{facility_id}")
+async def get_alarms_for_facility(facility_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(
+            Alarm, 
+            PointRole.facility_id, 
+            Facility.name.label("facility_name"), 
+            FacilityRoom.id.label("room_id"), 
+            FacilityRoom.name.label("room_name")
+        )
+        .join(PointRole, Alarm.role_id == PointRole.id)
+        .join(Facility, Facility.id == PointRole.facility_id)
+        .join(FacilityRoom, PointRole.room_id == FacilityRoom.id)
+        .where(
+            PointRole.facility_id == facility_id,
+            PointRole.is_current == True
+        )
+        .order_by(Alarm.timestamp.desc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    alarms_with_facility = []
+    for alarm, fac_id, facility_name, room_id, room_name in rows:
+        alarm_dict = {
+            column.name: getattr(alarm, column.name)
+            for column in alarm.__table__.columns
+        }
+        alarm_dict.update({
+            'facility_id': fac_id,
+            'facility_name': facility_name,
+            'room_id': room_id,
+            'room_name': room_name
+        })
+        alarms_with_facility.append(alarm_dict)
+
+    return {'alarms': alarms_with_facility}
+
+======================================================================
+■ File : auth_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\auth_controller.py
+======================================================================
+
+# ==============================================================
+# 경로 : src/module/ServiceApp/controllers/auth_controller.py
+# 명세 : 서비스 앱용 인증 컨트롤러
+# ==============================================================
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+import jwt
+import hashlib
+import random
+from datetime import datetime, timedelta, timezone
+
+from src.config.database import get_db
+from src.module.Core.models.User import User, ExternalProvider, UserRole
+
+router = APIRouter(prefix="/auth", tags=["ServiceApp - Auth"])
+
+SECRET_KEY = "idcool_secret_key_v1" 
+ALGORITHM = "HS256"
+
+# --- Schemas ---
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    phone_number: Optional[str] = None
+
+class SocialUserCreate(BaseModel):
+    email: EmailStr
+    name: str
+    provider: str
+    provider_id: str
+    phone_number: Optional[str] = None
+
+class LoginGeneralRequest(BaseModel):
+    email: EmailStr
+    password: str
+    keep_login: bool = False
+
+class LoginSocialRequest(BaseModel):
+    provider: str
+    provider_id: str
+    keep_login: bool = False
+
+class LinkSocialProvider(BaseModel):
+    email: EmailStr
+    provider: str
+    provider_id: str
+
+class CheckAccountRequest(BaseModel):
+    email: EmailStr
+
+class FindIdRequest(BaseModel):
+    name: str
+    phone_number: str
+
+class FindPwRequest(BaseModel):
+    name: str
+    email: EmailStr
+    phone_number: str
+
+class WithdrawRequest(BaseModel):
+    user_id: int
+
+class PasswordRequestCode(BaseModel):
+    email: EmailStr
+
+class PasswordVerifyCode(BaseModel):
+    token: str
+    code: str
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str
+
+class UpdateNameRequest(BaseModel):
+    name: str
+
+class UpdatePhoneRequest(BaseModel):
+    phone_number: str
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+def hash_code(code: str) -> str:
+    return hashlib.sha256(code.encode()).hexdigest()
+
+# --- Endpoints ---
+@router.post("/signup/general", status_code=status.HTTP_201_CREATED)
+async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    if result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
+
+    new_user = User(
+        email=user_in.email,
+        password=user_in.password,
+        name=user_in.name,
+        phone_number=user_in.phone_number,
+        role=UserRole.USER 
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id}
+
+@router.post("/signup/social", status_code=status.HTTP_201_CREATED)
+async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depends(get_db)):
+    if user_in.provider not in ["google", "apple"]:
+        raise HTTPException(status_code=400, detail="지원하지 않는 소셜 제공자입니다.")
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    if result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
+
+    new_user = User(
+        email=user_in.email, password=None, name=user_in.name,
+        phone_number=user_in.phone_number, role=UserRole.USER
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    new_provider = ExternalProvider(
+        account_id=new_user.id, provider=user_in.provider, provider_id=user_in.provider_id
+    )
+    db.add(new_provider)
+    await db.commit()
+    return {"message": f"{user_in.provider} 연동 계정이 생성되었습니다.", "user_id": new_user.id}
+
+@router.post("/login/general", status_code=status.HTTP_200_OK)
+async def login_general(req: LoginGeneralRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="가입되지 않은 이메일입니다.")
+    if user.password != req.password: 
+        raise HTTPException(status_code=401, detail="비밀번호가 일치하지 않습니다.")
+
+    token_expiry = "30days" if req.keep_login else "1day"
+    return {
+        "message": "로그인 성공",
+        "access_token": "dummy_token_here",
+        "user_id": user.id,
+        "role": user.role.value if hasattr(user.role, 'value') else user.role,
+        "expiry_policy": token_expiry
+    }
+
+@router.post("/login/social", status_code=status.HTTP_200_OK)
+async def login_social(req: LoginSocialRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ExternalProvider).where(ExternalProvider.provider == req.provider, ExternalProvider.provider_id == req.provider_id)
+    )
+    provider_info = result.scalars().first()
+    if not provider_info:
+        raise HTTPException(status_code=404, detail="연동된 소셜 계정이 없습니다. 회원가입을 진행해주세요.")
+
+    user_result = await db.execute(select(User).where(User.id == provider_info.account_id))
+    user = user_result.scalars().first()
+    token_expiry = "30days" if req.keep_login else "1day"
+    return {
+        "message": f"{req.provider} 소셜 로그인 성공",
+        "access_token": "dummy_social_token_here",
+        "user_id": user.id,
+        "expiry_policy": token_expiry
+    }
+
+@router.post("/check-account", status_code=status.HTTP_200_OK)
+async def check_account_existence(req: CheckAccountRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+    if not user:
+        return {"exists": False, "message": "해당 이메일로 가입된 계정이 없습니다."}
+
+    providers_result = await db.execute(select(ExternalProvider).where(ExternalProvider.account_id == user.id))
+    providers = providers_result.scalars().all()
+    if providers:
+        provider_names = ", ".join([p.provider for p in providers])
+        return {"exists": True, "message": f"해당 이메일은 {provider_names} 소셜 계정으로 연동되어 있습니다."}
+    return {"exists": True, "message": "해당 이메일은 일반 계정으로 가입되어 있습니다."}
+
+@router.get("/{user_id}/role", status_code=status.HTTP_200_OK)
+async def get_user_role(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User.role).where(User.id == user_id))
+    user_role = result.scalars().first()
+    if not user_role:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    return {"role": user_role.value if hasattr(user_role, 'value') else user_role}
+
+@router.get("/{user_id}/profile", status_code=status.HTTP_200_OK)
+async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    providers_result = await db.execute(select(ExternalProvider.provider).where(ExternalProvider.account_id == user_id))
+    return {
+        "name": user.name,
+        "phone_number": user.phone_number or "",
+        "linked_providers": providers_result.scalars().all()
+    }
+
+======================================================================
+■ File : board_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\board_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/ServiceApp/controllers/board_controller.py
+# 명세 : 보드(게시판) 관련 API 컨트롤러 (현재 스코프: 리스트 조회)
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File
+from pydantic import BaseModel
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+# ===============================================================
+
+router = APIRouter(prefix="/board", tags=["Board"])
+
+# --- Pydantic Schemas ---
+class PostCreateReq(BaseModel):
+    board_id: int
+    title: str
+    content: str
+    image_ids: List[int] = []  # URL 배열 대신, 사전 업로드된 이미지 ID 배열을 받음
+
+class PostUpdateReq(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    image_ids: Optional[List[int]] = None
+
+class CommentCreateReq(BaseModel):
+    content: str
+
+
+
+# [S/bp-02] 통합 조회 보드 포스트 리스트 (검색 조건 추가)
+@router.get("/integrated")
+async def get_integrated_posts(
+    user_id: int, 
+    page: int = Query(1, ge=1), 
+    limit: int = Query(30, le=100),
+    search_type: str = Query("all"), # all, title, creator, content
+    keyword: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    user_query = text("SELECT role FROM user_table WHERE id = :user_id")
+    user_res = await db.execute(user_query, {"user_id": user_id})
+    user = user_res.fetchone()
+
+    if not user or user.role not in ['ADMIN', 'DEVELOPER']:
+        raise HTTPException(status_code=403, detail="통합 조회 보드에 접근할 권한이 없습니다.")
+
+    offset = (page - 1) * limit
+
+    # 검색 쿼리 조건 생성
+    where_clause = "WHERE 1=1"
+    params = {"limit": limit, "offset": offset, "user_id": user_id}
+
+    if keyword and keyword.strip():
+        params["keyword"] = f"%{keyword.strip()}%"
+        if search_type == "title":
+            where_clause += " AND p.title ILIKE :keyword"
+        elif search_type == "creator":
+            where_clause += " AND u.name ILIKE :keyword"
+        elif search_type == "content":
+            where_clause += " AND p.content ILIKE :keyword"
+        else: # "all"
+            where_clause += " AND (p.title ILIKE :keyword OR u.name ILIKE :keyword OR p.content ILIKE :keyword)"
+
+    # COUNT 쿼리
+    count_query = text(f"""
+        SELECT COUNT(*) 
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+    """)
+    total_count = (await db.execute(count_query, params)).scalar()
+
+    # Data 쿼리
+    query = text(f"""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, params)
+    posts = result.fetchall()
+
+    return {
+        "status": "success",
+        "data": [dict(row._mapping) for row in posts],
+        "meta": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
+
+
+# [S/bp-03] 시설 조회 보드 포스트 리스트 (검색 조건 추가)
+@router.get("/facility/{facility_id}")
+async def get_facility_posts(
+    facility_id: int, 
+    user_id: int, 
+    page: int = Query(1, ge=1), 
+    limit: int = Query(30, le=100),
+    search_type: str = Query("all"),
+    keyword: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_query = text("""
+        SELECT 1 FROM user_table u
+        LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+        WHERE u.id = :user_id 
+          AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+    """)
+    auth_res = await db.execute(auth_query, {"user_id": user_id, "facility_id": facility_id})
+    if not auth_res.fetchone():
+        raise HTTPException(status_code=403, detail="해당 시설 보드에 접근할 권한이 없습니다.")
+
+    offset = (page - 1) * limit
+    where_clause = "WHERE b.facility_id = :facility_id"
+    params = {"facility_id": facility_id, "limit": limit, "offset": offset, "user_id": user_id}
+
+    if keyword and keyword.strip():
+        params["keyword"] = f"%{keyword.strip()}%"
+        if search_type == "title":
+            where_clause += " AND p.title ILIKE :keyword"
+        elif search_type == "creator":
+            where_clause += " AND u.name ILIKE :keyword"
+        elif search_type == "content":
+            where_clause += " AND p.content ILIKE :keyword"
+        else: # "all"
+            where_clause += " AND (p.title ILIKE :keyword OR u.name ILIKE :keyword OR p.content ILIKE :keyword)"
+
+    count_query = text(f"""
+        SELECT COUNT(*) 
+        FROM posts p 
+        JOIN boards b ON p.board_id = b.board_id 
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+    """)
+    total_count = (await db.execute(count_query, params)).scalar()
+
+    query = text(f"""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, params)
+    posts = result.fetchall()
+
+    return {
+        "status": "success",
+        "data": [dict(row._mapping) for row in posts],
+        "meta": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
+
+
+# ===============================================================
+# [S/bp-04] 단일 포스트 상세 조회 (댓글 포함)
+# ===============================================================
+@router.get("/post/{post_id}")
+async def get_post_detail(post_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    # 1. 포스트 기본 정보 조회 (p.images 제거)
+    post_query = text("""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at, p.updated_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        WHERE p.post_id = :post_id
+    """)
+    post = (await db.execute(post_query, {"post_id": post_id})).fetchone()
+
+    if not post:
+        raise HTTPException(status_code=404, detail="포스트를 찾을 수 없습니다.")
+
+    # 2. 권한 검증
+    auth_query = text("""
+        SELECT 1 FROM user_table u
+        LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+        WHERE u.id = :user_id AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+    """)
+    if not (await db.execute(auth_query, {"user_id": user_id, "facility_id": post.facility_id})).fetchone():
+        raise HTTPException(status_code=403, detail="조회 권한이 없습니다.")
+
+    # 3. 댓글 목록 같이 조회
+    comment_query = text("""
+        SELECT c.comment_id, c.content, c.creator_id, c.created_at, u.name as creator_name
+        FROM comments c
+        JOIN user_table u ON c.creator_id = u.id
+        WHERE c.post_id = :post_id
+        ORDER BY c.created_at ASC
+    """)
+    comments = (await db.execute(comment_query, {"post_id": post_id})).fetchall()
+
+    return {
+        "status": "success",
+        "data": dict(post._mapping),
+        "comments": [dict(c._mapping) for c in comments]
+    }
+
+
+# ===============================================================
+# [S/bp-09] 에디터용 이미지 사전 업로드 (Pre-upload) API 명세
+# ===============================================================
+@router.post("/image/upload")
+async def upload_post_image(
+    file: UploadFile = File(...), 
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    [명세 구현 예정 내용]
+    1. 용량 검증 (10MB 이하)
+    2. 이미지 메타데이터(Width, Height) 추출 및 Min Scale(200px) / Max Scale(1920px) 리사이징 로직 (Pillow 사용)
+    3. 스토리지 (로컬 or S3) 저장 로직 ([YYYY/MM/DD]/[UUID].[ext])
+    4. post_images 테이블에 post_id=NULL 로 INSERT 후 image_id 및 image_url 반환
+    """
+    # 더미 응답 (통합 전 프론트엔드 테스트용)
+    return {
+        "status": "success",
+        "image_id": 999, 
+        "image_url": "https://dummyimage.com/600x400/000/fff&text=Preview"
+    }
+
+
+# ===============================================================
+# [S/bp-05] 포스트 생성
+# ===============================================================
+@router.post("/post")
+async def create_post(user_id: int, req: PostCreateReq, db: AsyncSession = Depends(get_db)):
+    # 1. 포스트 삽입
+    query = text("""
+        INSERT INTO posts (board_id, creator_id, updater_id, title, content)
+        VALUES (:board_id, :user_id, :user_id, :title, :content)
+        RETURNING post_id
+    """)
+    result = await db.execute(query, {
+        "board_id": req.board_id, 
+        "user_id": user_id, 
+        "title": req.title, 
+        "content": req.content
+    })
+    new_post_id = result.scalar()
+
+    # 2. 선(Pre) 업로드된 이미지 ID 맵핑 (임시로 post_id=NULL 이었던 것을 업데이트)
+    if req.image_ids:
+        mapping_query = text("""
+            UPDATE post_images 
+            SET post_id = :post_id 
+            WHERE image_id = ANY(:image_ids)
+        """)
+        await db.execute(mapping_query, {"post_id": new_post_id, "image_ids": req.image_ids})
+        
+    await db.commit()
+    return {"status": "success", "post_id": new_post_id}
+
+# ===============================================================
+# [S/bp-06] 포스트 수정
+# ===============================================================
+@router.put("/post/{post_id}")
+async def update_post(post_id: int, user_id: int, req: PostUpdateReq, db: AsyncSession = Depends(get_db)):
+    # 1. 작성자 본인 확인
+    check_query = text("SELECT creator_id FROM posts WHERE post_id = :post_id")
+    post = (await db.execute(check_query, {"post_id": post_id})).fetchone()
+    if not post or post.creator_id != user_id:
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
+
+    # 2. 포스트 업데이트
+    update_query = text("""
+        UPDATE posts 
+        SET title = COALESCE(:title, title),
+            content = COALESCE(:content, content),
+            updater_id = :user_id
+        WHERE post_id = :post_id
+    """)
+    await db.execute(update_query, {
+        "title": req.title, 
+        "content": req.content, 
+        "user_id": user_id, 
+        "post_id": post_id
+    })
+
+    # 3. 추가된 이미지가 있다면 맵핑
+    if req.image_ids:
+        mapping_query = text("""
+            UPDATE post_images 
+            SET post_id = :post_id 
+            WHERE image_id = ANY(:image_ids)
+        """)
+        await db.execute(mapping_query, {"post_id": post_id, "image_ids": req.image_ids})
+
+    await db.commit()
+    return {"status": "success", "message": "포스트 수정 완료"}
+
+# ===============================================================
+# [S/bp-07] 포스트 삭제
+# ===============================================================
+@router.delete("/post/{post_id}")
+async def delete_post(post_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    check_query = text("""
+        SELECT p.creator_id, u.role 
+        FROM posts p JOIN user_table u ON u.id = :user_id 
+        WHERE p.post_id = :post_id
+    """)
+    post = (await db.execute(check_query, {"post_id": post_id, "user_id": user_id})).fetchone()
+    
+    # 작성자 본인이거나 관리자(ADMIN, DEVELOPER)인 경우 삭제 허용
+    if not post or (post.creator_id != user_id and post.role not in ['ADMIN', 'DEVELOPER']):
+        raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+    # ON DELETE CASCADE로 인해 comments, post_images 등도 자동 삭제됨
+    await db.execute(text("DELETE FROM posts WHERE post_id = :post_id"), {"post_id": post_id})
+    await db.commit()
+    return {"status": "success", "message": "포스트 삭제 완료"}
+
+# ===============================================================
+# [S/bp-08] 댓글 생성 및 삭제
+# ===============================================================
+@router.post("/post/{post_id}/comment")
+async def create_comment(post_id: int, user_id: int, req: CommentCreateReq, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        INSERT INTO comments (post_id, creator_id, content)
+        VALUES (:post_id, :user_id, :content)
+        RETURNING comment_id
+    """)
+    result = await db.execute(query, {"post_id": post_id, "user_id": user_id, "content": req.content})
+    await db.commit()
+    return {"status": "success", "comment_id": result.scalar()}
+
+@router.delete("/comment/{comment_id}")
+async def delete_comment(comment_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    check_query = text("""
+        SELECT c.creator_id, u.role 
+        FROM comments c JOIN user_table u ON u.id = :user_id 
+        WHERE c.comment_id = :comment_id
+    """)
+    comment = (await db.execute(check_query, {"comment_id": comment_id, "user_id": user_id})).fetchone()
+    
+    if not comment or (comment.creator_id != user_id and comment.role not in ['ADMIN', 'DEVELOPER']):
+        raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+    await db.execute(text("DELETE FROM comments WHERE comment_id = :comment_id"), {"comment_id": comment_id})
+    await db.commit()
+    return {"status": "success", "message": "댓글 삭제 완료"}
+
+======================================================================
+■ File : chart_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\chart_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 :  src/module/ServiceApp/controllers/chart_controller.py
+# 명세 : 차트 시각화를 위한 시계열 데이터 조회 API (TimescaleDB 연동)
+# ===============================================================
+from fastapi import APIRouter, Depends, Query, HTTPException
+from typing import Optional, Dict, Any, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+
+router = APIRouter(prefix="/chart", tags=["Chart"])
+
+# 프론트엔드 파라미터를 PostgreSQL Interval 문자열로 변환하는 매핑 딕셔너리
+SCALE_MAPPING = {
+    "10s": "10 seconds",
+    "1m": "1 minute",
+    "5m": "5 minutes",
+    "10m": "10 minutes",
+    "1h": "1 hour"
+}
+
+TIME_RANGE_MAPPING = {
+    "1h": "1 hour",
+    "12h": "12 hours",
+    "1d": "1 day",
+    "7d": "7 days",
+    "15d": "15 days",
+    "30d": "30 days"
+}
+
+@router.get("/compare/{facility_id}/available-roles")
+async def get_comparable_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    같은 시설 안에서 2개 이상의 호실에 공통으로 존재하는 role_name 목록을 반환한다.
+    (예: 모든 냉동실에 있는 "고내온도" 센서를 한 번에 비교하기 위한 선택지)
+    """
+    # bool_ 타입은 꺾은선 그래프로 겹쳐 비교하기 적합하지 않아 목록에서 제외한다
+    # (프론트의 MainChartViewer는 수치형 mean 값을 기준으로 그리기 때문).
+    query = text("""
+        SELECT pr.role_name, COUNT(DISTINCT pr.room_id) AS room_count,
+               MAX(prm.display_name) AS display_name
+        FROM point_role_table pr
+        LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
+        WHERE pr.facility_id = :facility_id AND pr.is_current = TRUE
+          AND pr.role_name NOT ILIKE 'bool\\_%' ESCAPE '\\'
+        GROUP BY pr.role_name
+        HAVING COUNT(DISTINCT pr.room_id) > 1
+        ORDER BY pr.role_name
+    """)
+    rows = await db.execute(query, {"facility_id": facility_id})
+    roles = [
+        {
+            "role_name": row.role_name,
+            "display_name": row.display_name or row.role_name,
+            "room_count": row.room_count,
+        }
+        for row in rows.fetchall()
+    ]
+    return {"status": "success", "data": {"roles": roles}}
+
+
+@router.get("/compare/{facility_id}")
+async def get_compare_data(
+    facility_id: int,
+    role_name: str = Query(..., description="호실 간 비교할 role_name"),
+    scale: str = Query("1m", description="데이터 해상도"),
+    time_range: str = Query("1d", description="조회 기간"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    같은 시설의 여러 호실에서 동일한 role_name(예: 고내온도)을 가진 값들을
+    호실별로 한 그래프에 겹쳐볼 수 있도록 반환한다.
+    """
+    if scale not in SCALE_MAPPING or time_range not in TIME_RANGE_MAPPING:
+        raise HTTPException(status_code=400, detail="유효하지 않은 파라미터입니다.")
+
+    bucket_interval = SCALE_MAPPING[scale]
+    range_interval = TIME_RANGE_MAPPING[time_range]
+
+    roles_query = text("""
+        SELECT pr.id AS role_id, pr.room_id, fr.name AS room_name
+        FROM point_role_table pr
+        JOIN facilities_room_table fr ON fr.id = pr.room_id
+        WHERE pr.facility_id = :facility_id AND pr.role_name = :role_name AND pr.is_current = TRUE
+        ORDER BY fr.name
+    """)
+    role_rows = (await db.execute(roles_query, {"facility_id": facility_id, "role_name": role_name})).fetchall()
+
+    if not role_rows:
+        return {"status": "success", "data": {"datasets": []}, "message": "비교할 호실 데이터가 없습니다."}
+
+    target_roles = [row.role_id for row in role_rows]
+    room_by_role = {row.role_id: {"room_id": row.room_id, "room_name": row.room_name} for row in role_rows}
+
+    r_name_lower = role_name.lower()
+    if "temp_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "temperature_numerical_logs", "AVG(temp_mean) AS mean, MIN(temp_min) AS min, MAX(temp_max) AS max", {"mean": "mean", "min": "min", "max": "max"}
+    elif "gear_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "gear_numerical_logs", "AVG(gear_mean) AS mean, MIN(gear_min) AS min, MAX(gear_max) AS max", {"mean": "mean", "min": "min", "max": "max"}
+    elif "static_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "equipment_static_logs", "AVG(setnum) AS mean", {"mean": "mean"}
+    elif "bool_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "bool_logs", "BOOL_OR(status_value) AS status", {"status": "status"}
+    else:
+        return {"status": "success", "data": {"datasets": []}, "message": "지원되지 않는 데이터 타입입니다."}
+
+    max_time_query = text(f"SELECT MAX(timestamp) FROM {table_name} WHERE role_id = ANY(:role_ids)")
+    latest_time = (await db.execute(max_time_query, {"role_ids": target_roles})).scalar()
+
+    if not latest_time:
+        return {"status": "success", "data": {"datasets": []}, "message": "기록된 로그가 없습니다."}
+
+    datasets_map: Dict[int, Any] = {
+        r_id: {
+            "role_id": r_id,
+            "room_id": room_by_role[r_id]["room_id"],
+            "room_name": room_by_role[r_id]["room_name"],
+            "role_name": role_name,
+            "data": [],
+        } for r_id in target_roles
+    }
+
+    query = text(f"""
+        SELECT role_id, time_bucket('{bucket_interval}', timestamp) AS bucket, {agg_columns}
+        FROM {table_name}
+        WHERE role_id = ANY(:role_ids)
+          AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+          AND timestamp <= CAST(:latest_time AS timestamptz)
+        GROUP BY role_id, bucket ORDER BY bucket ASC
+    """)
+    rows = await db.execute(query, {"role_ids": target_roles, "latest_time": latest_time})
+    for r in rows.fetchall():
+        r_dict = dict(r._mapping)
+        point = {"timestamp": r_dict["bucket"].isoformat()}
+        for db_key, out_key in data_key_mapping.items(): point[out_key] = r_dict[db_key]
+        datasets_map[r_dict["role_id"]]["data"].append(point)
+
+    return {
+        "status": "success",
+        "meta": {"facility_id": facility_id, "role_name": role_name, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
+        "data": {"datasets": list(datasets_map.values())}
+    }
+
+
+@router.get("/{facility_id}/{room_id}")
+async def get_chart_data(
+    facility_id: int,
+    room_id: int,
+    scale: str = Query("1m", description="데이터 해상도"),
+    time_range: str = Query("1d", description="조회 기간"),
+    role_ids: str = Query(..., description="조회할 PointRole ID 목록 (콤마로 구분)"),
+    db: AsyncSession = Depends(get_db)
+):
+    if scale not in SCALE_MAPPING or time_range not in TIME_RANGE_MAPPING:
+        raise HTTPException(status_code=400, detail="유효하지 않은 파라미터입니다.")
+    
+    bucket_interval = SCALE_MAPPING[scale]
+    range_interval = TIME_RANGE_MAPPING[time_range]
+    target_roles = [int(r.strip()) for r in role_ids.split(",")]
+
+    # 1. PointRole 메타데이터 조회 (타입 구분을 위해 role_name 활용)
+    # [주석] chart_group_table 의 구조와 그룹핑은 타입을 가리지 않습니다.
+    # 포인트롤 자체가 곧 타입 정보를 가지므로(role_name), 백엔드에서 이를 분석해 각각의 하이퍼테이블을 조회합니다.
+    role_query = text("""
+        SELECT id, role_name, target_value, target_low_limit, target_high_limit
+        FROM point_role_table
+        WHERE id = ANY(:role_ids) AND is_current = TRUE
+    """)
+    role_result = await db.execute(role_query, {"role_ids": target_roles})
+    roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
+
+    if not roles_info:
+        return {"status": "success", "data": {"datasets": []}, "message": "유효한 Role 데이터가 없습니다."}
+
+    # 역할별 쿼리 대상 분류
+    temp_roles, gear_roles, static_roles, bool_roles = [], [], [], []
+    for r_id, r_info in roles_info.items():
+        r_name = r_info["role_name"].lower()
+        if "temp_" in r_name: temp_roles.append(r_id)
+        elif "gear_" in r_name: gear_roles.append(r_id)
+        elif "static_" in r_name: static_roles.append(r_id)
+        elif "bool_" in r_name: bool_roles.append(r_id)
+
+    # 2. 통합 타임라인을 위한 기준 시간(가장 최근 데이터 시간) 확보
+    # 전체 쿼리를 단순화하기 위해 temperature 테이블 기준으로 최근 시간을 잡음 (실 환경에선 전체 테이블 MAX 비교 권장)
+    max_time_query = text("SELECT MAX(timestamp) FROM temperature_numerical_logs WHERE role_id = ANY(:role_ids)")
+    latest_time = (await db.execute(max_time_query, {"role_ids": temp_roles if temp_roles else target_roles})).scalar()
+
+    if not latest_time:
+        return {"status": "success", "data": {"datasets": []}, "message": "기록된 로그가 없습니다."}
+
+    # 3. 타입별 데이터 집계 및 병합 헬퍼 함수
+    datasets_map: Dict[int, Any] = {
+        r_id: {
+            "role_id": r_id, "role_name": roles_info[r_id]["role_name"],
+            "target_value": roles_info[r_id]["target_value"],
+            "target_low_limit": roles_info[r_id]["target_low_limit"],
+            "target_high_limit": roles_info[r_id]["target_high_limit"],
+            "data": []
+        } for r_id in roles_info.keys()
+    }
+
+    async def fetch_and_map(table_name: str, agg_columns: str, type_roles: List[int], data_key_mapping: dict):
+        if not type_roles: return
+        query = text(f"""
+            SELECT role_id, time_bucket('{bucket_interval}', timestamp) AS bucket, {agg_columns}
+            FROM {table_name}
+            WHERE role_id = ANY(:role_ids)
+              AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+              AND timestamp <= CAST(:latest_time AS timestamptz)
+            GROUP BY role_id, bucket ORDER BY bucket ASC
+        """)
+        rows = await db.execute(query, {"role_ids": type_roles, "latest_time": latest_time})
+        for r in rows.fetchall():
+            r_dict = dict(r._mapping)
+            point = {"timestamp": r_dict["bucket"].isoformat()}
+            for db_key, out_key in data_key_mapping.items(): point[out_key] = r_dict[db_key]
+            datasets_map[r_dict["role_id"]]["data"].append(point)
+
+    # 4. 각 하이퍼테이블 병렬/순차 조회
+    await fetch_and_map("temperature_numerical_logs", "AVG(temp_mean) AS mean, MIN(temp_min) AS min, MAX(temp_max) AS max", temp_roles, {"mean": "mean", "min": "min", "max": "max"})
+    await fetch_and_map("gear_numerical_logs", "AVG(gear_mean) AS mean, MIN(gear_min) AS min, MAX(gear_max) AS max", gear_roles, {"mean": "mean", "min": "min", "max": "max"})
+    await fetch_and_map("equipment_static_logs", "AVG(setnum) AS mean", static_roles, {"mean": "mean"})
+    await fetch_and_map("bool_logs", "BOOL_OR(status_value) AS status", bool_roles, {"status": "status"})
+
+    # 5. 조회 중인 포인트롤에 걸린 알람을 같은 기간으로 함께 조회 (그래프 위에 발생 시점 표시용)
+    alarm_query = text("""
+        SELECT alarm_id, role_id, alarm_name, severity, timestamp
+        FROM alarms
+        WHERE role_id = ANY(:role_ids)
+          AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+          AND timestamp <= CAST(:latest_time AS timestamptz)
+        ORDER BY timestamp ASC
+    """.format(range_interval=range_interval))
+    alarm_rows = await db.execute(alarm_query, {"role_ids": target_roles, "latest_time": latest_time})
+    alarms = [
+        {
+            "alarm_id": row.alarm_id,
+            "role_id": row.role_id,
+            "alarm_name": row.alarm_name,
+            "severity": row.severity,
+            "timestamp": row.timestamp.isoformat(),
+        }
+        for row in alarm_rows.fetchall()
+    ]
+
+    return {
+        "status": "success",
+        "meta": {"facility_id": facility_id, "room_id": room_id, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
+        "data": {"datasets": list(datasets_map.values()), "alarms": alarms}
+    }
+
+======================================================================
+■ File : chat_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\chat_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/ServiceApp/controllers/chat_controller.py
+# 명세 : 메신저 채팅방 관리 및 웹소켓 통신 컨트롤러
+# ===============================================================
+import json
+from typing import List, Dict, Optional
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+from src.module.Core.models.User import UserRole, User
+from src.module.Core.models.Chat import ChatParticipant, Message, MessageType, ChatRoomType, ChatRoom, MessagePin
+from sqlalchemy.future import select
+
+router = APIRouter(prefix="/chat", tags=["Chat"])
+
+# --- [Pydantic Schemas] ---
+class GroupChatCreateReq(BaseModel):
+    room_name: str
+    user_ids: List[int]
+
+# --- [웹소켓 매니저] ---
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[int, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, room_id: int):
+        await websocket.accept()
+        if room_id not in self.active_connections:
+            self.active_connections[room_id] = []
+        self.active_connections[room_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, room_id: int):
+        if room_id in self.active_connections:
+            self.active_connections[room_id].remove(websocket)
+            if not self.active_connections[room_id]:
+                del self.active_connections[room_id]
+
+    async def broadcast_to_room(self, room_id: int, message: dict):
+        if room_id in self.active_connections:
+            for connection in self.active_connections[room_id]:
+                await connection.send_text(json.dumps(message))
+
+manager = ConnectionManager()
+
+# --- [API Endpoints] ---
+
+@router.get("/rooms/{facility_id}", status_code=status.HTTP_200_OK)
+async def get_chat_rooms(facility_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[Page 1: Box #2] 참여 중인 채팅방 목록 조회 (정렬 및 타 시설 필터링 적용)"""
+    user_query = text("SELECT role FROM user_table WHERE id = :user_id")
+    user = (await db.execute(user_query, {"user_id": user_id})).fetchone()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    is_admin = user.role in [UserRole.ADMIN.value, UserRole.DEVELOPER.value]
+
+    # 다른 시설의 공식 채팅방(FACILITY) 제외 & 상대방 권한/시설 소속 여부 파악
+    query = text("""
+        SELECT cr.room_id, cr.room_name, cr.type, cr.facility_id, cp.unread_count,
+               (SELECT content FROM messages m WHERE m.room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message,
+               (SELECT created_at FROM messages m WHERE m.room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message_time,
+               (
+                   SELECT u.role 
+                   FROM chatparticipants cp2 
+                   JOIN user_table u ON cp2.user_id = u.id 
+                   WHERE cp2.room_id = cr.room_id AND cp2.user_id != :user_id
+                   LIMIT 1
+               ) as other_user_role,
+               (
+                   SELECT COUNT(*)
+                   FROM chatparticipants cp2
+                   JOIN facility_users fu ON cp2.user_id = fu.user_id
+                   WHERE cp2.room_id = cr.room_id AND cp2.user_id != :user_id AND fu.facility_id = :facility_id
+               ) as other_user_in_facility
+        FROM chatrooms cr
+        JOIN chatparticipants cp ON cr.room_id = cp.room_id
+        WHERE cp.user_id = :user_id
+          AND (cr.type != 'FACILITY' OR cr.facility_id = :facility_id)
+    """)
+    result = await db.execute(query, {"user_id": user_id, "facility_id": facility_id})
+    rooms = result.fetchall()
+
+    processed_rooms = []
+    for r in rooms:
+        priority = 99
+        if r.type == 'FACILITY':
+            priority = 1
+        elif r.type == 'DIRECT':
+            if is_admin:
+                # 관리자 정렬: 2. 관리자vs관리자, 3. 현재 시설 유저, 6. 기타 유저
+                if r.other_user_role in ['ADMIN', 'DEVELOPER']: priority = 2
+                elif r.other_user_in_facility > 0: priority = 3
+                else: priority = 6
+            else:
+                priority = 2 # 유저에게 관리자 1:1은 시설방 다음으로 중요
+        elif r.type == 'GROUP':
+            priority = 5 # (4는 즐겨찾기 용도로 비워둠)
+
+        room_name_display = r.room_name
+        if r.type == 'DIRECT' and not room_name_display:
+            room_name_display = "1:1 채팅방"
+
+        processed_rooms.append({
+            "room_id": r.room_id,
+            "room_name": room_name_display,
+            "type": r.type,
+            "last_message": r.last_message or "메시지가 없습니다.",
+            "unread_count": r.unread_count,
+            "sort_priority": priority,
+            "last_message_time": str(r.last_message_time) if r.last_message_time else ""
+        })
+
+    # 정렬: 1순위(우선순위 오름차순), 2순위(최신 메시지 내림차순)
+    processed_rooms.sort(key=lambda x: x["last_message_time"], reverse=True)
+    processed_rooms.sort(key=lambda x: x["sort_priority"])
+
+    return {"status": "success", "rooms": processed_rooms, "is_admin": is_admin}
+
+@router.post("/group", status_code=status.HTTP_201_CREATED)
+async def create_group_chat(req: GroupChatCreateReq, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[관리자 전용] 단체 채팅방 생성"""
+    new_room = ChatRoom(room_name=req.room_name, type=ChatRoomType.GROUP)
+    db.add(new_room)
+    await db.commit()
+    await db.refresh(new_room)
+
+    participants = [ChatParticipant(room_id=new_room.room_id, user_id=user_id)]
+    for uid in req.user_ids:
+        if uid != user_id:
+            participants.append(ChatParticipant(room_id=new_room.room_id, user_id=uid))
+    
+    db.add_all(participants)
+    await db.commit()
+    return {"status": "success", "message": "단체 채팅방이 생성되었습니다.", "room_id": new_room.room_id}
+
+@router.delete("/room/{room_id}")
+async def leave_or_delete_room(room_id: int, user_id: int, action: str = "delete", db: AsyncSession = Depends(get_db)):
+    """채팅방 삭제 보호 적용 (관리자라도 FACILITY, DIRECT 삭제 불가)"""
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    user = user_res.scalars().first()
+    is_admin = user.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+
+    room_res = await db.execute(select(ChatRoom).where(ChatRoom.room_id == room_id))
+    room = room_res.scalars().first()
+    if not room: raise HTTPException(status_code=404, detail="방이 없습니다.")
+
+    if action == "delete":
+        if not is_admin: raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+        if room.type in [ChatRoomType.FACILITY, ChatRoomType.DIRECT]:
+            raise HTTPException(status_code=400, detail=f"[{room.type.value}] 방은 시스템 정책상 삭제할 수 없습니다.")
+        
+        await db.delete(room)
+        await db.commit()
+        return {"status": "success", "message": "단체 채팅방이 삭제되었습니다."}
+    
+    elif action == "hide":
+        part = (await db.execute(select(ChatParticipant).where(ChatParticipant.room_id == room_id, ChatParticipant.user_id == user_id))).scalars().first()
+        if part: await db.delete(part)
+        await db.commit()
+        return {"status": "success", "message": "채팅방에서 나갔습니다."}
+
+@router.post("/room/{room_id}/pin/{message_id}")
+async def toggle_pin_message(room_id: int, message_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """메시지 고정 토글 (관리자는 타인 메시지 고정 해제 가능)"""
+    # 1. 고정 상태 확인
+    pin_res = await db.execute(select(MessagePin).where(MessagePin.message_id == message_id))
+    pin = pin_res.scalars().first()
+
+    # 2. 유저 권한 확인
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    user = user_res.scalars().first()
+    is_admin = user.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+
+    if pin:
+        # 고정 해제 (관리자 무조건 가능)
+        await db.delete(pin)
+        await db.commit()
+        return {"status": "success", "message": "메시지 고정이 해제되었습니다."}
+    else:
+        # 새 고정
+        new_pin = MessagePin(message_id=message_id)
+        db.add(new_pin)
+        await db.commit()
+        return {"status": "success", "message": "메시지가 고정되었습니다."}
+
+@router.get("/room/{room_id}/participants")
+async def get_chat_participants(room_id: int, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        SELECT u.id, u.name, u.role 
+        FROM chatparticipants cp
+        JOIN user_table u ON cp.user_id = u.id
+        WHERE cp.room_id = :room_id
+    """)
+    result = await db.execute(query, {"room_id": room_id})
+    return {"status": "success", "participants": [{"id": r.id, "name": r.name, "role": r.role} for r in result.fetchall()]}
+
+@router.put("/room/{room_id}/read")
+async def update_last_read(room_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        UPDATE chatparticipants 
+        SET unread_count = 0, last_read_message_id = (SELECT COALESCE(MAX(message_id), 0) FROM messages WHERE room_id = :room_id)
+        WHERE room_id = :room_id AND user_id = :user_id
+    """)
+    await db.execute(query, {"room_id": room_id, "user_id": user_id})
+    await db.commit()
+    return {"status": "success"}
+
+@router.get("/room/{room_id}/messages")
+async def get_chat_messages(room_id: int, user_id: int, limit: int = 50, offset: int = 0, keyword: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    """과거 메시지 로드 (답장 원문, 고정 여부 포함)"""
+    where_clause = "WHERE m.room_id = :room_id"
+    params = {"room_id": room_id, "limit": limit, "offset": offset}
+    
+    if keyword and keyword.strip():
+        where_clause += " AND m.content ILIKE :keyword"
+        params["keyword"] = f"%{keyword.strip()}%"
+
+    query = text(f"""
+        SELECT m.message_id, m.user_id, m.message_type, m.content, m.created_at,
+               pm.content as parent_content,
+               (SELECT COUNT(*) FROM messages_pin p WHERE p.message_id = m.message_id) as is_pinned
+        FROM messages m
+        LEFT JOIN messages pm ON m.parent_message_id = pm.message_id
+        {where_clause}
+        ORDER BY m.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, params)
+    messages = result.fetchall()
+
+    return {
+        "status": "success",
+        "messages": [{
+            "message_id": r.message_id, "user_id": r.user_id,
+            "message_type": r.message_type.value if hasattr(r.message_type, 'value') else r.message_type,
+            "content": r.content,
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "",
+            "parent_content": r.parent_content,
+            "is_pinned": r.is_pinned > 0
+        } for r in messages]
+    }
+
+@router.websocket("/ws/{room_id}/{user_id}")
+async def chat_websocket(websocket: WebSocket, room_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    await manager.connect(websocket, room_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            payload = json.loads(data)
+            
+            msg_type = MessageType.IMAGE if payload.get("type") == "IMAGE" else MessageType.TEXT
+            parent_id = payload.get("parent_message_id") # 답장 시 활용
+
+            new_msg = Message(
+                room_id=room_id, user_id=user_id, message_type=msg_type, 
+                content=payload.get("content", ""), parent_message_id=parent_id
+            )
+            db.add(new_msg)
+            await db.commit()
+            await db.refresh(new_msg)
+            
+            update_unread = text("UPDATE chatparticipants SET unread_count = unread_count + 1 WHERE room_id = :room_id AND user_id != :user_id")
+            await db.execute(update_unread, {"room_id": room_id, "user_id": user_id})
+            await db.commit()
+
+            parent_content = None
+            if parent_id:
+                parent_res = await db.execute(select(Message.content).where(Message.message_id == parent_id))
+                parent_content = parent_res.scalar()
+
+            broadcast_msg = {
+                "type": "chat", "message_id": new_msg.message_id, "user_id": user_id,
+                "message_type": msg_type.value, "content": new_msg.content,
+                "created_at": new_msg.created_at.strftime("%Y-%m-%d %H:%M") if new_msg.created_at else "Just now",
+                "parent_content": parent_content,
+                "is_pinned": False
+            }
+            await manager.broadcast_to_room(room_id, broadcast_msg)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, room_id)
+
+======================================================================
+■ File : facility_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\controllers\facility_controller.py
+======================================================================
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from pydantic import BaseModel
+
+from src.config.database import get_db
+from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
+from src.module.Core.models.User import User, UserRole
+
+router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
+
+class RegisterFacilityReq(BaseModel):
+    access_code: str
+
+@router.get("/{user_id}")
+async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
+    """유저가 소속된 시설 목록 조회 (관리자는 전체 조회)"""
+    
+    # 1. 유저 권한 확인
+    user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 2. 권한에 따른 조회 쿼리 분기
+    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        # 관리자는 매핑 관계없이 활성화된 모든 시설 조회
+        stmt = select(Facility).where(Facility.is_active == True)
+    else:
+        # 일반 유저는 자신에게 매핑된 시설만 조회
+        stmt = (
+            select(Facility)
+            .join(FacilityUser, Facility.id == FacilityUser.facility_id)
+            .where(FacilityUser.user_id == user_id, Facility.is_active == True)
+        )
+        
+    result = await db.execute(stmt)
+    facilities = result.scalars().all()
+    
+    return {
+        "facilities": [
+            {"id": f.id, "name": f.name, "start_date": f.start_date, "end_date": f.end_date}
+            for f in facilities
+        ]
+    }
+
+@router.post("/{user_id}/register")
+async def register_facility(user_id: int, req: RegisterFacilityReq, db: AsyncSession = Depends(get_db)):
+    """접근 코드를 통한 시설 등록"""
+    result = await db.execute(select(Facility).where(Facility.access_code == req.access_code))
+    facility = result.scalars().first()
+    
+    if not facility or not facility.is_active:
+        raise HTTPException(status_code=404, detail="유효하지 않은 접근 코드입니다.")
+        
+    exist_check = await db.execute(
+        select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility.id)
+    )
+    if exist_check.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 등록된 시설입니다.")
+        
+    new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
+    await db.commit()
+    
+    return {"message": f"'{facility.name}' 시설이 등록되었습니다."}
+
+@router.delete("/{user_id}/unlink/{facility_id}")
+async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
+    """시설 연결 해제"""
+    result = await db.execute(
+        select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility_id)
+    )
+    mapping = result.scalars().first()
+    
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")
+        
+    await db.delete(mapping)
+    await db.commit()
+    return {"message": "시설 등록이 해제되었습니다."}
+
+@router.get("/rooms/{facility_id}")
+async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db)):
+    """시설 내 호실 목록 조회"""
+    result = await db.execute(select(FacilityRoom).where(FacilityRoom.facility_id == facility_id))
+    rooms = result.scalars().all()
+    return {
+        "rooms": [
+            {
+                "id": r.id, 
+                "facility_id": r.facility_id, 
+                "name": r.name, 
+                "status": r.status.value if hasattr(r.status, 'value') else r.status
+            } for r in rooms
+        ]
+    }
+
+======================================================================
+■ File : router.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceApp\router.py
+======================================================================
+
+from fastapi import APIRouter
+
+from src.module.ServiceApp.controllers.auth_controller import router as auth_router
+from src.module.ServiceApp.controllers.facility_controller import router as facility_router
+from src.module.ServiceApp.controllers.alarm_controller import router as alarm_router
+from src.module.ServiceApp.controllers.chat_controller import router as chat_router
+from src.module.ServiceApp.controllers.board_controller import router as board_router
+from src.module.ServiceApp.controllers.chart_controller import router as chart_router
+
+router = APIRouter()
+
+router.include_router(auth_router)
+router.include_router(facility_router)
+router.include_router(alarm_router)
+router.include_router(chat_router)
+router.include_router(board_router)
+router.include_router(chart_router)
+
+======================================================================
+■ File : alarm_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\alarm_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 :  src/module/ServiceWeb/controllers/alarm_controller.py
+# 명세 : 알람 관련 API 엔드포인트 정의
+# ===============================================================
+
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from fastapi import APIRouter, Depends, HTTPException
+from src.config.database import get_db
+from src.module.Core.models.User import UserFcmToken
+from src.module.Core.models.Facility import  FacilityUser, Facility, FacilityRoom
+from src.module.Core.models.Monitoring import PointRole, Alarm
+
+router = APIRouter(prefix="/alarms", tags=["Alarms"])
+
+class RegistTokenRequest(BaseModel):
+    fcm_token: str
+    user_id: int
+
+@router.post('/register')
+async def registToken(user_in: RegistTokenRequest, db: AsyncSession = Depends(get_db)):
+    """Box #1: FCM 토큰 등록 (비동기 처리)"""
+    
+    # 1. 중복 등록 확인
+    mapping_result = await db.execute(
+        select(UserFcmToken).where(UserFcmToken.fcm_token == user_in.fcm_token)
+    )
+    existing_token = mapping_result.scalars().first()
+
+    # 이미 동일한 토큰이 등록된 경우
+    if existing_token:
+        # 소유 유저가 바뀌었을 가능성이 있으므로 user_id 업데이트 후 저장
+        if existing_token.user_id != user_in.user_id:
+            existing_token.user_id = user_in.user_id
+            await db.commit()
+            return {"message": "기존 토큰의 사용자 정보가 갱신되었습니다.", "user_id": user_in.user_id}
+        
+        return {"message": "이미 등록된 토큰입니다.", "user_id": user_in.user_id}
+
+    new_token = UserFcmToken(
+        fcm_token=user_in.fcm_token, 
+        user_id=user_in.user_id
+    )
+    
+    db.add(new_token)
+    await db.commit()
+
+    return {"message": "토큰이 성공적으로 등록되었습니다.", "user_id": new_token.user_id}
+
+
+
+@router.get("/{user_id}")
+async def get_alarms_for_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(
+            Alarm, 
+            PointRole.facility_id, 
+            Facility.name.label("facility_name"), 
+            FacilityRoom.id.label("room_id"), 
+            FacilityRoom.name.label("room_name")
+        )
+        .join(PointRole, Alarm.role_id == PointRole.id)
+        .join(FacilityUser, FacilityUser.facility_id == PointRole.facility_id)
+        .join(Facility, Facility.id == FacilityUser.facility_id)
+        .join(FacilityRoom, PointRole.room_id == FacilityRoom.id)
+        .where(
+            FacilityUser.user_id == user_id,
+            PointRole.is_current == True
+        )
+        .order_by(Alarm.timestamp.desc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    alarms_with_facility = []
+    for alarm, facility_id, facility_name, room_id, room_name in rows:
+        alarm_dict = {
+            column.name: getattr(alarm, column.name)
+            for column in alarm.__table__.columns
+        }
+        alarm_dict.update({
+            'facility_id': facility_id,
+            'facility_name': facility_name,
+            'room_id': room_id,
+            'room_name': room_name
+        })
+        alarms_with_facility.append(alarm_dict)
+
+    return {'alarms': alarms_with_facility}
+
+
+@router.get("/facility/{facility_id}")
+async def get_alarms_for_facility(facility_id: int, db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(
+            Alarm, 
+            PointRole.facility_id, 
+            Facility.name.label("facility_name"), 
+            FacilityRoom.id.label("room_id"), 
+            FacilityRoom.name.label("room_name")
+        )
+        .join(PointRole, Alarm.role_id == PointRole.id)
+        .join(Facility, Facility.id == PointRole.facility_id)
+        .join(FacilityRoom, PointRole.room_id == FacilityRoom.id)
+        .where(
+            PointRole.facility_id == facility_id,
+            PointRole.is_current == True
+        )
+        .order_by(Alarm.timestamp.desc())
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    alarms_with_facility = []
+    for alarm, fac_id, facility_name, room_id, room_name in rows:
+        alarm_dict = {
+            column.name: getattr(alarm, column.name)
+            for column in alarm.__table__.columns
+        }
+        alarm_dict.update({
+            'facility_id': fac_id,
+            'facility_name': facility_name,
+            'room_id': room_id,
+            'room_name': room_name
+        })
+        alarms_with_facility.append(alarm_dict)
+
+    return {'alarms': alarms_with_facility}
+
+======================================================================
+■ File : auth_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\auth_controller.py
+======================================================================
+
+# ==============================================================
+# 경로 : src/module/ServiceWeb/controllers/auth_controller.py
+# 명세 : 웹 애플리케이션용 인증 컨트롤러
+# ==============================================================
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+import jwt
+import hashlib
+import random
+from datetime import datetime, timedelta, timezone
+
+from src.config.database import get_db
+from src.module.Core.models.User import User, ExternalProvider, UserRole
+
+router = APIRouter(prefix="/auth", tags=["ServiceApp - Auth"])
+
+SECRET_KEY = "idcool_secret_key_v1" 
+ALGORITHM = "HS256"
+
+# --- Schemas ---
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    phone_number: Optional[str] = None
+
+class SocialUserCreate(BaseModel):
+    email: EmailStr
+    name: str
+    provider: str
+    provider_id: str
+    phone_number: Optional[str] = None
+
+class LoginGeneralRequest(BaseModel):
+    email: EmailStr
+    password: str
+    keep_login: bool = False
+
+class LoginSocialRequest(BaseModel):
+    provider: str
+    provider_id: str
+    keep_login: bool = False
+
+class LinkSocialProvider(BaseModel):
+    email: EmailStr
+    provider: str
+    provider_id: str
+
+class CheckAccountRequest(BaseModel):
+    email: EmailStr
+
+class FindIdRequest(BaseModel):
+    name: str
+    phone_number: str
+
+class FindPwRequest(BaseModel):
+    name: str
+    email: EmailStr
+    phone_number: str
+
+class WithdrawRequest(BaseModel):
+    user_id: int
+
+class PasswordRequestCode(BaseModel):
+    email: EmailStr
+
+class PasswordVerifyCode(BaseModel):
+    token: str
+    code: str
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str
+
+class UpdateNameRequest(BaseModel):
+    name: str
+
+class UpdatePhoneRequest(BaseModel):
+    phone_number: str
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+def hash_code(code: str) -> str:
+    return hashlib.sha256(code.encode()).hexdigest()
+
+# --- Endpoints ---
+@router.post("/signup/general", status_code=status.HTTP_201_CREATED)
+async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    if result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
+
+    new_user = User(
+        email=user_in.email,
+        password=user_in.password,
+        name=user_in.name,
+        phone_number=user_in.phone_number,
+        role=UserRole.USER 
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id}
+
+@router.post("/signup/social", status_code=status.HTTP_201_CREATED)
+async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depends(get_db)):
+    if user_in.provider not in ["google", "apple"]:
+        raise HTTPException(status_code=400, detail="지원하지 않는 소셜 제공자입니다.")
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    if result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
+
+    new_user = User(
+        email=user_in.email, password=None, name=user_in.name,
+        phone_number=user_in.phone_number, role=UserRole.USER
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    new_provider = ExternalProvider(
+        account_id=new_user.id, provider=user_in.provider, provider_id=user_in.provider_id
+    )
+    db.add(new_provider)
+    await db.commit()
+    return {"message": f"{user_in.provider} 연동 계정이 생성되었습니다.", "user_id": new_user.id}
+
+@router.post("/login/general", status_code=status.HTTP_200_OK)
+async def login_general(req: LoginGeneralRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="가입되지 않은 이메일입니다.")
+    if user.password != req.password: 
+        raise HTTPException(status_code=401, detail="비밀번호가 일치하지 않습니다.")
+
+    token_expiry = "30days" if req.keep_login else "1day"
+    return {
+        "message": "로그인 성공",
+        "access_token": "dummy_token_here",
+        "user_id": user.id,
+        "role": user.role.value if hasattr(user.role, 'value') else user.role,
+        "expiry_policy": token_expiry
+    }
+
+@router.post("/login/social", status_code=status.HTTP_200_OK)
+async def login_social(req: LoginSocialRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ExternalProvider).where(ExternalProvider.provider == req.provider, ExternalProvider.provider_id == req.provider_id)
+    )
+    provider_info = result.scalars().first()
+    if not provider_info:
+        raise HTTPException(status_code=404, detail="연동된 소셜 계정이 없습니다. 회원가입을 진행해주세요.")
+
+    user_result = await db.execute(select(User).where(User.id == provider_info.account_id))
+    user = user_result.scalars().first()
+    token_expiry = "30days" if req.keep_login else "1day"
+    return {
+        "message": f"{req.provider} 소셜 로그인 성공",
+        "access_token": "dummy_social_token_here",
+        "user_id": user.id,
+        "expiry_policy": token_expiry
+    }
+
+@router.post("/check-account", status_code=status.HTTP_200_OK)
+async def check_account_existence(req: CheckAccountRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+    if not user:
+        return {"exists": False, "message": "해당 이메일로 가입된 계정이 없습니다."}
+
+    providers_result = await db.execute(select(ExternalProvider).where(ExternalProvider.account_id == user.id))
+    providers = providers_result.scalars().all()
+    if providers:
+        provider_names = ", ".join([p.provider for p in providers])
+        return {"exists": True, "message": f"해당 이메일은 {provider_names} 소셜 계정으로 연동되어 있습니다."}
+    return {"exists": True, "message": "해당 이메일은 일반 계정으로 가입되어 있습니다."}
+
+@router.get("/{user_id}/role", status_code=status.HTTP_200_OK)
+async def get_user_role(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User.role).where(User.id == user_id))
+    user_role = result.scalars().first()
+    if not user_role:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    return {"role": user_role.value if hasattr(user_role, 'value') else user_role}
+
+@router.get("/{user_id}/profile", status_code=status.HTTP_200_OK)
+async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    providers_result = await db.execute(select(ExternalProvider.provider).where(ExternalProvider.account_id == user_id))
+    return {
+        "name": user.name,
+        "phone_number": user.phone_number or "",
+        "linked_providers": providers_result.scalars().all()
+    }
+
+======================================================================
+■ File : board_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\board_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/ServiceWeb/controllers/board_controller.py
+# 명세 : 보드(게시판) 관련 API 컨트롤러 (현재 스코프: 리스트 조회)
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File
+from pydantic import BaseModel
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+# ===============================================================
+
+router = APIRouter(prefix="/board", tags=["Board"])
+
+# --- Pydantic Schemas ---
+class PostCreateReq(BaseModel):
+    board_id: int
+    title: str
+    content: str
+    image_ids: List[int] = []  # URL 배열 대신, 사전 업로드된 이미지 ID 배열을 받음
+
+class PostUpdateReq(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    image_ids: Optional[List[int]] = None
+
+class CommentCreateReq(BaseModel):
+    content: str
+
+
+
+# [S/bp-02] 통합 조회 보드 포스트 리스트 (검색 조건 추가)
+@router.get("/integrated")
+async def get_integrated_posts(
+    user_id: int, 
+    page: int = Query(1, ge=1), 
+    limit: int = Query(30, le=100),
+    search_type: str = Query("all"), # all, title, creator, content
+    keyword: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    user_query = text("SELECT role FROM user_table WHERE id = :user_id")
+    user_res = await db.execute(user_query, {"user_id": user_id})
+    user = user_res.fetchone()
+
+    if not user or user.role not in ['ADMIN', 'DEVELOPER']:
+        raise HTTPException(status_code=403, detail="통합 조회 보드에 접근할 권한이 없습니다.")
+
+    offset = (page - 1) * limit
+
+    # 검색 쿼리 조건 생성
+    where_clause = "WHERE 1=1"
+    params = {"limit": limit, "offset": offset, "user_id": user_id}
+
+    if keyword and keyword.strip():
+        params["keyword"] = f"%{keyword.strip()}%"
+        if search_type == "title":
+            where_clause += " AND p.title ILIKE :keyword"
+        elif search_type == "creator":
+            where_clause += " AND u.name ILIKE :keyword"
+        elif search_type == "content":
+            where_clause += " AND p.content ILIKE :keyword"
+        else: # "all"
+            where_clause += " AND (p.title ILIKE :keyword OR u.name ILIKE :keyword OR p.content ILIKE :keyword)"
+
+    # COUNT 쿼리
+    count_query = text(f"""
+        SELECT COUNT(*) 
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+    """)
+    total_count = (await db.execute(count_query, params)).scalar()
+
+    # Data 쿼리
+    query = text(f"""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, params)
+    posts = result.fetchall()
+
+    return {
+        "status": "success",
+        "data": [dict(row._mapping) for row in posts],
+        "meta": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
+
+
+# [S/bp-03] 시설 조회 보드 포스트 리스트 (검색 조건 추가)
+@router.get("/facility/{facility_id}")
+async def get_facility_posts(
+    facility_id: int, 
+    user_id: int, 
+    page: int = Query(1, ge=1), 
+    limit: int = Query(30, le=100),
+    search_type: str = Query("all"),
+    keyword: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    auth_query = text("""
+        SELECT 1 FROM user_table u
+        LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+        WHERE u.id = :user_id 
+          AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+    """)
+    auth_res = await db.execute(auth_query, {"user_id": user_id, "facility_id": facility_id})
+    if not auth_res.fetchone():
+        raise HTTPException(status_code=403, detail="해당 시설 보드에 접근할 권한이 없습니다.")
+
+    offset = (page - 1) * limit
+    where_clause = "WHERE b.facility_id = :facility_id"
+    params = {"facility_id": facility_id, "limit": limit, "offset": offset, "user_id": user_id}
+
+    if keyword and keyword.strip():
+        params["keyword"] = f"%{keyword.strip()}%"
+        if search_type == "title":
+            where_clause += " AND p.title ILIKE :keyword"
+        elif search_type == "creator":
+            where_clause += " AND u.name ILIKE :keyword"
+        elif search_type == "content":
+            where_clause += " AND p.content ILIKE :keyword"
+        else: # "all"
+            where_clause += " AND (p.title ILIKE :keyword OR u.name ILIKE :keyword OR p.content ILIKE :keyword)"
+
+    count_query = text(f"""
+        SELECT COUNT(*) 
+        FROM posts p 
+        JOIN boards b ON p.board_id = b.board_id 
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+    """)
+    total_count = (await db.execute(count_query, params)).scalar()
+
+    query = text(f"""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        {where_clause}
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, params)
+    posts = result.fetchall()
+
+    return {
+        "status": "success",
+        "data": [dict(row._mapping) for row in posts],
+        "meta": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
+
+
+# ===============================================================
+# [S/bp-04] 단일 포스트 상세 조회 (댓글 포함)
+# ===============================================================
+@router.get("/post/{post_id}")
+async def get_post_detail(post_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    # 1. 포스트 기본 정보 조회 (p.images 제거)
+    post_query = text("""
+        SELECT p.post_id, p.title, p.content, p.creator_id, p.created_at, p.updated_at,
+               b.facility_id, b.facility_name, u.name as creator_name
+        FROM posts p
+        JOIN boards b ON p.board_id = b.board_id
+        JOIN user_table u ON p.creator_id = u.id
+        WHERE p.post_id = :post_id
+    """)
+    post = (await db.execute(post_query, {"post_id": post_id})).fetchone()
+
+    if not post:
+        raise HTTPException(status_code=404, detail="포스트를 찾을 수 없습니다.")
+
+    # 2. 권한 검증
+    auth_query = text("""
+        SELECT 1 FROM user_table u
+        LEFT JOIN facility_users fu ON u.id = fu.user_id AND fu.facility_id = :facility_id
+        WHERE u.id = :user_id AND (u.role IN ('ADMIN', 'DEVELOPER') OR fu.id IS NOT NULL)
+    """)
+    if not (await db.execute(auth_query, {"user_id": user_id, "facility_id": post.facility_id})).fetchone():
+        raise HTTPException(status_code=403, detail="조회 권한이 없습니다.")
+
+    # 3. 댓글 목록 같이 조회
+    comment_query = text("""
+        SELECT c.comment_id, c.content, c.creator_id, c.created_at, u.name as creator_name
+        FROM comments c
+        JOIN user_table u ON c.creator_id = u.id
+        WHERE c.post_id = :post_id
+        ORDER BY c.created_at ASC
+    """)
+    comments = (await db.execute(comment_query, {"post_id": post_id})).fetchall()
+
+    return {
+        "status": "success",
+        "data": dict(post._mapping),
+        "comments": [dict(c._mapping) for c in comments]
+    }
+
+
+# ===============================================================
+# [S/bp-09] 에디터용 이미지 사전 업로드 (Pre-upload) API 명세
+# ===============================================================
+@router.post("/image/upload")
+async def upload_post_image(
+    file: UploadFile = File(...), 
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    [명세 구현 예정 내용]
+    1. 용량 검증 (10MB 이하)
+    2. 이미지 메타데이터(Width, Height) 추출 및 Min Scale(200px) / Max Scale(1920px) 리사이징 로직 (Pillow 사용)
+    3. 스토리지 (로컬 or S3) 저장 로직 ([YYYY/MM/DD]/[UUID].[ext])
+    4. post_images 테이블에 post_id=NULL 로 INSERT 후 image_id 및 image_url 반환
+    """
+    # 더미 응답 (통합 전 프론트엔드 테스트용)
+    return {
+        "status": "success",
+        "image_id": 999, 
+        "image_url": "https://dummyimage.com/600x400/000/fff&text=Preview"
+    }
+
+
+# ===============================================================
+# [S/bp-05] 포스트 생성
+# ===============================================================
+@router.post("/post")
+async def create_post(user_id: int, req: PostCreateReq, db: AsyncSession = Depends(get_db)):
+    # 1. 포스트 삽입
+    query = text("""
+        INSERT INTO posts (board_id, creator_id, updater_id, title, content)
+        VALUES (:board_id, :user_id, :user_id, :title, :content)
+        RETURNING post_id
+    """)
+    result = await db.execute(query, {
+        "board_id": req.board_id, 
+        "user_id": user_id, 
+        "title": req.title, 
+        "content": req.content
+    })
+    new_post_id = result.scalar()
+
+    # 2. 선(Pre) 업로드된 이미지 ID 맵핑 (임시로 post_id=NULL 이었던 것을 업데이트)
+    if req.image_ids:
+        mapping_query = text("""
+            UPDATE post_images 
+            SET post_id = :post_id 
+            WHERE image_id = ANY(:image_ids)
+        """)
+        await db.execute(mapping_query, {"post_id": new_post_id, "image_ids": req.image_ids})
+        
+    await db.commit()
+    return {"status": "success", "post_id": new_post_id}
+
+# ===============================================================
+# [S/bp-06] 포스트 수정
+# ===============================================================
+@router.put("/post/{post_id}")
+async def update_post(post_id: int, user_id: int, req: PostUpdateReq, db: AsyncSession = Depends(get_db)):
+    # 1. 작성자 본인 확인
+    check_query = text("SELECT creator_id FROM posts WHERE post_id = :post_id")
+    post = (await db.execute(check_query, {"post_id": post_id})).fetchone()
+    if not post or post.creator_id != user_id:
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
+
+    # 2. 포스트 업데이트
+    update_query = text("""
+        UPDATE posts 
+        SET title = COALESCE(:title, title),
+            content = COALESCE(:content, content),
+            updater_id = :user_id
+        WHERE post_id = :post_id
+    """)
+    await db.execute(update_query, {
+        "title": req.title, 
+        "content": req.content, 
+        "user_id": user_id, 
+        "post_id": post_id
+    })
+
+    # 3. 추가된 이미지가 있다면 맵핑
+    if req.image_ids:
+        mapping_query = text("""
+            UPDATE post_images 
+            SET post_id = :post_id 
+            WHERE image_id = ANY(:image_ids)
+        """)
+        await db.execute(mapping_query, {"post_id": post_id, "image_ids": req.image_ids})
+
+    await db.commit()
+    return {"status": "success", "message": "포스트 수정 완료"}
+
+# ===============================================================
+# [S/bp-07] 포스트 삭제
+# ===============================================================
+@router.delete("/post/{post_id}")
+async def delete_post(post_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    check_query = text("""
+        SELECT p.creator_id, u.role 
+        FROM posts p JOIN user_table u ON u.id = :user_id 
+        WHERE p.post_id = :post_id
+    """)
+    post = (await db.execute(check_query, {"post_id": post_id, "user_id": user_id})).fetchone()
+    
+    # 작성자 본인이거나 관리자(ADMIN, DEVELOPER)인 경우 삭제 허용
+    if not post or (post.creator_id != user_id and post.role not in ['ADMIN', 'DEVELOPER']):
+        raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+    # ON DELETE CASCADE로 인해 comments, post_images 등도 자동 삭제됨
+    await db.execute(text("DELETE FROM posts WHERE post_id = :post_id"), {"post_id": post_id})
+    await db.commit()
+    return {"status": "success", "message": "포스트 삭제 완료"}
+
+# ===============================================================
+# [S/bp-08] 댓글 생성 및 삭제
+# ===============================================================
+@router.post("/post/{post_id}/comment")
+async def create_comment(post_id: int, user_id: int, req: CommentCreateReq, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        INSERT INTO comments (post_id, creator_id, content)
+        VALUES (:post_id, :user_id, :content)
+        RETURNING comment_id
+    """)
+    result = await db.execute(query, {"post_id": post_id, "user_id": user_id, "content": req.content})
+    await db.commit()
+    return {"status": "success", "comment_id": result.scalar()}
+
+@router.delete("/comment/{comment_id}")
+async def delete_comment(comment_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    check_query = text("""
+        SELECT c.creator_id, u.role 
+        FROM comments c JOIN user_table u ON u.id = :user_id 
+        WHERE c.comment_id = :comment_id
+    """)
+    comment = (await db.execute(check_query, {"comment_id": comment_id, "user_id": user_id})).fetchone()
+    
+    if not comment or (comment.creator_id != user_id and comment.role not in ['ADMIN', 'DEVELOPER']):
+        raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+    await db.execute(text("DELETE FROM comments WHERE comment_id = :comment_id"), {"comment_id": comment_id})
+    await db.commit()
+    return {"status": "success", "message": "댓글 삭제 완료"}
+
+======================================================================
+■ File : chart_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\chart_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 :  src/module/ServiceWeb/controllers/chart_controller.py
+# 명세 : 차트 시각화를 위한 시계열 데이터 조회 API (TimescaleDB 연동)
+# ===============================================================
+from fastapi import APIRouter, Depends, Query, HTTPException
+from typing import Optional, Dict, Any, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+
+router = APIRouter(prefix="/chart", tags=["Chart"])
+
+# 프론트엔드 파라미터를 PostgreSQL Interval 문자열로 변환하는 매핑 딕셔너리
+SCALE_MAPPING = {
+    "10s": "10 seconds",
+    "1m": "1 minute",
+    "5m": "5 minutes",
+    "10m": "10 minutes",
+    "1h": "1 hour"
+}
+
+TIME_RANGE_MAPPING = {
+    "1h": "1 hour",
+    "12h": "12 hours",
+    "1d": "1 day",
+    "7d": "7 days",
+    "15d": "15 days",
+    "30d": "30 days"
+}
+
+@router.get("/compare/{facility_id}/available-roles")
+async def get_comparable_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
+    """
+    같은 시설 안에서 2개 이상의 호실에 공통으로 존재하는 role_name 목록을 반환한다.
+    (예: 모든 냉동실에 있는 "고내온도" 센서를 한 번에 비교하기 위한 선택지)
+    """
+    # bool_ 타입은 꺾은선 그래프로 겹쳐 비교하기 적합하지 않아 목록에서 제외한다
+    # (프론트의 MainChartViewer는 수치형 mean 값을 기준으로 그리기 때문).
+    query = text("""
+        SELECT pr.role_name, COUNT(DISTINCT pr.room_id) AS room_count,
+               MAX(prm.display_name) AS display_name
+        FROM point_role_table pr
+        LEFT JOIN point_role_metadata prm ON pr.id = prm.role_id
+        WHERE pr.facility_id = :facility_id AND pr.is_current = TRUE
+          AND pr.role_name NOT ILIKE 'bool\\_%' ESCAPE '\\'
+        GROUP BY pr.role_name
+        HAVING COUNT(DISTINCT pr.room_id) > 1
+        ORDER BY pr.role_name
+    """)
+    rows = await db.execute(query, {"facility_id": facility_id})
+    roles = [
+        {
+            "role_name": row.role_name,
+            "display_name": row.display_name or row.role_name,
+            "room_count": row.room_count,
+        }
+        for row in rows.fetchall()
+    ]
+    return {"status": "success", "data": {"roles": roles}}
+
+
+@router.get("/compare/{facility_id}")
+async def get_compare_data(
+    facility_id: int,
+    role_name: str = Query(..., description="호실 간 비교할 role_name"),
+    scale: str = Query("1m", description="데이터 해상도"),
+    time_range: str = Query("1d", description="조회 기간"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    같은 시설의 여러 호실에서 동일한 role_name(예: 고내온도)을 가진 값들을
+    호실별로 한 그래프에 겹쳐볼 수 있도록 반환한다.
+    """
+    if scale not in SCALE_MAPPING or time_range not in TIME_RANGE_MAPPING:
+        raise HTTPException(status_code=400, detail="유효하지 않은 파라미터입니다.")
+
+    bucket_interval = SCALE_MAPPING[scale]
+    range_interval = TIME_RANGE_MAPPING[time_range]
+
+    roles_query = text("""
+        SELECT pr.id AS role_id, pr.room_id, fr.name AS room_name
+        FROM point_role_table pr
+        JOIN facilities_room_table fr ON fr.id = pr.room_id
+        WHERE pr.facility_id = :facility_id AND pr.role_name = :role_name AND pr.is_current = TRUE
+        ORDER BY fr.name
+    """)
+    role_rows = (await db.execute(roles_query, {"facility_id": facility_id, "role_name": role_name})).fetchall()
+
+    if not role_rows:
+        return {"status": "success", "data": {"datasets": []}, "message": "비교할 호실 데이터가 없습니다."}
+
+    target_roles = [row.role_id for row in role_rows]
+    room_by_role = {row.role_id: {"room_id": row.room_id, "room_name": row.room_name} for row in role_rows}
+
+    r_name_lower = role_name.lower()
+    if "temp_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "temperature_numerical_logs", "AVG(temp_mean) AS mean, MIN(temp_min) AS min, MAX(temp_max) AS max", {"mean": "mean", "min": "min", "max": "max"}
+    elif "gear_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "gear_numerical_logs", "AVG(gear_mean) AS mean, MIN(gear_min) AS min, MAX(gear_max) AS max", {"mean": "mean", "min": "min", "max": "max"}
+    elif "static_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "equipment_static_logs", "AVG(setnum) AS mean", {"mean": "mean"}
+    elif "bool_" in r_name_lower:
+        table_name, agg_columns, data_key_mapping = "bool_logs", "BOOL_OR(status_value) AS status", {"status": "status"}
+    else:
+        return {"status": "success", "data": {"datasets": []}, "message": "지원되지 않는 데이터 타입입니다."}
+
+    max_time_query = text(f"SELECT MAX(timestamp) FROM {table_name} WHERE role_id = ANY(:role_ids)")
+    latest_time = (await db.execute(max_time_query, {"role_ids": target_roles})).scalar()
+
+    if not latest_time:
+        return {"status": "success", "data": {"datasets": []}, "message": "기록된 로그가 없습니다."}
+
+    datasets_map: Dict[int, Any] = {
+        r_id: {
+            "role_id": r_id,
+            "room_id": room_by_role[r_id]["room_id"],
+            "room_name": room_by_role[r_id]["room_name"],
+            "role_name": role_name,
+            "data": [],
+        } for r_id in target_roles
+    }
+
+    query = text(f"""
+        SELECT role_id, time_bucket('{bucket_interval}', timestamp) AS bucket, {agg_columns}
+        FROM {table_name}
+        WHERE role_id = ANY(:role_ids)
+          AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+          AND timestamp <= CAST(:latest_time AS timestamptz)
+        GROUP BY role_id, bucket ORDER BY bucket ASC
+    """)
+    rows = await db.execute(query, {"role_ids": target_roles, "latest_time": latest_time})
+    for r in rows.fetchall():
+        r_dict = dict(r._mapping)
+        point = {"timestamp": r_dict["bucket"].isoformat()}
+        for db_key, out_key in data_key_mapping.items(): point[out_key] = r_dict[db_key]
+        datasets_map[r_dict["role_id"]]["data"].append(point)
+
+    return {
+        "status": "success",
+        "meta": {"facility_id": facility_id, "role_name": role_name, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
+        "data": {"datasets": list(datasets_map.values())}
+    }
+
+
+@router.get("/{facility_id}/{room_id}")
+async def get_chart_data(
+    facility_id: int,
+    room_id: int,
+    scale: str = Query("1m", description="데이터 해상도"),
+    time_range: str = Query("1d", description="조회 기간"),
+    role_ids: str = Query(..., description="조회할 PointRole ID 목록 (콤마로 구분)"),
+    db: AsyncSession = Depends(get_db)
+):
+    if scale not in SCALE_MAPPING or time_range not in TIME_RANGE_MAPPING:
+        raise HTTPException(status_code=400, detail="유효하지 않은 파라미터입니다.")
+    
+    bucket_interval = SCALE_MAPPING[scale]
+    range_interval = TIME_RANGE_MAPPING[time_range]
+    target_roles = [int(r.strip()) for r in role_ids.split(",")]
+
+    # 1. PointRole 메타데이터 조회 (타입 구분을 위해 role_name 활용)
+    # [주석] chart_group_table 의 구조와 그룹핑은 타입을 가리지 않습니다.
+    # 포인트롤 자체가 곧 타입 정보를 가지므로(role_name), 백엔드에서 이를 분석해 각각의 하이퍼테이블을 조회합니다.
+    role_query = text("""
+        SELECT id, role_name, target_value, target_low_limit, target_high_limit
+        FROM point_role_table
+        WHERE id = ANY(:role_ids) AND is_current = TRUE
+    """)
+    role_result = await db.execute(role_query, {"role_ids": target_roles})
+    roles_info = {row.id: dict(row._mapping) for row in role_result.fetchall()}
+
+    if not roles_info:
+        return {"status": "success", "data": {"datasets": []}, "message": "유효한 Role 데이터가 없습니다."}
+
+    # 역할별 쿼리 대상 분류
+    temp_roles, gear_roles, static_roles, bool_roles = [], [], [], []
+    for r_id, r_info in roles_info.items():
+        r_name = r_info["role_name"].lower()
+        if "temp_" in r_name: temp_roles.append(r_id)
+        elif "gear_" in r_name: gear_roles.append(r_id)
+        elif "static_" in r_name: static_roles.append(r_id)
+        elif "bool_" in r_name: bool_roles.append(r_id)
+
+    # 2. 통합 타임라인을 위한 기준 시간(가장 최근 데이터 시간) 확보
+    # 전체 쿼리를 단순화하기 위해 temperature 테이블 기준으로 최근 시간을 잡음 (실 환경에선 전체 테이블 MAX 비교 권장)
+    max_time_query = text("SELECT MAX(timestamp) FROM temperature_numerical_logs WHERE role_id = ANY(:role_ids)")
+    latest_time = (await db.execute(max_time_query, {"role_ids": temp_roles if temp_roles else target_roles})).scalar()
+
+    if not latest_time:
+        return {"status": "success", "data": {"datasets": []}, "message": "기록된 로그가 없습니다."}
+
+    # 3. 타입별 데이터 집계 및 병합 헬퍼 함수
+    datasets_map: Dict[int, Any] = {
+        r_id: {
+            "role_id": r_id, "role_name": roles_info[r_id]["role_name"],
+            "target_value": roles_info[r_id]["target_value"],
+            "target_low_limit": roles_info[r_id]["target_low_limit"],
+            "target_high_limit": roles_info[r_id]["target_high_limit"],
+            "data": []
+        } for r_id in roles_info.keys()
+    }
+
+    async def fetch_and_map(table_name: str, agg_columns: str, type_roles: List[int], data_key_mapping: dict):
+        if not type_roles: return
+        query = text(f"""
+            SELECT role_id, time_bucket('{bucket_interval}', timestamp) AS bucket, {agg_columns}
+            FROM {table_name}
+            WHERE role_id = ANY(:role_ids)
+              AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+              AND timestamp <= CAST(:latest_time AS timestamptz)
+            GROUP BY role_id, bucket ORDER BY bucket ASC
+        """)
+        rows = await db.execute(query, {"role_ids": type_roles, "latest_time": latest_time})
+        for r in rows.fetchall():
+            r_dict = dict(r._mapping)
+            point = {"timestamp": r_dict["bucket"].isoformat()}
+            for db_key, out_key in data_key_mapping.items(): point[out_key] = r_dict[db_key]
+            datasets_map[r_dict["role_id"]]["data"].append(point)
+
+    # 4. 각 하이퍼테이블 병렬/순차 조회
+    await fetch_and_map("temperature_numerical_logs", "AVG(temp_mean) AS mean, MIN(temp_min) AS min, MAX(temp_max) AS max", temp_roles, {"mean": "mean", "min": "min", "max": "max"})
+    await fetch_and_map("gear_numerical_logs", "AVG(gear_mean) AS mean, MIN(gear_min) AS min, MAX(gear_max) AS max", gear_roles, {"mean": "mean", "min": "min", "max": "max"})
+    await fetch_and_map("equipment_static_logs", "AVG(setnum) AS mean", static_roles, {"mean": "mean"})
+    await fetch_and_map("bool_logs", "BOOL_OR(status_value) AS status", bool_roles, {"status": "status"})
+
+    # 5. 조회 중인 포인트롤에 걸린 알람을 같은 기간으로 함께 조회 (그래프 위에 발생 시점 표시용)
+    alarm_query = text("""
+        SELECT alarm_id, role_id, alarm_name, severity, timestamp
+        FROM alarms
+        WHERE role_id = ANY(:role_ids)
+          AND timestamp >= (CAST(:latest_time AS timestamptz) - INTERVAL '{range_interval}')
+          AND timestamp <= CAST(:latest_time AS timestamptz)
+        ORDER BY timestamp ASC
+    """.format(range_interval=range_interval))
+    alarm_rows = await db.execute(alarm_query, {"role_ids": target_roles, "latest_time": latest_time})
+    alarms = [
+        {
+            "alarm_id": row.alarm_id,
+            "role_id": row.role_id,
+            "alarm_name": row.alarm_name,
+            "severity": row.severity,
+            "timestamp": row.timestamp.isoformat(),
+        }
+        for row in alarm_rows.fetchall()
+    ]
+
+    return {
+        "status": "success",
+        "meta": {"facility_id": facility_id, "room_id": room_id, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
+        "data": {"datasets": list(datasets_map.values()), "alarms": alarms}
+    }
+
+======================================================================
+■ File : chart_mapping_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\chart_mapping_controller.py
+======================================================================
+
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+
+router = APIRouter(prefix="/chart-mapping", tags=["Chart Mapping"])
+
+# data_type 제거
+class GroupCreateReq(BaseModel):
+    facility_id: int
+    room_id: int
+    group_name: str
+    role_ids: List[int]
+
+@router.get("/roles/{facility_id}/{room_id}")
+async def get_point_roles(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        SELECT id as role_id, role_name, target_value
+        FROM point_role_table
+        WHERE facility_id = :facility_id AND room_id = :room_id AND is_current = TRUE
+    """)
+    result = await db.execute(query, {"facility_id": facility_id, "room_id": room_id})
+    roles = [dict(row._mapping) for row in result.fetchall()]
+    return {"status": "success", "roles": roles}
+
+@router.post("/group")
+async def create_chart_group(req: GroupCreateReq, db: AsyncSession = Depends(get_db)):
+    try:
+        # data_type 관련 로직 제거
+        group_query = text("""
+            INSERT INTO chart_group_table (facility_id, room_id, group_name)
+            VALUES (:facility_id, :room_id, :group_name)
+            RETURNING id
+        """)
+        result = await db.execute(group_query, {
+            "facility_id": req.facility_id, 
+            "room_id": req.room_id,
+            "group_name": req.group_name
+        })
+        new_group_id = result.scalar()
+
+        if req.role_ids:
+            mapping_query = text("""
+                INSERT INTO chart_group_mapping (group_id, role_id)
+                VALUES (:group_id, :role_id)
+            """)
+            for r_id in req.role_ids:
+                await db.execute(mapping_query, {"group_id": new_group_id, "role_id": r_id})
+        
+        await db.commit()
+        return {"status": "success", "message": "그룹 생성 완료", "group_id": new_group_id}
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/groups/{facility_id}/{room_id}")
+async def get_chart_groups(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
+    # cg.data_type 제거
+    query = text("""
+        SELECT cg.id as group_id, cg.group_name,
+               array_agg(cgm.role_id) as role_ids
+        FROM chart_group_table cg
+        LEFT JOIN chart_group_mapping cgm ON cg.id = cgm.group_id
+        WHERE cg.facility_id = :facility_id AND cg.room_id = :room_id
+        GROUP BY cg.id
+    """)
+    result = await db.execute(query, {"facility_id": facility_id, "room_id": room_id})
+    groups = [dict(row._mapping) for row in result.fetchall()]
+    return {"status": "success", "groups": groups}
+
+======================================================================
+■ File : chat_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\chat_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 :  src/module/ServiceWeb/controllers/chat_controller.py
+# 명세 : 메신저 채팅방 관리 및 웹소켓 통신 컨트롤러
+# ===============================================================
+import json
+from typing import List, Dict, Optional
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+from src.config.database import get_db
+from src.module.Core.models.User import UserRole, User
+from src.module.Core.models.Chat import ChatParticipant, Message, MessageType, ChatRoomType, ChatRoom, MessagePin
+from sqlalchemy.future import select
+
+router = APIRouter(prefix="/chat", tags=["Chat"])
+
+# --- [Pydantic Schemas] ---
+class GroupChatCreateReq(BaseModel):
+    room_name: str
+    user_ids: List[int]
+
+# --- [웹소켓 매니저] ---
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[int, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, room_id: int):
+        await websocket.accept()
+        if room_id not in self.active_connections:
+            self.active_connections[room_id] = []
+        self.active_connections[room_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, room_id: int):
+        if room_id in self.active_connections:
+            self.active_connections[room_id].remove(websocket)
+            if not self.active_connections[room_id]:
+                del self.active_connections[room_id]
+
+    async def broadcast_to_room(self, room_id: int, message: dict):
+        if room_id in self.active_connections:
+            for connection in self.active_connections[room_id]:
+                await connection.send_text(json.dumps(message))
+
+manager = ConnectionManager()
+
+# --- [API Endpoints] ---
+
+@router.get("/rooms/{facility_id}", status_code=status.HTTP_200_OK)
+async def get_chat_rooms(facility_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[Page 1: Box #2] 참여 중인 채팅방 목록 조회 (정렬 및 타 시설 필터링 적용)"""
+    user_query = text("SELECT role FROM user_table WHERE id = :user_id")
+    user = (await db.execute(user_query, {"user_id": user_id})).fetchone()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    is_admin = user.role in [UserRole.ADMIN.value, UserRole.DEVELOPER.value]
+
+    # 다른 시설의 공식 채팅방(FACILITY) 제외 & 상대방 권한/시설 소속 여부 파악
+    query = text("""
+        SELECT cr.room_id, cr.room_name, cr.type, cr.facility_id, cp.unread_count,
+               (SELECT content FROM messages m WHERE m.room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message,
+               (SELECT created_at FROM messages m WHERE m.room_id = cr.room_id ORDER BY created_at DESC LIMIT 1) as last_message_time,
+               (
+                   SELECT u.role 
+                   FROM chatparticipants cp2 
+                   JOIN user_table u ON cp2.user_id = u.id 
+                   WHERE cp2.room_id = cr.room_id AND cp2.user_id != :user_id
+                   LIMIT 1
+               ) as other_user_role,
+               (
+                   SELECT COUNT(*)
+                   FROM chatparticipants cp2
+                   JOIN facility_users fu ON cp2.user_id = fu.user_id
+                   WHERE cp2.room_id = cr.room_id AND cp2.user_id != :user_id AND fu.facility_id = :facility_id
+               ) as other_user_in_facility
+        FROM chatrooms cr
+        JOIN chatparticipants cp ON cr.room_id = cp.room_id
+        WHERE cp.user_id = :user_id
+          AND (cr.type != 'FACILITY' OR cr.facility_id = :facility_id)
+    """)
+    result = await db.execute(query, {"user_id": user_id, "facility_id": facility_id})
+    rooms = result.fetchall()
+
+    processed_rooms = []
+    for r in rooms:
+        priority = 99
+        if r.type == 'FACILITY':
+            priority = 1
+        elif r.type == 'DIRECT':
+            if is_admin:
+                # 관리자 정렬: 2. 관리자vs관리자, 3. 현재 시설 유저, 6. 기타 유저
+                if r.other_user_role in ['ADMIN', 'DEVELOPER']: priority = 2
+                elif r.other_user_in_facility > 0: priority = 3
+                else: priority = 6
+            else:
+                priority = 2 # 유저에게 관리자 1:1은 시설방 다음으로 중요
+        elif r.type == 'GROUP':
+            priority = 5 # (4는 즐겨찾기 용도로 비워둠)
+
+        room_name_display = r.room_name
+        if r.type == 'DIRECT' and not room_name_display:
+            room_name_display = "1:1 채팅방"
+
+        processed_rooms.append({
+            "room_id": r.room_id,
+            "room_name": room_name_display,
+            "type": r.type,
+            "last_message": r.last_message or "메시지가 없습니다.",
+            "unread_count": r.unread_count,
+            "sort_priority": priority,
+            "last_message_time": str(r.last_message_time) if r.last_message_time else ""
+        })
+
+    # 정렬: 1순위(우선순위 오름차순), 2순위(최신 메시지 내림차순)
+    processed_rooms.sort(key=lambda x: x["last_message_time"], reverse=True)
+    processed_rooms.sort(key=lambda x: x["sort_priority"])
+
+    return {"status": "success", "rooms": processed_rooms, "is_admin": is_admin}
+
+@router.post("/group", status_code=status.HTTP_201_CREATED)
+async def create_group_chat(req: GroupChatCreateReq, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[관리자 전용] 단체 채팅방 생성"""
+    new_room = ChatRoom(room_name=req.room_name, type=ChatRoomType.GROUP)
+    db.add(new_room)
+    await db.commit()
+    await db.refresh(new_room)
+
+    participants = [ChatParticipant(room_id=new_room.room_id, user_id=user_id)]
+    for uid in req.user_ids:
+        if uid != user_id:
+            participants.append(ChatParticipant(room_id=new_room.room_id, user_id=uid))
+    
+    db.add_all(participants)
+    await db.commit()
+    return {"status": "success", "message": "단체 채팅방이 생성되었습니다.", "room_id": new_room.room_id}
+
+@router.delete("/room/{room_id}")
+async def leave_or_delete_room(room_id: int, user_id: int, action: str = "delete", db: AsyncSession = Depends(get_db)):
+    """채팅방 삭제 보호 적용 (관리자라도 FACILITY, DIRECT 삭제 불가)"""
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    user = user_res.scalars().first()
+    is_admin = user.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+
+    room_res = await db.execute(select(ChatRoom).where(ChatRoom.room_id == room_id))
+    room = room_res.scalars().first()
+    if not room: raise HTTPException(status_code=404, detail="방이 없습니다.")
+
+    if action == "delete":
+        if not is_admin: raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+        if room.type in [ChatRoomType.FACILITY, ChatRoomType.DIRECT]:
+            raise HTTPException(status_code=400, detail=f"[{room.type.value}] 방은 시스템 정책상 삭제할 수 없습니다.")
+        
+        await db.delete(room)
+        await db.commit()
+        return {"status": "success", "message": "단체 채팅방이 삭제되었습니다."}
+    
+    elif action == "hide":
+        part = (await db.execute(select(ChatParticipant).where(ChatParticipant.room_id == room_id, ChatParticipant.user_id == user_id))).scalars().first()
+        if part: await db.delete(part)
+        await db.commit()
+        return {"status": "success", "message": "채팅방에서 나갔습니다."}
+
+@router.post("/room/{room_id}/pin/{message_id}")
+async def toggle_pin_message(room_id: int, message_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """메시지 고정 토글 (관리자는 타인 메시지 고정 해제 가능)"""
+    # 1. 고정 상태 확인
+    pin_res = await db.execute(select(MessagePin).where(MessagePin.message_id == message_id))
+    pin = pin_res.scalars().first()
+
+    # 2. 유저 권한 확인
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    user = user_res.scalars().first()
+    is_admin = user.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+
+    if pin:
+        # 고정 해제 (관리자 무조건 가능)
+        await db.delete(pin)
+        await db.commit()
+        return {"status": "success", "message": "메시지 고정이 해제되었습니다."}
+    else:
+        # 새 고정
+        new_pin = MessagePin(message_id=message_id)
+        db.add(new_pin)
+        await db.commit()
+        return {"status": "success", "message": "메시지가 고정되었습니다."}
+
+@router.get("/room/{room_id}/participants")
+async def get_chat_participants(room_id: int, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        SELECT u.id, u.name, u.role 
+        FROM chatparticipants cp
+        JOIN user_table u ON cp.user_id = u.id
+        WHERE cp.room_id = :room_id
+    """)
+    result = await db.execute(query, {"room_id": room_id})
+    return {"status": "success", "participants": [{"id": r.id, "name": r.name, "role": r.role} for r in result.fetchall()]}
+
+@router.put("/room/{room_id}/read")
+async def update_last_read(room_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    query = text("""
+        UPDATE chatparticipants 
+        SET unread_count = 0, last_read_message_id = (SELECT COALESCE(MAX(message_id), 0) FROM messages WHERE room_id = :room_id)
+        WHERE room_id = :room_id AND user_id = :user_id
+    """)
+    await db.execute(query, {"room_id": room_id, "user_id": user_id})
+    await db.commit()
+    return {"status": "success"}
+
+@router.get("/room/{room_id}/messages")
+async def get_chat_messages(room_id: int, user_id: int, limit: int = 50, offset: int = 0, keyword: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    """과거 메시지 로드 (답장 원문, 고정 여부 포함)"""
+    where_clause = "WHERE m.room_id = :room_id"
+    params = {"room_id": room_id, "limit": limit, "offset": offset}
+    
+    if keyword and keyword.strip():
+        where_clause += " AND m.content ILIKE :keyword"
+        params["keyword"] = f"%{keyword.strip()}%"
+
+    query = text(f"""
+        SELECT m.message_id, m.user_id, m.message_type, m.content, m.created_at,
+               pm.content as parent_content,
+               (SELECT COUNT(*) FROM messages_pin p WHERE p.message_id = m.message_id) as is_pinned
+        FROM messages m
+        LEFT JOIN messages pm ON m.parent_message_id = pm.message_id
+        {where_clause}
+        ORDER BY m.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = await db.execute(query, params)
+    messages = result.fetchall()
+
+    return {
+        "status": "success",
+        "messages": [{
+            "message_id": r.message_id, "user_id": r.user_id,
+            "message_type": r.message_type.value if hasattr(r.message_type, 'value') else r.message_type,
+            "content": r.content,
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "",
+            "parent_content": r.parent_content,
+            "is_pinned": r.is_pinned > 0
+        } for r in messages]
+    }
+
+@router.websocket("/ws/{room_id}/{user_id}")
+async def chat_websocket(websocket: WebSocket, room_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    await manager.connect(websocket, room_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            payload = json.loads(data)
+            
+            msg_type = MessageType.IMAGE if payload.get("type") == "IMAGE" else MessageType.TEXT
+            parent_id = payload.get("parent_message_id") # 답장 시 활용
+
+            new_msg = Message(
+                room_id=room_id, user_id=user_id, message_type=msg_type, 
+                content=payload.get("content", ""), parent_message_id=parent_id
+            )
+            db.add(new_msg)
+            await db.commit()
+            await db.refresh(new_msg)
+            
+            update_unread = text("UPDATE chatparticipants SET unread_count = unread_count + 1 WHERE room_id = :room_id AND user_id != :user_id")
+            await db.execute(update_unread, {"room_id": room_id, "user_id": user_id})
+            await db.commit()
+
+            parent_content = None
+            if parent_id:
+                parent_res = await db.execute(select(Message.content).where(Message.message_id == parent_id))
+                parent_content = parent_res.scalar()
+
+            broadcast_msg = {
+                "type": "chat", "message_id": new_msg.message_id, "user_id": user_id,
+                "message_type": msg_type.value, "content": new_msg.content,
+                "created_at": new_msg.created_at.strftime("%Y-%m-%d %H:%M") if new_msg.created_at else "Just now",
+                "parent_content": parent_content,
+                "is_pinned": False
+            }
+            await manager.broadcast_to_room(room_id, broadcast_msg)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, room_id)
+
+======================================================================
+■ File : facility_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\facility_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/ServiceWeb/controllers/facility_controller.py
+# 명세 : 시설 관련 API 엔드포인트 정의
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from pydantic import BaseModel
+from src.module.Core.models.User import User, UserRole
+from src.config.database import get_db
+from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
+
+router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
+
+class RegisterFacilityReq(BaseModel):
+    access_code: str
+
+@router.get("/{user_id}")
+async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
+    """유저가 소속된 시설 목록 조회 (관리자는 전체 조회)"""
+    
+    # 1. 유저 권한 확인
+    user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 2. 권한에 따른 조회 쿼리 분기
+    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        # 관리자는 매핑 관계없이 활성화된 모든 시설 조회
+        stmt = select(Facility).where(Facility.is_active == True)
+    else:
+        # 일반 유저는 자신에게 매핑된 시설만 조회
+        stmt = (
+            select(Facility)
+            .join(FacilityUser, Facility.id == FacilityUser.facility_id)
+            .where(FacilityUser.user_id == user_id, Facility.is_active == True)
+        )
+        
+    result = await db.execute(stmt)
+    facilities = result.scalars().all()
+    
+    return {
+        "facilities": [
+            {"id": f.id, "name": f.name, "start_date": f.start_date, "end_date": f.end_date}
+            for f in facilities
+        ]
+    }
+
+
+@router.post("/{user_id}/register")
+async def register_facility(user_id: int, req: RegisterFacilityReq, db: AsyncSession = Depends(get_db)):
+    """접근 코드를 통한 시설 등록"""
+    result = await db.execute(select(Facility).where(Facility.access_code == req.access_code))
+    facility = result.scalars().first()
+    
+    if not facility or not facility.is_active:
+        raise HTTPException(status_code=404, detail="유효하지 않은 접근 코드입니다.")
+        
+    exist_check = await db.execute(
+        select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility.id)
+    )
+    if exist_check.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 등록된 시설입니다.")
+        
+    new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
+    await db.commit()
+    
+    return {"message": f"'{facility.name}' 시설이 등록되었습니다."}
+
+@router.delete("/{user_id}/unlink/{facility_id}")
+async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
+    """시설 연결 해제"""
+    result = await db.execute(
+        select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility_id)
+    )
+    mapping = result.scalars().first()
+    
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")
+        
+    await db.delete(mapping)
+    await db.commit()
+    return {"message": "시설 등록이 해제되었습니다."}
+
+@router.get("/rooms/{facility_id}")
+async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db)):
+    """시설 내 호실 목록 조회"""
+    result = await db.execute(select(FacilityRoom).where(FacilityRoom.facility_id == facility_id))
+    rooms = result.scalars().all()
+    return {
+        "rooms": [
+            {
+                "id": r.id, 
+                "facility_id": r.facility_id, 
+                "name": r.name, 
+                "status": r.status.value if hasattr(r.status, 'value') else r.status
+            } for r in rooms
+        ]
+    }
+
+======================================================================
+■ File : node_manage_controller.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\controllers\node_manage_controller.py
+======================================================================
+
+# ===============================================================
+# 경로 : src/module/ServiceWeb/controllers/node_manage_controller.py
+# 명세 : 시스템 대 시스템 용 노드 관리 컨트롤러
+# ===============================================================
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
+from pydantic import BaseModel
+from typing import Optional
+
+from src.config.database import get_db
+from src.module.Core.models.Facility import Facility, FacilityNode
+from src.module.Core.security import generate_facility_api_key
+
+router = APIRouter(prefix="/admin/nodes", tags=["ServiceWeb - Nodes"])
+
+class NodeCreateReq(BaseModel):
+    facility_id: int
+    node_code: str
+    node_name: str
+
+class NodeUpdateReq(BaseModel):
+    node_name: Optional[str] = None
+    facility_id: Optional[int] = None
+
+@router.get("/facilities")
+async def get_facilities(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Facility).where(Facility.is_active == True).order_by(Facility.name.asc()))
+    facilities = result.scalars().all()
+    return {
+        "status": "success",
+        "data": [{"id": f.id, "name": f.name} for f in facilities]
+    }
+
+@router.get("")
+async def get_nodes(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(FacilityNode)
+        .options(joinedload(FacilityNode.facility))
+        .order_by(FacilityNode.id.asc())
+    )
+    nodes = result.scalars().all()
+    return {
+        "status": "success",
+        "data": [
+            {
+                "id": n.id,
+                "facility_id": n.facility_id,
+                "facility_name": n.facility.name if n.facility else f"시설 #{n.facility_id}",
+                "node_code": n.node_code,
+                "node_name": n.node_name,
+                "status": n.status,
+                "is_active": n.is_active,
+                "last_heartbeat_at": n.last_heartbeat_at.isoformat() if n.last_heartbeat_at else None
+            }
+            for n in nodes
+        ]
+    }
+
+@router.post("")
+async def create_node(req: NodeCreateReq, db: AsyncSession = Depends(get_db)):
+    exists = await db.execute(select(FacilityNode).where(FacilityNode.node_code == req.node_code))
+    if exists.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 존재하는 노드 코드입니다.")
+
+    raw_key, key_hash = generate_facility_api_key()
+    new_node = FacilityNode(
+        facility_id=req.facility_id,
+        node_code=req.node_code,
+        node_name=req.node_name,
+        api_key_hash=key_hash,
+        status="OFFLINE",
+        is_active=True
+    )
+    db.add(new_node)
+    await db.commit()
+    await db.refresh(new_node)
+
+    return {
+        "status": "success",
+        "node_code": new_node.node_code,
+        "api_key": raw_key
+    }
+
+@router.patch("/{node_id}")
+async def update_node(node_id: int, req: NodeUpdateReq, db: AsyncSession = Depends(get_db)):
+    """노드 명칭 및 소속 시설 수정"""
+    result = await db.execute(select(FacilityNode).where(FacilityNode.id == node_id))
+    node = result.scalars().first()
+    if not node:
+        raise HTTPException(status_code=404, detail="노드를 찾을 수 없습니다.")
+
+    if req.node_name is not None:
+        node.node_name = req.node_name.strip()
+    if req.facility_id is not None:
+        node.facility_id = req.facility_id
+
+    await db.commit()
+    return {"status": "success", "message": "노드 정보가 수정되었습니다."}
+
+@router.post("/{node_id}/rotate-key")
+async def rotate_key(node_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(FacilityNode).where(FacilityNode.id == node_id))
+    node = result.scalars().first()
+    if not node:
+        raise HTTPException(status_code=404, detail="노드를 찾을 수 없습니다.")
+
+    raw_key, key_hash = generate_facility_api_key()
+    node.api_key_hash = key_hash
+    await db.commit()
+
+    return {
+        "status": "success",
+        "new_api_key": raw_key
+    }
+
+@router.delete("/{node_id}")
+async def delete_node(node_id: int, db: AsyncSession = Depends(get_db)):
+    """노드 및 API 키 완전 삭제"""
+    result = await db.execute(select(FacilityNode).where(FacilityNode.id == node_id))
+    node = result.scalars().first()
+    if not node:
+        raise HTTPException(status_code=404, detail="노드를 찾을 수 없습니다.")
+
+    await db.delete(node)
+    await db.commit()
+    return {"status": "success", "message": "노드가 삭제되었습니다."}
+
+======================================================================
+■ File : router.py
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\router.py
+======================================================================
+
+from fastapi import APIRouter
+from fastapi.responses import FileResponse
+import os
+
+from src.module.ServiceWeb.controllers.node_manage_controller import router as node_admin_router
+from src.module.ServiceWeb.controllers.chart_mapping_controller import router as chart_mapping_router
+
+from src.module.ServiceWeb.controllers.auth_controller import router as auth_router
+from src.module.ServiceWeb.controllers.facility_controller import router as facility_router
+from src.module.ServiceWeb.controllers.alarm_controller import router as alarm_router
+from src.module.ServiceWeb.controllers.chat_controller import router as chat_router
+from src.module.ServiceWeb.controllers.board_controller import router as board_router
+from src.module.ServiceWeb.controllers.chart_controller import router as chart_router
+
+router = APIRouter()
+
+# 웹(어드민) 전용 라우터
+router.include_router(node_admin_router)
+router.include_router(chart_mapping_router)
+
+# 일반 웹 기능 라우터
+router.include_router(auth_router)
+router.include_router(facility_router)
+router.include_router(alarm_router)
+router.include_router(chat_router)
+router.include_router(board_router)
+router.include_router(chart_router)
+
+# 임시 WebUI 대시보드 페이지 라우트
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UI_HTML_PATH = os.path.join(BASE_DIR, "webui", "index.html")
+
+@router.get("/dashboard", include_in_schema=False)
+async def serve_dashboard():
+    return FileResponse(UI_HTML_PATH)
+
+======================================================================
+■ File : index.html
+■ Path : C:\Users\ynham\Desktop\idcV2\src\module\ServiceWeb\webui\index.html
+======================================================================
+
+<!-- src/module/ServiceWeb/webui/index.html 수정 내용 중 script 및 테이블 영역 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>IDCool v2 - Node Management & Monitor</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; padding: 24px; background: #0f172a; color: #f8fafc; }
+    h1 { font-size: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 20px; }
+    .card { background: #1e293b; border-radius: 8px; padding: 20px; border: 1px solid #334155; }
+    .card h2 { font-size: 16px; margin-top: 0; margin-bottom: 16px; color: #38bdf8; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    input, select, button { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; margin-bottom: 12px; font-size: 13px; }
+    button { background: #2563eb; border: none; cursor: pointer; font-weight: 600; margin-top: 4px; }
+    button:hover { background: #1d4ed8; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; font-weight: 500; }
+    .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+    .badge.online { background: #059669; color: #ecfdf5; }
+    .badge.offline { background: #475569; color: #f1f5f9; }
+    .btn-action { padding: 4px 8px; width: auto; margin: 0 2px; font-size: 11px; display: inline-block; }
+    .btn-edit { background: #0284c7; }
+    .btn-rotate { background: #d97706; }
+    .btn-del { background: #dc2626; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; }
+    .modal { background: #1e293b; padding: 24px; border-radius: 8px; width: 440px; border: 1px solid #475569; }
+    .key-box { background: #0f172a; padding: 12px; border-radius: 6px; border: 1px dashed #38bdf8; word-break: break-all; color: #38bdf8; font-family: monospace; margin: 12px 0; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>🌐 IDCool v2 ServiceWeb - M2M Node Controller</h1>
+
+  <div class="grid">
+    <div class="card">
+      <h2>🔑 새 엣지 노드 발급</h2>
+      <label>소속 시설 선택</label>
+      <select id="facSelect">
+        <option value="">시설 목록 불러오는 중...</option>
+      </select>
+
+      <label>노드 식별 코드 (Unique)</label>
+      <input type="text" id="nodeCode" placeholder="예: NODE_FACILITY_D" />
+
+      <label>노드 명칭</label>
+      <input type="text" id="nodeName" placeholder="예: 제1시설 공조제어 노드" />
+
+      <button onclick="createNode()">API Key 발급 및 노드 등록</button>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="margin: 0;">📡 등록된 시스템 노드 현황</h2>
+        <button style="width: auto; margin: 0; padding: 6px 12px;" onclick="loadNodes()">새로고침</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>소속 시설명</th>
+            <th>노드 코드</th>
+            <th>명칭</th>
+            <th>상태</th>
+            <th>최근 신호</th>
+            <th>관리</th>
+          </tr>
+        </thead>
+        <tbody id="nodeTableBody">
+          <tr><td colspan="7" style="text-align: center; color: #64748b;">데이터를 불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="keyModal">
+    <div class="modal">
+      <h3 style="margin-top: 0; color: #38bdf8;">⚠️ API Key 발급 완료</h3>
+      <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+        발급된 원문 API Key는 보안상 <strong>지금 단 한 번만</strong> 표시됩니다. 창을 닫으면 다시 조회할 수 없으므로 엣지 노드의 <code>.env</code> 파일에 복사해 두세요.
+      </p>
+      <div class="key-box" id="modalApiKey"></div>
+      <button onclick="closeModal()">복사 후 창 닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let cachedFacilities = [];
+
+    async function loadFacilities() {
+      try {
+        const res = await fetch('/api/v1/serviceweb/admin/nodes/facilities');
+        const json = await res.json();
+        cachedFacilities = json.data || [];
+        const select = document.getElementById('facSelect');
+        select.innerHTML = '';
+
+        if (cachedFacilities.length === 0) {
+          select.innerHTML = '<option value="">등록된 시설이 없습니다</option>';
+          return;
+        }
+
+        cachedFacilities.forEach(fac => {
+          const opt = document.createElement('option');
+          opt.value = fac.id;
+          opt.textContent = fac.name;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("시설 목록 로드 실패:", err);
+      }
+    }
+
+    async function loadNodes() {
+      try {
+        const res = await fetch('/api/v1/serviceweb/admin/nodes');
+        const json = await res.json();
+        const tbody = document.getElementById('nodeTableBody');
+        tbody.innerHTML = '';
+
+        if (!json.data || json.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b;">등록된 노드가 없습니다.</td></tr>';
+          return;
+        }
+
+        json.data.forEach(node => {
+          const tr = document.createElement('tr');
+          const isOnline = node.status === 'ONLINE';
+          tr.innerHTML = `
+            <td>${node.id}</td>
+            <td><strong>${node.facility_name || ('시설 #' + node.facility_id)}</strong></td>
+            <td><strong>${node.node_code}</strong></td>
+            <td>${node.node_name}</td>
+            <td><span class="badge ${isOnline ? 'online' : 'offline'}">${node.status}</span></td>
+            <td style="font-size: 12px; color: #94a3b8;">${node.last_heartbeat_at ? new Date(node.last_heartbeat_at).toLocaleTimeString() : '-'}</td>
+            <td>
+              <button class="btn-action btn-edit" onclick="editNode(${node.id}, '${node.node_name}')">수정</button>
+              <button class="btn-action btn-rotate" onclick="rotateKey(${node.id})">재발급</button>
+              <button class="btn-action btn-del" onclick="deleteNode(${node.id})">삭제</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("노드 로드 실패:", err);
+      }
+    }
+
+    async function editNode(nodeId, currentName) {
+      const newName = prompt("변경할 노드 명칭을 입력하세요:", currentName);
+      if (newName === null || newName.trim() === "" || newName === currentName) return;
+
+      const res = await fetch(`/api/v1/serviceweb/admin/nodes/${nodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node_name: newName.trim() })
+      });
+      if (res.ok) {
+        loadNodes();
+      } else {
+        alert("수정 실패");
+      }
+    }
+
+    async function createNode() {
+      const facility_id = parseInt(document.getElementById('facSelect').value);
+      const node_code = document.getElementById('nodeCode').value.trim();
+      const node_name = document.getElementById('nodeName').value.trim();
+
+      if (!facility_id || !node_code || !node_name) {
+        alert("모든 필드를 입력하세요.");
+        return;
+      }
+
+      const res = await fetch('/api/v1/serviceweb/admin/nodes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ facility_id, node_code, node_name })
+      });
+
+      const json = await res.json();
+      if (res.ok) {
+        showKey(json.api_key);
+        document.getElementById('nodeCode').value = '';
+        document.getElementById('nodeName').value = '';
+        loadNodes();
+      } else {
+        alert(json.detail || "생성 실패");
+      }
+    }
+
+    async function rotateKey(nodeId) {
+      if (!confirm("키를 재발급하면 기존 키로 연결된 통신은 즉시 차단됩니다. 진행하시겠습니까?")) return;
+      const res = await fetch(`/api/v1/serviceweb/admin/nodes/${nodeId}/rotate-key`, { method: 'POST' });
+      const json = await res.json();
+      if (res.ok) {
+        showKey(json.new_api_key);
+      } else {
+        alert(json.detail || "재발급 실패");
+      }
+    }
+
+    async function deleteNode(nodeId) {
+      if (!confirm("정말 이 노드를 삭제하시겠습니까? 관련 통신과 인증이 영구 차단됩니다.")) return;
+      const res = await fetch(`/api/v1/serviceweb/admin/nodes/${nodeId}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadNodes();
+      } else {
+        alert("삭제 실패");
+      }
+    }
+
+    function showKey(key) {
+      document.getElementById('modalApiKey').innerText = key;
+      document.getElementById('keyModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      navigator.clipboard.writeText(document.getElementById('modalApiKey').innerText);
+      document.getElementById('keyModal').style.display = 'none';
+      alert("키가 클립보드에 복사되었습니다.");
+    }
+
+    loadFacilities();
+    loadNodes();
+    setInterval(loadNodes, 3000);
+  </script>
+</body>
+</html>
+
+======================================================================
+■ File : update.bat
+■ Path : C:\Users\ynham\Desktop\idcV2\update.bat
+======================================================================
+
+
+
