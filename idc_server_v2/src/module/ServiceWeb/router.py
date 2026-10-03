@@ -26,7 +26,7 @@ router.include_router(board_router)
 router.include_router(chart_router)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UI_HTML_PATH = os.path.join(BASE_DIR, "webui", "index.html")
+UI_HTML_PATH = os.path.join(BASE_DIR, "webui", "webservice", "dist", "index.html")
 
 @router.get("/dashboard", include_in_schema=False)
 async def serve_dashboard():
