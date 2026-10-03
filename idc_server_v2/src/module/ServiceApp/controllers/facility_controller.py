@@ -2,6 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
+from fastapi import WebSocket, WebSocketDisconnect
+from src.module.CServer.controllers.sys_auth_controller import stream_bridge
+import json
 
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
@@ -94,3 +97,22 @@ async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db
             } for r in rooms
         ]
     }
+
+@router.websocket("/data/get/{facility_id}")
+async def app_facility_monitoring_ws(websocket: WebSocket, facility_id: int):
+    await websocket.accept()
+    if facility_id not in stream_bridge.client_Listeners:
+        stream_bridge.client_Listeners[facility_id] = set()
+    stream_bridge.client_Listeners[facility_id].add(websocket)
+
+    # 접속 즉시 마지막 캐싱된 상태가 있다면 1회 전송
+    if facility_id in stream_bridge.latest_data:
+        await websocket.send_text(json.dumps({"datas": stream_bridge.latest_data[facility_id]}))
+
+    try:
+        while True:
+            # 앱에서 보낸 원격 제어 명령(WR)을 해당 시설 FServer로 전달
+            cmd_text = await websocket.receive_text()
+            await stream_bridge.send_command_to_fserver(facility_id, cmd_text)
+    except WebSocketDisconnect:
+        stream_bridge.client_Listeners[facility_id].discard(websocket)
