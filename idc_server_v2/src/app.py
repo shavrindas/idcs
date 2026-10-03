@@ -51,7 +51,9 @@ def root():
     return {"message": "Server is running"}
 
 
-
-WEBUI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "module", "ServiceWeb", "webui")
-if os.path.exists(WEBUI_DIR):
-    app.mount("/webui", StaticFiles(directory=WEBUI_DIR, html=True), name="webui")
+WEBUI_DIST_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "module", "ServiceWeb", "webui", "webservice", "dist"
+)
+if os.path.exists(WEBUI_DIST_DIR):
+    app.mount("/webui", StaticFiles(directory=WEBUI_DIST_DIR, html=True), name="webui")
