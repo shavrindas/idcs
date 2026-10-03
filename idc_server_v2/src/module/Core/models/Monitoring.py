@@ -153,7 +153,7 @@ class ChartGroup(Base):
     facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
     room_id = Column(Integer, ForeignKey("facilities_room_table.id", ondelete="CASCADE"), nullable=False)
     group_name = Column(String(150), nullable=False)
-    data_type = Column(String(50), nullable=False)
+    # data_type = Column(String(50), nullable=False)  # 삭제됨 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
