@@ -1,19 +1,20 @@
 // ===============================================================
-// 경로: lib/pages/indices/alarm_settings_page.dart
-// 명세: 알람이 어떻게 울릴지(소리/진동/잠금화면/다시 알림) 설정하는 화면
+// 경로: lib/pages/indices/settings_page.dart
+// 명세: 앱 설정 한 곳 — 화면 테마와 알람 동작
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/theme_controller.dart';
 
-class AlarmSettingsPage extends StatefulWidget {
-  const AlarmSettingsPage({super.key});
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
 
   @override
-  State<AlarmSettingsPage> createState() => _AlarmSettingsPageState();
+  State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _AlarmSettingsPageState extends State<AlarmSettingsPage> {
+class _SettingsPageState extends State<SettingsPage> {
   AlarmSettings _settings = const AlarmSettings();
   bool _isLoading = true;
 
@@ -40,12 +41,40 @@ class _AlarmSettingsPageState extends State<AlarmSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('알람 설정')),
+      appBar: AppBar(title: const Text('설정')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                ValueListenableBuilder<ThemeMode>(
+                  valueListenable: ThemeController.mode,
+                  builder: (context, mode, _) => _SettingsCard(
+                    title: '화면 테마',
+                    children: ThemeMode.values.map((m) {
+                      final selected = mode == m;
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        onTap: () => ThemeController.set(m),
+                        leading: Icon(
+                          selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+                          color: selected ? context.colors.primary : context.colors.textSecondary,
+                          size: 20,
+                        ),
+                        title: Text(
+                          ThemeController.labelOf(m),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            color: context.colors.textPrimary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 _SettingsCard(
                   title: '알림 방식',
                   children: [
@@ -87,6 +116,7 @@ class _AlarmSettingsPageState extends State<AlarmSettingsPage> {
                       children: AlarmSettings.repeatOptions.map((minutes) {
                         final selected = _settings.repeatMinutes == minutes;
                         return ChoiceChip(
+                          showCheckmark: false,
                           label: Text(minutes == 0 ? '없음' : '$minutes분'),
                           selected: selected,
                           onSelected: (_) => _update(_settings.copyWith(repeatMinutes: minutes)),

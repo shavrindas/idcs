@@ -112,7 +112,7 @@ class ChatRoomListBox extends StatelessWidget {
                 ? CircleAvatar(
                     radius: 13,
                     backgroundColor: context.colors.error,
-                    child: Text('${room['unread_count']}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                    child: Text('${room['unread_count']}', style: TextStyle(color: context.colors.onPrimary, fontSize: 12, fontWeight: FontWeight.w700)),
                   )
                 : null,
             onTap: () => onRoomTapped(room['room_id']),
