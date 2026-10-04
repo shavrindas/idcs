@@ -8,6 +8,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import jwt
+import os
 import hashlib
 import random
 from datetime import datetime, timedelta, timezone
@@ -200,4 +201,19 @@ async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
         "name": user.name,
         "phone_number": user.phone_number or "",
         "linked_providers": providers_result.scalars().all()
+    }
+
+@router.get("/debug-config", status_code=status.HTTP_200_OK)
+async def get_web_debug_config():
+    """웹 로그인 화면 디버그 계정 주입 설정 반환"""
+    enabled = os.getenv("ENABLE_SERVICE_WEB_DEBUG", "false").strip().lower() == "true"
+    if not enabled:
+        return {"enabled": False}
+
+    return {
+        "enabled": True,
+        "admin_email": os.getenv("WEB_DEBUG_ADMIN", "").strip(),
+        "admin_pass": os.getenv("WEB_DEBUG_ADMINPASS", "").strip(),
+        "user_email": os.getenv("WEB_DEBUG_USER", "").strip(),
+        "user_pass": os.getenv("WEB_DEBUG_USERPASS", "").strip(),
     }
