@@ -1,5 +1,5 @@
 # ===============================================================
-# 경로 : src/controllers/board/board_controller.py
+# 경로 : src/module/ServiceWeb/controllers/board_controller.py
 # 명세 : 보드(게시판) 관련 API 컨트롤러 (현재 스코프: 리스트 조회)
 # ===============================================================
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, UploadFile, File
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from config.db import get_db
+from src.config.database import get_db
 # ===============================================================
 
 router = APIRouter(prefix="/board", tags=["Board"])

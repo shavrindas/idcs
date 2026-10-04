@@ -249,3 +249,36 @@ async def get_chart_data(
         "meta": {"facility_id": facility_id, "room_id": room_id, "scale": scale, "time_range": time_range, "reference_time": latest_time.isoformat()},
         "data": {"datasets": list(datasets_map.values()), "alarms": alarms}
     }
+
+
+
+
+
+mapping_router = APIRouter(prefix="/chart-mapping", tags=["ServiceApp - Chart Mapping"])
+
+@mapping_router.get("/roles/{facility_id}/{room_id}")
+async def get_point_roles_for_app(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
+    """앱 차트 화면에서 포인트 롤 이름 매칭을 위한 조회 전용 API"""
+    query = text("""
+        SELECT id as role_id, role_name, target_value
+        FROM point_role_table
+        WHERE facility_id = :facility_id AND room_id = :room_id AND is_current = TRUE
+    """)
+    result = await db.execute(query, {"facility_id": facility_id, "room_id": room_id})
+    roles = [dict(row._mapping) for row in result.fetchall()]
+    return {"status": "success", "roles": roles}
+
+@mapping_router.get("/groups/{facility_id}/{room_id}")
+async def get_chart_groups_for_app(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
+    """앱 차트 화면에서 웹 어드민이 생성한 차트 그룹 목록을 불러오는 조회 전용 API"""
+    query = text("""
+        SELECT cg.id as group_id, cg.group_name,
+               COALESCE(array_agg(cgm.role_id) FILTER (WHERE cgm.role_id IS NOT NULL), '{}') as role_ids
+        FROM chart_group_table cg
+        LEFT JOIN chart_group_mapping cgm ON cg.id = cgm.group_id
+        WHERE cg.facility_id = :facility_id AND cg.room_id = :room_id
+        GROUP BY cg.id
+    """)
+    result = await db.execute(query, {"facility_id": facility_id, "room_id": room_id})
+    groups = [dict(row._mapping) for row in result.fetchall()]
+    return {"status": "success", "groups": groups}
