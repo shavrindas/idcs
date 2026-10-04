@@ -157,4 +157,13 @@ export const apiService = {
     if (!res.ok) throw new Error('노드 삭제 실패');
     return res.json();
   },
+  getDebugConfig: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/debug-config`);
+      if (!res.ok) return { enabled: false };
+      return res.json();
+    } catch {
+      return { enabled: false };
+    }
+  },
 };

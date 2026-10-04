@@ -1,24 +1,38 @@
-import React, { useState } from 'react';
+// 경로: src/module/ServiceWeb/webui/webservice/src/pages/LoginPage.tsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { Monogram, Wordmark } from '../components/Brand';
+
+interface DebugConfig {
+  enabled: boolean;
+  admin_email?: string;
+  admin_pass?: string;
+  user_email?: string;
+  user_pass?: string;
+}
 
 export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDevTools, setShowDevTools] = useState(false);
+  const [debugConfig, setDebugConfig] = useState<DebugConfig>({ enabled: false });
   const navigate = useNavigate();
 
-  // [개발용] 관리자 계정 주입
+  useEffect(() => {
+    apiService.getDebugConfig().then(cfg => setDebugConfig(cfg));
+  }, []);
+
+  // [.env 연동] 관리자 계정 주입
   const injectAdmin = () => {
-    setEmail('admin1@system.com');
-    setPassword('hashed_password');
+    setEmail(debugConfig.admin_email || '');
+    setPassword(debugConfig.admin_pass || '');
   };
 
-  // [개발용] 사용자 계정 주입
+  // [.env 연동] 사용자 계정 주입
   const injectUser = () => {
-    setEmail('user_a@test.com');
-    setPassword('hashed_password');
+    setEmail(debugConfig.user_email || '');
+    setPassword(debugConfig.user_pass || '');
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -36,7 +50,6 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
 
       onLogin(user);
 
-      // 권한별 리다이렉트
       if (user.role === 'ADMIN' || user.role === 'DEVELOPER') {
         navigate('/main');
       } else {
@@ -78,27 +91,29 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
         </button>
       </form>
 
-      {/* 개발용 계정 주입 도구 (기본 접힘) */}
-      <div style={{ width: 320 }}>
-        <button
-          type="button"
-          onClick={() => setShowDevTools(v => !v)}
-          className="btn btn-ghost btn-sm"
-          style={{ width: '100%' }}
-        >
-          {showDevTools ? '▲' : '▼'} 개발자 도구 (DEBUG 전용)
-        </button>
-        {showDevTools && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button type="button" onClick={injectAdmin} className="btn btn-outline btn-sm" style={{ flex: 1 }}>
-              관리자 계정 주입
-            </button>
-            <button type="button" onClick={injectUser} className="btn btn-outline btn-sm" style={{ flex: 1 }}>
-              사용자 계정 주입
-            </button>
-          </div>
-        )}
-      </div>
+      {/* ENABLE_SERVICE_WEB_DEBUG=true 일 때만 개발자 도구 노출 */}
+      {debugConfig.enabled && (
+        <div style={{ width: 320 }}>
+          <button
+            type="button"
+            onClick={() => setShowDevTools(v => !v)}
+            className="btn btn-ghost btn-sm"
+            style={{ width: '100%' }}
+          >
+            {showDevTools ? '▲' : '▼'} 개발자 도구 (DEBUG 전용)
+          </button>
+          {showDevTools && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button type="button" onClick={injectAdmin} className="btn btn-outline btn-sm" style={{ flex: 1 }}>
+                관리자 계정 주입
+              </button>
+              <button type="button" onClick={injectUser} className="btn btn-outline btn-sm" style={{ flex: 1 }}>
+                사용자 계정 주입
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
