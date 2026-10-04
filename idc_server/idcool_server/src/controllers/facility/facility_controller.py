@@ -11,7 +11,7 @@ from config.db import get_db
 from src.models.User import User, UserRole
 from src.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.models.Monitoring import PointRole, RemoteControlLog, BoolLog, TemperatureNumericalLog, EquipmentStaticLog
-from src.models.Chat import ChatRoom, ChatParticipant
+from src.models.Chat import ChatRoom, ChatParticipant, ChatRoomType
 import src.services.alarm as alarm_services
 import json
 import re
@@ -74,16 +74,32 @@ async def register_facility(user_id: int, req: RegisterFacilityRequest, db: Asyn
     # 3. 매핑 추가
     new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
     db.add(new_mapping)
-    await db.commit()
 
-    # 4. 해당하는 채팅방 가져오기
-    #chatroom_result = await db.excute(select(ChatRoom).where(ChatRoom.facility_id == facility.id))
+    # 4. Join the facility's chat room.
+    # This used to construct ChatRoom(facility_id=..., user_id=...), but ChatRoom has no
+    # user_id column and room_name is NOT NULL, so it raised and the endpoint answered 500
+    # even though the facility mapping above had already been committed. Membership is
+    # represented by ChatParticipant, not by creating a room.
+    room_result = await db.execute(
+        select(ChatRoom).where(
+            ChatRoom.facility_id == facility.id,
+            ChatRoom.type == ChatRoomType.FACILITY,
+        )
+    )
+    room = room_result.scalars().first()
 
-    # 5. 유저 채팅방 입장
-    
+    if room:
+        participant_result = await db.execute(
+            select(ChatParticipant).where(
+                ChatParticipant.room_id == room.room_id,
+                ChatParticipant.user_id == user_id,
+            )
+        )
+        if not participant_result.scalars().first():
+            db.add(ChatParticipant(room_id=room.room_id, user_id=user_id))
 
-    new_mapping = ChatRoom(facility_id=facility.id, user_id=user_id)
-    db.add(new_mapping)
+    # Commit the facility mapping and the chat room join together so a failure in either
+    # one does not leave the user half-registered.
     await db.commit()
 
 
