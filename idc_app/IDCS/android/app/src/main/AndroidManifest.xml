@@ -13,6 +13,7 @@
 
     <application
         android:label="idcs"
+        android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
