@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:idcs/services/common/find_pw/auth_api_service.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class FindPwPage extends StatefulWidget {
   const FindPwPage({super.key});
@@ -28,6 +29,9 @@ class _FindPwPageState extends State<FindPwPage> {
   final _codeController = TextEditingController();
   final _pwController = TextEditingController();
   final _pwConfirmController = TextEditingController();
+
+  bool _obscurePw = true;
+  bool _obscurePwConfirm = true;
 
   // 타이머 관련
   Timer? _timer;
@@ -124,125 +128,243 @@ class _FindPwPageState extends State<FindPwPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('비밀번호 찾기 페이지')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Text('비밀번호 재설정', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 6),
+              Text(
+                '이메일 인증 후 새 비밀번호를 설정해주세요.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 28),
+
+              // Step #1: 이메일 입력
+              _buildStepCard(
+                step: 1,
+                title: '이메일 인증',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildInputRow(
+                      icon: Icons.mail_outline_rounded,
+                      hint: '이메일',
+                      controller: _emailController,
+                      isEnabled: _currentStep == 1,
+                    ),
+                    const SizedBox(height: 14),
+                    ElevatedButton(
+                      onPressed: _currentStep == 1 ? _handleEmailSubmit : null,
+                      child: const Text('인증 코드 받기'),
+                    ),
+                    if (_box1Message.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _buildMessage(_box1Message),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Step #2: 코드 입력
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: _currentStep >= 2
+                    ? _buildStepCard(
+                        step: 2,
+                        title: '인증 코드 입력',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildInputRow(
+                              icon: Icons.pin_outlined,
+                              hint: '인증 코드',
+                              controller: _codeController,
+                              isEnabled: _currentStep == 2,
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Icon(Icons.timer_outlined, size: 16, color: context.colors.textSecondary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '남은 시간 ${_formatTime(_remainingSeconds)}',
+                                  style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            ElevatedButton(
+                              onPressed: _currentStep == 2 ? _handleCodeSubmit : null,
+                              child: const Text('코드 확인'),
+                            ),
+                            if (_box2Message.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              _buildMessage(_box2Message),
+                            ],
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              SizedBox(height: _currentStep >= 2 ? 16 : 0),
+
+              // Step #3: 새 비밀번호 입력
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: _currentStep >= 3
+                    ? _buildStepCard(
+                        step: 3,
+                        title: '새 비밀번호 설정',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildInputRow(
+                              icon: Icons.lock_outline_rounded,
+                              hint: '새 비밀번호',
+                              controller: _pwController,
+                              isObscure: _obscurePw,
+                              onToggleObscure: () => setState(() => _obscurePw = !_obscurePw),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildInputRow(
+                              icon: Icons.lock_outline_rounded,
+                              hint: '비밀번호 재입력',
+                              controller: _pwConfirmController,
+                              isObscure: _obscurePwConfirm,
+                              onToggleObscure: () => setState(() => _obscurePwConfirm = !_obscurePwConfirm),
+                            ),
+                            if (_box3Message.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              _buildMessage(_box3Message),
+                            ],
+                            const SizedBox(height: 14),
+                            ElevatedButton(
+                              onPressed: _handlePasswordReset,
+                              child: const Text('비밀번호 재설정'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 단계 카드 공통 UI
+  Widget _buildStepCard({required int step, required String title, required Widget child}) {
+    final bool isActive = step == _currentStep;
+    final bool isDone = step < _currentStep;
+
+    return Container(
+      padding: const EdgeInsets.all(18.0),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isActive ? context.colors.primary : context.colors.outline, width: isActive ? 1.4 : 1),
+      ),
+      child: Opacity(
+        opacity: isActive || isDone ? 1.0 : 0.5,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1: 이메일 입력
-            _buildBoxContainer(
-              isActive: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildInputRow('이메일 입력', _emailController, isEnabled: _currentStep == 1),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _currentStep == 1 ? _handleEmailSubmit : null,
-                    child: const Text('버튼(submit) 연동 계정 확인하기'),
-                  ),
-                  if (_box1Message.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(_box1Message, style: const TextStyle(color: Colors.purple)),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Box #2: 코드 입력 (AnimatedSize로 Collapse 효과 부여)
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              child: _currentStep >= 2
-                  ? _buildBoxContainer(
-                isActive: _currentStep == 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildInputRow('코드 입력', _codeController, isEnabled: _currentStep == 2),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _currentStep == 2 ? _handleCodeSubmit : null,
-                      child: const Text('버튼(submit) 입력 코드 확인'),
-                    ),
-                    const SizedBox(height: 8),
-                    Text('남은 시간: ${_formatTime(_remainingSeconds)}',
-                        style: const TextStyle()),
-                    if (_box2Message.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(_box2Message, style: const TextStyle()),
-                      ),
-                  ],
+            Row(
+              children: [
+                _StepBadge(isActive: isActive, isDone: isDone, number: step),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                 ),
-              )
-                  : const SizedBox.shrink(), // 단계가 아니면 보이지 않음
+              ],
             ),
-            SizedBox(height: _currentStep >= 2 ? 16 : 0),
-
-            // Box #3: 새 비밀번호 입력
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              child: _currentStep >= 3
-                  ? _buildBoxContainer(
-                isActive: _currentStep == 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildInputRow('새 비밀번호', _pwController, isObscure: true),
-                    const SizedBox(height: 8),
-                    _buildInputRow('재입력', _pwConfirmController, isObscure: true),
-                    const SizedBox(height: 12),
-                    if (_box3Message.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text(_box3Message, style: const TextStyle()),
-                      ),
-                    ElevatedButton(
-                      onPressed: _handlePasswordReset,
-                      child: const Text('버튼(submit) 비밀번호 다시 설정하기'),
-                    ),
-                  ],
-                ),
-              )
-                  : const SizedBox.shrink(),
-            ),
+            const SizedBox(height: 14),
+            child,
           ],
         ),
       ),
     );
   }
 
-  // 공통 UI 빌더 헬퍼
-  Widget _buildBoxContainer({required Widget child, required bool isActive}) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(),
-      ),
-      padding: const EdgeInsets.all(12.0),
-      // 비활성 박스는 반투명 처리
-      child: Opacity(opacity: isActive ? 1.0 : 0.5, child: child),
+  Widget _buildMessage(String message) {
+    return Text(
+      message,
+      style: TextStyle(color: context.colors.primary, fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
     );
   }
 
-  Widget _buildInputRow(String label, TextEditingController controller, {bool isObscure = false, bool isEnabled = true}) {
-    return Row(
-      children: [
-        SizedBox(width: 80, child: Text(label, style: const TextStyle(fontSize: 13))),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            obscureText: isObscure,
-            enabled: isEnabled,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              isDense: true,
+  Widget _buildInputRow({
+    required IconData icon,
+    required String hint,
+    required TextEditingController controller,
+    bool isEnabled = true,
+    bool? isObscure,
+    VoidCallback? onToggleObscure,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isObscure ?? false,
+      enabled: isEnabled,
+      decoration: InputDecoration(
+        labelText: hint,
+        prefixIcon: Icon(icon),
+        suffixIcon: onToggleObscure == null
+            ? null
+            : IconButton(
+              tooltip: '비밀번호 표시',
+                icon: Icon(
+                  isObscure! ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  color: context.colors.textSecondary,
+                ),
+                onPressed: onToggleObscure,
+              ),
+      ),
+    );
+  }
+}
+
+class _StepBadge extends StatelessWidget {
+  final bool isActive;
+  final bool isDone;
+  final int number;
+
+  const _StepBadge({required this.isActive, required this.isDone, required this.number});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color background = isDone
+        ? context.colors.primary
+        : isActive
+            ? context.colors.primary
+            : context.colors.outline;
+
+    return Container(
+      width: 24,
+      height: 24,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+      child: isDone
+          ? Icon(Icons.check, size: 14, color: context.colors.onPrimary)
+          : Text(
+              '$number',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isActive ? context.colors.onPrimary : context.colors.textSecondary,
+              ),
             ),
-          ),
-        ),
-      ],
     );
   }
 }

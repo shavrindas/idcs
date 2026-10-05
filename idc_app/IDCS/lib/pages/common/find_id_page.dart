@@ -51,19 +51,29 @@ class _FindIdPageState extends State<FindIdPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('아이디 찾기 페이지')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            FindIdBox(
-              emailController: _emailController,
-              onSubmit: _handleCheckAccount,
-              resultMessage: _resultMessage,
-              isExpanded: _isExpanded,
-            ),
-          ],
+      appBar: AppBar(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Text('아이디 찾기', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 6),
+              Text(
+                '가입하신 이메일을 입력하면 계정 정보를 확인해드려요.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 32),
+              FindIdBox(
+                emailController: _emailController,
+                onSubmit: _handleCheckAccount,
+                resultMessage: _resultMessage,
+                isExpanded: _isExpanded,
+              ),
+            ],
+          ),
         ),
       ),
     );

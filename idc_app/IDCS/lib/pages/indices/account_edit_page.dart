@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:idcs/components/indices/global_nav_box.dart';
+import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
 import 'package:idcs/services/common/user_api_service.dart';
+import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/main.dart'; // AuthService 접근용
 
 class PersonalPage extends StatefulWidget {
   final String userId;
@@ -13,15 +15,30 @@ class PersonalPage extends StatefulWidget {
 }
 
 class _PersonalPageState extends State<PersonalPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _currentPwController = TextEditingController();
   final TextEditingController _newPwController = TextEditingController();
 
   bool _isAdmin = false;
   bool _isLoading = true;
   List<dynamic> _linkedProviders = [];
+
+  String _name = '';
+  String _phone = '';
+
+  /// 소셜로만 가입한 계정은 비밀번호가 없어 변경 UI를 숨긴다.
+  bool _hasPassword = true;
   String _pwCollapseMessage = '';
+
+  /// 이 계정이 어떤 방식으로 로그인하는지. 이미 로그인한 사용자에게
+  /// '연동하기'를 권하는 대신 현재 상태만 보여준다.
+  String get _loginMethod {
+    final providers = _linkedProviders
+        .map((p) => p.toString())
+        .map((p) => p.isEmpty ? p : '${p[0].toUpperCase()}${p.substring(1)}')
+        .toList();
+    if (providers.isEmpty) return '이메일';
+    return _hasPassword ? '이메일 · ${providers.join(' · ')}' : providers.join(' · ');
+  }
 
   @override
   void initState() {
@@ -31,8 +48,6 @@ class _PersonalPageState extends State<PersonalPage> {
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
     _currentPwController.dispose();
     _newPwController.dispose();
     super.dispose();
@@ -48,9 +63,10 @@ class _PersonalPageState extends State<PersonalPage> {
       if (mounted) {
         setState(() {
           _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
-          _nameController.text = profile['name'];
-          _phoneController.text = profile['phone_number'];
+          _name = profile['name'] ?? '';
+          _phone = profile['phone_number'] ?? '';
           _linkedProviders = profile['linked_providers'] ?? [];
+          _hasPassword = profile['has_password'] ?? true;
         });
       }
     } catch (e) {
@@ -60,22 +76,30 @@ class _PersonalPageState extends State<PersonalPage> {
     }
   }
 
-  Future<void> _handleUpdateName() async {
-    try {
-      final msg = await UserApiService.updateName(widget.userId, _nameController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-    }
-  }
+  /// 수정 모드에서 저장. 실제로 바뀐 값만 서버에 보낸다.
+  /// 실패하면 예외를 그대로 올려 수정 모드가 닫히지 않게 한다.
+  Future<void> _handleSaveProfile(String name, String phone) async {
+    final List<String> messages = [];
 
-  Future<void> _handleUpdatePhone() async {
-    try {
-      final msg = await UserApiService.updatePhone(widget.userId, _phoneController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    if (name != _name) {
+      messages.add(await UserApiService.updateName(widget.userId, name));
     }
+    if (phone != _phone) {
+      messages.add(await UserApiService.updatePhone(widget.userId, phone));
+    }
+
+    if (!mounted) return;
+
+    if (messages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('변경된 내용이 없습니다.')));
+      return;
+    }
+
+    setState(() {
+      _name = name;
+      _phone = phone;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(messages.join(' / '))));
   }
 
   Future<void> _handleUpdatePassword() async {
@@ -93,6 +117,7 @@ class _PersonalPageState extends State<PersonalPage> {
 
     try {
       final msg = await UserApiService.updatePassword(widget.userId, currentPw, newPw);
+      if (!mounted) return;
       setState(() {
         _pwCollapseMessage = '성공적으로 변경되었습니다.';
         _currentPwController.clear();
@@ -104,19 +129,47 @@ class _PersonalPageState extends State<PersonalPage> {
     }
   }
 
-  Future<void> _handleSocialLink(String provider) async {
-    if (_linkedProviders.contains(provider)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미 $provider 계정과 연동되어 있습니다.')));
-      return;
+  Future<void> _handleLogout() async {
+    await AuthService.setUserId(null);
+    if (!mounted) return;
+    context.go('/login');
+  }
+
+  Future<void> _handleWithdraw() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('정말 탈퇴하시겠습니까?'),
+        content: const Text('계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
+            child: const Text('탈퇴하기'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final msg = await UserApiService.withdraw(widget.userId);
+      await AuthService.setUserId(null);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      context.go('/login');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     }
-    // TODO: 소셜 로그인 SDK 호출 후 연동 API(AuthApiService.linkSocial 등) 트리거 로직 작성
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$provider 연동은 백엔드 /link-social API로 연결해야 합니다.')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('계정 수정 페이지')),
+      appBar: AppBar(title: const Text('내 정보')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -124,43 +177,134 @@ class _PersonalPageState extends State<PersonalPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Box #1
-            GlobalNavigationBox(
-              userId: widget.userId,
-              isAdmin: _isAdmin,
-              onStateInitialize: _loadInitialData,
+            // 계정 요약 + 로그아웃
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.colors.outline),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: context.colors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.person_rounded, color: context.colors.primary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _name.isEmpty ? '이름 없음' : _name,
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: context.colors.textPrimary),
+                        ),
+                        Text('ID ${widget.userId}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  TextButton(onPressed: _handleLogout, child: const Text('로그아웃')),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 
-            // Box #2
-            UsernameEditBox(
-              controller: _nameController,
-              onSubmit: _handleUpdateName,
+            // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
+            _LinkCard(
+              title: '설정',
+              subtitle: '화면 테마, 알람 소리·진동',
+              icon: Icons.settings_outlined,
+              onPressed: () => context.push('/settings'),
             ),
             const SizedBox(height: 16),
 
-            // Box #3
-            PhoneEditBox(
-              controller: _phoneController,
-              onSubmit: _handleUpdatePhone,
+            if (_isAdmin) ...[
+              _LinkCard(
+                title: '통합 소요 기록',
+                icon: Icons.assignment_outlined,
+                onPressed: () => context.push('/total_board/${widget.userId}'),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // 이름·전화번호·로그인 방식. 평소엔 읽기 전용, 수정 버튼으로 연다.
+            ProfileInfoBox(
+              name: _name,
+              phone: _phone,
+              loginMethod: _loginMethod,
+              onSave: _handleSaveProfile,
             ),
             const SizedBox(height: 16),
 
-            // Box #4
-            PasswordEditBox(
-              currentPwController: _currentPwController,
-              newPwController: _newPwController,
-              collapseMessage: _pwCollapseMessage,
-              onSubmit: _handleUpdatePassword,
-            ),
-            const SizedBox(height: 16),
+            // 소셜로만 가입한 계정은 비밀번호 자체가 없으므로 숨긴다
+            if (_hasPassword) ...[
+              PasswordChangeBox(
+                currentPwController: _currentPwController,
+                newPwController: _newPwController,
+                collapseMessage: _pwCollapseMessage,
+                onSubmit: _handleUpdatePassword,
+              ),
+              const SizedBox(height: 16),
+            ],
 
-            // Box #5
-            SocialLinkBox(
-              linkedProviders: _linkedProviders,
-              onLinkPressed: _handleSocialLink,
-            ),
+            WithdrawBox(onWithdraw: _handleWithdraw),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 다른 화면으로 넘어가는 줄 카드 (설정, 관리자 전용 통합 소요 기록 등)
+class _LinkCard extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _LinkCard({required this.title, this.subtitle, required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.colors.surface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: context.colors.outline),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: context.colors.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(subtitle!, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary, size: 20),
+            ],
+          ),
         ),
       ),
     );

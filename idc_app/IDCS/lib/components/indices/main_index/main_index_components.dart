@@ -1,38 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
-
-
-/// Box #2: 통합 시설 박스 (빈 박스로 임시 편성)
+/// Box #2: 통합 시설 박스
 class IntegratedFacilityBox extends StatelessWidget {
   final List<dynamic> facilities;
   final Function(int) onFacilityPressed;
+  final String label;
+  final String emptyMessage;
 
   const IntegratedFacilityBox({
-    super.key, required this.facilities, required this.onFacilityPressed
+    super.key,
+    required this.facilities,
+    required this.onFacilityPressed,
+    this.label = '내 시설',
+    this.emptyMessage = '조회할 수 있는 시설이 없습니다.',
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('통합 시설 박스', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          if (facilities.isEmpty)
-            const Center(child: Text('조회할 수 있는 시설이 없습니다.', style: TextStyle(color: Colors.grey))),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // An empty label means the screen already names this section in its app bar.
+        if (label.isNotEmpty) ...[
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.4),
+          ),
+          const SizedBox(height: 10),
+        ],
 
-          // Grid 형태로 카드 배치
+        if (facilities.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            decoration: BoxDecoration(
+              color: context.colors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: context.colors.outline),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.domain_disabled_outlined, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
+                const SizedBox(height: 8),
+                Text(emptyMessage, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+              ],
+            ),
+          )
+        else
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // 2열 배치
+              crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 2.5, // 카드 비율
+              childAspectRatio: 2.5,
             ),
             itemCount: facilities.length,
             itemBuilder: (context, index) {
@@ -40,32 +64,49 @@ class IntegratedFacilityBox extends StatelessWidget {
               // TODO: 알람 발생 여부는 추후 백엔드 데이터에 맞춰 실제 필드로 교체
               final bool hasAlarm = index % 2 == 0; // 임시: 짝수 인덱스에만 알람 표시
 
-              return InkWell(
-                onTap: () => onFacilityPressed(fac['id']),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Stack(
-                    children: [
-                      Center(child: Text(fac['name'], textAlign: TextAlign.center)),
-                      if (hasAlarm) // 알람 레드 닷
-                        Positioned(
-                          right: 8, top: 8,
-                          child: Container(
-                            width: 10, height: 10,
-                            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              return Material(
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => onFacilityPressed(fac['id']),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: context.colors.outline),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Text(
+                            fac['name'],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontWeight: FontWeight.w600, color: context.colors.textPrimary, fontSize: 13),
                           ),
                         ),
-                    ],
+                        if (hasAlarm)
+                          Positioned(
+                            right: 4,
+                            top: 4,
+                            child: Container(
+                              width: 9,
+                              height: 9,
+                              decoration: BoxDecoration(
+                                color: context.colors.error,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: context.colors.surface, width: 1.5),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               );
             },
           ),
-        ],
-      ),
+      ],
     );
   }
 }

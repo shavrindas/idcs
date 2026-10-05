@@ -1,74 +1,55 @@
 // ===============================================================
 // 경로 : lib/pages/common/opening_page.dart
-// 명세 : 오프닝 페이지 (디자인 요소를 제외한 기본 컴포넌트 분할 상태)
+// 명세 : 오프닝 페이지 (스플래시 / 환영 화면)
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../main.dart';
-
-import 'package:idcs/components/common/opening/open_nav.dart';
-import 'package:idcs/components/common/opening/open_inj_static.dart';
-import 'package:idcs/components/common/opening/open_inj_text.dart';
+import '../../theme/app_logo.dart';
 
 class OpeningPage extends StatelessWidget {
-  const OpeningPage({Key? key}) : super(key: key);
+  const OpeningPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('오프닝 페이지'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Box #1: 로그인 페이지 이동
-            NavigationBox(
-              title: '로그인 페이지로 이동',
-              //onPressed: () => Navigator.pushNamed(context, '/login'),
-              onPressed: () => context.push('/login'),
-            ),
-            const SizedBox(height: 16),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 28.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 72),
 
-            // Box #2: 계정 생성 페이지 이동
-            NavigationBox(
-              title: '계정 생성 페이지로 이동',
-              // onPressed: () => Navigator.pushNamed(context, '/signup'),
-              onPressed: () => context.push('/signup'),
-            ),
-            const SizedBox(height: 16),
+              // 브랜드 로고
+              const Center(child: AppMonogram(size: 92)),
+              const SizedBox(height: 28),
 
-            // Box #3: 권한 주입 (admin - ID 1)
-            AuthInjectionBox(
-              title: '권한 주입 계정(admin)',
-              userIdToInject: 1,
-            ),
-            const SizedBox(height: 16),
+              const Center(child: AppWordmark(fontSize: 26)),
+              const SizedBox(height: 10),
+              Text(
+                '냉동창고 실시간 관제 · 모니터링 시스템',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
 
-            // Box #4: 권한 주입 (user - ID 4)
-            AuthInjectionBox(
-              title: '권한 주입 계정(user_4)',
-              userIdToInject: 4,
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 96),
 
-            // Box #5: 권한 주입 (직접 입력)
-            const CustomAuthInjectionBox(),
+              // 주요 액션
+              ElevatedButton(
+                onPressed: () => context.push('/login'),
+                child: const Text('로그인'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push('/signup'),
+                child: const Text('회원가입'),
+              ),
 
-            // Box #6: 시설 관리 페이지 이동
-            NavigationBox(
-              title: '시설 목록 페이지로 이동',
-              // onPressed: () => Navigator.pushNamed(context, '/signup'),
-              onPressed: () => context.push('/facilities_list/${AuthService.getCurrentUserId()}'),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-

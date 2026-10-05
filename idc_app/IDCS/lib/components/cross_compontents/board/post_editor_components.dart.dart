@@ -4,6 +4,9 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 제목 입력 및 이미지 첨부 제어 박스
 class PostInputBox extends StatelessWidget {
@@ -19,26 +22,27 @@ class PostInputBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.outline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextField(
             controller: titleController,
-            decoration: const InputDecoration(
-              labelText: '제목',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
+            decoration: const InputDecoration(labelText: '제목'),
           ),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: OutlinedButton.icon(
               onPressed: onImageAttach,
-              icon: const Icon(Icons.image, size: 18),
+              icon: const Icon(Icons.image_outlined, size: 18),
               label: const Text('이미지 첨부'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
             ),
           ),
         ],
@@ -48,38 +52,62 @@ class PostInputBox extends StatelessWidget {
 }
 
 /// Box #2: 에디터 툴바 및 작성 영역 박스
-class QuillEditorBox extends StatelessWidget {
+///
+/// FocusNode/ScrollController를 build() 안에서 만들면 화면이 다시 그려질 때마다
+/// 새로 생성되어 입력 도중 포커스와 스크롤 위치가 날아간다. State가 들고 있어야 한다.
+class QuillEditorBox extends StatefulWidget {
   final quill.QuillController quillController;
 
   const QuillEditorBox({super.key, required this.quillController});
 
   @override
+  State<QuillEditorBox> createState() => _QuillEditorBoxState();
+}
+
+class _QuillEditorBoxState extends State<QuillEditorBox> {
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.outline),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           // 툴바 영역
           Container(
-            color: Colors.grey.shade100,
+            color: context.colors.background,
             padding: const EdgeInsets.all(4.0),
             child: quill.QuillSimpleToolbar(
-              controller: quillController,
+              controller: widget.quillController,
               config: const quill.QuillSimpleToolbarConfig(),
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: context.colors.outline),
           // 에디터 영역 (고정 높이 부여 후 자체 스크롤 비활성화 위임)
           Container(
             height: 400,
             padding: const EdgeInsets.all(12.0),
-            color: Colors.white,
+            color: context.colors.surface,
             child: quill.QuillEditor(
-              controller: quillController,
-              focusNode: FocusNode(),
-              scrollController: ScrollController(),
-              config: const quill.QuillEditorConfig(
-                // 자체 스크롤을 막고 부모의 SingleChildScrollView에 의존하게 할 때 유용 (v11 방식)
+              controller: widget.quillController,
+              focusNode: _focusNode,
+              scrollController: _scrollController,
+              config: quill.QuillEditorConfig(
+                // 이미지 블록은 본체가 그리지 못해 extensions의 빌더를 넘겨야 한다.
+                embedBuilders: FlutterQuillEmbeds.editorBuilders(),
               ),
             ),
           ),
@@ -92,7 +120,7 @@ class QuillEditorBox extends StatelessWidget {
 /// Box #3: 제출(완료) 버튼 박스
 class SubmitBox extends StatelessWidget {
   final String buttonLabel;
-  final VoidCallback onSubmit;
+  final Future<void> Function() onSubmit;
 
   const SubmitBox({
     super.key,
@@ -102,16 +130,6 @@ class SubmitBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
-      child: ElevatedButton(
-        onPressed: onSubmit,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-        child: Text(buttonLabel, style: const TextStyle(fontSize: 16)),
-      ),
-    );
+    return AsyncActionButton(label: buttonLabel, onPressed: onSubmit);
   }
 }

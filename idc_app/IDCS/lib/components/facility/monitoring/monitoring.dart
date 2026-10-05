@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class MonitoringCard extends StatelessWidget {
   final String title;
@@ -16,35 +17,55 @@ class MonitoringCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
+    // 제어 가능한(OnConfirm이 있는) 카드는 정적 정보 카드보다 시각적으로 한 단계 부각시킨다.
+    final bool isControl = OnConfirm != null;
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blueGrey),
-            ),
-            const SizedBox(height: 12),
-            // 💡 독립된 StatefulWidget으로 개별 Row 생성
-            ...fields.entries.map((entry) => _EditableRowItem(
-              key: ValueKey(entry.key), // label을 키값으로 설정하여 위젯 재사용성 보장
-              label: entry.key,
-              value: entry.value,
-              onConfirm: OnConfirm,
-            )),
-          ],
-        ),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isControl ? context.colors.primary.withValues(alpha: 0.18) : context.colors.outline),
+        boxShadow: isControl ? context.colors.softShadow : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                title,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3),
+              ),
+              if (isControl) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: context.colors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('제어', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.primary)),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          // 독립된 StatefulWidget으로 개별 Row 생성
+          ...fields.entries.map((entry) => _EditableRowItem(
+            key: ValueKey(entry.key), // label을 키값으로 설정하여 위젯 재사용성 보장
+            label: entry.key,
+            value: entry.value,
+            onConfirm: OnConfirm,
+          )),
+        ],
       ),
     );
   }
 }
 
-// 💡 입력 상태를 유지하기 위해 개별 Row를 StatefulWidget으로 분리
+// 입력 상태를 유지하기 위해 개별 Row를 StatefulWidget으로 분리
 class _EditableRowItem extends StatefulWidget {
   final String label;
   final String value;
@@ -62,7 +83,7 @@ class _EditableRowItem extends StatefulWidget {
 }
 
 class _EditableRowItemState extends State<_EditableRowItem> {
-  // 💡 State 내부에서 컨트롤러를 선언하여 부모가 re-build되어도 입력값이 유지됨
+  // State 내부에서 컨트롤러를 선언하여 부모가 re-build되어도 입력값이 유지됨
   late final TextEditingController _inputController;
 
   @override
@@ -73,7 +94,7 @@ class _EditableRowItemState extends State<_EditableRowItem> {
 
   @override
   void dispose() {
-    // 💡 메모리 누수 방지를 위한 자원 해제
+    // 메모리 누수 방지를 위한 자원 해제
     _inputController.dispose();
     super.dispose();
   }
@@ -92,15 +113,13 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               key: ValueKey(widget.value), // 실시간 값이 변할 때 텍스트 업데이트
               initialValue: widget.value,
               readOnly: true,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
               decoration: InputDecoration(
                 labelText: widget.label,
-                labelStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                filled: true,
-                fillColor: Colors.grey[50],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide(color: Colors.grey[300]!)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide(color: Colors.grey[200]!)),
+                labelStyle: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                fillColor: context.colors.background,
               ),
             ),
           ),
@@ -113,15 +132,10 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               child: TextField(
                 controller: _inputController,
                 style: const TextStyle(fontSize: 14),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: '입력',
-                  hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide(color: Colors.grey[300]!)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide(color: Colors.grey[300]!)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0), borderSide: const BorderSide(color: Colors.blue)),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
                 ),
               ),
             ),
@@ -129,20 +143,15 @@ class _EditableRowItemState extends State<_EditableRowItem> {
 
             // 3. 확인 버튼
             SizedBox(
-              height: 40,
+              height: 44,
               child: ElevatedButton(
                 onPressed: () {
                   final inputText = _inputController.text;
                   widget.onConfirm!(widget.label, inputText);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
+                  minimumSize: const Size(64, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
                 ),
                 child: const Text('확인', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               ),

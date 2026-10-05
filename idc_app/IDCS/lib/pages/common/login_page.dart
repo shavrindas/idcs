@@ -6,11 +6,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:idcs/components/common/opening/open_nav.dart';
 import 'package:idcs/components/common/login/login_components.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/login/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
+import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/app_logo.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -54,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
       // 1. AuthService에 발급받은 user_id 저장 (이 시점에 isLoggedIn이 true가 됨)
       final userId = result['user_id'];
-      AuthService.setUserId(userId);
+      await AuthService.setUserId(userId, persist: _keepLogin);
 
       // [비동기 컨텍스트 방어 로직] 화면이 파괴되지 않았는지 확인
       if (!mounted) return;
@@ -64,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // 2. 메인 색인 페이지로 라우팅 (이제 리다이렉트에 걸리지 않고 정상 이동!)
-      context.go('/main_index/$userId');
+      context.go('/index/$userId/home');
 
     } catch (e) {
       if (!mounted) return;
@@ -97,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       final userId = result['user_id'];
-      AuthService.setUserId(userId);
+      await AuthService.setUserId(userId, persist: _keepLogin);
 
       if (!mounted) return;
 
@@ -105,9 +106,10 @@ class _LoginPageState extends State<LoginPage> {
         SnackBar(content: Text(result['message'])),
       );
 
-      context.go('/main_index/$userId');
+      context.go('/index/$userId/home');
 
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
@@ -117,51 +119,93 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('로그인 페이지')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            StandardLoginBox(
-              emailController: _emailController,
-              passwordController: _passwordController,
-              onLoginPressed: _handleGeneralLogin,
-            ),
-            const SizedBox(height: 16),
-            SocialLoginBox(
-              onSocialLoginPressed: _handleSocialLogin,
-            ),
-            const SizedBox(height: 16),
-            KeepLoginStateBox(
-              isChecked: _keepLogin,
-              onChanged: (bool? value) {
-                setState(() {
-                  _keepLogin = value ?? false;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '계정 생성 페이지로 이동',
-              onPressed: () => context.push('/signup'),
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '아이디 찾기 페이지로 이동',
-              onPressed: () => context.push('/find_id'),
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '비밀번호 찾기 페이지로 이동',
-              onPressed: () => context.push('/find_pw'),
-            ),
-            const SizedBox(height: 16),
-            NavigationBox(
-              title: '오프닝 페이지로 이동',
-              onPressed: () => context.push('/'),
-            ),
-          ],
+      appBar: AppBar(title: const AppWordmark(fontSize: 17)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              Text('다시 만나서 반가워요', style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 6),
+              Text(
+                '계정 정보를 입력하고 로그인해주세요.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 32),
+
+              StandardLoginBox(
+                emailController: _emailController,
+                passwordController: _passwordController,
+                onLoginPressed: _handleGeneralLogin,
+              ),
+
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  KeepLoginStateBox(
+                    isChecked: _keepLogin,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _keepLogin = value ?? false;
+                      });
+                    },
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/find_pw'),
+                    child: const Text('비밀번호 찾기'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+              SocialLoginBox(
+                onSocialLoginPressed: _handleSocialLogin,
+              ),
+
+              const SizedBox(height: 40),
+
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      '계정이 없으신가요? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push('/signup'),
+                      child: Text(
+                        '회원가입',
+                        style: TextStyle(
+                          color: context.colors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '  ·  ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push('/find_id'),
+                      child: Text(
+                        '아이디 찾기',
+                        style: TextStyle(
+                          color: context.colors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

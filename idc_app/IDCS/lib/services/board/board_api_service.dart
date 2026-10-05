@@ -72,9 +72,28 @@ class BoardApiService {
   }
 
   /// 4. 새 게시글 생성
+  /// 에디터 이미지 사전 업로드. 글을 저장할 때 반환된 image_id를 함께 보내면
+  /// 서버가 그 이미지를 해당 글에 묶어준다.
+  static Future<({int imageId, String imageUrl})> uploadImage({
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    final request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/image/upload'))
+      ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+
+    final streamed = await request.send();
+    final body = utf8.decode(await streamed.stream.toBytes());
+    final decoded = jsonDecode(body);
+
+    if (streamed.statusCode == 200) {
+      return (imageId: decoded['image_id'] as int, imageUrl: decoded['image_url'] as String);
+    }
+    throw Exception(decoded['detail'] ?? '이미지 업로드에 실패했습니다.');
+  }
+
   static Future<int> createPost({
     required String userId,
-    required int boardId,
+    required int facilityId,
     required String title,
     required String contentJson,
     required List<int> imageIds,
@@ -84,7 +103,7 @@ class BoardApiService {
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "board_id": boardId,
+        "facility_id": facilityId,
         "title": title,
         "content": contentJson,
         "image_ids": imageIds,

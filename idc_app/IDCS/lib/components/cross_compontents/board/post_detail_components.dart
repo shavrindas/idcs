@@ -4,9 +4,14 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 게시글 본문 렌더링 박스 (읽기 전용 에디터 포함)
-class PostContentBox extends StatelessWidget {
+///
+/// FocusNode/ScrollController는 build()가 아니라 State가 들고 있어야 한다.
+/// build()에서 만들면 다시 그릴 때마다 새로 생성되어 스크롤 위치가 초기화된다.
+class PostContentBox extends StatefulWidget {
   final Map<String, dynamic> post;
   final quill.QuillController quillController;
 
@@ -17,43 +22,58 @@ class PostContentBox extends StatelessWidget {
   });
 
   @override
+  State<PostContentBox> createState() => _PostContentBoxState();
+}
+
+class _PostContentBoxState extends State<PostContentBox> {
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final post = widget.post;
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: context.colors.softShadow,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '[${post['facility_name']}]',
-            style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+            style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w700, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Text(
             post['title'] ?? '제목 없음',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
           ),
           const SizedBox(height: 8),
           Text(
-            '작성자: ${post['creator_name']} | 작성일: ${post['created_at']}',
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            '작성자: ${post['creator_name']} · 작성일: ${post['created_at']}',
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
           ),
-          const Divider(height: 24),
+          Divider(height: 28, color: context.colors.outline),
           // 읽기 전용 Quill Editor 영역
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: quill.QuillEditor(
-              controller: quillController,
-              focusNode: FocusNode(),
-              scrollController: ScrollController(),
-              config: const quill.QuillEditorConfig(
-                showCursor: false,
-                autoFocus: false,
-              ),
+          quill.QuillEditor(
+            controller: widget.quillController,
+            focusNode: _focusNode,
+            scrollController: _scrollController,
+            config: quill.QuillEditorConfig(
+              showCursor: false,
+              autoFocus: false,
+              // 본문에 들어간 이미지를 그리려면 extensions의 빌더가 필요하다.
+              embedBuilders: FlutterQuillEmbeds.editorBuilders(),
             ),
           ),
         ],
@@ -75,26 +95,27 @@ class PostControlBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          ElevatedButton.icon(
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit, size: 16),
-            label: const Text('수정'),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        OutlinedButton.icon(
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined, size: 16),
+          label: const Text('수정'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: onDelete,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(0, 40),
+            foregroundColor: context.colors.error,
+            side: BorderSide(color: context.colors.error.withValues(alpha: 0.4)),
           ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: onDelete,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade50),
-            icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-            label: const Text('삭제', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+          label: const Text('삭제'),
+        ),
+      ],
     );
   }
 }
@@ -121,20 +142,24 @@ class CommentBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.outline),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('댓글', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
+          Text('댓글 ${comments.length}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
+          const SizedBox(height: 8),
 
           // 댓글 리스트
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: comments.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.outline),
             itemBuilder: (context, index) {
               final comment = comments[index];
               final bool isCreator = comment['creator_id'].toString() == currentUserId;
@@ -142,11 +167,15 @@ class CommentBox extends StatelessWidget {
               return ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                title: Text(comment['content'] ?? ''),
-                subtitle: Text('${comment['creator_name']} | ${comment['created_at']}'),
+                title: Text(comment['content'] ?? '', style: TextStyle(fontSize: 14, color: context.colors.textPrimary)),
+                subtitle: Text(
+                  '${comment['creator_name']} · ${comment['created_at']}',
+                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                ),
                 trailing: (isCreator || isAdmin)
                     ? IconButton(
-                  icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                      tooltip: '댓글 삭제',
+                  icon: Icon(Icons.close_rounded, size: 16, color: context.colors.textSecondary),
                   onPressed: () => onDelete(comment['comment_id']),
                 )
                     : null,
@@ -155,9 +184,9 @@ class CommentBox extends StatelessWidget {
           ),
 
           if (comments.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: Text('등록된 댓글이 없습니다.', style: TextStyle(color: Colors.grey)),
+              child: Text('등록된 댓글이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
             ),
 
           const SizedBox(height: 12),
@@ -170,15 +199,18 @@ class CommentBox extends StatelessWidget {
                   controller: commentController,
                   decoration: const InputDecoration(
                     hintText: '댓글을 입력하세요...',
-                    border: OutlineInputBorder(),
                     isDense: true,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: onSubmit,
-                child: const Text('등록'),
+              SizedBox(
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: onSubmit,
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(64, 48)),
+                  child: const Text('등록'),
+                ),
               ),
             ],
           ),
