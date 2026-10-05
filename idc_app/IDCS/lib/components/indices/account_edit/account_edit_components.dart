@@ -1,158 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/theme_controller.dart';
 
-/// 내 정보 카드.
-///
-/// 예전에는 이름·전화번호가 각각 입력칸과 저장 버튼을 달고 항상 열려 있었다.
-/// 평소에 바꿀 일이 거의 없는 값인데 화면이 늘 '수정 중'처럼 보이고,
-/// 지금 값이 무엇인지 읽기도 어려웠다. 평소엔 읽기 전용으로 두고
-/// 수정 버튼을 눌렀을 때만 입력칸이 열리도록 한다.
-class ProfileInfoBox extends StatefulWidget {
-  final String name;
-  final String phone;
+/// Box #2: 아이디(username) 수정 박스
+class UsernameEditBox extends StatelessWidget {
+  final TextEditingController controller;
+  final Future<void> Function() onSubmit;
 
-  /// 이 계정이 어떤 방식으로 로그인하는지 (예: '이메일', 'Google').
-  final String loginMethod;
-
-  /// 바뀐 값만 저장한다. 실패하면 예외를 던져 수정 모드를 유지한다.
-  final Future<void> Function(String name, String phone) onSave;
-
-  const ProfileInfoBox({
-    super.key,
-    required this.name,
-    required this.phone,
-    required this.loginMethod,
-    required this.onSave,
-  });
-
-  @override
-  State<ProfileInfoBox> createState() => _ProfileInfoBoxState();
-}
-
-class _ProfileInfoBoxState extends State<ProfileInfoBox> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  bool _editing = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  void _startEditing() {
-    _nameController.text = widget.name;
-    _phoneController.text = widget.phone;
-    setState(() => _editing = true);
-  }
-
-  Future<void> _save() async {
-    await widget.onSave(_nameController.text.trim(), _phoneController.text.trim());
-    if (mounted) setState(() => _editing = false);
-  }
+  const UsernameEditBox({super.key, required this.controller, required this.onSubmit});
 
   @override
   Widget build(BuildContext context) {
     return _EditCard(
-      title: '내 정보',
-      child: _editing ? _buildEditing(context) : _buildReading(context),
-    );
-  }
-
-  Widget _buildReading(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _InfoRow(icon: Icons.badge_outlined, label: '이름', value: widget.name.isEmpty ? '-' : widget.name),
-        _InfoRow(icon: Icons.phone_outlined, label: '전화번호', value: widget.phone.isEmpty ? '-' : widget.phone),
-        // 이미 로그인한 사용자에게 '연동하기'를 권하는 대신, 지금 어떤 방식으로
-        // 로그인하는지만 알려준다.
-        _InfoRow(icon: Icons.login_rounded, label: '로그인 방식', value: widget.loginMethod),
-        const SizedBox(height: 14),
-        OutlinedButton.icon(
-          onPressed: _startEditing,
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          label: const Text('수정'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEditing(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(labelText: '이름', prefixIcon: Icon(Icons.badge_outlined)),
-        ),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _phoneController,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(labelText: '전화번호', prefixIcon: Icon(Icons.phone_outlined)),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => setState(() => _editing = false),
-                child: const Text('취소'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(child: AsyncActionButton(label: '저장', onPressed: _save)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// 읽기 모드에서 쓰는 한 줄 (라벨 - 값).
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InfoRow({required this.icon, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
+      title: '이름',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, size: 18, color: context.colors.textSecondary),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 76,
-            child: Text(label, style: TextStyle(fontSize: 13, color: context.colors.textSecondary)),
+          TextField(
+            controller: controller,
+            decoration: const InputDecoration(prefixIcon: Icon(Icons.badge_outlined)),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          const SizedBox(height: 14),
+          AsyncActionButton(label: '이름 저장', onPressed: onSubmit),
         ],
       ),
     );
   }
 }
 
-/// 비밀번호 변경. 자주 쓰는 기능이 아니라 평소엔 접어두고 눌렀을 때만 펼친다.
-class PasswordChangeBox extends StatefulWidget {
+/// Box #3: 전화번호 수정 박스
+class PhoneEditBox extends StatelessWidget {
+  final TextEditingController controller;
+  final Future<void> Function() onSubmit;
+
+  const PhoneEditBox({super.key, required this.controller, required this.onSubmit});
+
+  @override
+  Widget build(BuildContext context) {
+    return _EditCard(
+      title: '전화번호',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(prefixIcon: Icon(Icons.phone_outlined)),
+          ),
+          const SizedBox(height: 14),
+          AsyncActionButton(label: '전화번호 저장', onPressed: onSubmit),
+        ],
+      ),
+    );
+  }
+}
+
+/// Box #4: 비밀번호 수정 박스
+class PasswordEditBox extends StatefulWidget {
   final TextEditingController currentPwController;
   final TextEditingController newPwController;
   final String collapseMessage;
   final Future<void> Function() onSubmit;
 
-  const PasswordChangeBox({
+  const PasswordEditBox({
     super.key,
     required this.currentPwController,
     required this.newPwController,
@@ -161,85 +72,199 @@ class PasswordChangeBox extends StatefulWidget {
   });
 
   @override
-  State<PasswordChangeBox> createState() => _PasswordChangeBoxState();
+  State<PasswordEditBox> createState() => _PasswordEditBoxState();
 }
 
-class _PasswordChangeBoxState extends State<PasswordChangeBox> {
-  bool _expanded = false;
+class _PasswordEditBoxState extends State<PasswordEditBox> {
   bool _obscureCurrent = true;
   bool _obscureNew = true;
 
   @override
   Widget build(BuildContext context) {
     return _EditCard(
-      title: '비밀번호',
+      title: '비밀번호 변경',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          InkWell(
-            onTap: () => setState(() => _expanded = !_expanded),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
-                  Icon(Icons.lock_outline_rounded, size: 18, color: context.colors.textSecondary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '비밀번호 변경',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
-                    ),
-                  ),
-                  Icon(
-                    _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                    size: 20,
-                    color: context.colors.textSecondary,
-                  ),
-                ],
+          TextField(
+            controller: widget.currentPwController,
+            obscureText: _obscureCurrent,
+            decoration: InputDecoration(
+              labelText: '기존 비밀번호',
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                tooltip: '비밀번호 표시',
+                icon: Icon(_obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: context.colors.textSecondary),
+                onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
               ),
             ),
           ),
-          if (_expanded) ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: widget.currentPwController,
-              obscureText: _obscureCurrent,
-              decoration: InputDecoration(
-                labelText: '기존 비밀번호',
-                suffixIcon: IconButton(
-                  tooltip: '비밀번호 표시',
-                  icon: Icon(_obscureCurrent ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: context.colors.textSecondary),
-                  onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
-                ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: widget.newPwController,
+            obscureText: _obscureNew,
+            decoration: InputDecoration(
+              labelText: '새 비밀번호',
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              suffixIcon: IconButton(
+                tooltip: '비밀번호 표시',
+                icon: Icon(_obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: context.colors.textSecondary),
+                onPressed: () => setState(() => _obscureNew = !_obscureNew),
               ),
             ),
+          ),
+          if (widget.collapseMessage.isNotEmpty) ...[
             const SizedBox(height: 10),
-            TextField(
-              controller: widget.newPwController,
-              obscureText: _obscureNew,
-              decoration: InputDecoration(
-                labelText: '새 비밀번호',
-                suffixIcon: IconButton(
-                  tooltip: '비밀번호 표시',
-                  icon: Icon(_obscureNew ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: context.colors.textSecondary),
-                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                ),
-              ),
+            Text(
+              widget.collapseMessage,
+              style: TextStyle(color: context.colors.primary, fontSize: 13, fontWeight: FontWeight.w600),
             ),
-            if (widget.collapseMessage.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(
-                widget.collapseMessage,
-                style: TextStyle(color: context.colors.primary, fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-            ],
-            const SizedBox(height: 14),
-            AsyncActionButton(label: '비밀번호 변경', onPressed: widget.onSubmit),
           ],
+          const SizedBox(height: 14),
+          AsyncActionButton(label: '비밀번호 변경', onPressed: widget.onSubmit),
         ],
+      ),
+    );
+  }
+}
+
+/// Box #5: 외부 프로바이더 연동 박스
+class SocialLinkBox extends StatelessWidget {
+  final List<dynamic> linkedProviders;
+  final Function(String) onLinkPressed;
+
+  const SocialLinkBox({
+    super.key,
+    required this.linkedProviders,
+    required this.onLinkPressed,
+  });
+
+  bool _isLinked(String provider) =>
+      linkedProviders.any((p) => p.toString().toLowerCase() == provider);
+
+  @override
+  Widget build(BuildContext context) {
+    return _EditCard(
+      title: '연동 계정',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ProviderRow(
+            label: 'Google',
+            isLinked: _isLinked('google'),
+            onPressed: () => onLinkPressed('google'),
+            badge: Container(
+              width: 22,
+              height: 22,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Color(0xFF4285F4), shape: BoxShape.circle),
+              child: const Text('G', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _ProviderRow(
+            label: 'Apple',
+            isLinked: _isLinked('apple'),
+            onPressed: () => onLinkPressed('apple'),
+            badge: Container(
+              width: 22,
+              height: 22,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+              child: const Icon(Icons.apple, color: Colors.white, size: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 프로바이더 한 줄. 이미 연동된 계정은 '연동됨'으로 표시하고 버튼을 없앤다.
+class _ProviderRow extends StatelessWidget {
+  final String label;
+  final bool isLinked;
+  final Widget badge;
+  final VoidCallback onPressed;
+
+  const _ProviderRow({
+    required this.label,
+    required this.isLinked,
+    required this.badge,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.colors.outline),
+      ),
+      child: Row(
+        children: [
+          badge,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+            ),
+          ),
+          if (isLinked)
+            Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: context.colors.success, size: 17),
+                const SizedBox(width: 5),
+                Text(
+                  '연동됨',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.success),
+                ),
+              ],
+            )
+          else
+            TextButton(onPressed: onPressed, child: const Text('연동하기')),
+        ],
+      ),
+    );
+  }
+}
+
+/// 화면 테마(밝게/어둡게/시스템 설정) 선택 박스.
+class ThemeModeBox extends StatelessWidget {
+  final ThemeMode current;
+  final ValueChanged<ThemeMode> onChanged;
+
+  const ThemeModeBox({super.key, required this.current, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _EditCard(
+      title: '화면 테마',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: ThemeMode.values.map((mode) {
+          final selected = current == mode;
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            onTap: () => onChanged(mode),
+            leading: Icon(
+              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+              color: selected ? context.colors.primary : context.colors.textSecondary,
+              size: 20,
+            ),
+            title: Text(
+              ThemeController.labelOf(mode),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: context.colors.textPrimary,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

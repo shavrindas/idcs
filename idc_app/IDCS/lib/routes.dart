@@ -61,6 +61,13 @@ final GoRouter appRouter = GoRouter(
                 builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!),
               ),
             ]),
+            // 개괄 모니터링 임시 추가 26.10.05
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'allmonitoring',
+                builder: (context, state) => MonitoringAll(userId: state.pathParameters['userId']!),
+              ),
+            ]),
           ],
         ),
       ],
@@ -74,7 +81,7 @@ final GoRouter appRouter = GoRouter(
         userId: state.pathParameters['userId']!,
       ),
     ),
-    GoRoute(path: '/settings', builder: (context, state) => const SettingsPage()),
+    GoRoute(path: '/alarm_settings', builder: (context, state) => const AlarmSettingsPage()),
 
     // [facility] - 유저 ID & 시설 ID 기반
     // 시설 내부 5개 섹션(모니터링/차트/소요기록/메신저/알람) 하단 네비게이션 셸.
@@ -183,6 +190,7 @@ final GoRouter appRouter = GoRouter(
         roomId: state.pathParameters['roomId']!,
       ),
     ),
+    
     //모니터링 끝-------------------------------------------------------------------
 
     // [chat_room] - 채팅방 상세. 셸 위로 풀스크린 push.

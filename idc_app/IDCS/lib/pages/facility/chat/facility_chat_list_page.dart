@@ -1,6 +1,5 @@
 // 경로: lib/pages/facility/chat/facility_chat_list_page.dart
 import 'package:flutter/material.dart';
-import 'package:idcs/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_list_components.dart';
 import 'package:idcs/services/chat/chat_api_service.dart';
@@ -83,7 +82,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
         child: Wrap(
           children: [
             ListTile(
-              leading: Icon(Icons.exit_to_app, color: context.colors.error),
+              leading: const Icon(Icons.exit_to_app, color: Colors.red),
               title: const Text('채팅방 나가기 (관리자는 단체방 삭제 가능)'),
               onTap: () async {
                 Navigator.pop(context);
