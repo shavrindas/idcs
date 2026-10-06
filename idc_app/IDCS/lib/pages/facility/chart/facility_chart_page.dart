@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/chart/chart_components.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import '../../../services/common/api_client.dart';
 
 class FacilityChartPage extends StatefulWidget {
   final String userId;
@@ -74,7 +75,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('호실 조회 오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('호실 조회 오류: ${describeApiError(e)}')));
         setState(() => _isLoading = false);
       }
     }
@@ -126,7 +127,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('그룹 로드 오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('그룹 로드 오류: ${describeApiError(e)}')));
         setState(() => _isLoading = false);
       }
     }
@@ -200,7 +201,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('차트 오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('차트 오류: ${describeApiError(e)}')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

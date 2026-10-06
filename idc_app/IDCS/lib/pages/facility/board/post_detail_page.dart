@@ -9,6 +9,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:idcs/components/cross_compontents/board/post_detail_components.dart';
 import 'package:idcs/services/board/board_api_service.dart';
 import 'package:idcs/services/common/user_api_service.dart';
+import '../../../services/common/api_client.dart';
 
 class PostDetailPage extends StatefulWidget {
   final int postId;
@@ -61,7 +62,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 로드 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 로드 실패: ${describeApiError(e)}')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -95,7 +96,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: ${describeApiError(e)}')));
       }
     }
   }
@@ -114,7 +115,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 작성 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 작성 실패: ${describeApiError(e)}')));
       }
     }
   }
@@ -125,7 +126,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 삭제 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 삭제 실패: ${describeApiError(e)}')));
       }
     }
   }

@@ -3,6 +3,7 @@ import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dar
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import '../../services/common/api_client.dart';
 
 class FacilityAlarmPage extends StatefulWidget {
   final String userId;
@@ -51,7 +52,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('권한 조회 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('권한 조회 실패: ${describeApiError(e)}')));
       }
     } finally {
       if (mounted) {

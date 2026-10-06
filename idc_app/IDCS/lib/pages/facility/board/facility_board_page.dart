@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
 import 'package:idcs/services/board/board_api_service.dart';
+import '../../../services/common/api_client.dart';
 
 class FacilityBoardPage extends StatefulWidget {
   final String userId;
@@ -60,7 +61,7 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -17,7 +17,7 @@ import 'package:idcs/pages/common/find_pw_page.dart';
 import 'package:idcs/pages/common/login_page.dart';
 import 'package:idcs/pages/common/signup_page.dart';
 import 'package:idcs/pages/common/find_id_page.dart';
-import 'package:idcs/pages/facility/monitoring//monitoring_room.dart';
+import 'package:idcs/pages/facility/monitoring/monitoring_room.dart';
 import 'package:idcs/pages/facility/facility_shell_page.dart';
 import 'package:idcs/pages/indices/user_shell_page.dart';
 import 'package:idcs/pages/facility/monitoring/monitoring_page.dart';

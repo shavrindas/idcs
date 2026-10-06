@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:idcs/firebase_options.dart';
 import 'package:idcs/main.dart';
-import 'package:http/http.dart' as http;
+import 'api_client.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -203,7 +203,7 @@ class FcmService {
 
       print("발급된 토큰: $token");
       final url = Uri.parse('${AppConfig.baseUrl}/alarms/register');
-      final response = await http.post(
+      final response = await ApiClient.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({

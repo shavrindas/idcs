@@ -9,6 +9,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
 import 'package:idcs/components/cross_compontents/board/post_editor_components.dart.dart';
 import 'package:idcs/services/board/board_api_service.dart';
+import '../../../services/common/api_client.dart';
 
 class PostCreatePage extends StatefulWidget {
   final String facilityId;
@@ -58,7 +59,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
       _uploadedImageIds.add(uploaded.imageId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미지 첨부 실패: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미지 첨부 실패: ${describeApiError(e)}')));
     }
   }
 
@@ -85,7 +86,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 작성 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 작성 실패: ${describeApiError(e)}')));
       }
     }
   }

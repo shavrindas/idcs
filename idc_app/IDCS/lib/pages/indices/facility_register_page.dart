@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:idcs/components/indices/facility_register/facility_register.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import '../../services/common/api_client.dart';
 
 class FacilityRegisterPage extends StatefulWidget {
   final String userId;
@@ -53,7 +54,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
       });
       await _loadData(); // 목록 새로고침
     } catch (e) {
-      setState(() => _collapseMessage = '등록 실패: $e');
+      setState(() => _collapseMessage = '등록 실패: ${describeApiError(e)}');
     }
   }
 

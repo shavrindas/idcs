@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../api_client.dart';
 // AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
 import '../../../main.dart';
 
@@ -10,7 +10,7 @@ class AuthApiService {
 
 
   static Future<Map<String, dynamic>> requestPasswordCode(String email) async {
-    final response = await http.post(
+    final response = await ApiClient.post(
       Uri.parse('$_authUrl/password/request-code'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email}),
@@ -20,7 +20,7 @@ class AuthApiService {
   }
 
   static Future<Map<String, dynamic>> verifyPasswordCode(String token, String code) async {
-    final response = await http.post(
+    final response = await ApiClient.post(
       Uri.parse('$_authUrl/password/verify-code'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'token': token, 'code': code}),
@@ -30,7 +30,7 @@ class AuthApiService {
   }
 
   static Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
-    final response = await http.post(
+    final response = await ApiClient.post(
       Uri.parse('$_authUrl/password/reset'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'token': token, 'new_password': newPassword}),

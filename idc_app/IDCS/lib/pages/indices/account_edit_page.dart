@@ -4,6 +4,7 @@ import 'package:idcs/components/indices/account_edit/account_edit_components.dar
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/main.dart'; // AuthService 접근용
+import '../../services/common/api_client.dart';
 
 class PersonalPage extends StatefulWidget {
   final String userId;
@@ -125,7 +126,7 @@ class _PersonalPageState extends State<PersonalPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      setState(() => _pwCollapseMessage = '오류: $e');
+      setState(() => _pwCollapseMessage = '오류: ${describeApiError(e)}');
     }
   }
 
