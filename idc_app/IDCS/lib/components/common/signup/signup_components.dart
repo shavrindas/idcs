@@ -1,5 +1,6 @@
 // 경로: lib/components/signup/signup_components.dart
 import 'package:flutter/material.dart';
+import 'package:idcs/services/common/social_auth_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// Box #1: 일반 계정 생성 박스
@@ -91,6 +92,10 @@ class SocialSignupBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // On web the plugin cannot run this sign-in flow at all, so showing the
+    // buttons would only offer a dead end.
+    if (!SocialAuthService.isSupported) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
