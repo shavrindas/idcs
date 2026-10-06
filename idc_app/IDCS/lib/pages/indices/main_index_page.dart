@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/main_index/main_index_components.dart';
+import 'package:idcs/components/shared/alarm_row.dart';
+import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/services/common/user_api_service.dart';
+import '../../services/common/api_client.dart';
 
 class MainIndexPage extends StatefulWidget {
   final String userId;
@@ -16,7 +19,7 @@ class MainIndexPage extends StatefulWidget {
 class _MainIndexPageState extends State<MainIndexPage> {
   bool _isAdmin = false;
   bool _isLoading = true;
-  List<dynamic> _facilities = [];
+  List<FacilitySummary> _facilities = [];
 
   @override
   void initState() {
@@ -33,14 +36,17 @@ class _MainIndexPageState extends State<MainIndexPage> {
     try {
       final role = await UserApiService.getUserRole(widget.userId);
       final facilities = await FacilityApiService.getFacilities(widget.userId);
+      final summaries = await _buildSummaries(facilities);
+      if (!mounted) return;
       setState(() {
         // ADMIN이거나 DEVELOPER인 경우 관리자 박스 노출
         _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
-        _facilities = facilities;
+        _facilities = summaries;
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('권한 조회 실패: $e')),
+        SnackBar(content: Text('권한 조회 실패: ${describeApiError(e)}')),
       );
     } finally {
       if (mounted) {
@@ -49,6 +55,49 @@ class _MainIndexPageState extends State<MainIndexPage> {
         });
       }
     }
+  }
+
+  /// Combines the facility list with the user's alarms and each facility's room
+  /// count, so a card can show real state instead of just a name.
+  ///
+  /// The alarm list covers every facility the user belongs to, so one request is
+  /// enough; room counts need one request per facility and are fetched in
+  /// parallel. A failed room request only drops that one count — the card still
+  /// renders, since the alarm state matters more than the room total.
+  Future<List<FacilitySummary>> _buildSummaries(List<dynamic> facilities) async {
+    final activeCounts = <int, int>{};
+    try {
+      final alarms = await AlarmApiService.getUserAlarms(widget.userId);
+      for (final alarm in alarms.where(isAlarmActive)) {
+        final facilityId = alarm['facility_id'];
+        if (facilityId is int) {
+          activeCounts[facilityId] = (activeCounts[facilityId] ?? 0) + 1;
+        }
+      }
+    } catch (_) {
+      // Leave the counts empty; cards then read as 정상 rather than blocking the screen.
+    }
+
+    final roomCounts = await Future.wait(
+      facilities.map((fac) async {
+        try {
+          final rooms = await FacilityApiService.getFacilityRooms(fac['id'].toString());
+          return rooms.length;
+        } catch (_) {
+          return null;
+        }
+      }),
+    );
+
+    return [
+      for (var i = 0; i < facilities.length; i++)
+        FacilitySummary(
+          id: facilities[i]['id'],
+          name: facilities[i]['name'] ?? '이름 없는 시설',
+          roomCount: roomCounts[i],
+          activeAlarmCount: activeCounts[facilities[i]['id']] ?? 0,
+        ),
+    ];
   }
 
   @override
@@ -73,11 +122,8 @@ class _MainIndexPageState extends State<MainIndexPage> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16.0),
-                child: IntegratedFacilityBox(
+                child: FacilitySummaryList(
                   facilities: _facilities,
-                  // The app bar already says 내 시설; repeating it above the grid is noise.
-                  // The room picker still passes its own label.
-                  label: '',
                   onFacilityPressed: (facilityId) {
                     // 터치 시 시설 라우팅용 nav 페이지로 이동
                     context.push('/facility/${widget.userId}/$facilityId/monitoring');
