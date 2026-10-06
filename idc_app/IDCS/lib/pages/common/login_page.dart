@@ -12,6 +12,7 @@ import 'package:idcs/services/common/login/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/app_logo.dart';
+import '../../services/common/api_client.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -70,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(describeApiError(e))),
       );
     }
   }
@@ -111,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(describeApiError(e))),
       );
     }
   }

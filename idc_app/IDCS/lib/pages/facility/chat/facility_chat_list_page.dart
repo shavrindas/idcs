@@ -4,6 +4,7 @@ import 'package:idcs/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_list_components.dart';
 import 'package:idcs/services/chat/chat_api_service.dart';
+import '../../../services/common/api_client.dart';
 
 class FacilityChatListPage extends StatefulWidget {
   final String userId;
@@ -37,7 +38,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
         });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -91,7 +92,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                   await ChatApiService.leaveOrDeleteRoom(roomId, widget.userId, action: 'delete');
                   _fetchRooms();
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
                 }
               },
             ),

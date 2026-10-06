@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:idcs/services/common/find_pw/auth_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import '../../services/common/api_client.dart';
 
 class FindPwPage extends StatefulWidget {
   const FindPwPage({super.key});
@@ -83,7 +84,7 @@ class _FindPwPageState extends State<FindPwPage> {
       });
       _startTimer();
     } catch (e) {
-      setState(() => _box1Message = e.toString());
+      setState(() => _box1Message = describeApiError(e));
     }
   }
 
@@ -101,7 +102,7 @@ class _FindPwPageState extends State<FindPwPage> {
         _currentStep = 3; // Box 3 열기
       });
     } catch (e) {
-      setState(() => _box2Message = e.toString());
+      setState(() => _box2Message = describeApiError(e));
     }
   }
 
@@ -121,7 +122,7 @@ class _FindPwPageState extends State<FindPwPage> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
       context.go('/login'); // 완료 시 로그인 페이지 이동
     } catch (e) {
-      setState(() => _box3Message = e.toString());
+      setState(() => _box3Message = describeApiError(e));
     }
   }
 
