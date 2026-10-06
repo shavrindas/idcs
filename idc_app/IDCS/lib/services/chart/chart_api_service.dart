@@ -3,7 +3,7 @@
 // 명세: 차트 시계열 과거 데이터 조회 서비스
 // ===============================================================
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../common/api_client.dart';
 import 'package:idcs/main.dart'; // AppConfig
 
 class ChartApiService {
@@ -20,7 +20,7 @@ class ChartApiService {
     required List<int> roleIds, // 필수로 변경
   }) async {
     final urlStr = '$_baseUrl/$facilityId/$roomId?scale=$scale&time_range=$timeRange&role_ids=${roleIds.join(',')}';
-    final response = await http.get(Uri.parse(urlStr));
+    final response = await ApiClient.get(Uri.parse(urlStr));
 
     final String responseBody = utf8.decode(response.bodyBytes);
 
@@ -40,7 +40,7 @@ class ChartApiService {
   /// 그룹에 어떤 항목이 묶여 있는지 보여주려면 이 목록과 맞춰봐야 한다.
   static Future<List<dynamic>> getPointRoles(int facilityId, int roomId) async {
     final url = Uri.parse('$_mappingUrl/roles/$facilityId/$roomId');
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
     final String responseBody = utf8.decode(response.bodyBytes);
 
     if (response.statusCode == 200) {
@@ -52,7 +52,7 @@ class ChartApiService {
 
   static Future<List<dynamic>> getChartGroups(int facilityId, int roomId) async {
     final url = Uri.parse('$_mappingUrl/groups/$facilityId/$roomId');
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
     final String responseBody = utf8.decode(response.bodyBytes);
 
     if (response.statusCode == 200) {

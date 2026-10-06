@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'api_client.dart';
 import '../../main.dart';
 
 class UserApiService {
@@ -8,7 +8,7 @@ class UserApiService {
   /// 유저 권한(Role) 조회 API
   static Future<String> getUserRole(String userId) async {
     final url = Uri.parse('$_baseUrl/$userId/role');
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -24,7 +24,7 @@ class UserApiService {
   /// 유저 프로필 조회
   static Future<Map<String, dynamic>> getUserProfile(String userId) async {
     final url = Uri.parse('$_baseUrl/$userId/profile');
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
     if (response.statusCode == 200) {
       return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
@@ -35,7 +35,7 @@ class UserApiService {
   /// Box #2: 이름 수정
   static Future<String> updateName(String userId, String name) async {
     final url = Uri.parse('$_baseUrl/$userId/name');
-    final response = await http.put(
+    final response = await ApiClient.put(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': name}),
@@ -48,7 +48,7 @@ class UserApiService {
   /// Box #3: 전화번호 수정
   static Future<String> updatePhone(String userId, String phone) async {
     final url = Uri.parse('$_baseUrl/$userId/phone');
-    final response = await http.put(
+    final response = await ApiClient.put(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'phone_number': phone}),
@@ -61,7 +61,7 @@ class UserApiService {
   /// Box #4: 비밀번호 수정
   static Future<String> updatePassword(String userId, String currentPw, String newPw) async {
     final url = Uri.parse('$_baseUrl/$userId/password');
-    final response = await http.put(
+    final response = await ApiClient.put(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -77,7 +77,7 @@ class UserApiService {
   /// 계정 탈퇴. 서버에서 CASCADE로 연동 계정/시설 소속 정보까지 함께 삭제된다.
   static Future<String> withdraw(String userId) async {
     final url = Uri.parse('$_baseUrl/withdraw');
-    final response = await http.delete(
+    final response = await ApiClient.delete(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'user_id': int.parse(userId)}),

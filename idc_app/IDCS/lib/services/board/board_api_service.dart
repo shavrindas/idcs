@@ -4,6 +4,7 @@
 // ===============================================================
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../common/api_client.dart';
 import 'package:idcs/main.dart'; // AppConfig
 import 'package:idcs/models/post_model.dart';
 
@@ -24,7 +25,7 @@ class BoardApiService {
       '$_baseUrl/facility/$facilityId?user_id=$userId&page=$page&limit=$limit&search_type=$searchType&keyword=$encodedKeyword',
     );
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
     if (response.statusCode == 200) {
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       final posts = (decoded['data'] as List).map((p) => PostModel.fromJson(p)).toList();
@@ -47,7 +48,7 @@ class BoardApiService {
       '$_baseUrl/integrated?user_id=$userId&page=$page&limit=$limit&search_type=$searchType&keyword=$encodedKeyword',
     );
 
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
     if (response.statusCode == 200) {
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       final posts = (decoded['data'] as List).map((p) => PostModel.fromJson(p)).toList();
@@ -63,7 +64,7 @@ class BoardApiService {
     required String userId,
   }) async {
     final url = Uri.parse('$_baseUrl/post/$postId?user_id=$userId');
-    final response = await http.get(url);
+    final response = await ApiClient.get(url);
 
     if (response.statusCode == 200) {
       return jsonDecode(utf8.decode(response.bodyBytes));
@@ -81,7 +82,7 @@ class BoardApiService {
     final request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/image/upload'))
       ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
 
-    final streamed = await request.send();
+    final streamed = await ApiClient.send(request);
     final body = utf8.decode(await streamed.stream.toBytes());
     final decoded = jsonDecode(body);
 
@@ -99,7 +100,7 @@ class BoardApiService {
     required List<int> imageIds,
   }) async {
     final url = Uri.parse('$_baseUrl/post?user_id=$userId');
-    final response = await http.post(
+    final response = await ApiClient.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -126,7 +127,7 @@ class BoardApiService {
     required List<int> imageIds,
   }) async {
     final url = Uri.parse('$_baseUrl/post/$postId?user_id=$userId');
-    final response = await http.put(
+    final response = await ApiClient.put(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -147,7 +148,7 @@ class BoardApiService {
     required String userId,
   }) async {
     final url = Uri.parse('$_baseUrl/post/$postId?user_id=$userId');
-    final response = await http.delete(url);
+    final response = await ApiClient.delete(url);
 
     if (response.statusCode != 200) {
       throw Exception('게시글 삭제에 실패했습니다.');
@@ -161,7 +162,7 @@ class BoardApiService {
     required String content,
   }) async {
     final url = Uri.parse('$_baseUrl/post/$postId/comment?user_id=$userId');
-    final response = await http.post(
+    final response = await ApiClient.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({"content": content}),
@@ -178,7 +179,7 @@ class BoardApiService {
     required String userId,
   }) async {
     final url = Uri.parse('$_baseUrl/comment/$commentId?user_id=$userId');
-    final response = await http.delete(url);
+    final response = await ApiClient.delete(url);
 
     if (response.statusCode != 200) {
       throw Exception('댓글 삭제에 실패했습니다.');
