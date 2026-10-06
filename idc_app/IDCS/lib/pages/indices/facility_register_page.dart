@@ -36,7 +36,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
         _facilities = await FacilityApiService.getFacilities(widget.userId);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -64,7 +64,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       await _loadData();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
     }
   }
 

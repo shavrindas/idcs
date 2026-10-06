@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/common/find_id/find_id_components.dart';
 import 'package:idcs/services/common/find_id/auth_api_service.dart';
+import '../../services/common/api_client.dart';
 
 class FindIdPage extends StatefulWidget {
   const FindIdPage({super.key});
@@ -43,7 +44,7 @@ class _FindIdPageState extends State<FindIdPage> {
     } catch (e) {
       setState(() {
         _isExpanded = true;
-        _resultMessage = '오류 발생: ${e.toString()}';
+        _resultMessage = '오류 발생: ${describeApiError(e)}';
       });
     }
   }

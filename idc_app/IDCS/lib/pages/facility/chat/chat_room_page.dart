@@ -6,6 +6,7 @@ import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/chat/chat_api_service.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_room_components.dart';
 import 'package:idcs/theme/app_theme.dart';
+import '../../../services/common/api_client.dart';
 
 class ChatRoomPage extends StatefulWidget {
   final String userId;
@@ -41,7 +42,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       _participants = await ChatApiService.getParticipants(widget.roomId);
       await _loadMessages();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
     } finally {
       if (mounted) setState(() => _isLoadingHistory = false);
     }
@@ -104,7 +105,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         await ChatApiService.togglePinMessage(widget.roomId, msg['message_id'], widget.userId);
         _loadMessages(); // 상태 리프레시
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
       }
     }
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/common/signup/signup_components.dart';
 import 'package:idcs/services/common/signup/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
+import '../../services/common/api_client.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -62,7 +63,7 @@ class _SignupPageState extends State<SignupPage> {
       context.go('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(describeApiError(e))),
       );
     }
   }
@@ -103,7 +104,7 @@ class _SignupPageState extends State<SignupPage> {
       );
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
     }
   }
 
@@ -143,7 +144,7 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
       context.go('/login');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
     }
   }
 
