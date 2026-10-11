@@ -4,7 +4,9 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/panel_background.dart';
 import 'package:idcs/theme/theme_controller.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -75,6 +77,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                ValueListenableBuilder<MonitoringViewSettings>(
+                  valueListenable: MonitoringViewController.settings,
+                  builder: (context, view, _) => _PanelAppearanceCard(view: view),
+                ),
+                const SizedBox(height: 16),
                 _SettingsCard(
                   title: '알림 방식',
                   children: [
@@ -142,6 +149,214 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+/// 실시간 제어판 겉모습 설정.
+///
+/// The three controls are shown under one live sample rather than as separate
+/// sliders: opacity only means something against a backdrop, and a number size
+/// is hard to judge as a percentage. The sample is the panel in miniature.
+class _PanelAppearanceCard extends StatelessWidget {
+  final MonitoringViewSettings view;
+
+  const _PanelAppearanceCard({required this.view});
+
+  Future<void> _update(MonitoringViewSettings next) =>
+      MonitoringViewController.set(next);
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return _SettingsCard(
+      title: '제어판 화면',
+      children: [
+        Text(
+          '호실에 들어갔을 때 보이는 실시간 제어판에만 적용됩니다.',
+          style: TextStyle(fontSize: 13, color: colors.textSecondary),
+        ),
+        const SizedBox(height: 12),
+
+        _PanelPreview(view: view),
+        const SizedBox(height: 16),
+
+        _Label(text: '배경'),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 76,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: PanelBackground.all.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final option = PanelBackground.all[i];
+              return _BackgroundChoice(
+                option: option,
+                selected: option.id == view.backgroundId,
+                onTap: () => _update(view.copyWith(backgroundId: option.id)),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        _Label(text: '투명도', trailing: '${((1 - view.panelOpacity) * 100).round()}%'),
+        Slider(
+          // Runs backwards: the user thinks in "how see-through", the panel is
+          // drawn with "how opaque". The floor keeps the readings legible.
+          value: 1 - view.panelOpacity,
+          max: 1 - MonitoringViewSettings.minOpacity,
+          onChanged: (v) => _update(view.copyWith(panelOpacity: 1 - v)),
+        ),
+
+        _Label(
+          text: '숫자 크기',
+          trailing: '${view.valueFontSize.round()}pt',
+        ),
+        Slider(
+          value: view.valueFontScale,
+          min: MonitoringViewSettings.minFontScale,
+          max: MonitoringViewSettings.maxFontScale,
+          onChanged: (v) => _update(view.copyWith(valueFontScale: v)),
+        ),
+      ],
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  final String text;
+  final String? trailing;
+
+  const _Label({required this.text, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: context.colors.textPrimary,
+          ),
+        ),
+        if (trailing != null)
+          Text(
+            trailing!,
+            style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
+          ),
+      ],
+    );
+  }
+}
+
+/// One background option as a small tile painted with the real pattern.
+class _BackgroundChoice extends StatelessWidget {
+  final PanelBackground option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _BackgroundChoice({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 48,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected ? colors.primary : colors.outline,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: PanelBackdrop(backgroundId: option.id),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            option.label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+              color: selected ? colors.primary : colors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The control panel in miniature, so the three settings can be judged together.
+class _PanelPreview extends StatelessWidget {
+  final MonitoringViewSettings view;
+
+  const _PanelPreview({required this.view});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 108,
+        child: Stack(
+          children: [
+            Positioned.fill(child: PanelBackdrop(backgroundId: view.backgroundId)),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Container(
+                // Full width, like a real panel card, so the sample reads as the
+                // 제어판 in miniature rather than a floating chip.
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: colors.surface.withValues(alpha: view.panelOpacity),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: colors.outline),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '고내온도',
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '-18.5',
+                      style: TextStyle(
+                        fontSize: view.valueFontSize,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
