@@ -79,6 +79,19 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    # 배경은 코드로 그리지만(panel_background.dart), 이미지 배경을 추가할 수 있도록
+    # 폴더를 열어 둔다. assets/backgrounds/README.md 참고.
+    - assets/backgrounds/
+
+  fonts:
+    # 제어판 숫자용 7세그먼트(LED) 글꼴. SIL OFL 1.1 — assets/fonts/DSEG-LICENSE.txt
+    - family: DSEG7
+      fonts:
+        - asset: assets/fonts/DSEG7Classic-Regular.ttf
+        - asset: assets/fonts/DSEG7Classic-Bold.ttf
+          weight: 700
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

@@ -65,6 +65,10 @@ class MonitoringCard extends StatelessWidget {
             label: entry.key,
             value: entry.value,
             view: view,
+            // Only live readings get the LED face. 시설 기본 정보 is the one card
+            // without 제어, and its numbers are identifiers (시설/호실/관리자 ID),
+            // not measurements — a seven-segment display would imply a gauge.
+            ledAllowed: isControl,
             onConfirm: OnConfirm,
           )),
         ],
@@ -78,6 +82,9 @@ class _EditableRowItem extends StatefulWidget {
   final String label;
   final String value;
   final MonitoringViewSettings view;
+
+  /// False on the static info card, where numbers are identifiers.
+  final bool ledAllowed;
   final Function(String label, String inputValue)? onConfirm;
 
   const _EditableRowItem({
@@ -85,6 +92,7 @@ class _EditableRowItem extends StatefulWidget {
     required this.label,
     required this.value,
     required this.view,
+    required this.ledAllowed,
     this.onConfirm,
   });
 
@@ -111,6 +119,8 @@ class _EditableRowItemState extends State<_EditableRowItem> {
 
   @override
   Widget build(BuildContext context) {
+    final useLed = widget.ledAllowed && widget.view.usesLedFor(widget.value);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
@@ -129,6 +139,10 @@ class _EditableRowItemState extends State<_EditableRowItem> {
                 fontSize: widget.view.valueFontSize,
                 fontWeight: FontWeight.w600,
                 color: context.colors.textPrimary,
+                fontFamily: useLed ? MonitoringViewSettings.ledFontFamily : null,
+                // DSEG7 is a fixed seven-segment grid, so a little tracking
+                // keeps the digits from reading as one block.
+                letterSpacing: useLed ? 1 : null,
               ),
               decoration: InputDecoration(
                 labelText: widget.label,
