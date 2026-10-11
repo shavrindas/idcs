@@ -4,6 +4,7 @@ import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class FacilityAlarmPage extends StatefulWidget {
   final String userId;
@@ -52,7 +53,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('권한 조회 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(e)))));
       }
     } finally {
       if (mounted) {
@@ -104,11 +105,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                                 controller: _searchController,
                                 decoration: InputDecoration(
                                   // 선택된 필터 기준에 따라 힌트 문구 변경
-                                  hintText: _searchTarget == 'name' ? '알람 명으로 검색...' : '룸 이름으로 검색...',
+                                  hintText: _searchTarget == 'name' ? context.l10n.alarmSearchByAlarmOrRoom : context.l10n.alarmSearchByRoom,
                                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                                   suffixIcon: _searchQuery.isNotEmpty
                                       ? IconButton(
-                                        tooltip: '검색어 지우기',
+                                        tooltip: context.l10n.actionSearchClear,
                                           icon: const Icon(Icons.clear_rounded, size: 20),
                                           onPressed: () {
                                             setState(() {
@@ -143,14 +144,14 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                                   value: _searchTarget,
                                   icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
                                   isDense: true,
-                                  items: const [
+                                  items: [
                                     DropdownMenuItem(
                                       value: 'name',
-                                      child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldName, style: TextStyle(fontSize: 14)),
                                     ),
                                     DropdownMenuItem(
                                       value: 'room',
-                                      child: Text('룸 ID', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldRoomId, style: TextStyle(fontSize: 14)),
                                     ),
                                   ],
                                   onChanged: (value) {

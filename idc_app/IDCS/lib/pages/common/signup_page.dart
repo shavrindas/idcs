@@ -71,6 +71,8 @@ class _SignupPageState extends State<SignupPage> {
 
   // API 연동: 소셜 계정 생성 처리
   Future<void> _handleSocialSignup(String provider) async {
+    // Read before awaiting: context may no longer be valid further down.
+    final l10n = context.l10n;
     try {
       Map<String, String>? socialData;
 
@@ -92,7 +94,7 @@ class _SignupPageState extends State<SignupPage> {
           });
           return; // 여기서 흐름을 멈추고 유저의 수동 입력을 기다립니다.
         } else {
-          throw Exception(context.l10n.signupEmailUnavailable);
+          throw Exception(l10n.signupEmailUnavailable);
         }
       }
 

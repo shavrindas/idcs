@@ -89,7 +89,8 @@ class _FacilityCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      facility.name,
+                      // Empty means the server had no name for it.
+                      facility.name.isEmpty ? context.l10n.facilityUnnamed : facility.name,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

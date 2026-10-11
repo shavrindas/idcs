@@ -7,6 +7,7 @@ import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class MainIndexPage extends StatefulWidget {
   final String userId;
@@ -51,7 +52,7 @@ class _MainIndexPageState extends State<MainIndexPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('권한 조회 실패: ${describeApiError(e)}')),
+        SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(e)))),
       );
     } finally {
       if (mounted) {
@@ -115,7 +116,7 @@ class _MainIndexPageState extends State<MainIndexPage> {
       for (var i = 0; i < facilities.length; i++)
         FacilitySummary(
           id: facilities[i]['id'],
-          name: facilities[i]['name'] ?? '이름 없는 시설',
+          name: facilities[i]['name'] ?? '',
           roomCount: roomCounts[i],
           activeAlarmCount: activeCounts[facilities[i]['id']] ?? 0,
         ),
@@ -126,13 +127,13 @@ class _MainIndexPageState extends State<MainIndexPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('내 시설'),
+        title: Text(context.l10n.facilitiesTitle),
         actions: [
           // 관리자는 웹 콘솔에서 시설을 관리하므로, 코드 등록은 일반 유저에게만 노출
           if (!_isAdmin)
             IconButton(
               icon: const Icon(Icons.add_business_outlined),
-              tooltip: '시설 등록',
+              tooltip: context.l10n.facilityRegister,
               onPressed: () => context.push('/facility_register/${widget.userId}'),
             ),
         ],

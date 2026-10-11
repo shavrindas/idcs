@@ -835,6 +835,408 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'오류: {message}'**
   String errorPrefix(String message);
+
+  /// No description provided for @chartFilterTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회 조건'**
+  String get chartFilterTitle;
+
+  /// No description provided for @chartRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실'**
+  String get chartRoom;
+
+  /// No description provided for @chartRoomUnnamed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 없는 호실'**
+  String get chartRoomUnnamed;
+
+  /// No description provided for @chartResolution.
+  ///
+  /// In ko, this message translates to:
+  /// **'해상도'**
+  String get chartResolution;
+
+  /// No description provided for @chartRes10s.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 단위'**
+  String get chartRes10s;
+
+  /// No description provided for @chartRes1m.
+  ///
+  /// In ko, this message translates to:
+  /// **'1분 단위'**
+  String get chartRes1m;
+
+  /// No description provided for @chartRes5m.
+  ///
+  /// In ko, this message translates to:
+  /// **'5분 단위'**
+  String get chartRes5m;
+
+  /// No description provided for @chartRes1h.
+  ///
+  /// In ko, this message translates to:
+  /// **'1시간 단위'**
+  String get chartRes1h;
+
+  /// No description provided for @chartRange.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회 기간'**
+  String get chartRange;
+
+  /// No description provided for @chartRange1h.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 1시간'**
+  String get chartRange1h;
+
+  /// No description provided for @chartRange12h.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 12시간'**
+  String get chartRange12h;
+
+  /// No description provided for @chartRange1d.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 1일'**
+  String get chartRange1d;
+
+  /// No description provided for @chartRange7d.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 7일'**
+  String get chartRange7d;
+
+  /// No description provided for @chartRange15d.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 15일'**
+  String get chartRange15d;
+
+  /// No description provided for @chartApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'적용'**
+  String get chartApply;
+
+  /// No description provided for @chartGroups.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터 그룹'**
+  String get chartGroups;
+
+  /// No description provided for @chartNoGroups.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 그룹이 없습니다.'**
+  String get chartNoGroups;
+
+  /// No description provided for @chartPickManually.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 선택'**
+  String get chartPickManually;
+
+  /// No description provided for @chartPickItems.
+  ///
+  /// In ko, this message translates to:
+  /// **'표시할 항목을 고르세요'**
+  String get chartPickItems;
+
+  /// No description provided for @chartGroupItems.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 그룹에 묶인 항목'**
+  String get chartGroupItems;
+
+  /// No description provided for @chartTooManySeries.
+  ///
+  /// In ko, this message translates to:
+  /// **'{shown}개를 한 번에 그리면 알아보기 어렵습니다. {limit}개 이하를 권합니다.'**
+  String chartTooManySeries(int shown, int limit);
+
+  /// No description provided for @chartSeriesN.
+  ///
+  /// In ko, this message translates to:
+  /// **'시리즈 {index}'**
+  String chartSeriesN(int index);
+
+  /// No description provided for @chartSummary.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 요약'**
+  String get chartSummary;
+
+  /// No description provided for @chartMin.
+  ///
+  /// In ko, this message translates to:
+  /// **'최소'**
+  String get chartMin;
+
+  /// No description provided for @chartAvg.
+  ///
+  /// In ko, this message translates to:
+  /// **'평균'**
+  String get chartAvg;
+
+  /// No description provided for @chartMax.
+  ///
+  /// In ko, this message translates to:
+  /// **'최대'**
+  String get chartMax;
+
+  /// No description provided for @chartNoData.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회된 데이터가 없습니다.'**
+  String get chartNoData;
+
+  /// No description provided for @chartNoValidData.
+  ///
+  /// In ko, this message translates to:
+  /// **'유효한 그래프 데이터가 없습니다.'**
+  String get chartNoValidData;
+
+  /// No description provided for @chartLowerLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'하한 {value}'**
+  String chartLowerLimit(String value);
+
+  /// No description provided for @chartUpperLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'상한 {value}'**
+  String chartUpperLimit(String value);
+
+  /// No description provided for @chartTools.
+  ///
+  /// In ko, this message translates to:
+  /// **'탐색 도구'**
+  String get chartTools;
+
+  /// No description provided for @chartPanDisabled.
+  ///
+  /// In ko, this message translates to:
+  /// **'이동 (비활성)'**
+  String get chartPanDisabled;
+
+  /// No description provided for @chartHideBaseline.
+  ///
+  /// In ko, this message translates to:
+  /// **'기준선 숨기기'**
+  String get chartHideBaseline;
+
+  /// No description provided for @chartShowBaseline.
+  ///
+  /// In ko, this message translates to:
+  /// **'기준선 표시'**
+  String get chartShowBaseline;
+
+  /// No description provided for @chartNoteDisabled.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모 (비활성)'**
+  String get chartNoteDisabled;
+
+  /// No description provided for @chartResetView.
+  ///
+  /// In ko, this message translates to:
+  /// **'시점 초기화'**
+  String get chartResetView;
+
+  /// No description provided for @backToFacilities.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 시설 목록으로'**
+  String get backToFacilities;
+
+  /// No description provided for @facilityFallbackName.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 {id}'**
+  String facilityFallbackName(String id);
+
+  /// No description provided for @navMonitoring.
+  ///
+  /// In ko, this message translates to:
+  /// **'모니터링'**
+  String get navMonitoring;
+
+  /// No description provided for @navChart.
+  ///
+  /// In ko, this message translates to:
+  /// **'차트'**
+  String get navChart;
+
+  /// No description provided for @navBoard.
+  ///
+  /// In ko, this message translates to:
+  /// **'소요기록'**
+  String get navBoard;
+
+  /// No description provided for @navMessenger.
+  ///
+  /// In ko, this message translates to:
+  /// **'메신저'**
+  String get navMessenger;
+
+  /// No description provided for @navAlarm.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람'**
+  String get navAlarm;
+
+  /// No description provided for @alarmSearchByAlarmOrRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 명으로 검색...'**
+  String get alarmSearchByAlarmOrRoom;
+
+  /// No description provided for @alarmFieldRoomId.
+  ///
+  /// In ko, this message translates to:
+  /// **'룸 ID'**
+  String get alarmFieldRoomId;
+
+  /// No description provided for @chartPageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터 차트'**
+  String get chartPageTitle;
+
+  /// No description provided for @roomLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 조회 실패: {message}'**
+  String roomLoadFailed(String message);
+
+  /// No description provided for @roomQueryFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 조회 오류: {message}'**
+  String roomQueryFailed(String message);
+
+  /// No description provided for @groupLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'그룹 로드 오류: {message}'**
+  String groupLoadFailed(String message);
+
+  /// No description provided for @chartFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'차트 오류: {message}'**
+  String chartFailed(String message);
+
+  /// No description provided for @roomPickerTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 선택'**
+  String get roomPickerTitle;
+
+  /// No description provided for @panelControlBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'제어'**
+  String get panelControlBadge;
+
+  /// No description provided for @panelInputHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'입력'**
+  String get panelInputHint;
+
+  /// No description provided for @panelConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get panelConfirm;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과가 없습니다.'**
+  String get searchNoResults;
+
+  /// No description provided for @alarmsNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회할 수 있는 알람이 없습니다.'**
+  String get alarmsNone;
+
+  /// No description provided for @alarmNameMissing.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 이름 없음'**
+  String get alarmNameMissing;
+
+  /// No description provided for @roomNameMissing.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 이름 없음'**
+  String get roomNameMissing;
+
+  /// No description provided for @facilityNameMissing.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 이름 없음'**
+  String get facilityNameMissing;
+
+  /// No description provided for @facilityRegister.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 등록'**
+  String get facilityRegister;
+
+  /// No description provided for @facilityAccessCode.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 접근 코드'**
+  String get facilityAccessCode;
+
+  /// No description provided for @facilityRegistered.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 시설'**
+  String get facilityRegistered;
+
+  /// No description provided for @facilityUnlink.
+  ///
+  /// In ko, this message translates to:
+  /// **'해제'**
+  String get facilityUnlink;
+
+  /// No description provided for @facilityRegisterFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록 실패: {message}'**
+  String facilityRegisterFailed(String message);
+
+  /// No description provided for @facilityRegisterTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 등록 페이지'**
+  String get facilityRegisterTitle;
+
+  /// No description provided for @facilityRegisterAdminNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자 및 개발자는 시설 등록이 필요하지 않습니다.'**
+  String get facilityRegisterAdminNote;
+
+  /// No description provided for @facilityUnnamed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 없는 시설'**
+  String get facilityUnnamed;
 }
 
 class _AppLocalizationsDelegate

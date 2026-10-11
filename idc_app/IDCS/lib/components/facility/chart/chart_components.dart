@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 차트 필터 박스 (해상도 및 조회 기간 설정)
 class ChartFilterBox extends StatelessWidget {
@@ -39,19 +40,19 @@ class ChartFilterBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: '조회 조건',
+      title: context.l10n.chartFilterTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DropdownButtonFormField<int>(
             value: selectedRoomId,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: '호실'),
+            decoration: InputDecoration(labelText: context.l10n.chartRoom),
             items: rooms
                 .map(
                   (room) => DropdownMenuItem<int>(
                     value: room['id'] is int ? room['id'] : int.tryParse(room['id'].toString()),
-                    child: Text(room['name']?.toString() ?? '이름 없는 호실', overflow: TextOverflow.ellipsis),
+                    child: Text(room['name']?.toString() ?? context.l10n.chartRoomUnnamed, overflow: TextOverflow.ellipsis),
                   ),
                 )
                 .toList(),
@@ -67,23 +68,23 @@ class ChartFilterBox extends StatelessWidget {
                 child: DropdownButtonFormField<String>(
                   value: currentScale,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '해상도'),
-                  items: const [
+                  decoration: InputDecoration(labelText: context.l10n.chartResolution),
+                  items: [
                     DropdownMenuItem(
                       value: '10s',
-                      child: Text('10초 단위', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRes10s, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '1m',
-                      child: Text('1분 단위', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRes1m, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '5m',
-                      child: Text('5분 단위', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRes5m, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '1h',
-                      child: Text('1시간 단위', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRes1h, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                   onChanged: (val) {
@@ -91,32 +92,32 @@ class ChartFilterBox extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: currentTimeRange,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: '조회 기간'),
-                  items: const [
+                  decoration: InputDecoration(labelText: context.l10n.chartRange),
+                  items: [
                     DropdownMenuItem(
                       value: '1h',
-                      child: Text('최근 1시간', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRange1h, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '12h',
-                      child: Text('최근 12시간', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRange12h, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '1d',
-                      child: Text('최근 1일', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRange1d, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '7d',
-                      child: Text('최근 7일', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRange7d, overflow: TextOverflow.ellipsis),
                     ),
                     DropdownMenuItem(
                       value: '15d',
-                      child: Text('최근 15일', overflow: TextOverflow.ellipsis),
+                      child: Text(context.l10n.chartRange15d, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                   onChanged: (val) {
@@ -130,7 +131,7 @@ class ChartFilterBox extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onApply,
                   style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
-                  child: const Text('적용'),
+                  child: Text(context.l10n.chartApply),
                 ),
               ),
             ],
@@ -188,14 +189,14 @@ class ChartSeriesBox extends StatelessWidget {
     final shown = _shownRoles;
 
     return _SectionCard(
-      title: '데이터 그룹',
+      title: context.l10n.chartGroups,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (availableGroups.isEmpty && !directMode)
             Padding(
               padding: EdgeInsets.only(bottom: 8),
-              child: Text('등록된 그룹이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+              child: Text(context.l10n.chartNoGroups, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
             ),
           Wrap(
             spacing: 8.0,
@@ -210,7 +211,7 @@ class ChartSeriesBox extends StatelessWidget {
                   onSelected: () => onGroupSelected(group['group_id']),
                 );
               }),
-              _chip(context, label: '직접 선택', selected: directMode, onSelected: onDirectModeSelected),
+              _chip(context, label: context.l10n.chartPickManually, selected: directMode, onSelected: onDirectModeSelected),
             ],
           ),
           if (shown.isNotEmpty) ...[
@@ -218,7 +219,7 @@ class ChartSeriesBox extends StatelessWidget {
             Divider(height: 1, color: context.colors.outline),
             const SizedBox(height: 10),
             Text(
-              directMode ? '표시할 항목을 고르세요' : '이 그룹에 묶인 항목',
+              directMode ? context.l10n.chartPickItems : context.l10n.chartGroupItems,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
             ),
             // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
@@ -230,8 +231,7 @@ class ChartSeriesBox extends StatelessWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      '${visibleRoleIds.length}개를 한 번에 그리면 알아보기 어렵습니다. '
-                      '$_readableSeriesLimit개 이하를 권합니다.',
+                      context.l10n.chartTooManySeries(visibleRoleIds.length, _readableSeriesLimit),
                       style: TextStyle(fontSize: 12, color: context.colors.warning),
                     ),
                   ),
@@ -249,7 +249,7 @@ class ChartSeriesBox extends StatelessWidget {
                     final id = _roleId(role);
                     final checked = id != null && visibleRoleIds.contains(id);
                     return FilterChip(
-                      label: Text(role['role_name']?.toString() ?? '이름 없음'),
+                      label: Text(role['role_name']?.toString() ?? context.l10n.noName),
                       selected: checked,
                       onSelected: id == null ? null : (val) => onRoleToggled(id, val),
                       labelStyle: TextStyle(
@@ -440,7 +440,7 @@ class ChartStatsBox extends StatelessWidget {
 
       stats.add(
         _SeriesStat(
-          name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
+          name: ds['display_name'] ?? ds['role_name'] ?? context.l10n.chartSeriesN(i + 1),
           color: context.colors.chartSeries[i % context.colors.chartSeries.length],
           min: minVal,
           avg: count > 0 ? sum / count : null,
@@ -452,7 +452,7 @@ class ChartStatsBox extends StatelessWidget {
     if (stats.isEmpty) return const SizedBox.shrink();
 
     return _SectionCard(
-      title: '구간 요약',
+      title: context.l10n.chartSummary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: stats
@@ -474,11 +474,11 @@ class ChartStatsBox extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    _statChip(context, '최소', s.min),
+                    _statChip(context, context.l10n.chartMin, s.min),
                     const SizedBox(width: 6),
-                    _statChip(context, '평균', s.avg),
+                    _statChip(context, context.l10n.chartAvg, s.avg),
                     const SizedBox(width: 6),
-                    _statChip(context, '최대', s.max),
+                    _statChip(context, context.l10n.chartMax, s.max),
                   ],
                 ),
               ),
@@ -530,7 +530,7 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(
         context,
         child: Center(
-          child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+          child: Text(context.l10n.chartNoData, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         ),
       );
     }
@@ -588,7 +588,7 @@ class ChartCanvasBox extends StatelessWidget {
       if (spots.isNotEmpty) {
         // 색만으로 시리즈를 구분하면 색각 이상이나 흑백 출력(포스터·인쇄)에서 구분이 안 된다.
         // 실선/파선/점선을 함께 돌려 색 없이도 구분되게 한다.
-        seriesNames.add(ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}');
+        seriesNames.add(ds['display_name'] ?? ds['role_name'] ?? context.l10n.chartSeriesN(i + 1));
         final dash = _seriesDashPatterns[i % _seriesDashPatterns.length];
         seriesDashes.add(dash);
 
@@ -607,12 +607,12 @@ class ChartCanvasBox extends StatelessWidget {
 
         if (showTargetLines) {
           if (targetLow != null) {
-            targetLines.add(_targetLine(targetLow, seriesColor, '하한 ${targetLow.toStringAsFixed(1)}'));
+            targetLines.add(_targetLine(targetLow, seriesColor, context.l10n.chartLowerLimit(targetLow.toStringAsFixed(1))));
             if (targetLow < minY) minY = targetLow;
             if (targetLow > maxY) maxY = targetLow;
           }
           if (targetHigh != null) {
-            targetLines.add(_targetLine(targetHigh, seriesColor, '상한 ${targetHigh.toStringAsFixed(1)}'));
+            targetLines.add(_targetLine(targetHigh, seriesColor, context.l10n.chartUpperLimit(targetHigh.toStringAsFixed(1))));
             if (targetHigh < minY) minY = targetHigh;
             if (targetHigh > maxY) maxY = targetHigh;
           }
@@ -628,7 +628,7 @@ class ChartCanvasBox extends StatelessWidget {
         if (ts == null) continue;
         final double x = ts.millisecondsSinceEpoch.toDouble();
         if (x < minX || x > maxX) continue;
-        final String name = a['alarm_name']?.toString() ?? '알람';
+        final String name = a['alarm_name']?.toString() ?? context.l10n.alarmShort;
         alarmLines.add(
           VerticalLine(
             x: x,
@@ -663,7 +663,7 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(
         context,
         child: Center(
-          child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+          child: Text(context.l10n.chartNoValidData, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         ),
       );
     }
@@ -795,14 +795,14 @@ class ChartToolBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: '탐색 도구',
+      title: context.l10n.chartTools,
       child: Row(
         children: [
           const Spacer(),
           IconButton(
             icon: Icon(Icons.pan_tool_outlined, color: context.colors.textSecondary),
             onPressed: null,
-            tooltip: '이동 (비활성)',
+            tooltip: context.l10n.chartPanDisabled,
           ),
           IconButton(
             icon: Icon(
@@ -810,17 +810,17 @@ class ChartToolBox extends StatelessWidget {
               color: showTargetLines ? context.colors.primary : context.colors.textSecondary,
             ),
             onPressed: () => onToggleTargetLines(!showTargetLines),
-            tooltip: showTargetLines ? '기준선 숨기기' : '기준선 표시',
+            tooltip: showTargetLines ? context.l10n.chartHideBaseline : context.l10n.chartShowBaseline,
           ),
           IconButton(
             icon: Icon(Icons.text_fields_rounded, color: context.colors.textSecondary),
             onPressed: null,
-            tooltip: '메모 (비활성)',
+            tooltip: context.l10n.chartNoteDisabled,
           ),
           IconButton(
             icon: Icon(Icons.refresh_rounded, color: context.colors.primary),
             onPressed: () {},
-            tooltip: '시점 초기화',
+            tooltip: context.l10n.chartResetView,
           ),
         ],
       ),

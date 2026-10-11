@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class MonitoringCard extends StatelessWidget {
   final String title;
@@ -53,7 +54,7 @@ class MonitoringCard extends StatelessWidget {
                     color: context.colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('제어', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.primary)),
+                  child: Text(context.l10n.panelControlBadge, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.primary)),
                 ),
               ],
             ],
@@ -162,8 +163,8 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               child: TextField(
                 controller: _inputController,
                 style: const TextStyle(fontSize: 14),
-                decoration: const InputDecoration(
-                  hintText: '입력',
+                decoration: InputDecoration(
+                  hintText: context.l10n.panelInputHint,
                   isDense: true,
                   contentPadding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
                 ),
@@ -183,7 +184,7 @@ class _EditableRowItemState extends State<_EditableRowItem> {
                   minimumSize: const Size(64, 44),
                   padding: const EdgeInsets.symmetric(horizontal: 14.0),
                 ),
-                child: const Text('확인', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                child: Text(context.l10n.panelConfirm, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
