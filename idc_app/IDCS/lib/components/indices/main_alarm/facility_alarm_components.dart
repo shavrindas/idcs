@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #2: 시설 알람 박스 (순수 목록 표시 역할)
 class FacilityAlarmBox extends StatelessWidget {
@@ -18,7 +19,7 @@ class FacilityAlarmBox extends StatelessWidget {
       return SliverToBoxAdapter(
         child: EmptyListState(
           icon: Icons.notifications_off_outlined,
-          message: isSearching ? '검색 결과가 없습니다.' : '조회할 수 있는 알람이 없습니다.',
+          message: isSearching ? context.l10n.searchNoResults : context.l10n.alarmsNone,
         ),
       );
     }
@@ -32,8 +33,8 @@ class FacilityAlarmBox extends StatelessWidget {
 
         return GroupedAlarmTile(
           group: group,
-          title: group.alarm['alarm_name'] ?? '알람 이름 없음',
-          subtitle: group.alarm['room_name'] ?? '호실 이름 없음',
+          title: group.alarm['alarm_name'] ?? context.l10n.alarmNameMissing,
+          subtitle: group.alarm['room_name'] ?? context.l10n.roomNameMissing,
         );
       },
     );

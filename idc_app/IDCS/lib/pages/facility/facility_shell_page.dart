@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class FacilityShellPage extends StatefulWidget {
   final String userId;
@@ -72,11 +73,11 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
             ? null
             : IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: '내 시설 목록으로',
+                tooltip: context.l10n.backToFacilities,
                 onPressed: _backToHome,
               ),
         automaticallyImplyLeading: false,
-        title: Text(_facilityName ?? '시설 ${widget.facilityId}'),
+        title: Text(_facilityName ?? context.l10n.facilityFallbackName(widget.facilityId)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: context.colors.surface,
@@ -85,7 +86,7 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
           if (FacilityShortcut.isSoleFacility)
             IconButton(
               icon: const Icon(Icons.person_outline_rounded),
-              tooltip: '내 정보',
+              tooltip: context.l10n.profileTitle,
               onPressed: () => context.push('/index/${widget.userId}/profile'),
             ),
         ],
@@ -97,12 +98,12 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
           index,
           initialLocation: index == widget.navigationShell.currentIndex,
         ),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.sensors_outlined), selectedIcon: Icon(Icons.sensors_rounded), label: '모니터링'),
-          NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: '차트'),
-          NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: '소요기록'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline_rounded), selectedIcon: Icon(Icons.chat_bubble_rounded), label: '메신저'),
-          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: '알람'),
+        destinations: [
+          NavigationDestination(icon: Icon(Icons.sensors_outlined), selectedIcon: Icon(Icons.sensors_rounded), label: context.l10n.navMonitoring),
+          NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: context.l10n.navChart),
+          NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: context.l10n.navBoard),
+          NavigationDestination(icon: Icon(Icons.chat_bubble_outline_rounded), selectedIcon: Icon(Icons.chat_bubble_rounded), label: context.l10n.navMessenger),
+          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
         ],
       ),
     );

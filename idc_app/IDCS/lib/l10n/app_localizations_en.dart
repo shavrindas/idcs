@@ -403,4 +403,226 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorPrefix(String message) {
     return 'Error: $message';
   }
+
+  @override
+  String get chartFilterTitle => 'Query';
+
+  @override
+  String get chartRoom => 'Room';
+
+  @override
+  String get chartRoomUnnamed => 'Unnamed room';
+
+  @override
+  String get chartResolution => 'Resolution';
+
+  @override
+  String get chartRes10s => '10 seconds';
+
+  @override
+  String get chartRes1m => '1 minute';
+
+  @override
+  String get chartRes5m => '5 minutes';
+
+  @override
+  String get chartRes1h => '1 hour';
+
+  @override
+  String get chartRange => 'Period';
+
+  @override
+  String get chartRange1h => 'Last hour';
+
+  @override
+  String get chartRange12h => 'Last 12 hours';
+
+  @override
+  String get chartRange1d => 'Last day';
+
+  @override
+  String get chartRange7d => 'Last 7 days';
+
+  @override
+  String get chartRange15d => 'Last 15 days';
+
+  @override
+  String get chartApply => 'Apply';
+
+  @override
+  String get chartGroups => 'Data groups';
+
+  @override
+  String get chartNoGroups => 'No groups defined.';
+
+  @override
+  String get chartPickManually => 'Pick manually';
+
+  @override
+  String get chartPickItems => 'Choose what to plot';
+
+  @override
+  String get chartGroupItems => 'Points in this group';
+
+  @override
+  String chartTooManySeries(int shown, int limit) {
+    return 'Plotting $shown at once is hard to read. $limit or fewer is easier.';
+  }
+
+  @override
+  String chartSeriesN(int index) {
+    return 'Series $index';
+  }
+
+  @override
+  String get chartSummary => 'Range summary';
+
+  @override
+  String get chartMin => 'Min';
+
+  @override
+  String get chartAvg => 'Avg';
+
+  @override
+  String get chartMax => 'Max';
+
+  @override
+  String get chartNoData => 'No data for this query.';
+
+  @override
+  String get chartNoValidData => 'No plottable data.';
+
+  @override
+  String chartLowerLimit(String value) {
+    return 'Low $value';
+  }
+
+  @override
+  String chartUpperLimit(String value) {
+    return 'High $value';
+  }
+
+  @override
+  String get chartTools => 'Tools';
+
+  @override
+  String get chartPanDisabled => 'Pan (off)';
+
+  @override
+  String get chartHideBaseline => 'Hide safe range';
+
+  @override
+  String get chartShowBaseline => 'Show safe range';
+
+  @override
+  String get chartNoteDisabled => 'Note (off)';
+
+  @override
+  String get chartResetView => 'Reset view';
+
+  @override
+  String get backToFacilities => 'Back to my facilities';
+
+  @override
+  String facilityFallbackName(String id) {
+    return 'Facility $id';
+  }
+
+  @override
+  String get navMonitoring => 'Monitor';
+
+  @override
+  String get navChart => 'Charts';
+
+  @override
+  String get navBoard => 'Work log';
+
+  @override
+  String get navMessenger => 'Messages';
+
+  @override
+  String get navAlarm => 'Alarms';
+
+  @override
+  String get alarmSearchByAlarmOrRoom => 'Search by alarm name…';
+
+  @override
+  String get alarmFieldRoomId => 'Room ID';
+
+  @override
+  String get chartPageTitle => 'Data charts';
+
+  @override
+  String roomLoadFailed(String message) {
+    return 'Could not load rooms: $message';
+  }
+
+  @override
+  String roomQueryFailed(String message) {
+    return 'Room lookup failed: $message';
+  }
+
+  @override
+  String groupLoadFailed(String message) {
+    return 'Could not load groups: $message';
+  }
+
+  @override
+  String chartFailed(String message) {
+    return 'Chart error: $message';
+  }
+
+  @override
+  String get roomPickerTitle => 'Choose a room';
+
+  @override
+  String get panelControlBadge => 'Control';
+
+  @override
+  String get panelInputHint => 'Value';
+
+  @override
+  String get panelConfirm => 'Set';
+
+  @override
+  String get searchNoResults => 'No matches.';
+
+  @override
+  String get alarmsNone => 'No alarms to show.';
+
+  @override
+  String get alarmNameMissing => 'Unnamed alarm';
+
+  @override
+  String get roomNameMissing => 'Unnamed room';
+
+  @override
+  String get facilityNameMissing => 'Unnamed facility';
+
+  @override
+  String get facilityRegister => 'Add facility';
+
+  @override
+  String get facilityAccessCode => 'Facility access code';
+
+  @override
+  String get facilityRegistered => 'Registered facilities';
+
+  @override
+  String get facilityUnlink => 'Remove';
+
+  @override
+  String facilityRegisterFailed(String message) {
+    return 'Could not register: $message';
+  }
+
+  @override
+  String get facilityRegisterTitle => 'Add a facility';
+
+  @override
+  String get facilityRegisterAdminNote =>
+      'Admins and developers do not need to register facilities.';
+
+  @override
+  String get facilityUnnamed => 'Unnamed facility';
 }

@@ -3,6 +3,7 @@ import 'package:idcs/components/indices/facility_register/facility_register.dart
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class FacilityRegisterPage extends StatefulWidget {
   final String userId;
@@ -46,6 +47,8 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
     final code = _codeController.text.trim();
     if (code.isEmpty) return;
 
+    // Read before awaiting: context may no longer be valid in the catch.
+    final l10n = context.l10n;
     try {
       final msg = await FacilityApiService.registerFacility(widget.userId, code);
       setState(() {
@@ -54,7 +57,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
       });
       await _loadData(); // 목록 새로고침
     } catch (e) {
-      setState(() => _collapseMessage = '등록 실패: ${describeApiError(e)}');
+      setState(() => _collapseMessage = l10n.facilityRegisterFailed(describeApiError(e)));
     }
   }
 
@@ -72,13 +75,13 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
   Widget build(BuildContext context) {
     if (_isAdmin) {
       return Scaffold(
-        appBar: AppBar(title: const Text('시설 등록 페이지')),
-        body: const Center(child: Text('관리자 및 개발자는 시설 등록이 필요하지 않습니다.')),
+        appBar: AppBar(title: Text(context.l10n.facilityRegisterTitle)),
+        body: Center(child: Text(context.l10n.facilityRegisterAdminNote)),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('시설 등록 페이지')),
+      appBar: AppBar(title: Text(context.l10n.facilityRegisterTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

@@ -393,4 +393,225 @@ class AppLocalizationsKo extends AppLocalizations {
   String errorPrefix(String message) {
     return '오류: $message';
   }
+
+  @override
+  String get chartFilterTitle => '조회 조건';
+
+  @override
+  String get chartRoom => '호실';
+
+  @override
+  String get chartRoomUnnamed => '이름 없는 호실';
+
+  @override
+  String get chartResolution => '해상도';
+
+  @override
+  String get chartRes10s => '10초 단위';
+
+  @override
+  String get chartRes1m => '1분 단위';
+
+  @override
+  String get chartRes5m => '5분 단위';
+
+  @override
+  String get chartRes1h => '1시간 단위';
+
+  @override
+  String get chartRange => '조회 기간';
+
+  @override
+  String get chartRange1h => '최근 1시간';
+
+  @override
+  String get chartRange12h => '최근 12시간';
+
+  @override
+  String get chartRange1d => '최근 1일';
+
+  @override
+  String get chartRange7d => '최근 7일';
+
+  @override
+  String get chartRange15d => '최근 15일';
+
+  @override
+  String get chartApply => '적용';
+
+  @override
+  String get chartGroups => '데이터 그룹';
+
+  @override
+  String get chartNoGroups => '등록된 그룹이 없습니다.';
+
+  @override
+  String get chartPickManually => '직접 선택';
+
+  @override
+  String get chartPickItems => '표시할 항목을 고르세요';
+
+  @override
+  String get chartGroupItems => '이 그룹에 묶인 항목';
+
+  @override
+  String chartTooManySeries(int shown, int limit) {
+    return '$shown개를 한 번에 그리면 알아보기 어렵습니다. $limit개 이하를 권합니다.';
+  }
+
+  @override
+  String chartSeriesN(int index) {
+    return '시리즈 $index';
+  }
+
+  @override
+  String get chartSummary => '구간 요약';
+
+  @override
+  String get chartMin => '최소';
+
+  @override
+  String get chartAvg => '평균';
+
+  @override
+  String get chartMax => '최대';
+
+  @override
+  String get chartNoData => '조회된 데이터가 없습니다.';
+
+  @override
+  String get chartNoValidData => '유효한 그래프 데이터가 없습니다.';
+
+  @override
+  String chartLowerLimit(String value) {
+    return '하한 $value';
+  }
+
+  @override
+  String chartUpperLimit(String value) {
+    return '상한 $value';
+  }
+
+  @override
+  String get chartTools => '탐색 도구';
+
+  @override
+  String get chartPanDisabled => '이동 (비활성)';
+
+  @override
+  String get chartHideBaseline => '기준선 숨기기';
+
+  @override
+  String get chartShowBaseline => '기준선 표시';
+
+  @override
+  String get chartNoteDisabled => '메모 (비활성)';
+
+  @override
+  String get chartResetView => '시점 초기화';
+
+  @override
+  String get backToFacilities => '내 시설 목록으로';
+
+  @override
+  String facilityFallbackName(String id) {
+    return '시설 $id';
+  }
+
+  @override
+  String get navMonitoring => '모니터링';
+
+  @override
+  String get navChart => '차트';
+
+  @override
+  String get navBoard => '소요기록';
+
+  @override
+  String get navMessenger => '메신저';
+
+  @override
+  String get navAlarm => '알람';
+
+  @override
+  String get alarmSearchByAlarmOrRoom => '알람 명으로 검색...';
+
+  @override
+  String get alarmFieldRoomId => '룸 ID';
+
+  @override
+  String get chartPageTitle => '데이터 차트';
+
+  @override
+  String roomLoadFailed(String message) {
+    return '호실 조회 실패: $message';
+  }
+
+  @override
+  String roomQueryFailed(String message) {
+    return '호실 조회 오류: $message';
+  }
+
+  @override
+  String groupLoadFailed(String message) {
+    return '그룹 로드 오류: $message';
+  }
+
+  @override
+  String chartFailed(String message) {
+    return '차트 오류: $message';
+  }
+
+  @override
+  String get roomPickerTitle => '호실 선택';
+
+  @override
+  String get panelControlBadge => '제어';
+
+  @override
+  String get panelInputHint => '입력';
+
+  @override
+  String get panelConfirm => '확인';
+
+  @override
+  String get searchNoResults => '검색 결과가 없습니다.';
+
+  @override
+  String get alarmsNone => '조회할 수 있는 알람이 없습니다.';
+
+  @override
+  String get alarmNameMissing => '알람 이름 없음';
+
+  @override
+  String get roomNameMissing => '호실 이름 없음';
+
+  @override
+  String get facilityNameMissing => '시설 이름 없음';
+
+  @override
+  String get facilityRegister => '시설 등록';
+
+  @override
+  String get facilityAccessCode => '시설 접근 코드';
+
+  @override
+  String get facilityRegistered => '등록된 시설';
+
+  @override
+  String get facilityUnlink => '해제';
+
+  @override
+  String facilityRegisterFailed(String message) {
+    return '등록 실패: $message';
+  }
+
+  @override
+  String get facilityRegisterTitle => '시설 등록 페이지';
+
+  @override
+  String get facilityRegisterAdminNote => '관리자 및 개발자는 시설 등록이 필요하지 않습니다.';
+
+  @override
+  String get facilityUnnamed => '이름 없는 시설';
 }

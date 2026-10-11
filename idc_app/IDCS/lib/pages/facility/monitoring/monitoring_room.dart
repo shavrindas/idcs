@@ -6,6 +6,7 @@ import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class MonitoringRoom extends StatefulWidget {
   final String userId;
@@ -45,7 +46,7 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('호실 조회 실패: ${describeApiError(e)}')),
+        SnackBar(content: Text(context.l10n.roomLoadFailed(describeApiError(e)))),
       );
     } finally {
       if (mounted) {
@@ -89,7 +90,7 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    '호실 선택',
+                    context.l10n.roomPickerTitle,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,

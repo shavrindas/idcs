@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #2: 시설 접근 코드 입력 및 등록 박스
 class FacilityInputBox extends StatelessWidget {
@@ -23,17 +24,17 @@ class FacilityInputBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('시설 등록', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+          Text(context.l10n.facilityRegister, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
           const SizedBox(height: 12),
           TextField(
             controller: codeController,
-            decoration: const InputDecoration(
-              labelText: '시설 접근 코드',
+            decoration: InputDecoration(
+              labelText: context.l10n.facilityAccessCode,
               prefixIcon: Icon(Icons.qr_code_outlined),
             ),
           ),
           const SizedBox(height: 14),
-          ElevatedButton(onPressed: onSubmit, child: const Text('시설 등록')),
+          ElevatedButton(onPressed: onSubmit, child: Text(context.l10n.facilityRegister)),
           if (collapseMessage.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
@@ -83,10 +84,10 @@ class FacilityListEditBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('등록된 시설', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+          Text(context.l10n.facilityRegistered, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
           const SizedBox(height: 12),
           if (facilities.isEmpty)
-            Text('등록된 시설이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+            Text(context.l10n.facilitiesEmpty, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           ...facilities.map((fac) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
@@ -110,7 +111,7 @@ class FacilityListEditBox extends StatelessWidget {
                       foregroundColor: context.colors.error,
                       side: BorderSide(color: context.colors.error.withValues(alpha: 0.4)),
                     ),
-                    child: const Text('해제'),
+                    child: Text(context.l10n.facilityUnlink),
                   ),
                 ],
               ),

@@ -181,5 +181,145 @@
         "type": "String"
       }
     }
-  }
+  },
+  "chartFilterTitle": "Query",
+  "chartRoom": "Room",
+  "chartRoomUnnamed": "Unnamed room",
+  "chartResolution": "Resolution",
+  "chartRes10s": "10 seconds",
+  "chartRes1m": "1 minute",
+  "chartRes5m": "5 minutes",
+  "chartRes1h": "1 hour",
+  "chartRange": "Period",
+  "chartRange1h": "Last hour",
+  "chartRange12h": "Last 12 hours",
+  "chartRange1d": "Last day",
+  "chartRange7d": "Last 7 days",
+  "chartRange15d": "Last 15 days",
+  "chartApply": "Apply",
+  "chartGroups": "Data groups",
+  "chartNoGroups": "No groups defined.",
+  "chartPickManually": "Pick manually",
+  "chartPickItems": "Choose what to plot",
+  "chartGroupItems": "Points in this group",
+  "chartTooManySeries": "Plotting {shown} at once is hard to read. {limit} or fewer is easier.",
+  "@chartTooManySeries": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSeriesN": "Series {index}",
+  "@chartSeriesN": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSummary": "Range summary",
+  "chartMin": "Min",
+  "chartAvg": "Avg",
+  "chartMax": "Max",
+  "chartNoData": "No data for this query.",
+  "chartNoValidData": "No plottable data.",
+  "chartLowerLimit": "Low {value}",
+  "@chartLowerLimit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chartUpperLimit": "High {value}",
+  "@chartUpperLimit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chartTools": "Tools",
+  "chartPanDisabled": "Pan (off)",
+  "chartHideBaseline": "Hide safe range",
+  "chartShowBaseline": "Show safe range",
+  "chartNoteDisabled": "Note (off)",
+  "chartResetView": "Reset view",
+  "backToFacilities": "Back to my facilities",
+  "facilityFallbackName": "Facility {id}",
+  "@facilityFallbackName": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navMonitoring": "Monitor",
+  "navChart": "Charts",
+  "navBoard": "Work log",
+  "navMessenger": "Messages",
+  "navAlarm": "Alarms",
+  "alarmSearchByAlarmOrRoom": "Search by alarm name…",
+  "alarmFieldRoomId": "Room ID",
+  "chartPageTitle": "Data charts",
+  "roomLoadFailed": "Could not load rooms: {message}",
+  "@roomLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "roomQueryFailed": "Room lookup failed: {message}",
+  "@roomQueryFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "groupLoadFailed": "Could not load groups: {message}",
+  "@groupLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "chartFailed": "Chart error: {message}",
+  "@chartFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "roomPickerTitle": "Choose a room",
+  "panelControlBadge": "Control",
+  "panelInputHint": "Value",
+  "panelConfirm": "Set",
+  "searchNoResults": "No matches.",
+  "alarmsNone": "No alarms to show.",
+  "alarmNameMissing": "Unnamed alarm",
+  "roomNameMissing": "Unnamed room",
+  "facilityNameMissing": "Unnamed facility",
+  "facilityRegister": "Add facility",
+  "facilityAccessCode": "Facility access code",
+  "facilityRegistered": "Registered facilities",
+  "facilityUnlink": "Remove",
+  "facilityRegisterFailed": "Could not register: {message}",
+  "@facilityRegisterFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "facilityRegisterTitle": "Add a facility",
+  "facilityRegisterAdminNote": "Admins and developers do not need to register facilities.",
+  "facilityUnnamed": "Unnamed facility"
 }

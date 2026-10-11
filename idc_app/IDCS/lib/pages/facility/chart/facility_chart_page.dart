@@ -6,6 +6,7 @@ import 'package:idcs/components/facility/chart/chart_components.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class FacilityChartPage extends StatefulWidget {
   final String userId;
@@ -75,7 +76,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('호실 조회 오류: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.roomQueryFailed(describeApiError(e)))));
         setState(() => _isLoading = false);
       }
     }
@@ -127,7 +128,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('그룹 로드 오류: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.groupLoadFailed(describeApiError(e)))));
         setState(() => _isLoading = false);
       }
     }
@@ -201,7 +202,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('차트 오류: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.chartFailed(describeApiError(e)))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -211,7 +212,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('데이터 차트')),
+      appBar: AppBar(title: Text(context.l10n.chartPageTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
