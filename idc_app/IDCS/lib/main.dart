@@ -11,6 +11,7 @@ import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:idcs/l10n/app_localizations.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/theme/locale_controller.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/date_symbol_data_local.dart';

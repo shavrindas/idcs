@@ -16,7 +16,7 @@ class PostModel {
     return PostModel(
       postId: json['post_id'], facilityId: json['facility_id'], creatorId: json['creator_id'],
       title: json['title'], content: json['content'],
-      facilityName: json['facility_name'] ?? '', creatorName: json['creator_name'] ?? '알 수 없음',
+      facilityName: json['facility_name'] ?? '', creatorName: json['creator_name'] ?? '',
     );
   }
 }

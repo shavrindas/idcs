@@ -5,6 +5,7 @@
 //       해당 탭 콘텐츠 안의 버튼으로 진입하는 풀스크린 push 화면으로 유지한다.
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class UserShellPage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -21,10 +22,10 @@ class UserShellPage extends StatelessWidget {
           index,
           initialLocation: index == navigationShell.currentIndex,
         ),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard_rounded), label: '홈'),
-          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: '알람'),
-          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: '내 정보'),
+        destinations: [
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard_rounded), label: context.l10n.navHome),
+          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
+          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: context.l10n.profileTitle),
         ],
       ),
     );

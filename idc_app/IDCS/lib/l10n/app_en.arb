@@ -321,5 +321,178 @@
   },
   "facilityRegisterTitle": "Add a facility",
   "facilityRegisterAdminNote": "Admins and developers do not need to register facilities.",
-  "facilityUnnamed": "Unnamed facility"
+  "facilityUnnamed": "Unnamed facility",
+  "boardNewPost": "New post",
+  "boardSearchAll": "All",
+  "boardTitle": "Title",
+  "boardAuthor": "Author",
+  "boardBody": "Body",
+  "boardSearchHint": "Type to search",
+  "actionSearch": "Search",
+  "boardEmpty": "No posts yet.",
+  "boardPostMeta": "[{facility}] by {author}",
+  "@boardPostMeta": {
+    "placeholders": {
+      "facility": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pageFirst": "First page",
+  "pagePrev": "Previous page",
+  "pageNext": "Next page",
+  "pageLast": "Last page",
+  "postNoTitle": "Untitled",
+  "postMeta": "By {author} · {date}",
+  "@postMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "actionDelete": "Delete",
+  "commentsCount": "Comments {count}",
+  "@commentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentDelete": "Delete comment",
+  "commentsEmpty": "No comments yet.",
+  "commentHint": "Write a comment…",
+  "commentSubmit": "Post",
+  "postLoadFailed": "Could not load the post: {message}",
+  "@postLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "Deleted.",
+  "postDeleteFailed": "Could not delete: {message}",
+  "@postDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentFailed": "Could not post the comment: {message}",
+  "@commentFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentDeleteFailed": "Could not delete the comment: {message}",
+  "@commentDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "dataUnavailable": "Could not load the data.",
+  "postDetailTitle": "Post",
+  "imageAttachFailed": "Could not attach the image: {message}",
+  "@imageAttachFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postTitleRequired": "Please enter a title.",
+  "postCreated": "Post published.",
+  "postCreateFailed": "Could not publish: {message}",
+  "@postCreateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postCreateTitle": "New post (facility {id})",
+  "@postCreateTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "postCreateSubmit": "Publish",
+  "postSourceLoadFailed": "Could not load the original: {message}",
+  "@postSourceLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postUpdated": "Changes saved.",
+  "postUpdateFailed": "Could not save: {message}",
+  "@postUpdateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postEditTitle": "Edit post",
+  "postEditSubmit": "Save changes",
+  "totalBoardTitle": "All work logs (admin)",
+  "totalBoardSearch": "Search and filter",
+  "boardPageTitle": "Work log",
+  "boardSearchTitle": "Search posts",
+  "chatMenu": "Menu",
+  "chatNoMessages": "No messages yet.",
+  "chatReply": "Reply",
+  "chatPinToggle": "Pin",
+  "chatReplyingTo": "Replying to: {text}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "actionClose": "Close",
+  "chatAttach": "Attach",
+  "chatInputHint": "Write a message…",
+  "chatSend": "Send",
+  "chatRoomsManage": "Manage rooms",
+  "chatGroupCreate": "New group chat",
+  "chatRoomsEmpty": "You are not in any chat rooms.",
+  "chatRoomName": "Room name",
+  "chatInviteUsers": "User IDs to invite (comma separated)",
+  "actionCreate": "Create",
+  "chatLeaveRoom": "Leave room (admins can delete group rooms)",
+  "chatSearchHint": "Search messages…",
+  "chatRoom": "Chat",
+  "chatMembers": "Members",
+  "chatRoomFallback": "Chat {id}",
+  "@chatRoomFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navHome": "Home",
+  "appTagline": "Live monitoring for cold storage",
+  "findIdCheck": "Check my account",
+  "editorImageAttach": "Attach image",
+  "loginMethodEmail": "Email",
+  "notFound": "Page not found."
 }

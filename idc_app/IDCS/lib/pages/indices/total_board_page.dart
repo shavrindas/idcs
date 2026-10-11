@@ -8,6 +8,7 @@ import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
 import 'package:idcs/services/board/board_api_service.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class TotalBoardPage extends StatefulWidget {
   final String userId;
@@ -85,7 +86,7 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('통합 소요 기록 (관리자)')),
+      appBar: AppBar(title: Text(context.l10n.totalBoardTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -93,7 +94,7 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
           children: [
             // 📌 3. 필수 전달 인자 누락 에러 수정 부분
             BoardHeaderBox(
-              title: '통합 검색 및 필터',
+              title: context.l10n.totalBoardSearch,
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
               onSearchTypeChanged: (val) {

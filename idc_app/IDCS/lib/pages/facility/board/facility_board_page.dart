@@ -8,6 +8,7 @@ import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
 import 'package:idcs/services/board/board_api_service.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class FacilityBoardPage extends StatefulWidget {
   final String userId;
@@ -84,14 +85,14 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('소요 기록')),
+      appBar: AppBar(title: Text(context.l10n.boardPageTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             BoardHeaderBox(
-              title: '게시글 검색',
+              title: context.l10n.boardSearchTitle,
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
               onSearchTypeChanged: (val) {

@@ -1237,6 +1237,420 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이름 없는 시설'**
   String get facilityUnnamed;
+
+  /// No description provided for @boardNewPost.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 글 작성'**
+  String get boardNewPost;
+
+  /// No description provided for @boardSearchAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get boardSearchAll;
+
+  /// No description provided for @boardTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목'**
+  String get boardTitle;
+
+  /// No description provided for @boardAuthor.
+  ///
+  /// In ko, this message translates to:
+  /// **'작성자'**
+  String get boardAuthor;
+
+  /// No description provided for @boardBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'내용'**
+  String get boardBody;
+
+  /// No description provided for @boardSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색어를 입력하세요'**
+  String get boardSearchHint;
+
+  /// No description provided for @actionSearch.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색'**
+  String get actionSearch;
+
+  /// No description provided for @boardEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 포스트가 없습니다.'**
+  String get boardEmpty;
+
+  /// No description provided for @boardPostMeta.
+  ///
+  /// In ko, this message translates to:
+  /// **'[{facility}] 작성자: {author}'**
+  String boardPostMeta(String facility, String author);
+
+  /// No description provided for @pageFirst.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 페이지'**
+  String get pageFirst;
+
+  /// No description provided for @pagePrev.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 페이지'**
+  String get pagePrev;
+
+  /// No description provided for @pageNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 페이지'**
+  String get pageNext;
+
+  /// No description provided for @pageLast.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 페이지'**
+  String get pageLast;
+
+  /// No description provided for @postNoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목 없음'**
+  String get postNoTitle;
+
+  /// No description provided for @postMeta.
+  ///
+  /// In ko, this message translates to:
+  /// **'작성자: {author} · 작성일: {date}'**
+  String postMeta(String author, String date);
+
+  /// No description provided for @actionDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get actionDelete;
+
+  /// No description provided for @commentsCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글 {count}'**
+  String commentsCount(int count);
+
+  /// No description provided for @commentDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글 삭제'**
+  String get commentDelete;
+
+  /// No description provided for @commentsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 댓글이 없습니다.'**
+  String get commentsEmpty;
+
+  /// No description provided for @commentHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글을 입력하세요...'**
+  String get commentHint;
+
+  /// No description provided for @commentSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록'**
+  String get commentSubmit;
+
+  /// No description provided for @postLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 로드 실패: {message}'**
+  String postLoadFailed(String message);
+
+  /// No description provided for @postDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제되었습니다.'**
+  String get postDeleted;
+
+  /// No description provided for @postDeleteFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제 실패: {message}'**
+  String postDeleteFailed(String message);
+
+  /// No description provided for @commentFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글 작성 실패: {message}'**
+  String commentFailed(String message);
+
+  /// No description provided for @commentDeleteFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'댓글 삭제 실패: {message}'**
+  String commentDeleteFailed(String message);
+
+  /// No description provided for @dataUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터를 불러올 수 없습니다.'**
+  String get dataUnavailable;
+
+  /// No description provided for @postDetailTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 상세 조회'**
+  String get postDetailTitle;
+
+  /// No description provided for @imageAttachFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 첨부 실패: {message}'**
+  String imageAttachFailed(String message);
+
+  /// No description provided for @postTitleRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목을 입력해주세요.'**
+  String get postTitleRequired;
+
+  /// No description provided for @postCreated.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글이 작성되었습니다.'**
+  String get postCreated;
+
+  /// No description provided for @postCreateFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 작성 실패: {message}'**
+  String postCreateFailed(String message);
+
+  /// No description provided for @postCreateTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 게시글 작성 (시설 {id})'**
+  String postCreateTitle(String id);
+
+  /// No description provided for @postCreateSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 등록하기'**
+  String get postCreateSubmit;
+
+  /// No description provided for @postSourceLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'원문 로드 실패: {message}'**
+  String postSourceLoadFailed(String message);
+
+  /// No description provided for @postUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정 완료되었습니다.'**
+  String get postUpdated;
+
+  /// No description provided for @postUpdateFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정 실패: {message}'**
+  String postUpdateFailed(String message);
+
+  /// No description provided for @postEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 수정'**
+  String get postEditTitle;
+
+  /// No description provided for @postEditSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정 완료하기'**
+  String get postEditSubmit;
+
+  /// No description provided for @totalBoardTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'통합 소요 기록 (관리자)'**
+  String get totalBoardTitle;
+
+  /// No description provided for @totalBoardSearch.
+  ///
+  /// In ko, this message translates to:
+  /// **'통합 검색 및 필터'**
+  String get totalBoardSearch;
+
+  /// No description provided for @boardPageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'소요 기록'**
+  String get boardPageTitle;
+
+  /// No description provided for @boardSearchTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시글 검색'**
+  String get boardSearchTitle;
+
+  /// No description provided for @chatMenu.
+  ///
+  /// In ko, this message translates to:
+  /// **'메뉴'**
+  String get chatMenu;
+
+  /// No description provided for @chatNoMessages.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지가 없습니다.'**
+  String get chatNoMessages;
+
+  /// No description provided for @chatReply.
+  ///
+  /// In ko, this message translates to:
+  /// **'답장'**
+  String get chatReply;
+
+  /// No description provided for @chatPinToggle.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정 토글'**
+  String get chatPinToggle;
+
+  /// No description provided for @chatReplyingTo.
+  ///
+  /// In ko, this message translates to:
+  /// **'답장: {text}'**
+  String chatReplyingTo(String text);
+
+  /// No description provided for @actionClose.
+  ///
+  /// In ko, this message translates to:
+  /// **'닫기'**
+  String get actionClose;
+
+  /// No description provided for @chatAttach.
+  ///
+  /// In ko, this message translates to:
+  /// **'첨부'**
+  String get chatAttach;
+
+  /// No description provided for @chatInputHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지를 입력하세요...'**
+  String get chatInputHint;
+
+  /// No description provided for @chatSend.
+  ///
+  /// In ko, this message translates to:
+  /// **'보내기'**
+  String get chatSend;
+
+  /// No description provided for @chatRoomsManage.
+  ///
+  /// In ko, this message translates to:
+  /// **'채팅방 관리'**
+  String get chatRoomsManage;
+
+  /// No description provided for @chatGroupCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'단체 채팅방 생성'**
+  String get chatGroupCreate;
+
+  /// No description provided for @chatRoomsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'참여 중인 채팅방이 없습니다.'**
+  String get chatRoomsEmpty;
+
+  /// No description provided for @chatRoomName.
+  ///
+  /// In ko, this message translates to:
+  /// **'방 이름'**
+  String get chatRoomName;
+
+  /// No description provided for @chatInviteUsers.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대할 유저 ID (콤마로 구분)'**
+  String get chatInviteUsers;
+
+  /// No description provided for @actionCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'생성'**
+  String get actionCreate;
+
+  /// No description provided for @chatLeaveRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'채팅방 나가기 (관리자는 단체방 삭제 가능)'**
+  String get chatLeaveRoom;
+
+  /// No description provided for @chatSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지 검색...'**
+  String get chatSearchHint;
+
+  /// No description provided for @chatRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'채팅방'**
+  String get chatRoom;
+
+  /// No description provided for @chatMembers.
+  ///
+  /// In ko, this message translates to:
+  /// **'참여중인 유저 목록'**
+  String get chatMembers;
+
+  /// No description provided for @chatRoomFallback.
+  ///
+  /// In ko, this message translates to:
+  /// **'채팅방 {id}'**
+  String chatRoomFallback(String id);
+
+  /// No description provided for @navHome.
+  ///
+  /// In ko, this message translates to:
+  /// **'홈'**
+  String get navHome;
+
+  /// No description provided for @appTagline.
+  ///
+  /// In ko, this message translates to:
+  /// **'냉동창고 실시간 관제 · 모니터링 시스템'**
+  String get appTagline;
+
+  /// No description provided for @findIdCheck.
+  ///
+  /// In ko, this message translates to:
+  /// **'가입 여부 확인하기'**
+  String get findIdCheck;
+
+  /// No description provided for @editorImageAttach.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 첨부'**
+  String get editorImageAttach;
+
+  /// No description provided for @loginMethodEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일'**
+  String get loginMethodEmail;
+
+  /// No description provided for @notFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'페이지를 찾을 수 없습니다.'**
+  String get notFound;
 }
 
 class _AppLocalizationsDelegate

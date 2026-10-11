@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_logo.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class OpeningPage extends StatelessWidget {
   const OpeningPage({super.key});
@@ -27,7 +28,7 @@ class OpeningPage extends StatelessWidget {
               const Center(child: AppWordmark(fontSize: 26)),
               const SizedBox(height: 10),
               Text(
-                '냉동창고 실시간 관제 · 모니터링 시스템',
+                context.l10n.appTagline,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -37,12 +38,12 @@ class OpeningPage extends StatelessWidget {
               // 주요 액션
               ElevatedButton(
                 onPressed: () => context.push('/login'),
-                child: const Text('로그인'),
+                child: Text(context.l10n.login),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () => context.push('/signup'),
-                child: const Text('회원가입'),
+                child: Text(context.l10n.signUp),
               ),
 
               const SizedBox(height: 24),

@@ -202,6 +202,6 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Not Found')),
-        body: const Center(child: Text('페이지를 찾을 수 없습니다.')),
+        body: Center(child: Text(context.l10n.notFound)),
       );
 }

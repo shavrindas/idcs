@@ -1,6 +1,7 @@
 // 경로: lib/components/cross_compontents/chat/chat_room_components.dart
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 채팅방 헤더
 class ChatRoomHeaderBox extends StatelessWidget {
@@ -20,7 +21,7 @@ class ChatRoomHeaderBox extends StatelessWidget {
         children: [
           Text(roomName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
           IconButton(
-            tooltip: '메뉴',
+            tooltip: context.l10n.chatMenu,
             icon: Icon(Icons.menu_rounded, color: context.colors.textSecondary),
             onPressed: onMenuPressed,
             constraints: const BoxConstraints(), padding: EdgeInsets.zero,
@@ -43,7 +44,7 @@ class ChatMessageListBox extends StatelessWidget {
   Widget build(BuildContext context) {
     if (messages.isEmpty) {
       return Center(
-        child: Text('메시지가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+        child: Text(context.l10n.chatNoMessages, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
       );
     }
 
@@ -140,10 +141,10 @@ class ChatMessageListBox extends StatelessWidget {
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
       items: [
-        const PopupMenuItem(value: 'reply', child: Row(children: [Icon(Icons.reply_rounded, size: 18), SizedBox(width: 8), Text('답장')])),
-        const PopupMenuItem(value: 'pin', child: Row(children: [Icon(Icons.push_pin_outlined, size: 18), SizedBox(width: 8), Text('고정 토글')])),
-        PopupMenuItem(value: 'edit', enabled: false, child: Row(children: [Icon(Icons.edit_outlined, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text('수정', style: TextStyle(color: context.colors.textSecondary))])),
-        PopupMenuItem(value: 'delete', enabled: false, child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text('삭제', style: TextStyle(color: context.colors.textSecondary))])),
+        PopupMenuItem(value: 'reply', child: Row(children: [Icon(Icons.reply_rounded, size: 18), SizedBox(width: 8), Text(context.l10n.chatReply)])),
+        PopupMenuItem(value: 'pin', child: Row(children: [Icon(Icons.push_pin_outlined, size: 18), SizedBox(width: 8), Text(context.l10n.chatPinToggle)])),
+        PopupMenuItem(value: 'edit', enabled: false, child: Row(children: [Icon(Icons.edit_outlined, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text(context.l10n.actionEdit, style: TextStyle(color: context.colors.textSecondary))])),
+        PopupMenuItem(value: 'delete', enabled: false, child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text(context.l10n.actionDelete, style: TextStyle(color: context.colors.textSecondary))])),
       ],
     ).then((value) {
       if (value != null) onAction(msg, value);
@@ -179,14 +180,14 @@ class ChatInputBox extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '답장: ${replyingTo!['content']}',
+                      context.l10n.chatReplyingTo('${replyingTo!['content']}'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
                     ),
                   ),
                   IconButton(
-                    tooltip: '닫기',
+                    tooltip: context.l10n.actionClose,
                     icon: Icon(Icons.close_rounded, size: 16, color: context.colors.textSecondary),
                     onPressed: onCancelReply,
                     constraints: const BoxConstraints(),
@@ -200,15 +201,15 @@ class ChatInputBox extends StatelessWidget {
             child: Row(
               children: [
                 IconButton(
-                  tooltip: '첨부',
+                  tooltip: context.l10n.chatAttach,
                   icon: Icon(Icons.add_circle_outline_rounded, color: context.colors.textSecondary),
                   onPressed: () {},
                 ),
                 Expanded(
                   child: TextField(
                     controller: controller,
-                    decoration: const InputDecoration(
-                      hintText: '메시지를 입력하세요...',
+                    decoration: InputDecoration(
+                      hintText: context.l10n.chatInputHint,
                       border: InputBorder.none,
                       filled: false,
                       isDense: true,
@@ -217,7 +218,7 @@ class ChatInputBox extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: '보내기',
+                  tooltip: context.l10n.chatSend,
                   icon: Icon(Icons.send_rounded, color: context.colors.primary),
                   onPressed: onSend,
                 ),
