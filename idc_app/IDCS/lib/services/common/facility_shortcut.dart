@@ -1,27 +1,26 @@
 // 경로: lib/services/common/facility_shortcut.dart
-// 명세: 시설이 하나뿐인 계정에서 시설 선택 화면을 한 번만 건너뛰기 위한 플래그
+// 명세: 시설이 하나뿐인 계정에서 시설 선택 화면을 건너뛰는 동작의 상태
 
-/// Tracks whether the "only one facility" shortcut has already been taken.
+/// Tracks whether the signed-in account has exactly one facility.
 ///
-/// This cannot live in the router's `redirect`: a permanent redirect from 홈 to
-/// the facility would fire again the moment the user presses back, trapping them
-/// in a loop with no way to reach 알람 or 내 정보. So the jump is one-shot —
-/// taken on the first 홈 load after signing in, and not again until the signed-in
-/// user changes.
+/// For such an account the 내 시설 list is a screen with a single card on it, so
+/// 홈 goes straight into the facility instead. The jump replaces the stack
+/// rather than pushing, which means back from the facility leaves the app —
+/// there is no one-item list to come back to.
+///
+/// That removes the only route to 내 정보, so [FacilityShellPage] shows a
+/// profile button in its app bar while this is set.
 class FacilityShortcut {
   FacilityShortcut._();
 
-  static bool _pending = true;
+  static bool _soleFacility = false;
 
-  /// Takes the shortcut if it is still available. Returns true at most once per
-  /// sign-in, so the caller can navigate without risking a loop.
-  static bool consume() {
-    if (!_pending) return false;
-    _pending = false;
-    return true;
-  }
+  /// True once 홈 has seen that this account owns exactly one facility.
+  static bool get isSoleFacility => _soleFacility;
 
-  /// Makes the shortcut available again. Called whenever the signed-in user
-  /// changes, so the next account (or the next sign-in) gets its own jump.
-  static void rearm() => _pending = true;
+  static void markSoleFacility(bool value) => _soleFacility = value;
+
+  /// Called whenever the signed-in user changes, so the next account starts
+  /// from an unknown state rather than inheriting the previous one's layout.
+  static void reset() => _soleFacility = false;
 }
