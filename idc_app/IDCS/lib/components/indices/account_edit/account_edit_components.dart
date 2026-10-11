@@ -6,14 +6,14 @@ import 'package:idcs/l10n/l10n_context.dart';
 /// 내 정보 카드.
 ///
 /// 예전에는 이름·전화번호가 각각 입력칸과 저장 버튼을 달고 항상 열려 있었다.
-/// 평소에 바꿀 일이 거의 없는 값인데 화면이 늘 context.l10n.actionEditing처럼 보이고,
+/// 평소에 바꿀 일이 거의 없는 값인데 화면이 늘 '수정 중'처럼 보이고,
 /// 지금 값이 무엇인지 읽기도 어려웠다. 평소엔 읽기 전용으로 두고
 /// 수정 버튼을 눌렀을 때만 입력칸이 열리도록 한다.
 class ProfileInfoBox extends StatefulWidget {
   final String name;
   final String phone;
 
-  /// 이 계정이 어떤 방식으로 로그인하는지 (예: context.l10n.fieldEmail, 'Google').
+  /// 이 계정이 어떤 방식으로 로그인하는지 (예: '이메일', 'Google').
   final String loginMethod;
 
   /// 바뀐 값만 저장한다. 실패하면 예외를 던져 수정 모드를 유지한다.
@@ -68,7 +68,7 @@ class _ProfileInfoBoxState extends State<ProfileInfoBox> {
       children: [
         _InfoRow(icon: Icons.badge_outlined, label: context.l10n.fieldName, value: widget.name.isEmpty ? '-' : widget.name),
         _InfoRow(icon: Icons.phone_outlined, label: context.l10n.fieldPhone, value: widget.phone.isEmpty ? '-' : widget.phone),
-        // 이미 로그인한 사용자에게 context.l10n.actionLink를 권하는 대신, 지금 어떤 방식으로
+        // 이미 로그인한 사용자에게 '연동하기'를 권하는 대신, 지금 어떤 방식으로
         // 로그인하는지만 알려준다.
         _InfoRow(icon: Icons.login_rounded, label: context.l10n.loginMethod, value: widget.loginMethod),
         const SizedBox(height: 14),

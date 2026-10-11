@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 보드 헤더 박스 (검색 및 필터)
 class BoardHeaderBox extends StatelessWidget {
@@ -45,7 +46,7 @@ class BoardHeaderBox extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: onCreatePost,
                   icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: const Text('새 글 작성'),
+                  label: Text(context.l10n.boardNewPost),
                   style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
                 ),
             ],
@@ -65,11 +66,11 @@ class BoardHeaderBox extends StatelessWidget {
                     value: selectedSearchType,
                     icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
                     isDense: true,
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('전체')),
-                      DropdownMenuItem(value: 'title', child: Text('제목')),
-                      DropdownMenuItem(value: 'creator', child: Text('작성자')),
-                      DropdownMenuItem(value: 'content', child: Text('내용')),
+                    items: [
+                      DropdownMenuItem(value: 'all', child: Text(context.l10n.boardSearchAll)),
+                      DropdownMenuItem(value: 'title', child: Text(context.l10n.boardTitle)),
+                      DropdownMenuItem(value: 'creator', child: Text(context.l10n.boardAuthor)),
+                      DropdownMenuItem(value: 'content', child: Text(context.l10n.boardBody)),
                     ],
                     onChanged: onSearchTypeChanged,
                   ),
@@ -80,8 +81,8 @@ class BoardHeaderBox extends StatelessWidget {
                 child: TextField(
                   controller: searchController,
                   onSubmitted: (_) => onSearch(),
-                  decoration: const InputDecoration(
-                    hintText: '검색어를 입력하세요',
+                  decoration: InputDecoration(
+                    hintText: context.l10n.boardSearchHint,
                     isDense: true,
                     prefixIcon: Icon(Icons.search_rounded, size: 20),
                   ),
@@ -93,7 +94,7 @@ class BoardHeaderBox extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onSearch,
                   style: ElevatedButton.styleFrom(minimumSize: const Size(64, 48)),
-                  child: const Text('검색'),
+                  child: Text(context.l10n.actionSearch),
                 ),
               ),
             ],
@@ -142,7 +143,7 @@ class BoardListAndPagingBox extends StatelessWidget {
                 ? const Center(child: CircularProgressIndicator())
                 : posts.isEmpty
                 ? Center(
-                    child: Text('등록된 포스트가 없습니다.', style: TextStyle(color: context.colors.textSecondary)),
+                    child: Text(context.l10n.boardEmpty, style: TextStyle(color: context.colors.textSecondary)),
                   )
                 : ListView.separated(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -158,7 +159,11 @@ class BoardListAndPagingBox extends StatelessWidget {
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
                   ),
                   subtitle: Text(
-                    '[${post.facilityName}] 작성자: ${post.creatorName}',
+                    context.l10n.boardPostMeta(
+                      post.facilityName,
+                      // The model leaves this empty when the server had no author.
+                      post.creatorName.isEmpty ? context.l10n.noName : post.creatorName,
+                    ),
                     style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                   ),
                   trailing: Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textSecondary),
@@ -191,14 +196,14 @@ class BoardListAndPagingBox extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              tooltip: '첫 페이지',
+              tooltip: context.l10n.pageFirst,
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: context.colors.textSecondary),
               onPressed: currentPage > 1 ? () => onPageChanged(1) : null,
             ),
             IconButton(
-              tooltip: '이전 페이지',
+              tooltip: context.l10n.pagePrev,
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: Icon(Icons.chevron_left_rounded, size: 18, color: context.colors.textSecondary),
@@ -233,14 +238,14 @@ class BoardListAndPagingBox extends StatelessWidget {
 
             const SizedBox(width: 4),
             IconButton(
-              tooltip: '다음 페이지',
+              tooltip: context.l10n.pageNext,
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: Icon(Icons.chevron_right_rounded, size: 18, color: context.colors.textSecondary),
               onPressed: endPage < safeTotalPages ? () => onPageChanged(endPage + 1) : null,
             ),
             IconButton(
-              tooltip: '마지막 페이지',
+              tooltip: context.l10n.pageLast,
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.all(6),
               icon: Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: context.colors.textSecondary),

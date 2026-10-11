@@ -7,6 +7,7 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 제목 입력 및 이미지 첨부 제어 박스
 class PostInputBox extends StatelessWidget {
@@ -33,7 +34,7 @@ class PostInputBox extends StatelessWidget {
         children: [
           TextField(
             controller: titleController,
-            decoration: const InputDecoration(labelText: '제목'),
+            decoration: InputDecoration(labelText: context.l10n.boardTitle),
           ),
           const SizedBox(height: 12),
           Align(
@@ -41,7 +42,7 @@ class PostInputBox extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onImageAttach,
               icon: const Icon(Icons.image_outlined, size: 18),
-              label: const Text('이미지 첨부'),
+              label: Text(context.l10n.editorImageAttach),
               style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
             ),
           ),

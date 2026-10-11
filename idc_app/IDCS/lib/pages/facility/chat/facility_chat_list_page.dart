@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_list_components.dart';
 import 'package:idcs/services/chat/chat_api_service.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class FacilityChatListPage extends StatefulWidget {
   final String userId;
@@ -51,16 +52,16 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('단체 채팅방 생성'),
+        title: Text(context.l10n.chatGroupCreate),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: '방 이름')),
-            TextField(controller: usersCtrl, decoration: const InputDecoration(labelText: '초대할 유저 ID (콤마로 구분)')),
+            TextField(controller: nameCtrl, decoration: InputDecoration(labelText: context.l10n.chatRoomName)),
+            TextField(controller: usersCtrl, decoration: InputDecoration(labelText: context.l10n.chatInviteUsers)),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.actionCancel)),
           ElevatedButton(
             onPressed: () async {
               final ids = usersCtrl.text.split(',').map((e) => int.tryParse(e.trim())).whereType<int>().toList();
@@ -70,7 +71,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                 _fetchRooms();
               }
             },
-            child: const Text('생성'),
+            child: Text(context.l10n.actionCreate),
           ),
         ],
       ),
@@ -85,7 +86,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
           children: [
             ListTile(
               leading: Icon(Icons.exit_to_app, color: context.colors.error),
-              title: const Text('채팅방 나가기 (관리자는 단체방 삭제 가능)'),
+              title: Text(context.l10n.chatLeaveRoom),
               onTap: () async {
                 Navigator.pop(context);
                 try {
@@ -105,7 +106,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('메신저')),
+      appBar: AppBar(title: Text(context.l10n.navMessenger)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

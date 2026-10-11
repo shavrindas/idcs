@@ -614,4 +614,239 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get facilityUnnamed => '이름 없는 시설';
+
+  @override
+  String get boardNewPost => '새 글 작성';
+
+  @override
+  String get boardSearchAll => '전체';
+
+  @override
+  String get boardTitle => '제목';
+
+  @override
+  String get boardAuthor => '작성자';
+
+  @override
+  String get boardBody => '내용';
+
+  @override
+  String get boardSearchHint => '검색어를 입력하세요';
+
+  @override
+  String get actionSearch => '검색';
+
+  @override
+  String get boardEmpty => '등록된 포스트가 없습니다.';
+
+  @override
+  String boardPostMeta(String facility, String author) {
+    return '[$facility] 작성자: $author';
+  }
+
+  @override
+  String get pageFirst => '첫 페이지';
+
+  @override
+  String get pagePrev => '이전 페이지';
+
+  @override
+  String get pageNext => '다음 페이지';
+
+  @override
+  String get pageLast => '마지막 페이지';
+
+  @override
+  String get postNoTitle => '제목 없음';
+
+  @override
+  String postMeta(String author, String date) {
+    return '작성자: $author · 작성일: $date';
+  }
+
+  @override
+  String get actionDelete => '삭제';
+
+  @override
+  String commentsCount(int count) {
+    return '댓글 $count';
+  }
+
+  @override
+  String get commentDelete => '댓글 삭제';
+
+  @override
+  String get commentsEmpty => '등록된 댓글이 없습니다.';
+
+  @override
+  String get commentHint => '댓글을 입력하세요...';
+
+  @override
+  String get commentSubmit => '등록';
+
+  @override
+  String postLoadFailed(String message) {
+    return '게시글 로드 실패: $message';
+  }
+
+  @override
+  String get postDeleted => '삭제되었습니다.';
+
+  @override
+  String postDeleteFailed(String message) {
+    return '삭제 실패: $message';
+  }
+
+  @override
+  String commentFailed(String message) {
+    return '댓글 작성 실패: $message';
+  }
+
+  @override
+  String commentDeleteFailed(String message) {
+    return '댓글 삭제 실패: $message';
+  }
+
+  @override
+  String get dataUnavailable => '데이터를 불러올 수 없습니다.';
+
+  @override
+  String get postDetailTitle => '게시글 상세 조회';
+
+  @override
+  String imageAttachFailed(String message) {
+    return '이미지 첨부 실패: $message';
+  }
+
+  @override
+  String get postTitleRequired => '제목을 입력해주세요.';
+
+  @override
+  String get postCreated => '게시글이 작성되었습니다.';
+
+  @override
+  String postCreateFailed(String message) {
+    return '게시글 작성 실패: $message';
+  }
+
+  @override
+  String postCreateTitle(String id) {
+    return '새 게시글 작성 (시설 $id)';
+  }
+
+  @override
+  String get postCreateSubmit => '게시글 등록하기';
+
+  @override
+  String postSourceLoadFailed(String message) {
+    return '원문 로드 실패: $message';
+  }
+
+  @override
+  String get postUpdated => '수정 완료되었습니다.';
+
+  @override
+  String postUpdateFailed(String message) {
+    return '수정 실패: $message';
+  }
+
+  @override
+  String get postEditTitle => '게시글 수정';
+
+  @override
+  String get postEditSubmit => '수정 완료하기';
+
+  @override
+  String get totalBoardTitle => '통합 소요 기록 (관리자)';
+
+  @override
+  String get totalBoardSearch => '통합 검색 및 필터';
+
+  @override
+  String get boardPageTitle => '소요 기록';
+
+  @override
+  String get boardSearchTitle => '게시글 검색';
+
+  @override
+  String get chatMenu => '메뉴';
+
+  @override
+  String get chatNoMessages => '메시지가 없습니다.';
+
+  @override
+  String get chatReply => '답장';
+
+  @override
+  String get chatPinToggle => '고정 토글';
+
+  @override
+  String chatReplyingTo(String text) {
+    return '답장: $text';
+  }
+
+  @override
+  String get actionClose => '닫기';
+
+  @override
+  String get chatAttach => '첨부';
+
+  @override
+  String get chatInputHint => '메시지를 입력하세요...';
+
+  @override
+  String get chatSend => '보내기';
+
+  @override
+  String get chatRoomsManage => '채팅방 관리';
+
+  @override
+  String get chatGroupCreate => '단체 채팅방 생성';
+
+  @override
+  String get chatRoomsEmpty => '참여 중인 채팅방이 없습니다.';
+
+  @override
+  String get chatRoomName => '방 이름';
+
+  @override
+  String get chatInviteUsers => '초대할 유저 ID (콤마로 구분)';
+
+  @override
+  String get actionCreate => '생성';
+
+  @override
+  String get chatLeaveRoom => '채팅방 나가기 (관리자는 단체방 삭제 가능)';
+
+  @override
+  String get chatSearchHint => '메시지 검색...';
+
+  @override
+  String get chatRoom => '채팅방';
+
+  @override
+  String get chatMembers => '참여중인 유저 목록';
+
+  @override
+  String chatRoomFallback(String id) {
+    return '채팅방 $id';
+  }
+
+  @override
+  String get navHome => '홈';
+
+  @override
+  String get appTagline => '냉동창고 실시간 관제 · 모니터링 시스템';
+
+  @override
+  String get findIdCheck => '가입 여부 확인하기';
+
+  @override
+  String get editorImageAttach => '이미지 첨부';
+
+  @override
+  String get loginMethodEmail => '이메일';
+
+  @override
+  String get notFound => '페이지를 찾을 수 없습니다.';
 }

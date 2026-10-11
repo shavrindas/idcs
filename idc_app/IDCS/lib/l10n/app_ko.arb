@@ -321,5 +321,178 @@
   },
   "facilityRegisterTitle": "시설 등록 페이지",
   "facilityRegisterAdminNote": "관리자 및 개발자는 시설 등록이 필요하지 않습니다.",
-  "facilityUnnamed": "이름 없는 시설"
+  "facilityUnnamed": "이름 없는 시설",
+  "boardNewPost": "새 글 작성",
+  "boardSearchAll": "전체",
+  "boardTitle": "제목",
+  "boardAuthor": "작성자",
+  "boardBody": "내용",
+  "boardSearchHint": "검색어를 입력하세요",
+  "actionSearch": "검색",
+  "boardEmpty": "등록된 포스트가 없습니다.",
+  "boardPostMeta": "[{facility}] 작성자: {author}",
+  "@boardPostMeta": {
+    "placeholders": {
+      "facility": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pageFirst": "첫 페이지",
+  "pagePrev": "이전 페이지",
+  "pageNext": "다음 페이지",
+  "pageLast": "마지막 페이지",
+  "postNoTitle": "제목 없음",
+  "postMeta": "작성자: {author} · 작성일: {date}",
+  "@postMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "actionDelete": "삭제",
+  "commentsCount": "댓글 {count}",
+  "@commentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentDelete": "댓글 삭제",
+  "commentsEmpty": "등록된 댓글이 없습니다.",
+  "commentHint": "댓글을 입력하세요...",
+  "commentSubmit": "등록",
+  "postLoadFailed": "게시글 로드 실패: {message}",
+  "@postLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "삭제되었습니다.",
+  "postDeleteFailed": "삭제 실패: {message}",
+  "@postDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentFailed": "댓글 작성 실패: {message}",
+  "@commentFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentDeleteFailed": "댓글 삭제 실패: {message}",
+  "@commentDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "dataUnavailable": "데이터를 불러올 수 없습니다.",
+  "postDetailTitle": "게시글 상세 조회",
+  "imageAttachFailed": "이미지 첨부 실패: {message}",
+  "@imageAttachFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postTitleRequired": "제목을 입력해주세요.",
+  "postCreated": "게시글이 작성되었습니다.",
+  "postCreateFailed": "게시글 작성 실패: {message}",
+  "@postCreateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postCreateTitle": "새 게시글 작성 (시설 {id})",
+  "@postCreateTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "postCreateSubmit": "게시글 등록하기",
+  "postSourceLoadFailed": "원문 로드 실패: {message}",
+  "@postSourceLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postUpdated": "수정 완료되었습니다.",
+  "postUpdateFailed": "수정 실패: {message}",
+  "@postUpdateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postEditTitle": "게시글 수정",
+  "postEditSubmit": "수정 완료하기",
+  "totalBoardTitle": "통합 소요 기록 (관리자)",
+  "totalBoardSearch": "통합 검색 및 필터",
+  "boardPageTitle": "소요 기록",
+  "boardSearchTitle": "게시글 검색",
+  "chatMenu": "메뉴",
+  "chatNoMessages": "메시지가 없습니다.",
+  "chatReply": "답장",
+  "chatPinToggle": "고정 토글",
+  "chatReplyingTo": "답장: {text}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "actionClose": "닫기",
+  "chatAttach": "첨부",
+  "chatInputHint": "메시지를 입력하세요...",
+  "chatSend": "보내기",
+  "chatRoomsManage": "채팅방 관리",
+  "chatGroupCreate": "단체 채팅방 생성",
+  "chatRoomsEmpty": "참여 중인 채팅방이 없습니다.",
+  "chatRoomName": "방 이름",
+  "chatInviteUsers": "초대할 유저 ID (콤마로 구분)",
+  "actionCreate": "생성",
+  "chatLeaveRoom": "채팅방 나가기 (관리자는 단체방 삭제 가능)",
+  "chatSearchHint": "메시지 검색...",
+  "chatRoom": "채팅방",
+  "chatMembers": "참여중인 유저 목록",
+  "chatRoomFallback": "채팅방 {id}",
+  "@chatRoomFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navHome": "홈",
+  "appTagline": "냉동창고 실시간 관제 · 모니터링 시스템",
+  "findIdCheck": "가입 여부 확인하기",
+  "editorImageAttach": "이미지 첨부",
+  "loginMethodEmail": "이메일",
+  "notFound": "페이지를 찾을 수 없습니다."
 }

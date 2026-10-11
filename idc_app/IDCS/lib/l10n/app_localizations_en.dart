@@ -625,4 +625,239 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilityUnnamed => 'Unnamed facility';
+
+  @override
+  String get boardNewPost => 'New post';
+
+  @override
+  String get boardSearchAll => 'All';
+
+  @override
+  String get boardTitle => 'Title';
+
+  @override
+  String get boardAuthor => 'Author';
+
+  @override
+  String get boardBody => 'Body';
+
+  @override
+  String get boardSearchHint => 'Type to search';
+
+  @override
+  String get actionSearch => 'Search';
+
+  @override
+  String get boardEmpty => 'No posts yet.';
+
+  @override
+  String boardPostMeta(String facility, String author) {
+    return '[$facility] by $author';
+  }
+
+  @override
+  String get pageFirst => 'First page';
+
+  @override
+  String get pagePrev => 'Previous page';
+
+  @override
+  String get pageNext => 'Next page';
+
+  @override
+  String get pageLast => 'Last page';
+
+  @override
+  String get postNoTitle => 'Untitled';
+
+  @override
+  String postMeta(String author, String date) {
+    return 'By $author · $date';
+  }
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String commentsCount(int count) {
+    return 'Comments $count';
+  }
+
+  @override
+  String get commentDelete => 'Delete comment';
+
+  @override
+  String get commentsEmpty => 'No comments yet.';
+
+  @override
+  String get commentHint => 'Write a comment…';
+
+  @override
+  String get commentSubmit => 'Post';
+
+  @override
+  String postLoadFailed(String message) {
+    return 'Could not load the post: $message';
+  }
+
+  @override
+  String get postDeleted => 'Deleted.';
+
+  @override
+  String postDeleteFailed(String message) {
+    return 'Could not delete: $message';
+  }
+
+  @override
+  String commentFailed(String message) {
+    return 'Could not post the comment: $message';
+  }
+
+  @override
+  String commentDeleteFailed(String message) {
+    return 'Could not delete the comment: $message';
+  }
+
+  @override
+  String get dataUnavailable => 'Could not load the data.';
+
+  @override
+  String get postDetailTitle => 'Post';
+
+  @override
+  String imageAttachFailed(String message) {
+    return 'Could not attach the image: $message';
+  }
+
+  @override
+  String get postTitleRequired => 'Please enter a title.';
+
+  @override
+  String get postCreated => 'Post published.';
+
+  @override
+  String postCreateFailed(String message) {
+    return 'Could not publish: $message';
+  }
+
+  @override
+  String postCreateTitle(String id) {
+    return 'New post (facility $id)';
+  }
+
+  @override
+  String get postCreateSubmit => 'Publish';
+
+  @override
+  String postSourceLoadFailed(String message) {
+    return 'Could not load the original: $message';
+  }
+
+  @override
+  String get postUpdated => 'Changes saved.';
+
+  @override
+  String postUpdateFailed(String message) {
+    return 'Could not save: $message';
+  }
+
+  @override
+  String get postEditTitle => 'Edit post';
+
+  @override
+  String get postEditSubmit => 'Save changes';
+
+  @override
+  String get totalBoardTitle => 'All work logs (admin)';
+
+  @override
+  String get totalBoardSearch => 'Search and filter';
+
+  @override
+  String get boardPageTitle => 'Work log';
+
+  @override
+  String get boardSearchTitle => 'Search posts';
+
+  @override
+  String get chatMenu => 'Menu';
+
+  @override
+  String get chatNoMessages => 'No messages yet.';
+
+  @override
+  String get chatReply => 'Reply';
+
+  @override
+  String get chatPinToggle => 'Pin';
+
+  @override
+  String chatReplyingTo(String text) {
+    return 'Replying to: $text';
+  }
+
+  @override
+  String get actionClose => 'Close';
+
+  @override
+  String get chatAttach => 'Attach';
+
+  @override
+  String get chatInputHint => 'Write a message…';
+
+  @override
+  String get chatSend => 'Send';
+
+  @override
+  String get chatRoomsManage => 'Manage rooms';
+
+  @override
+  String get chatGroupCreate => 'New group chat';
+
+  @override
+  String get chatRoomsEmpty => 'You are not in any chat rooms.';
+
+  @override
+  String get chatRoomName => 'Room name';
+
+  @override
+  String get chatInviteUsers => 'User IDs to invite (comma separated)';
+
+  @override
+  String get actionCreate => 'Create';
+
+  @override
+  String get chatLeaveRoom => 'Leave room (admins can delete group rooms)';
+
+  @override
+  String get chatSearchHint => 'Search messages…';
+
+  @override
+  String get chatRoom => 'Chat';
+
+  @override
+  String get chatMembers => 'Members';
+
+  @override
+  String chatRoomFallback(String id) {
+    return 'Chat $id';
+  }
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get appTagline => 'Live monitoring for cold storage';
+
+  @override
+  String get findIdCheck => 'Check my account';
+
+  @override
+  String get editorImageAttach => 'Attach image';
+
+  @override
+  String get loginMethodEmail => 'Email';
+
+  @override
+  String get notFound => 'Page not found.';
 }

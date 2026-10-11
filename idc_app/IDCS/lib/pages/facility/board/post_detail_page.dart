@@ -10,6 +10,7 @@ import 'package:idcs/components/cross_compontents/board/post_detail_components.d
 import 'package:idcs/services/board/board_api_service.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class PostDetailPage extends StatefulWidget {
   final int postId;
@@ -62,7 +63,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 로드 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postLoadFailed(describeApiError(e)))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -91,12 +92,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
     try {
       await BoardApiService.deletePost(postId: widget.postId, userId: widget.userId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제되었습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postDeleted)));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postDeleteFailed(describeApiError(e)))));
       }
     }
   }
@@ -115,7 +116,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 작성 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentFailed(describeApiError(e)))));
       }
     }
   }
@@ -126,7 +127,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 삭제 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentDeleteFailed(describeApiError(e)))));
       }
     }
   }
@@ -134,14 +135,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_post == null || _quillController == null) return const Scaffold(body: Center(child: Text('데이터를 불러올 수 없습니다.')));
+    if (_post == null || _quillController == null) return Scaffold(body: Center(child: Text(context.l10n.dataUnavailable)));
 
     final bool isCreator = _post!['creator_id'].toString() == widget.userId;
     final bool isAdmin = _userRole == 'ADMIN' || _userRole == 'DEVELOPER';
     final bool canControl = isCreator || isAdmin;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('게시글 상세 조회')),
+      appBar: AppBar(title: Text(context.l10n.postDetailTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

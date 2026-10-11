@@ -32,14 +32,15 @@ class _PersonalPageState extends State<PersonalPage> {
   String _pwCollapseMessage = '';
 
   /// 이 계정이 어떤 방식으로 로그인하는지. 이미 로그인한 사용자에게
-  /// context.l10n.actionLink를 권하는 대신 현재 상태만 보여준다.
-  String get _loginMethod {
+  /// '연동하기'를 권하는 대신 현재 상태만 보여준다.
+  String _loginMethodLabel(BuildContext context) {
     final providers = _linkedProviders
         .map((p) => p.toString())
         .map((p) => p.isEmpty ? p : '${p[0].toUpperCase()}${p.substring(1)}')
         .toList();
-    if (providers.isEmpty) return '이메일';
-    return _hasPassword ? '이메일 · ${providers.join(' · ')}' : providers.join(' · ');
+    final email = context.l10n.loginMethodEmail;
+    if (providers.isEmpty) return email;
+    return _hasPassword ? '$email · ${providers.join(' · ')}' : providers.join(' · ');
   }
 
   @override
@@ -240,7 +241,7 @@ class _PersonalPageState extends State<PersonalPage> {
             ProfileInfoBox(
               name: _name,
               phone: _phone,
-              loginMethod: _loginMethod,
+              loginMethod: _loginMethodLabel(context),
               onSave: _handleSaveProfile,
             ),
             const SizedBox(height: 16),

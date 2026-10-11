@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:idcs/components/cross_compontents/board/post_editor_components.dart.dart';
 import 'package:idcs/services/board/board_api_service.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class PostCreatePage extends StatefulWidget {
   final String facilityId;
@@ -59,13 +60,13 @@ class _PostCreatePageState extends State<PostCreatePage> {
       _uploadedImageIds.add(uploaded.imageId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미지 첨부 실패: ${describeApiError(e)}')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.imageAttachFailed(describeApiError(e)))));
     }
   }
 
   Future<void> _handleSubmit() async {
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('제목을 입력해주세요.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postTitleRequired)));
       return;
     }
 
@@ -81,12 +82,12 @@ class _PostCreatePageState extends State<PostCreatePage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('게시글이 작성되었습니다.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postCreated)));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('게시글 작성 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postCreateFailed(describeApiError(e)))));
       }
     }
   }
@@ -94,7 +95,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('새 게시글 작성 (시설 ${widget.facilityId})')),
+      appBar: AppBar(title: Text(context.l10n.postCreateTitle(widget.facilityId))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -108,7 +109,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
             QuillEditorBox(quillController: _quillController),
             const SizedBox(height: 16),
             SubmitBox(
-              buttonLabel: '게시글 등록하기',
+              buttonLabel: context.l10n.postCreateSubmit,
               onSubmit: _handleSubmit,
             ),
           ],

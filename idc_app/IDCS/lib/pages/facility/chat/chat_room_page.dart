@@ -7,6 +7,7 @@ import 'package:idcs/services/chat/chat_api_service.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_room_components.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class ChatRoomPage extends StatefulWidget {
   final String userId;
@@ -118,14 +119,14 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         title: _isSearchMode
             ? TextField(
           controller: _searchController,
-          decoration: const InputDecoration(hintText: '메시지 검색...', border: InputBorder.none, filled: false),
+          decoration: InputDecoration(hintText: context.l10n.chatSearchHint, border: InputBorder.none, filled: false),
           style: TextStyle(color: context.colors.textPrimary),
           onSubmitted: (val) => _loadMessages(keyword: val),
         )
-            : const Text('채팅방'),
+            : Text(context.l10n.chatRoom),
         actions: [
           IconButton(
-            tooltip: '닫기',
+            tooltip: context.l10n.actionClose,
             icon: Icon(_isSearchMode ? Icons.close_rounded : Icons.search_rounded),
             onPressed: () {
               setState(() {
@@ -144,7 +145,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: context.colors.primary),
-              child: Center(child: Text('참여중인 유저 목록', style: TextStyle(color: context.colors.onPrimary, fontSize: 18, fontWeight: FontWeight.w700))),
+              child: Center(child: Text(context.l10n.chatMembers, style: TextStyle(color: context.colors.onPrimary, fontSize: 18, fontWeight: FontWeight.w700))),
             ),
             Expanded(
               child: ListView.builder(
@@ -175,7 +176,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ChatRoomHeaderBox(
-            roomName: '채팅방 ${widget.roomId}',
+            roomName: context.l10n.chatRoomFallback('${widget.roomId}'),
             onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
           Expanded(
