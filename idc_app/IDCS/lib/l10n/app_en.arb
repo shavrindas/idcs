@@ -1,19 +1,15 @@
 {
   "@@locale": "en",
-
   "settingsTitle": "Settings",
   "settingsDeviceOnly": "These settings apply to this device only.",
-
   "settingsLanguage": "Language",
   "languageSystem": "System default",
   "languageKorean": "한국어",
   "languageEnglish": "English",
-
   "settingsTheme": "Appearance",
   "themeSystem": "System default",
   "themeLight": "Light",
   "themeDark": "Dark",
-
   "settingsPanel": "Control panel",
   "settingsPanelNote": "Applies only to the live control panel shown inside a room.",
   "panelBackground": "Background",
@@ -22,13 +18,11 @@
   "panelLedDigits": "LED digits",
   "panelLedDigitsNote": "Show numbers as a seven-segment display.",
   "panelSampleLabel": "Room temp",
-
   "backgroundNone": "None",
   "backgroundBlueprint": "Blueprint",
   "backgroundCoil": "Cooling coil",
   "backgroundMetal": "Metal",
   "backgroundGrid": "Grid",
-
   "settingsAlarmStyle": "Alarm alerts",
   "alarmSound": "Sound",
   "alarmSoundNote": "Play a sound when an alarm arrives.",
@@ -36,19 +30,79 @@
   "alarmVibrationNote": "Vibrate when an alarm arrives.",
   "alarmLockScreen": "Show details on lock screen",
   "alarmLockScreenNote": "When off, the lock screen only shows that an alarm arrived.",
-
   "alarmRepeat": "Remind again",
   "alarmRepeatNote": "If an alarm goes unread, remind you at the chosen interval up to {count} more times.",
   "@alarmRepeatNote": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "alarmRepeatNone": "Off",
   "alarmRepeatMinutes": "{minutes} min",
   "@alarmRepeatMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "fieldEmail": "Email",
+  "fieldPassword": "Password",
+  "fieldNewPassword": "New password",
+  "fieldConfirmPassword": "Re-enter password",
+  "fieldName": "Name",
+  "fieldPhoneOptional": "Phone (optional)",
+  "fieldVerificationCode": "Verification code",
+  "showPassword": "Show password",
+  "actionCancel": "Cancel",
+  "actionSubmit": "Done",
+  "orDivider": "or",
+  "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
+  "login": "Sign in",
+  "loginWelcomeTitle": "Welcome back",
+  "loginWelcomeSubtitle": "Enter your account details to sign in.",
+  "loginMissingFields": "Please enter both your email and password.",
+  "keepSignedIn": "Keep me signed in",
+  "noAccountQuestion": "Don't have an account? ",
+  "signUp": "Sign up",
+  "signupTitle": "Create an account",
+  "signupSubtitle": "Fill in the details below to create your account.",
+  "signupCreateAccount": "Create account",
+  "signupMissingFields": "Please fill in all required fields.",
+  "signupEmailRequired": "Please enter an email address.",
+  "signupEmailUnavailable": "Your email could not be read. Please allow email access in settings.",
+  "signupAppleEmailMissing": "Your Apple account did not share an email address.\nPlease enter one so the service works properly.",
+  "findId": "Find my ID",
+  "findIdSubtitle": "Enter the email you signed up with and we'll look up your account.",
+  "findIdEmailRequired": "Please enter the email to look up.",
+  "errorOccurred": "Something went wrong: {message}",
+  "@errorOccurred": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "findPassword": "Forgot password",
+  "resetPasswordTitle": "Reset password",
+  "resetPasswordSubtitle": "Verify your email, then set a new password.",
+  "resetStepEmail": "Verify email",
+  "resetSendCode": "Send code",
+  "resetStepCode": "Enter the code",
+  "resetVerifyCode": "Verify code",
+  "resetStepNewPassword": "Set a new password",
+  "resetTimeLeft": "Time left {time}",
+  "@resetTimeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetTimedOut": "Time ran out. Please start again.",
+  "resetCodeVerified": "Code verified.",
+  "resetPasswordMismatch": "The passwords do not match."
 }
