@@ -4,6 +4,7 @@ import 'package:idcs/components/indices/main_index/main_index_components.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import '../../services/common/api_client.dart';
 
@@ -43,6 +44,7 @@ class _MainIndexPageState extends State<MainIndexPage> {
         _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
         _facilities = summaries;
       });
+      _maybeOpenOnlyFacility(summaries);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +57,20 @@ class _MainIndexPageState extends State<MainIndexPage> {
         });
       }
     }
+  }
+
+  /// With a single facility, the 내 시설 list is a one-item screen the user has to
+  /// tap through every time, so open that facility straight away.
+  ///
+  /// This pushes rather than replaces, exactly as tapping the card does, so 홈
+  /// stays underneath and back still leads to 알람 / 내 정보. [FacilityShortcut]
+  /// keeps it to one jump per sign-in — otherwise pressing back would land here
+  /// and bounce the user straight into the facility again.
+  void _maybeOpenOnlyFacility(List<FacilitySummary> summaries) {
+    if (summaries.length != 1) return;
+    if (!FacilityShortcut.consume()) return;
+    if (!mounted) return;
+    context.push('/facility/${widget.userId}/${summaries.first.id}/monitoring');
   }
 
   /// Combines the facility list with the user's alarms and each facility's room
