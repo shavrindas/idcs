@@ -20,6 +20,9 @@ class MainIndexPage extends StatefulWidget {
 class _MainIndexPageState extends State<MainIndexPage> {
   bool _isAdmin = false;
   bool _isLoading = true;
+
+  /// Set once this screen has handed over to a sole facility.
+  bool _jumped = false;
   List<FacilitySummary> _facilities = [];
 
   @override
@@ -60,17 +63,20 @@ class _MainIndexPageState extends State<MainIndexPage> {
   }
 
   /// With a single facility, the 내 시설 list is a one-item screen the user has to
-  /// tap through every time, so open that facility straight away.
+  /// tap through every time, so open that facility straight away — on launch and
+  /// whenever 홈 is opened again.
   ///
-  /// This pushes rather than replaces, exactly as tapping the card does, so 홈
-  /// stays underneath and back still leads to 알람 / 내 정보. [FacilityShortcut]
-  /// keeps it to one jump per sign-in — otherwise pressing back would land here
-  /// and bounce the user straight into the facility again.
+  /// It uses `go`, not `push`: the stack is replaced, so back from the facility
+  /// leaves the app instead of returning here and bouncing straight back in.
+  /// The facility shell then carries the only way to 내 정보, which is why
+  /// [FacilityShortcut.isSoleFacility] is set before navigating.
   void _maybeOpenOnlyFacility(List<FacilitySummary> summaries) {
-    if (summaries.length != 1) return;
-    if (!FacilityShortcut.consume()) return;
-    if (!mounted) return;
-    context.push('/facility/${widget.userId}/${summaries.first.id}/monitoring');
+    final sole = summaries.length == 1;
+    FacilityShortcut.markSoleFacility(sole);
+    if (!sole || _jumped || !mounted) return;
+    // Guard against a second jump from pull-to-refresh on this same screen.
+    _jumped = true;
+    context.go('/facility/${widget.userId}/${summaries.first.id}/monitoring');
   }
 
   /// Combines the facility list with the user's alarms and each facility's room

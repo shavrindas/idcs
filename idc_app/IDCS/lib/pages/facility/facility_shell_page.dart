@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 class FacilityShellPage extends StatefulWidget {
@@ -65,16 +66,29 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: '내 시설 목록으로',
-          onPressed: _backToHome,
-        ),
+        // 시설이 하나뿐인 계정은 이 셸이 홈이라 돌아갈 목록이 없다. 대신 그 경우에만
+        // 내 정보로 가는 버튼을 둔다 — 없으면 설정·로그아웃에 닿을 길이 사라진다.
+        leading: FacilityShortcut.isSoleFacility
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: '내 시설 목록으로',
+                onPressed: _backToHome,
+              ),
+        automaticallyImplyLeading: false,
         title: Text(_facilityName ?? '시설 ${widget.facilityId}'),
         centerTitle: true,
         elevation: 0,
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
+        actions: [
+          if (FacilityShortcut.isSoleFacility)
+            IconButton(
+              icon: const Icon(Icons.person_outline_rounded),
+              tooltip: '내 정보',
+              onPressed: () => context.push('/index/${widget.userId}/profile'),
+            ),
+        ],
       ),
       body: widget.navigationShell,
       bottomNavigationBar: NavigationBar(
