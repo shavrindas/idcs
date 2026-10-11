@@ -1,0 +1,54 @@
+{
+  "@@locale": "ko",
+
+  "settingsTitle": "설정",
+  "settingsDeviceOnly": "이 설정은 이 기기에만 적용됩니다.",
+
+  "settingsLanguage": "언어",
+  "languageSystem": "시스템 설정",
+  "languageKorean": "한국어",
+  "languageEnglish": "English",
+
+  "settingsTheme": "화면 테마",
+  "themeSystem": "시스템 설정",
+  "themeLight": "밝게",
+  "themeDark": "어둡게",
+
+  "settingsPanel": "제어판 화면",
+  "settingsPanelNote": "호실에 들어갔을 때 보이는 실시간 제어판에만 적용됩니다.",
+  "panelBackground": "배경",
+  "panelOpacity": "투명도",
+  "panelValueSize": "숫자 크기",
+  "panelLedDigits": "LED 숫자",
+  "panelLedDigitsNote": "숫자를 7세그먼트 표시기 모양으로 보여줍니다.",
+  "panelSampleLabel": "고내온도",
+
+  "backgroundNone": "없음",
+  "backgroundBlueprint": "도면",
+  "backgroundCoil": "냉각 코일",
+  "backgroundMetal": "금속",
+  "backgroundGrid": "격자",
+
+  "settingsAlarmStyle": "알림 방식",
+  "alarmSound": "소리",
+  "alarmSoundNote": "알람이 올 때 소리로 알립니다.",
+  "alarmVibration": "진동",
+  "alarmVibrationNote": "알람이 올 때 진동으로 알립니다.",
+  "alarmLockScreen": "잠금화면에 내용 표시",
+  "alarmLockScreenNote": "꺼두면 잠금화면에서는 알람이 왔다는 사실만 보입니다.",
+
+  "alarmRepeat": "다시 알림",
+  "alarmRepeatNote": "알람을 확인하지 못했을 때 설정한 간격으로 최대 {count}번까지 다시 알려줍니다.",
+  "@alarmRepeatNote": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "alarmRepeatNone": "없음",
+  "alarmRepeatMinutes": "{minutes}분",
+  "@alarmRepeatMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  }
+}
