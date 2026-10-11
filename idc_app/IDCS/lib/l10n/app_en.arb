@@ -1,0 +1,54 @@
+{
+  "@@locale": "en",
+
+  "settingsTitle": "Settings",
+  "settingsDeviceOnly": "These settings apply to this device only.",
+
+  "settingsLanguage": "Language",
+  "languageSystem": "System default",
+  "languageKorean": "한국어",
+  "languageEnglish": "English",
+
+  "settingsTheme": "Appearance",
+  "themeSystem": "System default",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+
+  "settingsPanel": "Control panel",
+  "settingsPanelNote": "Applies only to the live control panel shown inside a room.",
+  "panelBackground": "Background",
+  "panelOpacity": "Transparency",
+  "panelValueSize": "Reading size",
+  "panelLedDigits": "LED digits",
+  "panelLedDigitsNote": "Show numbers as a seven-segment display.",
+  "panelSampleLabel": "Room temp",
+
+  "backgroundNone": "None",
+  "backgroundBlueprint": "Blueprint",
+  "backgroundCoil": "Cooling coil",
+  "backgroundMetal": "Metal",
+  "backgroundGrid": "Grid",
+
+  "settingsAlarmStyle": "Alarm alerts",
+  "alarmSound": "Sound",
+  "alarmSoundNote": "Play a sound when an alarm arrives.",
+  "alarmVibration": "Vibration",
+  "alarmVibrationNote": "Vibrate when an alarm arrives.",
+  "alarmLockScreen": "Show details on lock screen",
+  "alarmLockScreenNote": "When off, the lock screen only shows that an alarm arrived.",
+
+  "alarmRepeat": "Remind again",
+  "alarmRepeatNote": "If an alarm goes unread, remind you at the chosen interval up to {count} more times.",
+  "@alarmRepeatNote": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "alarmRepeatNone": "Off",
+  "alarmRepeatMinutes": "{minutes} min",
+  "@alarmRepeatMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  }
+}

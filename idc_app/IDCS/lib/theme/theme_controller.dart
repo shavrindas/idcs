@@ -1,6 +1,7 @@
 // 경로: lib/theme/theme_controller.dart
 // 명세: 연한/어두운 테마 선택값 보관 및 기기 저장
 import 'package:flutter/material.dart';
+import 'package:idcs/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 테마 선택값. 기본은 기기 설정을 따라가고, 사용자가 직접 고르면 그 값을 기억한다.
@@ -36,14 +37,14 @@ class ThemeController {
     }
   }
 
-  static String labelOf(ThemeMode m) {
+  static String labelOf(ThemeMode m, AppLocalizations l10n) {
     switch (m) {
       case ThemeMode.light:
-        return '밝게';
+        return l10n.themeLight;
       case ThemeMode.dark:
-        return '어둡게';
+        return l10n.themeDark;
       case ThemeMode.system:
-        return '시스템 설정';
+        return l10n.themeSystem;
     }
   }
 }

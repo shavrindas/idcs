@@ -3,10 +3,12 @@
 // 명세: 앱 설정 한 곳 — 화면 테마와 알람 동작
 // ===============================================================
 import 'package:flutter/material.dart';
+import 'package:idcs/l10n/app_localizations.dart';
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/panel_background.dart';
+import 'package:idcs/theme/locale_controller.dart';
 import 'package:idcs/theme/theme_controller.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -40,10 +42,25 @@ class _SettingsPageState extends State<SettingsPage> {
     await next.save();
   }
 
+  /// Each language is named in its own language, so someone who cannot read the
+  /// current one can still find theirs. Only the "follow the device" row is
+  /// translated.
+  String _languageLabel(Locale? option, AppLocalizations l10n) {
+    switch (option?.languageCode) {
+      case 'ko':
+        return l10n.languageKorean;
+      case 'en':
+        return l10n.languageEnglish;
+      default:
+        return l10n.languageSystem;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('설정')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -52,7 +69,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ValueListenableBuilder<ThemeMode>(
                   valueListenable: ThemeController.mode,
                   builder: (context, mode, _) => _SettingsCard(
-                    title: '화면 테마',
+                    title: l10n.settingsTheme,
                     children: ThemeMode.values.map((m) {
                       final selected = mode == m;
                       return ListTile(
@@ -65,10 +82,41 @@ class _SettingsPageState extends State<SettingsPage> {
                           size: 20,
                         ),
                         title: Text(
-                          ThemeController.labelOf(m),
+                          ThemeController.labelOf(m, l10n),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            color: context.colors.textPrimary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ValueListenableBuilder<Locale?>(
+                  valueListenable: LocaleController.locale,
+                  builder: (context, selected, _) => _SettingsCard(
+                    title: l10n.settingsLanguage,
+                    // null = follow the device, then one row per supported language.
+                    children: [null, ...LocaleController.supported].map((option) {
+                      final isSelected = selected?.languageCode == option?.languageCode;
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        onTap: () => LocaleController.set(option),
+                        leading: Icon(
+                          isSelected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          color: isSelected ? context.colors.primary : context.colors.textSecondary,
+                          size: 20,
+                        ),
+                        title: Text(
+                          _languageLabel(option, l10n),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                             color: context.colors.textPrimary,
                           ),
                         ),
@@ -83,26 +131,26 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 16),
                 _SettingsCard(
-                  title: '알림 방식',
+                  title: l10n.settingsAlarmStyle,
                   children: [
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('소리'),
-                      subtitle: const Text('알람이 올 때 소리로 알립니다.'),
+                      title: Text(l10n.alarmSound),
+                      subtitle: Text(l10n.alarmSoundNote),
                       value: _settings.sound,
                       onChanged: (val) => _update(_settings.copyWith(sound: val)),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('진동'),
-                      subtitle: const Text('알람이 올 때 진동으로 알립니다.'),
+                      title: Text(l10n.alarmVibration),
+                      subtitle: Text(l10n.alarmVibrationNote),
                       value: _settings.vibration,
                       onChanged: (val) => _update(_settings.copyWith(vibration: val)),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('잠금화면에 내용 표시'),
-                      subtitle: const Text('꺼두면 잠금화면에서는 알람이 왔다는 사실만 보입니다.'),
+                      title: Text(l10n.alarmLockScreen),
+                      subtitle: Text(l10n.alarmLockScreenNote),
                       value: _settings.showOnLockScreen,
                       onChanged: (val) => _update(_settings.copyWith(showOnLockScreen: val)),
                     ),
@@ -110,11 +158,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 16),
                 _SettingsCard(
-                  title: '다시 알림',
+                  title: l10n.alarmRepeat,
                   children: [
                     Text(
-                      '알람을 확인하지 못했을 때 설정한 간격으로 최대 '
-                      '${AlarmSettings.maxRepeatCount}번까지 다시 알려줍니다.',
+                      l10n.alarmRepeatNote(AlarmSettings.maxRepeatCount),
                       style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
                     ),
                     const SizedBox(height: 12),
@@ -124,7 +171,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         final selected = _settings.repeatMinutes == minutes;
                         return ChoiceChip(
                           showCheckmark: false,
-                          label: Text(minutes == 0 ? '없음' : '$minutes분'),
+                          label: Text(minutes == 0 ? l10n.alarmRepeatNone : l10n.alarmRepeatMinutes(minutes)),
                           selected: selected,
                           onSelected: (_) => _update(_settings.copyWith(repeatMinutes: minutes)),
                           labelStyle: TextStyle(
@@ -143,7 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '이 설정은 이 기기에만 적용됩니다.',
+                  l10n.settingsDeviceOnly,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                 ),
@@ -168,13 +215,14 @@ class _PanelAppearanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return _SettingsCard(
-      title: '제어판 화면',
+      title: l10n.settingsPanel,
       children: [
         Text(
-          '호실에 들어갔을 때 보이는 실시간 제어판에만 적용됩니다.',
+          l10n.settingsPanelNote,
           style: TextStyle(fontSize: 13, color: colors.textSecondary),
         ),
         const SizedBox(height: 12),
@@ -182,7 +230,7 @@ class _PanelAppearanceCard extends StatelessWidget {
         _PanelPreview(view: view),
         const SizedBox(height: 16),
 
-        _Label(text: '배경'),
+        _Label(text: l10n.panelBackground),
         const SizedBox(height: 8),
         SizedBox(
           height: 76,
@@ -202,7 +250,7 @@ class _PanelAppearanceCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        _Label(text: '투명도', trailing: '${((1 - view.panelOpacity) * 100).round()}%'),
+        _Label(text: l10n.panelOpacity, trailing: '${((1 - view.panelOpacity) * 100).round()}%'),
         Slider(
           // Runs backwards: the user thinks in "how see-through", the panel is
           // drawn with "how opaque". The floor keeps the readings legible.
@@ -212,7 +260,7 @@ class _PanelAppearanceCard extends StatelessWidget {
         ),
 
         _Label(
-          text: '숫자 크기',
+          text: l10n.panelValueSize,
           trailing: '${view.valueFontSize.round()}pt',
         ),
         Slider(
@@ -224,8 +272,8 @@ class _PanelAppearanceCard extends StatelessWidget {
 
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('LED 숫자'),
-          subtitle: const Text('숫자를 7세그먼트 표시기 모양으로 보여줍니다.'),
+          title: Text(l10n.panelLedDigits),
+          subtitle: Text(l10n.panelLedDigitsNote),
           value: view.ledDigits,
           onChanged: (val) => _update(view.copyWith(ledDigits: val)),
         ),
@@ -277,6 +325,7 @@ class _BackgroundChoice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colors = context.colors;
 
     return GestureDetector(
@@ -299,7 +348,7 @@ class _BackgroundChoice extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            option.label,
+            option.labelOf(l10n),
             style: TextStyle(
               fontSize: 12,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
@@ -350,7 +399,7 @@ class _PanelPreview extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '고내온도',
+                      AppLocalizations.of(context).panelSampleLabel,
                       style: TextStyle(fontSize: 12, color: colors.textSecondary),
                     ),
                     const SizedBox(height: 2),

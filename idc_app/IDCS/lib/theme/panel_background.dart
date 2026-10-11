@@ -5,6 +5,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:idcs/l10n/app_localizations.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 /// A backdrop the user can pick for the live control panel.
@@ -18,8 +19,8 @@ import 'package:idcs/theme/app_theme.dart';
 class PanelBackground {
   final String id;
 
-  /// Shown in 설정. Korean, like the rest of the app's copy.
-  final String label;
+  /// Shown in 설정. Resolved at build time so it follows the chosen language.
+  final String Function(AppLocalizations) labelOf;
 
   /// Builds the painter for the current palette. Null means "no pattern".
   final CustomPainter Function(AppPalette colors)? painterOf;
@@ -29,7 +30,7 @@ class PanelBackground {
 
   const PanelBackground({
     required this.id,
-    required this.label,
+    required this.labelOf,
     this.painterOf,
     this.assetPath,
   });
@@ -37,25 +38,25 @@ class PanelBackground {
   static const String defaultId = 'none';
 
   static final List<PanelBackground> all = [
-    const PanelBackground(id: 'none', label: '없음'),
+    PanelBackground(id: 'none', labelOf: (l) => l.backgroundNone),
     PanelBackground(
       id: 'blueprint',
-      label: '도면',
+      labelOf: (l) => l.backgroundBlueprint,
       painterOf: (colors) => _BlueprintPainter(colors),
     ),
     PanelBackground(
       id: 'coil',
-      label: '냉각 코일',
+      labelOf: (l) => l.backgroundCoil,
       painterOf: (colors) => _CoilPainter(colors),
     ),
     PanelBackground(
       id: 'metal',
-      label: '금속',
+      labelOf: (l) => l.backgroundMetal,
       painterOf: (colors) => _MetalPainter(colors),
     ),
     PanelBackground(
       id: 'grid',
-      label: '격자',
+      labelOf: (l) => l.backgroundGrid,
       painterOf: (colors) => _GridPainter(colors),
     ),
   ];

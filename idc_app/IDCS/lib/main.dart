@@ -10,6 +10,8 @@ import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:idcs/l10n/app_localizations.dart';
+import 'package:idcs/theme/locale_controller.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:go_router/go_router.dart';
@@ -63,6 +65,9 @@ void main() async {
   // 제어판 겉모습 설정 복원. 첫 화면이 그려지기 전에 읽어야 깜빡임이 없다.
   await MonitoringViewController.load();
 
+  // 표시 언어 복원. 역시 첫 프레임 전에 읽어야 한국어로 떴다가 바뀌지 않는다.
+  await LocaleController.load();
+
   runApp(const MyApp());
 }
 
@@ -73,20 +78,27 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeController.mode,
-      builder: (context, themeMode, _) => MaterialApp.router(
-        title: 'IDCool Systems Routing',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: themeMode,
-        routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          FlutterQuillLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
+      builder: (context, themeMode, _) => ValueListenableBuilder<Locale?>(
+        valueListenable: LocaleController.locale,
+        // locale이 null이면 MaterialApp이 기기 설정을 따라간다.
+        builder: (context, locale, _) => MaterialApp.router(
+          title: 'IDCool Systems Routing',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeMode,
+          locale: locale,
+          routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
+          localizationsDelegates: const [
+            // AppLocalizations.delegate is a const instance, so the list stays const.
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            FlutterQuillLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
     );
   }
