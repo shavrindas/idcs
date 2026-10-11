@@ -247,4 +247,150 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get resetPasswordMismatch => '비밀번호가 일치하지 않습니다.';
+
+  @override
+  String get actionSave => '저장';
+
+  @override
+  String get actionEdit => '수정';
+
+  @override
+  String get actionEditing => '수정 중';
+
+  @override
+  String get actionLink => '연동하기';
+
+  @override
+  String get actionLogout => '로그아웃';
+
+  @override
+  String get actionSearchClear => '검색어 지우기';
+
+  @override
+  String get fieldPhone => '전화번호';
+
+  @override
+  String get fieldCurrentPassword => '기존 비밀번호';
+
+  @override
+  String get loginMethod => '로그인 방식';
+
+  @override
+  String get noName => '이름 없음';
+
+  @override
+  String get profileTitle => '내 정보';
+
+  @override
+  String get profileNoChanges => '변경된 내용이 없습니다.';
+
+  @override
+  String get profileSaved => '성공적으로 변경되었습니다.';
+
+  @override
+  String get profileSettingsSubtitle => '화면 테마, 제어판 화면, 알람 소리·진동';
+
+  @override
+  String get profileTotalBoard => '통합 소요 기록';
+
+  @override
+  String get passwordSection => '비밀번호';
+
+  @override
+  String get passwordChange => '비밀번호 변경';
+
+  @override
+  String get passwordAllRequired => '비밀번호를 모두 입력해주세요.';
+
+  @override
+  String get passwordSameAsOld => '새 비밀번호가 기존 비밀번호와 동일합니다.';
+
+  @override
+  String get withdrawTitle => '계정 탈퇴';
+
+  @override
+  String get withdrawNote => '탈퇴하면 계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.';
+
+  @override
+  String get withdrawConfirmTitle => '정말 탈퇴하시겠습니까?';
+
+  @override
+  String get withdrawConfirmBody => '계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.';
+
+  @override
+  String get withdrawConfirmAction => '탈퇴하기';
+
+  @override
+  String get alarmsAllTitle => '전체 알람';
+
+  @override
+  String get alarmSearchByFacility => '시설 이름으로 검색...';
+
+  @override
+  String get alarmSearchByRoom => '룸 이름으로 검색...';
+
+  @override
+  String get alarmSearchByName => '알람 이름으로 검색...';
+
+  @override
+  String get alarmFieldName => '알람 명';
+
+  @override
+  String get alarmFieldRoom => '룸 이름';
+
+  @override
+  String get alarmFieldFacility => '시설 이름';
+
+  @override
+  String get alarmStatusAll => '전체';
+
+  @override
+  String get alarmStatusActive => '진행중';
+
+  @override
+  String get alarmStatusEnded => '종료';
+
+  @override
+  String get alarmGroupToggle => '묶어서 보기';
+
+  @override
+  String get alarmShort => '알람';
+
+  @override
+  String get statusNormal => '정상';
+
+  @override
+  String get statusActiveAlarms => '진행 중 알람';
+
+  @override
+  String countCases(String label, int count) {
+    return '$label $count건';
+  }
+
+  @override
+  String get facilitiesTitle => '내 시설';
+
+  @override
+  String get facilitiesEmpty => '등록된 시설이 없습니다.';
+
+  @override
+  String get facilitiesNoneVisible => '조회할 수 있는 시설이 없습니다.';
+
+  @override
+  String get roomsEmpty => '등록된 호실이 없습니다.';
+
+  @override
+  String roomCount(int count) {
+    return '호실 $count개';
+  }
+
+  @override
+  String permissionLoadFailed(String message) {
+    return '권한 조회 실패: $message';
+  }
+
+  @override
+  String errorPrefix(String message) {
+    return '오류: $message';
+  }
 }

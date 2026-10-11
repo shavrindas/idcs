@@ -2,6 +2,7 @@
 // 명세: 홈(내 시설) 카드 목록과, 호실 선택 화면이 함께 쓰는 격자 박스
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// One facility's at-a-glance state on the home screen.
 /// [roomCount] is null while the room list is still loading or failed to load,
@@ -26,19 +27,21 @@ class FacilitySummary {
 class FacilitySummaryList extends StatelessWidget {
   final List<FacilitySummary> facilities;
   final Function(int) onFacilityPressed;
-  final String emptyMessage;
+  /// Null falls back to the translated default at build time — a default
+  /// parameter value cannot read the locale.
+  final String? emptyMessage;
 
   const FacilitySummaryList({
     super.key,
     required this.facilities,
     required this.onFacilityPressed,
-    this.emptyMessage = '등록된 시설이 없습니다.',
+    this.emptyMessage,
   });
 
   @override
   Widget build(BuildContext context) {
     if (facilities.isEmpty) {
-      return _EmptyBox(message: emptyMessage);
+      return _EmptyBox(message: emptyMessage ?? context.l10n.facilitiesEmpty);
     }
 
     return Column(
@@ -98,7 +101,7 @@ class _FacilityCard extends StatelessWidget {
                       children: [
                         if (facility.roomCount != null) ...[
                           Text(
-                            '호실 ${facility.roomCount}개',
+                            context.l10n.roomCount(facility.roomCount!),
                             style: TextStyle(fontSize: 13, color: colors.textSecondary),
                           ),
                           Text(
@@ -127,9 +130,10 @@ class _StatusText extends StatelessWidget {
   final int count;
 
   /// Wording differs by level: a facility says 진행 중 알람 N건, a room just 알람 N건.
-  final String label;
+  /// Null means the facility-level wording; a room passes its own.
+  final String? label;
 
-  const _StatusText({required this.count, this.label = '진행 중 알람'});
+  const _StatusText({required this.count, this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +153,9 @@ class _StatusText extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          hasAlarm ? '$label $count건' : '정상',
+          hasAlarm
+              ? context.l10n.countCases(label ?? context.l10n.statusActiveAlarms, count)
+              : context.l10n.statusNormal,
           style: TextStyle(
             fontSize: 13,
             fontWeight: hasAlarm ? FontWeight.w600 : FontWeight.w400,
@@ -197,19 +203,19 @@ class RoomGrid extends StatelessWidget {
   /// Active alarm count per room id. A missing id simply counts as zero.
   final Map<int, int> activeAlarmCounts;
   final Function(int) onRoomPressed;
-  final String emptyMessage;
+  final String? emptyMessage;
 
   const RoomGrid({
     super.key,
     required this.rooms,
     required this.activeAlarmCounts,
     required this.onRoomPressed,
-    this.emptyMessage = '등록된 호실이 없습니다.',
+    this.emptyMessage,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (rooms.isEmpty) return _EmptyBox(message: emptyMessage);
+    if (rooms.isEmpty) return _EmptyBox(message: emptyMessage ?? context.l10n.roomsEmpty);
 
     return GridView.builder(
       shrinkWrap: true,
@@ -252,7 +258,7 @@ class RoomGrid extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  _StatusText(count: count, label: '알람'),
+                  _StatusText(count: count, label: context.l10n.alarmShort),
                 ],
               ),
             ),
@@ -268,15 +274,15 @@ class RoomGrid extends StatelessWidget {
 class IntegratedFacilityBox extends StatelessWidget {
   final List<dynamic> facilities;
   final Function(int) onFacilityPressed;
-  final String label;
-  final String emptyMessage;
+  final String? label;
+  final String? emptyMessage;
 
   const IntegratedFacilityBox({
     super.key,
     required this.facilities,
     required this.onFacilityPressed,
-    this.label = '내 시설',
-    this.emptyMessage = '조회할 수 있는 시설이 없습니다.',
+    this.label,
+    this.emptyMessage,
   });
 
   @override
@@ -284,10 +290,11 @@ class IntegratedFacilityBox extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // An empty label means the screen already names this section in its app bar.
-        if (label.isNotEmpty) ...[
+        // A null or empty label means the screen already names this section in
+        // its app bar.
+        if (label != null && label!.isNotEmpty) ...[
           Text(
-            label,
+            label!,
             style: TextStyle(
                 fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.4),
           ),
@@ -295,7 +302,7 @@ class IntegratedFacilityBox extends StatelessWidget {
         ],
 
         if (facilities.isEmpty)
-          _EmptyBox(message: emptyMessage)
+          _EmptyBox(message: emptyMessage ?? context.l10n.facilitiesNoneVisible)
         else
           GridView.builder(
             shrinkWrap: true,

@@ -104,5 +104,82 @@
   },
   "resetTimedOut": "Time ran out. Please start again.",
   "resetCodeVerified": "Code verified.",
-  "resetPasswordMismatch": "The passwords do not match."
+  "resetPasswordMismatch": "The passwords do not match.",
+  "actionSave": "Save",
+  "actionEdit": "Edit",
+  "actionEditing": "Editing",
+  "actionLink": "Link",
+  "actionLogout": "Sign out",
+  "actionSearchClear": "Clear search",
+  "fieldPhone": "Phone",
+  "fieldCurrentPassword": "Current password",
+  "loginMethod": "Sign-in method",
+  "noName": "No name",
+  "profileTitle": "My profile",
+  "profileNoChanges": "Nothing has changed.",
+  "profileSaved": "Saved.",
+  "profileSettingsSubtitle": "Appearance, control panel, alarm sound and vibration",
+  "profileTotalBoard": "All work logs",
+  "passwordSection": "Password",
+  "passwordChange": "Change password",
+  "passwordAllRequired": "Please fill in every password field.",
+  "passwordSameAsOld": "The new password is the same as the current one.",
+  "withdrawTitle": "Delete account",
+  "withdrawNote": "Deleting your account removes your details and facility membership for good.",
+  "withdrawConfirmTitle": "Delete your account?",
+  "withdrawConfirmBody": "Your details and facility membership will be removed and cannot be restored.",
+  "withdrawConfirmAction": "Delete",
+  "alarmsAllTitle": "All alarms",
+  "alarmSearchByFacility": "Search by facility…",
+  "alarmSearchByRoom": "Search by room…",
+  "alarmSearchByName": "Search by alarm name…",
+  "alarmFieldName": "Alarm",
+  "alarmFieldRoom": "Room",
+  "alarmFieldFacility": "Facility",
+  "alarmStatusAll": "All",
+  "alarmStatusActive": "Active",
+  "alarmStatusEnded": "Ended",
+  "alarmGroupToggle": "Group repeats",
+  "alarmShort": "Alarms",
+  "statusNormal": "Normal",
+  "statusActiveAlarms": "Active alarms",
+  "countCases": "{label} {count}",
+  "@countCases": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "facilitiesTitle": "My facilities",
+  "facilitiesEmpty": "No facilities registered.",
+  "facilitiesNoneVisible": "No facilities available to view.",
+  "roomsEmpty": "No rooms registered.",
+  "roomCount": "{count} rooms",
+  "@roomCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "permissionLoadFailed": "Could not load permissions: {message}",
+  "@permissionLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPrefix": "Error: {message}",
+  "@errorPrefix": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  }
 }

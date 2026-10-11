@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// 알람 목록 상태 필터.
 enum AlarmStatusFilter { all, active, ended }
@@ -166,7 +167,7 @@ class AlarmRow extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          isActive ? '진행중' : '종료',
+                          isActive ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
                         ),
                         if (timestamp.isNotEmpty) ...[
@@ -290,7 +291,7 @@ class _OccurrenceRow extends StatelessWidget {
               ),
             ),
             Text(
-              active ? '진행중' : '종료',
+              active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
             ),
           ],
@@ -323,13 +324,13 @@ class AlarmFilterBar extends StatelessWidget {
           child: Wrap(
             spacing: 6,
             children: [
-              _chip(context, '전체', AlarmStatusFilter.all),
-              _chip(context, '진행중', AlarmStatusFilter.active),
-              _chip(context, '종료', AlarmStatusFilter.ended),
+              _chip(context, context.l10n.alarmStatusAll, AlarmStatusFilter.all),
+              _chip(context, context.l10n.alarmStatusActive, AlarmStatusFilter.active),
+              _chip(context, context.l10n.alarmStatusEnded, AlarmStatusFilter.ended),
             ],
           ),
         ),
-        Text('묶어서 보기', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+        Text(context.l10n.alarmGroupToggle, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
         Switch(value: grouped, onChanged: onGroupedChanged),
       ],
     );

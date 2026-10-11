@@ -5,6 +5,7 @@ import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/main.dart'; // AuthService 접근용
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class PersonalPage extends StatefulWidget {
   final String userId;
@@ -31,7 +32,7 @@ class _PersonalPageState extends State<PersonalPage> {
   String _pwCollapseMessage = '';
 
   /// 이 계정이 어떤 방식으로 로그인하는지. 이미 로그인한 사용자에게
-  /// '연동하기'를 권하는 대신 현재 상태만 보여준다.
+  /// context.l10n.actionLink를 권하는 대신 현재 상태만 보여준다.
   String get _loginMethod {
     final providers = _linkedProviders
         .map((p) => p.toString())
@@ -92,7 +93,7 @@ class _PersonalPageState extends State<PersonalPage> {
     if (!mounted) return;
 
     if (messages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('변경된 내용이 없습니다.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.profileNoChanges)));
       return;
     }
 
@@ -108,11 +109,11 @@ class _PersonalPageState extends State<PersonalPage> {
     final newPw = _newPwController.text.trim();
 
     if (currentPw.isEmpty || newPw.isEmpty) {
-      setState(() => _pwCollapseMessage = '비밀번호를 모두 입력해주세요.');
+      setState(() => _pwCollapseMessage = context.l10n.passwordAllRequired);
       return;
     }
     if (currentPw == newPw) {
-      setState(() => _pwCollapseMessage = '새 비밀번호가 기존 비밀번호와 동일합니다.');
+      setState(() => _pwCollapseMessage = context.l10n.passwordSameAsOld);
       return;
     }
 
@@ -120,13 +121,13 @@ class _PersonalPageState extends State<PersonalPage> {
       final msg = await UserApiService.updatePassword(widget.userId, currentPw, newPw);
       if (!mounted) return;
       setState(() {
-        _pwCollapseMessage = '성공적으로 변경되었습니다.';
+        _pwCollapseMessage = context.l10n.profileSaved;
         _currentPwController.clear();
         _newPwController.clear();
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      setState(() => _pwCollapseMessage = '오류: ${describeApiError(e)}');
+      setState(() => _pwCollapseMessage = context.l10n.errorPrefix(describeApiError(e)));
     }
   }
 
@@ -140,14 +141,14 @@ class _PersonalPageState extends State<PersonalPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('정말 탈퇴하시겠습니까?'),
-        content: const Text('계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.'),
+        title: Text(context.l10n.withdrawConfirmTitle),
+        content: Text(context.l10n.withdrawConfirmBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(context.l10n.actionCancel)),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: context.colors.error),
-            child: const Text('탈퇴하기'),
+            child: Text(context.l10n.withdrawConfirmAction),
           ),
         ],
       ),
@@ -170,7 +171,7 @@ class _PersonalPageState extends State<PersonalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('내 정보')),
+      appBar: AppBar(title: Text(context.l10n.profileTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -204,14 +205,14 @@ class _PersonalPageState extends State<PersonalPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _name.isEmpty ? '이름 없음' : _name,
+                          _name.isEmpty ? context.l10n.noName : _name,
                           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: context.colors.textPrimary),
                         ),
                         Text('ID ${widget.userId}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
                       ],
                     ),
                   ),
-                  TextButton(onPressed: _handleLogout, child: const Text('로그아웃')),
+                  TextButton(onPressed: _handleLogout, child: Text(context.l10n.actionLogout)),
                 ],
               ),
             ),
@@ -219,8 +220,8 @@ class _PersonalPageState extends State<PersonalPage> {
 
             // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
             _LinkCard(
-              title: '설정',
-              subtitle: '화면 테마, 제어판 화면, 알람 소리·진동',
+              title: context.l10n.settingsTitle,
+              subtitle: context.l10n.profileSettingsSubtitle,
               icon: Icons.settings_outlined,
               onPressed: () => context.push('/settings'),
             ),
@@ -228,7 +229,7 @@ class _PersonalPageState extends State<PersonalPage> {
 
             if (_isAdmin) ...[
               _LinkCard(
-                title: '통합 소요 기록',
+                title: context.l10n.profileTotalBoard,
                 icon: Icons.assignment_outlined,
                 onPressed: () => context.push('/total_board/${widget.userId}'),
               ),

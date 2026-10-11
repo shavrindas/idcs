@@ -253,4 +253,154 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetPasswordMismatch => 'The passwords do not match.';
+
+  @override
+  String get actionSave => 'Save';
+
+  @override
+  String get actionEdit => 'Edit';
+
+  @override
+  String get actionEditing => 'Editing';
+
+  @override
+  String get actionLink => 'Link';
+
+  @override
+  String get actionLogout => 'Sign out';
+
+  @override
+  String get actionSearchClear => 'Clear search';
+
+  @override
+  String get fieldPhone => 'Phone';
+
+  @override
+  String get fieldCurrentPassword => 'Current password';
+
+  @override
+  String get loginMethod => 'Sign-in method';
+
+  @override
+  String get noName => 'No name';
+
+  @override
+  String get profileTitle => 'My profile';
+
+  @override
+  String get profileNoChanges => 'Nothing has changed.';
+
+  @override
+  String get profileSaved => 'Saved.';
+
+  @override
+  String get profileSettingsSubtitle =>
+      'Appearance, control panel, alarm sound and vibration';
+
+  @override
+  String get profileTotalBoard => 'All work logs';
+
+  @override
+  String get passwordSection => 'Password';
+
+  @override
+  String get passwordChange => 'Change password';
+
+  @override
+  String get passwordAllRequired => 'Please fill in every password field.';
+
+  @override
+  String get passwordSameAsOld =>
+      'The new password is the same as the current one.';
+
+  @override
+  String get withdrawTitle => 'Delete account';
+
+  @override
+  String get withdrawNote =>
+      'Deleting your account removes your details and facility membership for good.';
+
+  @override
+  String get withdrawConfirmTitle => 'Delete your account?';
+
+  @override
+  String get withdrawConfirmBody =>
+      'Your details and facility membership will be removed and cannot be restored.';
+
+  @override
+  String get withdrawConfirmAction => 'Delete';
+
+  @override
+  String get alarmsAllTitle => 'All alarms';
+
+  @override
+  String get alarmSearchByFacility => 'Search by facility…';
+
+  @override
+  String get alarmSearchByRoom => 'Search by room…';
+
+  @override
+  String get alarmSearchByName => 'Search by alarm name…';
+
+  @override
+  String get alarmFieldName => 'Alarm';
+
+  @override
+  String get alarmFieldRoom => 'Room';
+
+  @override
+  String get alarmFieldFacility => 'Facility';
+
+  @override
+  String get alarmStatusAll => 'All';
+
+  @override
+  String get alarmStatusActive => 'Active';
+
+  @override
+  String get alarmStatusEnded => 'Ended';
+
+  @override
+  String get alarmGroupToggle => 'Group repeats';
+
+  @override
+  String get alarmShort => 'Alarms';
+
+  @override
+  String get statusNormal => 'Normal';
+
+  @override
+  String get statusActiveAlarms => 'Active alarms';
+
+  @override
+  String countCases(String label, int count) {
+    return '$label $count';
+  }
+
+  @override
+  String get facilitiesTitle => 'My facilities';
+
+  @override
+  String get facilitiesEmpty => 'No facilities registered.';
+
+  @override
+  String get facilitiesNoneVisible => 'No facilities available to view.';
+
+  @override
+  String get roomsEmpty => 'No rooms registered.';
+
+  @override
+  String roomCount(int count) {
+    return '$count rooms';
+  }
+
+  @override
+  String permissionLoadFailed(String message) {
+    return 'Could not load permissions: $message';
+  }
+
+  @override
+  String errorPrefix(String message) {
+    return 'Error: $message';
+  }
 }
