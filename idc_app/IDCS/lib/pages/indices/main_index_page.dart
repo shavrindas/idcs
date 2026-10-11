@@ -75,9 +75,6 @@ class _MainIndexPageState extends State<MainIndexPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: IntegratedFacilityBox(
                   facilities: _facilities,
-                  // The app bar already says 내 시설; repeating it above the grid is noise.
-                  // The room picker still passes its own label.
-                  label: '',
                   onFacilityPressed: (facilityId) {
                     // 터치 시 시설 라우팅용 nav 페이지로 이동
                     context.push('/facility/${widget.userId}/$facilityId/monitoring');

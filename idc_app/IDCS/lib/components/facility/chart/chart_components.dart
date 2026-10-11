@@ -48,16 +48,12 @@ class ChartFilterBox extends StatelessWidget {
             isExpanded: true,
             decoration: const InputDecoration(labelText: '호실'),
             items: rooms
-                .map(
-                  (room) => DropdownMenuItem<int>(
-                    value: room['id'] is int ? room['id'] : int.tryParse(room['id'].toString()),
-                    child: Text(room['name']?.toString() ?? '이름 없는 호실', overflow: TextOverflow.ellipsis),
-                  ),
-                )
+                .map((room) => DropdownMenuItem<int>(
+                      value: room['id'] is int ? room['id'] : int.tryParse(room['id'].toString()),
+                      child: Text(room['name']?.toString() ?? '이름 없는 호실', overflow: TextOverflow.ellipsis),
+                    ))
                 .toList(),
-            onChanged: (val) {
-              if (val != null) onRoomChanged(val);
-            },
+            onChanged: (val) { if (val != null) onRoomChanged(val); },
           ),
           const SizedBox(height: 12),
           Row(
@@ -69,26 +65,12 @@ class ChartFilterBox extends StatelessWidget {
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: '해상도'),
                   items: const [
-                    DropdownMenuItem(
-                      value: '10s',
-                      child: Text('10초 단위', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '1m',
-                      child: Text('1분 단위', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '5m',
-                      child: Text('5분 단위', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '1h',
-                      child: Text('1시간 단위', overflow: TextOverflow.ellipsis),
-                    ),
+                    DropdownMenuItem(value: '10s', child: Text('10초 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1m', child: Text('1분 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '5m', child: Text('5분 단위', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1h', child: Text('1시간 단위', overflow: TextOverflow.ellipsis)),
                   ],
-                  onChanged: (val) {
-                    if (val != null) onScaleChanged(val);
-                  },
+                  onChanged: (val) { if (val != null) onScaleChanged(val); },
                 ),
               ),
               const SizedBox(width: 8),
@@ -98,30 +80,13 @@ class ChartFilterBox extends StatelessWidget {
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: '조회 기간'),
                   items: const [
-                    DropdownMenuItem(
-                      value: '1h',
-                      child: Text('최근 1시간', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '12h',
-                      child: Text('최근 12시간', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '1d',
-                      child: Text('최근 1일', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '7d',
-                      child: Text('최근 7일', overflow: TextOverflow.ellipsis),
-                    ),
-                    DropdownMenuItem(
-                      value: '15d',
-                      child: Text('최근 15일', overflow: TextOverflow.ellipsis),
-                    ),
+                    DropdownMenuItem(value: '1h', child: Text('최근 1시간', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '12h', child: Text('최근 12시간', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '1d', child: Text('최근 1일', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '7d', child: Text('최근 7일', overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem(value: '15d', child: Text('최근 15일', overflow: TextOverflow.ellipsis)),
                   ],
-                  onChanged: (val) {
-                    if (val != null) onTimeRangeChanged(val);
-                  },
+                  onChanged: (val) { if (val != null) onTimeRangeChanged(val); },
                 ),
               ),
               const SizedBox(width: 8),
@@ -170,7 +135,8 @@ class ChartSeriesBox extends StatelessWidget {
     required this.onRoleToggled,
   });
 
-  int? _roleId(dynamic role) => role['role_id'] is int ? role['role_id'] : int.tryParse(role['role_id'].toString());
+  int? _roleId(dynamic role) =>
+      role['role_id'] is int ? role['role_id'] : int.tryParse(role['role_id'].toString());
 
   /// 체크박스로 보여줄 항목. 그룹 모드면 그룹에 묶인 것만, 직접 선택이면 전체.
   List<dynamic> get _shownRoles {
@@ -203,14 +169,17 @@ class ChartSeriesBox extends StatelessWidget {
             children: [
               ...availableGroups.map((group) {
                 final isSelected = !directMode && selectedGroupId == group['group_id'];
-                return _chip(
-                  context,
+                return _chip(context,
                   label: group['group_name'],
                   selected: isSelected,
                   onSelected: () => onGroupSelected(group['group_id']),
                 );
               }),
-              _chip(context, label: '직접 선택', selected: directMode, onSelected: onDirectModeSelected),
+              _chip(context,
+                label: '직접 선택',
+                selected: directMode,
+                onSelected: onDirectModeSelected,
+              ),
             ],
           ),
           if (shown.isNotEmpty) ...[
@@ -257,7 +226,8 @@ class ChartSeriesBox extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: checked ? context.colors.primary : context.colors.textSecondary,
                       ),
-                      showCheckmark: false,
+                      showCheckmark: true,
+                      checkmarkColor: context.colors.primary,
                       selectedColor: context.colors.primary.withValues(alpha: 0.12),
                       backgroundColor: context.colors.background,
                       side: BorderSide(color: checked ? context.colors.primary : context.colors.outline),
@@ -273,19 +243,11 @@ class ChartSeriesBox extends StatelessWidget {
     );
   }
 
-  Widget _chip(
-    BuildContext context, {
-    required String label,
-    required bool selected,
-    required VoidCallback onSelected,
-  }) {
+  Widget _chip(BuildContext context, {required String label, required bool selected, required VoidCallback onSelected}) {
     return ChoiceChip(
-      showCheckmark: false,
       label: Text(label),
       selected: selected,
-      onSelected: (val) {
-        if (val) onSelected();
-      },
+      onSelected: (val) { if (val) onSelected(); },
       labelStyle: TextStyle(
         color: selected ? context.colors.onPrimary : context.colors.textPrimary,
         fontWeight: FontWeight.w600,
@@ -381,9 +343,9 @@ class _LegendLinePainter extends CustomPainter {
 /// 시리즈별 선 모양. 색을 못 쓰는 상황(색각 이상, 흑백 인쇄)에서도 구분되게 한다.
 /// null이면 실선.
 const List<List<int>?> _seriesDashPatterns = [
-  null, // 실선
-  [6, 3], // 파선
-  [2, 3], // 점선
+  null,        // 실선
+  [6, 3],      // 파선
+  [2, 3],      // 점선
   [10, 3, 2, 3], // 일점쇄선
   [8, 4],
   [3, 2, 8, 2],
@@ -438,15 +400,13 @@ class ChartStatsBox extends StatelessWidget {
 
       if (count == 0 && minVal == null) continue;
 
-      stats.add(
-        _SeriesStat(
-          name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
-          color: context.colors.chartSeries[i % context.colors.chartSeries.length],
-          min: minVal,
-          avg: count > 0 ? sum / count : null,
-          max: maxVal,
-        ),
-      );
+      stats.add(_SeriesStat(
+        name: ds['display_name'] ?? ds['role_name'] ?? '시리즈 ${i + 1}',
+        color: context.colors.chartSeries[i % context.colors.chartSeries.length],
+        min: minVal,
+        avg: count > 0 ? sum / count : null,
+        max: maxVal,
+      ));
     }
 
     if (stats.isEmpty) return const SizedBox.shrink();
@@ -455,35 +415,23 @@ class ChartStatsBox extends StatelessWidget {
       title: '구간 요약',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: stats
-            .map(
-              (s) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        s.name,
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    _statChip(context, '최소', s.min),
-                    const SizedBox(width: 6),
-                    _statChip(context, '평균', s.avg),
-                    const SizedBox(width: 6),
-                    _statChip(context, '최대', s.max),
-                  ],
-                ),
+        children: stats.map((s) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: s.color, shape: BoxShape.circle)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(s.name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary), overflow: TextOverflow.ellipsis),
               ),
-            )
-            .toList(),
+              _statChip(context, '최소', s.min),
+              const SizedBox(width: 6),
+              _statChip(context, '평균', s.avg),
+              const SizedBox(width: 6),
+              _statChip(context, '최대', s.max),
+            ],
+          ),
+        )).toList(),
       ),
     );
   }
@@ -516,7 +464,12 @@ class ChartCanvasBox extends StatelessWidget {
   final bool isLoading;
   final bool showTargetLines;
 
-  const ChartCanvasBox({super.key, required this.chartData, required this.isLoading, this.showTargetLines = true});
+  const ChartCanvasBox({
+    super.key,
+    required this.chartData,
+    required this.isLoading,
+    this.showTargetLines = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -524,11 +477,8 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(context, child: const Center(child: CircularProgressIndicator()));
     }
 
-    if (chartData == null ||
-        chartData!['data']['datasets'] == null ||
-        (chartData!['data']['datasets'] as List).isEmpty) {
-      return _buildContainer(
-        context,
+    if (chartData == null || chartData!['data']['datasets'] == null || (chartData!['data']['datasets'] as List).isEmpty) {
+      return _buildContainer(context,
         child: Center(
           child: Text('조회된 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
         ),
@@ -648,104 +598,94 @@ class ChartCanvasBox extends StatelessWidget {
     }
 
     if (minY == double.infinity || maxY == -double.infinity) {
-      minY = 0;
-      maxY = 10;
+      minY = 0; maxY = 10;
     } else if (minY == maxY) {
-      minY -= 5;
-      maxY += 5;
+      minY -= 5; maxY += 5;
     } else {
       final padding = (maxY - minY) * 0.1;
-      minY -= padding;
-      maxY += padding;
+      minY -= padding; maxY += padding;
     }
 
     if (lineBars.isEmpty) {
-      return _buildContainer(
-        context,
-        child: Center(
-          child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-        ),
+      return _buildContainer(context,
+        child: Center(child: Text('유효한 그래프 데이터가 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13))),
       );
     }
 
-    return _buildContainer(
-      context,
+    return _buildContainer(context,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _ChartLegend(names: seriesNames, dashes: seriesDashes, colors: colors),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(right: 16.0, top: 8.0),
-              child: LineChart(
-                LineChartData(
-                  minX: minX,
-                  maxX: maxX,
-                  minY: minY,
-                  maxY: maxY,
-                  lineBarsData: lineBars,
-                  lineTouchData: LineTouchData(
-                    touchTooltipData: LineTouchTooltipData(
-                      // 기본 배경은 어두운 회색 고정이라 어두운 테마에서 차트와 섞인다.
-                      getTooltipColor: (_) =>
-                          context.colors.isDark ? context.colors.background : const Color(0xFF2B3843),
-                      getTooltipItems: (touchedSpots) {
-                        return touchedSpots.map((spot) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
-                          final timeStr = DateFormat('MM-dd HH:mm').format(dt);
-                          // 여러 선이 겹칠 때 어느 시리즈의 값인지 알 수 없어 이름을 함께 보여준다.
-                          final name = spot.barIndex < seriesNames.length ? seriesNames[spot.barIndex] : '';
-                          return LineTooltipItem(
-                            '$name\n$timeStr\n${spot.y.toStringAsFixed(1)}',
-                            const TextStyle(color: Colors.white, fontSize: 12),
-                          );
-                        }).toList();
-                      },
-                    ),
-                  ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawVerticalLine: true,
-                    getDrawingHorizontalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
-                    getDrawingVerticalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
-                  ),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          if (value == minX || value == maxX) return const SizedBox.shrink();
-                          final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              DateFormat('HH:mm').format(dt),
-                              style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
-                            ),
-                          );
-                        },
+        padding: const EdgeInsets.only(right: 16.0, top: 8.0),
+        child: LineChart(
+          LineChartData(
+            minX: minX,
+            maxX: maxX,
+            minY: minY,
+            maxY: maxY,
+            lineBarsData: lineBars,
+            lineTouchData: LineTouchData(
+              touchTooltipData: LineTouchTooltipData(
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((spot) {
+                    final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
+                    final timeStr = DateFormat('MM-dd HH:mm').format(dt);
+                    // 여러 선이 겹칠 때 어느 시리즈의 값인지 알 수 없어 이름을 함께 보여준다.
+                    final name = spot.barIndex < seriesNames.length ? seriesNames[spot.barIndex] : '';
+                    return LineTooltipItem(
+                      '$name\n$timeStr\n${spot.y.toStringAsFixed(1)}',
+                      const TextStyle(color: Colors.white, fontSize: 12),
+                    );
+                  }).toList();
+                },
+              ),
+            ),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: true,
+              getDrawingHorizontalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
+              getDrawingVerticalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  getTitlesWidget: (value, meta) {
+                    if (value == minX || value == maxX) return const SizedBox.shrink();
+                    final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        DateFormat('HH:mm').format(dt),
+                        style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
                       ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toStringAsFixed(1),
-                            style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
+                    );
+                  },
                 ),
               ),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 40,
+                  getTitlesWidget: (value, meta) {
+                    return Text(
+                      value.toStringAsFixed(1),
+                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                    );
+                  },
+                ),
+              ),
+            ),
+            borderData: FlBorderData(show: false),
+            extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
+          ),
+        ),
             ),
           ),
         ],
@@ -790,7 +730,11 @@ class ChartToolBox extends StatelessWidget {
   final bool showTargetLines;
   final ValueChanged<bool> onToggleTargetLines;
 
-  const ChartToolBox({super.key, required this.showTargetLines, required this.onToggleTargetLines});
+  const ChartToolBox({
+    super.key,
+    required this.showTargetLines,
+    required this.onToggleTargetLines,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -799,11 +743,7 @@ class ChartToolBox extends StatelessWidget {
       child: Row(
         children: [
           const Spacer(),
-          IconButton(
-            icon: Icon(Icons.pan_tool_outlined, color: context.colors.textSecondary),
-            onPressed: null,
-            tooltip: '이동 (비활성)',
-          ),
+          IconButton(icon: Icon(Icons.pan_tool_outlined, color: context.colors.textSecondary), onPressed: null, tooltip: '이동 (비활성)'),
           IconButton(
             icon: Icon(
               Icons.show_chart_rounded,
@@ -812,16 +752,8 @@ class ChartToolBox extends StatelessWidget {
             onPressed: () => onToggleTargetLines(!showTargetLines),
             tooltip: showTargetLines ? '기준선 숨기기' : '기준선 표시',
           ),
-          IconButton(
-            icon: Icon(Icons.text_fields_rounded, color: context.colors.textSecondary),
-            onPressed: null,
-            tooltip: '메모 (비활성)',
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh_rounded, color: context.colors.primary),
-            onPressed: () {},
-            tooltip: '시점 초기화',
-          ),
+          IconButton(icon: Icon(Icons.text_fields_rounded, color: context.colors.textSecondary), onPressed: null, tooltip: '메모 (비활성)'),
+          IconButton(icon: Icon(Icons.refresh_rounded, color: context.colors.primary), onPressed: () {}, tooltip: '시점 초기화'),
         ],
       ),
     );
@@ -850,10 +782,7 @@ class _SectionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
-              ),
+              Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
               if (trailing != null) trailing!,
             ],
           ),

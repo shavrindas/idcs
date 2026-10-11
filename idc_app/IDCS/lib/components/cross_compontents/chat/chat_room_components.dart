@@ -142,8 +142,8 @@ class ChatMessageListBox extends StatelessWidget {
       items: [
         const PopupMenuItem(value: 'reply', child: Row(children: [Icon(Icons.reply_rounded, size: 18), SizedBox(width: 8), Text('답장')])),
         const PopupMenuItem(value: 'pin', child: Row(children: [Icon(Icons.push_pin_outlined, size: 18), SizedBox(width: 8), Text('고정 토글')])),
-        PopupMenuItem(value: 'edit', enabled: false, child: Row(children: [Icon(Icons.edit_outlined, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text('수정', style: TextStyle(color: context.colors.textSecondary))])),
-        PopupMenuItem(value: 'delete', enabled: false, child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text('삭제', style: TextStyle(color: context.colors.textSecondary))])),
+        const PopupMenuItem(value: 'edit', enabled: false, child: Row(children: [Icon(Icons.edit_outlined, size: 18, color: Colors.grey), SizedBox(width: 8), Text('수정', style: TextStyle(color: Colors.grey))])),
+        const PopupMenuItem(value: 'delete', enabled: false, child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: Colors.grey), SizedBox(width: 8), Text('삭제', style: TextStyle(color: Colors.grey))])),
       ],
     ).then((value) {
       if (value != null) onAction(msg, value);

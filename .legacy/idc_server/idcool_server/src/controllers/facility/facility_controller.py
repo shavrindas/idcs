@@ -2,6 +2,8 @@
 # 경로 : src/controllers/facility/facility_controller.py
 # 명세 : 시설 관련 API 엔드포인트 정의
 # ===============================================================
+from operator import or_
+
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +13,7 @@ from config.db import get_db
 from src.models.User import User, UserRole
 from src.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.models.Monitoring import PointRole, RemoteControlLog, BoolLog, TemperatureNumericalLog, EquipmentStaticLog
-from src.models.Chat import ChatRoom, ChatParticipant, ChatRoomType
+from src.models.Chat import ChatRoom, ChatParticipant
 import src.services.alarm as alarm_services
 import json
 import re
@@ -74,32 +76,16 @@ async def register_facility(user_id: int, req: RegisterFacilityRequest, db: Asyn
     # 3. 매핑 추가
     new_mapping = FacilityUser(facility_id=facility.id, user_id=user_id)
     db.add(new_mapping)
+    await db.commit()
 
-    # 4. Join the facility's chat room.
-    # This used to construct ChatRoom(facility_id=..., user_id=...), but ChatRoom has no
-    # user_id column and room_name is NOT NULL, so it raised and the endpoint answered 500
-    # even though the facility mapping above had already been committed. Membership is
-    # represented by ChatParticipant, not by creating a room.
-    room_result = await db.execute(
-        select(ChatRoom).where(
-            ChatRoom.facility_id == facility.id,
-            ChatRoom.type == ChatRoomType.FACILITY,
-        )
-    )
-    room = room_result.scalars().first()
+    # 4. 해당하는 채팅방 가져오기
+    #chatroom_result = await db.excute(select(ChatRoom).where(ChatRoom.facility_id == facility.id))
 
-    if room:
-        participant_result = await db.execute(
-            select(ChatParticipant).where(
-                ChatParticipant.room_id == room.room_id,
-                ChatParticipant.user_id == user_id,
-            )
-        )
-        if not participant_result.scalars().first():
-            db.add(ChatParticipant(room_id=room.room_id, user_id=user_id))
+    # 5. 유저 채팅방 입장
+    
 
-    # Commit the facility mapping and the chat room join together so a failure in either
-    # one does not leave the user half-registered.
+    new_mapping = ChatRoom(facility_id=facility.id, user_id=user_id)
+    db.add(new_mapping)
     await db.commit()
 
 
@@ -138,6 +124,7 @@ async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db
 #서버-시설 간 연결 관리 및 브로드캐스팅
 set_sockets: Dict[int, WebSocket] = {}
 get_sockets: Dict[int, List[WebSocket]] = {}
+allget_sockets: Dict[int, List[WebSocket]] = {}
 
 #서버-시설 간 연결 관리 및 브로드캐스팅
 @router.websocket("/data/set/{facility_id}")
@@ -225,14 +212,13 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
                     
                     break
 
+            # --- [2. 모니터링 & 브로드캐스팅 로직] ---
             if "datas" in data_dict:
-                #역할 스캔
+                # 역할 스캔 및 알람 확인
                 roles = await alarm_services.scan_roles(facility_id)
-
-                #알람 출력
                 await alarm_services.check_roles(facility_id, data_dict["datas"], roles)
 
-                # 모니터링 출력 
+                # 상세 모니터링 출력 (원본 데이터 전체 전송)
                 if facility_id in get_sockets:
                     for client in get_sockets[facility_id][:]:
                         try:
@@ -240,6 +226,49 @@ async def set_facility_data(websocket: WebSocket, facility_id: int):
                         except Exception:
                             if client in get_sockets[facility_id]:
                                 get_sockets[facility_id].remove(client)
+                
+                # 💡 개괄 모니터링 전용 데이터 필터링 로직
+                raw_datas = data_dict["datas"]
+                filtered_datas = {}
+
+                # 특정 키워드가 포함된 키만 선별 (예: "25.temp_pv" -> "temp_pv" 포함 여부 확인)
+                if isinstance(raw_datas, dict):
+                    for key, val in raw_datas.items():
+                        if any(keyword in key for keyword in ["temp_pv"]):
+                            filtered_datas[key] = val
+
+                # 💡 필터링된 결과가 존재할 때만 브로드캐스트용 JSON 구성
+                if filtered_datas:
+                    filtered_payload = json.dumps({
+                        "facility_id": facility_id,  # 개괄 모니터링 식별용 ID
+                        "datas": filtered_datas
+                    })
+
+                    async for db in get_db():
+                        # 💡 해당 시설에 매핑된 유저 OR 역할(role)이 ADMIN인 모든 유저 조회
+                        stmt = (
+                            select(User.id)
+                            .outerjoin(FacilityUser, User.id == FacilityUser.user_id)
+                            .where(
+                                or_(
+                                    FacilityUser.facility_id == facility_id,
+                                    User.role == UserRole.ADMIN
+                                )
+                            )
+                            .distinct()  # 중복 ID 방지
+                        )
+                        result = await db.execute(stmt)
+                        target_user_ids = result.scalars().all()
+
+                        for user_id in target_user_ids:
+                            if user_id in allget_sockets:
+                                for client in allget_sockets[user_id][:]:
+                                    try:
+                                        await client.send_text(filtered_payload)
+                                    except Exception:
+                                        if client in allget_sockets[user_id]:
+                                            allget_sockets[user_id].remove(client)
+                        break
 
             if "status" in data_dict.keys():
                 if "SUCCESS" in data_dict["status"]:
@@ -301,3 +330,28 @@ async def get_facility_data(websocket: WebSocket, facility_id: int):
             get_sockets[facility_id].remove(websocket)
             if not get_sockets[facility_id]:
                 del get_sockets[facility_id]
+
+#개괄 모니터링 관리
+@router.websocket("/data/allget/{user_id}")
+async def allget_facility_data(websocket: WebSocket, user_id: int):
+    print("접속 시도", user_id)
+    await websocket.accept()
+    
+    if user_id not in allget_sockets:
+        allget_sockets[user_id] = []
+    allget_sockets[user_id].append(websocket)
+    print(f"[앱 연결 성공] Facility {user_id} 개괄 모니터링 시작 (현재 접속자: {len(allget_sockets[user_id])}명)")
+
+    try:
+        while True:
+            recv = await websocket.receive_text()
+
+            if recv:
+                await set_sockets[user_id].send_text(recv)
+            
+    except WebSocketDisconnect:
+        print(f"[앱 연결 종료] Facility {user_id} 모니터링 중지")
+        if user_id in allget_sockets and websocket in allget_sockets[user_id]:
+            allget_sockets[user_id].remove(websocket)
+            if not allget_sockets[user_id]:
+                del allget_sockets[user_id]
