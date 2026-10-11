@@ -849,4 +849,71 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notFound => '페이지를 찾을 수 없습니다.';
+
+  @override
+  String get errorServerUnreachable => '서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.';
+
+  @override
+  String get errorServerTimeout => '서버 응답이 없습니다. 네트워크 상태를 확인해주세요.';
+
+  @override
+  String get errorRequestFailed => '요청을 처리하지 못했습니다.';
+
+  @override
+  String get googleOnlyOnApp => '구글 로그인은 앱에서만 사용할 수 있습니다.';
+
+  @override
+  String get appleOnlyOnApp => '애플 로그인은 앱에서만 사용할 수 있습니다.';
+
+  @override
+  String get googleNotConfigured =>
+      '구글 로그인이 아직 설정되지 않았습니다. Firebase 프로젝트에 이 앱의 OAuth 클라이언트(SHA-1 지문)를 등록해야 합니다.';
+
+  @override
+  String googleSignInFailed(String reason) {
+    return '구글 로그인을 진행할 수 없습니다. ($reason)';
+  }
+
+  @override
+  String appleSignInFailed(String reason) {
+    return '애플 로그인을 진행할 수 없습니다. ($reason)';
+  }
+
+  @override
+  String get googleDefaultName => '구글유저';
+
+  @override
+  String get appleDefaultName => '애플유저';
+
+  @override
+  String get notificationFallbackTitle => '알림';
+
+  @override
+  String alarmRepeatSuffix(String body, int index, int total) {
+    return '$body (다시 알림 $index/$total)';
+  }
+
+  @override
+  String get channelSoundVibe => '알람 (소리+진동)';
+
+  @override
+  String get channelSoundVibeDesc => '소리와 진동을 모두 사용하는 알람';
+
+  @override
+  String get channelSoundOnly => '알람 (소리만)';
+
+  @override
+  String get channelSoundOnlyDesc => '소리만 사용하는 알람';
+
+  @override
+  String get channelVibeOnly => '알람 (진동만)';
+
+  @override
+  String get channelVibeOnlyDesc => '진동만 사용하는 알람';
+
+  @override
+  String get channelSilent => '알람 (무음)';
+
+  @override
+  String get channelSilentDesc => '소리와 진동 없이 표시만 하는 알람';
 }

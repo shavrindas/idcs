@@ -17,7 +17,7 @@ class AlarmApiService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['alarms'] ?? [];
     } else {
-      throw Exception('권한 정보를 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
   /// 알람 조회 API(시설)
@@ -29,7 +29,7 @@ class AlarmApiService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['alarms'] ?? [];
     } else {
-      throw Exception('권한 정보를 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 }

@@ -63,7 +63,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postLoadFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postLoadFailed(describeApiError(context, e)))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -97,7 +97,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postDeleteFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postDeleteFailed(describeApiError(context, e)))));
       }
     }
   }
@@ -116,7 +116,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentFailed(describeApiError(context, e)))));
       }
     }
   }
@@ -127,7 +127,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentDeleteFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentDeleteFailed(describeApiError(context, e)))));
       }
     }
   }

@@ -37,7 +37,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
         _facilities = await FacilityApiService.getFacilities(widget.userId);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -57,17 +57,23 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
       });
       await _loadData(); // 목록 새로고침
     } catch (e) {
-      setState(() => _collapseMessage = l10n.facilityRegisterFailed(describeApiError(e)));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      setState(() => _collapseMessage = l10n.facilityRegisterFailed(describeApiError(context, e)));
     }
   }
 
   Future<void> _handleUnlink(int facilityId) async {
     try {
       final msg = await FacilityApiService.unlinkFacility(widget.userId, facilityId);
+      // The await above may have outlived this screen.
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       await _loadData();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     }
   }
 

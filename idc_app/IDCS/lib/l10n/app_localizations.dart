@@ -1651,6 +1651,126 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'페이지를 찾을 수 없습니다.'**
   String get notFound;
+
+  /// No description provided for @errorServerUnreachable.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.'**
+  String get errorServerUnreachable;
+
+  /// No description provided for @errorServerTimeout.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 응답이 없습니다. 네트워크 상태를 확인해주세요.'**
+  String get errorServerTimeout;
+
+  /// No description provided for @errorRequestFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'요청을 처리하지 못했습니다.'**
+  String get errorRequestFailed;
+
+  /// No description provided for @googleOnlyOnApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글 로그인은 앱에서만 사용할 수 있습니다.'**
+  String get googleOnlyOnApp;
+
+  /// No description provided for @appleOnlyOnApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'애플 로그인은 앱에서만 사용할 수 있습니다.'**
+  String get appleOnlyOnApp;
+
+  /// No description provided for @googleNotConfigured.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글 로그인이 아직 설정되지 않았습니다. Firebase 프로젝트에 이 앱의 OAuth 클라이언트(SHA-1 지문)를 등록해야 합니다.'**
+  String get googleNotConfigured;
+
+  /// No description provided for @googleSignInFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글 로그인을 진행할 수 없습니다. ({reason})'**
+  String googleSignInFailed(String reason);
+
+  /// No description provided for @appleSignInFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'애플 로그인을 진행할 수 없습니다. ({reason})'**
+  String appleSignInFailed(String reason);
+
+  /// No description provided for @googleDefaultName.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글유저'**
+  String get googleDefaultName;
+
+  /// No description provided for @appleDefaultName.
+  ///
+  /// In ko, this message translates to:
+  /// **'애플유저'**
+  String get appleDefaultName;
+
+  /// No description provided for @notificationFallbackTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림'**
+  String get notificationFallbackTitle;
+
+  /// No description provided for @alarmRepeatSuffix.
+  ///
+  /// In ko, this message translates to:
+  /// **'{body} (다시 알림 {index}/{total})'**
+  String alarmRepeatSuffix(String body, int index, int total);
+
+  /// No description provided for @channelSoundVibe.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 (소리+진동)'**
+  String get channelSoundVibe;
+
+  /// No description provided for @channelSoundVibeDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리와 진동을 모두 사용하는 알람'**
+  String get channelSoundVibeDesc;
+
+  /// No description provided for @channelSoundOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 (소리만)'**
+  String get channelSoundOnly;
+
+  /// No description provided for @channelSoundOnlyDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리만 사용하는 알람'**
+  String get channelSoundOnlyDesc;
+
+  /// No description provided for @channelVibeOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 (진동만)'**
+  String get channelVibeOnly;
+
+  /// No description provided for @channelVibeOnlyDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'진동만 사용하는 알람'**
+  String get channelVibeOnlyDesc;
+
+  /// No description provided for @channelSilent.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 (무음)'**
+  String get channelSilent;
+
+  /// No description provided for @channelSilentDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리와 진동 없이 표시만 하는 알람'**
+  String get channelSilentDesc;
 }
 
 class _AppLocalizationsDelegate

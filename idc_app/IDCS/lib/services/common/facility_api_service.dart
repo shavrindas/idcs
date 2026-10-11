@@ -13,7 +13,7 @@ class FacilityApiService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['facilities'] ?? [];
     } else {
-      throw Exception('시설 목록을 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -27,7 +27,7 @@ class FacilityApiService {
     );
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) return data['message'];
-    throw Exception(data['detail'] ?? '시설 등록에 실패했습니다.');
+    throw ApiException.rejected(data);
   }
 
   // 시설 연동 해제
@@ -36,7 +36,7 @@ class FacilityApiService {
     final response = await ApiClient.delete(url);
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) return data['message'];
-    throw Exception(data['detail'] ?? '시설 해제에 실패했습니다.');
+    throw ApiException.rejected(data);
   }
 
   //시설 호실 목록 조회
@@ -47,7 +47,7 @@ class FacilityApiService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['rooms'] ?? [];
     } else {
-      throw Exception('시설 목록을 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 }

@@ -57,14 +57,18 @@ class _SignupPageState extends State<SignupPage> {
         phoneNumber: phone,
       );
 
+      // The await above may have outlived this screen.
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'])),
       );
       // 가입 성공 시 로그인 페이지로 이동
       context.go('/login');
     } catch (e) {
+      // The await above may have outlived this screen.
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeApiError(e))),
+        SnackBar(content: Text(describeApiError(context, e))),
       );
     }
   }
@@ -90,7 +94,7 @@ class _SignupPageState extends State<SignupPage> {
           setState(() {
             _showAppleFallback = true; // Box 3 열기
             _pendingAppleProviderId = socialData!['provider_id']!;
-            _pendingAppleName = socialData['name']!;
+            _pendingAppleName = socialData['name']!.isEmpty ? l10n.appleDefaultName : socialData['name']!;
           });
           return; // 여기서 흐름을 멈추고 유저의 수동 입력을 기다립니다.
         } else {
@@ -103,11 +107,15 @@ class _SignupPageState extends State<SignupPage> {
         provider: socialData['provider']!,
         providerId: socialData['provider_id']!,
         email: socialData['email']!,
-        name: socialData['name']!,
+        name: socialData['name']!.isEmpty
+            ? (socialData['provider'] == 'apple' ? l10n.appleDefaultName : l10n.googleDefaultName)
+            : socialData['name']!,
       );
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     }
   }
 
@@ -144,10 +152,14 @@ class _SignupPageState extends State<SignupPage> {
         name: name,
       );
 
+      // The await above may have outlived this screen.
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
       context.go('/login');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     }
   }
 

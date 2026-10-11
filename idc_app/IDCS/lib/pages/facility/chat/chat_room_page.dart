@@ -43,7 +43,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       _participants = await ChatApiService.getParticipants(widget.roomId);
       await _loadMessages();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     } finally {
       if (mounted) setState(() => _isLoadingHistory = false);
     }
@@ -106,7 +106,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         await ChatApiService.togglePinMessage(widget.roomId, msg['message_id'], widget.userId);
         _loadMessages(); // 상태 리프레시
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+        // The await above may have outlived this screen.
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     }
   }

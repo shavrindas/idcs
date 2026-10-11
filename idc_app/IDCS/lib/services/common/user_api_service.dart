@@ -14,7 +14,7 @@ class UserApiService {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['role']; // 'USER', 'ADMIN', 'DEVELOPER' 중 하나 반환
     } else {
-      throw Exception('권한 정보를 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -28,7 +28,7 @@ class UserApiService {
     if (response.statusCode == 200) {
       return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
-      throw Exception('프로필 정보를 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -42,7 +42,7 @@ class UserApiService {
     );
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) return data['message'];
-    throw Exception(data['detail'] ?? '이름 수정에 실패했습니다.');
+    throw ApiException.rejected(data);
   }
 
   /// Box #3: 전화번호 수정
@@ -55,7 +55,7 @@ class UserApiService {
     );
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) return data['message'];
-    throw Exception(data['detail'] ?? '전화번호 수정에 실패했습니다.');
+    throw ApiException.rejected(data);
   }
 
   /// Box #4: 비밀번호 수정
@@ -71,7 +71,7 @@ class UserApiService {
     );
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) return data['message'];
-    throw Exception(data['detail'] ?? '비밀번호 수정에 실패했습니다.');
+    throw ApiException.rejected(data);
   }
 
   /// 계정 탈퇴. 서버에서 CASCADE로 연동 계정/시설 소속 정보까지 함께 삭제된다.
@@ -84,6 +84,6 @@ class UserApiService {
     );
     final data = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) return data['message'];
-    throw Exception(data['detail'] ?? '계정 탈퇴에 실패했습니다.');
+    throw ApiException.rejected(data);
   }
 }

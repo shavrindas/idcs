@@ -19,7 +19,7 @@ class AuthApiService {
       return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(error['detail'] ?? '계정 정보를 확인하는데 실패했습니다.');
+      throw ApiException.rejected(error);
     }
   }
 }

@@ -1,4 +1,9 @@
 import 'dart:convert';
+import 'dart:ui' show PlatformDispatcher;
+
+import 'package:flutter/widgets.dart' show Locale;
+import 'package:idcs/l10n/app_localizations.dart';
+import 'package:idcs/theme/locale_controller.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -10,33 +15,76 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
 
-// 안드로이드는 채널을 한 번 만들면 소리/진동 설정을 나중에 바꿀 수 없다.
-// 그래서 조합별로 채널을 미리 만들어 두고, 알림을 띄울 때 설정에 맞는 채널을 고른다.
-const List<AndroidNotificationChannel> alarmChannels = [
-  AndroidNotificationChannel('alarm_sound_vibe', '알람 (소리+진동)',
-      description: '소리와 진동을 모두 사용하는 알람', importance: Importance.max, playSound: true, enableVibration: true),
-  AndroidNotificationChannel('alarm_sound', '알람 (소리만)',
-      description: '소리만 사용하는 알람', importance: Importance.max, playSound: true, enableVibration: false),
-  AndroidNotificationChannel('alarm_vibe', '알람 (진동만)',
-      description: '진동만 사용하는 알람', importance: Importance.max, playSound: false, enableVibration: true),
-  AndroidNotificationChannel('alarm_silent', '알람 (무음)',
-      description: '소리와 진동 없이 표시만 하는 알람', importance: Importance.max, playSound: false, enableVibration: false),
-];
-
-AndroidNotificationChannel _channelFor(AlarmSettings s) {
-  if (s.sound && s.vibration) return alarmChannels[0];
-  if (s.sound) return alarmChannels[1];
-  if (s.vibration) return alarmChannels[2];
-  return alarmChannels[3];
+/// Loads the app's strings without a BuildContext.
+///
+/// Notification text is produced outside the widget tree — at startup, and from
+/// a background isolate — so it cannot read the locale from a widget. The user's
+/// own choice wins; otherwise the device language, falling back to Korean when
+/// it is one the app does not carry.
+Future<AppLocalizations> _strings() {
+  final chosen = LocaleController.locale.value;
+  final device = PlatformDispatcher.instance.locale;
+  final supported = AppLocalizations.supportedLocales
+      .any((l) => l.languageCode == device.languageCode);
+  return AppLocalizations.delegate
+      .load(chosen ?? (supported ? Locale(device.languageCode) : const Locale('ko')));
 }
 
-NotificationDetails _detailsFor(AlarmSettings s) {
+// 안드로이드는 채널을 한 번 만들면 소리/진동 설정을 나중에 바꿀 수 없다.
+// 그래서 조합별로 채널을 미리 만들어 두고, 알림을 띄울 때 설정에 맞는 채널을 고른다.
+//
+// 채널 이름도 처음 만들 때 고정된다 — 나중에 앱 언어를 바꿔도 안드로이드 설정에
+// 보이는 이름은 그대로다. 재설치해야 새 언어로 다시 만들어진다.
+enum _AlarmChannel {
+  soundVibe('alarm_sound_vibe', sound: true, vibration: true),
+  soundOnly('alarm_sound', sound: true, vibration: false),
+  vibeOnly('alarm_vibe', sound: false, vibration: true),
+  silent('alarm_silent', sound: false, vibration: false);
+
+  const _AlarmChannel(this.id, {required this.sound, required this.vibration});
+
+  final String id;
+  final bool sound;
+  final bool vibration;
+
+  String name(AppLocalizations l) => switch (this) {
+        soundVibe => l.channelSoundVibe,
+        soundOnly => l.channelSoundOnly,
+        vibeOnly => l.channelVibeOnly,
+        silent => l.channelSilent,
+      };
+
+  String description(AppLocalizations l) => switch (this) {
+        soundVibe => l.channelSoundVibeDesc,
+        soundOnly => l.channelSoundOnlyDesc,
+        vibeOnly => l.channelVibeOnlyDesc,
+        silent => l.channelSilentDesc,
+      };
+
+  AndroidNotificationChannel toChannel(AppLocalizations l) => AndroidNotificationChannel(
+        id,
+        name(l),
+        description: description(l),
+        importance: Importance.max,
+        playSound: sound,
+        enableVibration: vibration,
+      );
+}
+
+_AlarmChannel _channelFor(AlarmSettings s) {
+  if (s.sound && s.vibration) return _AlarmChannel.soundVibe;
+  if (s.sound) return _AlarmChannel.soundOnly;
+  if (s.vibration) return _AlarmChannel.vibeOnly;
+  return _AlarmChannel.silent;
+}
+
+NotificationDetails _detailsFor(AlarmSettings s, AppLocalizations l10n) {
   final channel = _channelFor(s);
   return NotificationDetails(
     android: AndroidNotificationDetails(
       channel.id,
-      channel.name,
-      channelDescription: channel.description,
+      channel.name(l10n),
+      channelDescription: channel.description(l10n),
       icon: '@mipmap/ic_launcher',
       importance: Importance.max,
       priority: Priority.high,
@@ -55,7 +103,8 @@ Future<void> showAlarmNotification(
   String body,
 ) async {
   final settings = await AlarmSettings.load();
-  final details = _detailsFor(settings);
+  final l10n = await _strings();
+  final details = _detailsFor(settings, l10n);
   final baseId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
   await plugin.show(baseId, title, body, details);
@@ -67,7 +116,7 @@ Future<void> showAlarmNotification(
     await plugin.zonedSchedule(
       baseId + i,
       title,
-      '$body (다시 알림 $i/${AlarmSettings.maxRepeatCount})',
+      l10n.alarmRepeatSuffix(body, i, AlarmSettings.maxRepeatCount),
       tz.TZDateTime.now(tz.local).add(Duration(minutes: settings.repeatMinutes * i)),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -146,8 +195,9 @@ class FcmService {
       if (androidPlugin != null) {
         await androidPlugin.requestNotificationsPermission();
         // 소리/진동 조합별 채널을 모두 등록해 두고, 알림을 띄울 때 설정에 맞는 것을 고른다.
-        for (final channel in alarmChannels) {
-          await androidPlugin.createNotificationChannel(channel);
+        final channelStrings = await _strings();
+        for (final channel in _AlarmChannel.values) {
+          await androidPlugin.createNotificationChannel(channel.toChannel(channelStrings));
         }
       }
 
@@ -157,7 +207,7 @@ class FcmService {
         print("🔥 [Notification]: ${message.notification?.title} / ${message.notification?.body}");
         print("🔥 [Data]: ${message.data}");
 
-        String title = message.notification?.title ?? message.data['title'] ?? '알림';
+        String title = message.notification?.title ?? message.data['title'] ?? (await _strings()).notificationFallbackTitle;
         String body = message.notification?.body ?? message.data['body'] ?? '';
 
         try {
@@ -216,7 +266,7 @@ class FcmService {
         return jsonDecode(utf8.decode(response.bodyBytes));
       } else {
         final error = jsonDecode(utf8.decode(response.bodyBytes));
-        throw Exception(error['detail'] ?? '토큰 등록에 실패했습니다.');
+        throw ApiException.rejected(error);
       }
     } catch (e) {
       print("registToken 에러: $e");

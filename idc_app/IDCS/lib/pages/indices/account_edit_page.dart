@@ -73,7 +73,7 @@ class _PersonalPageState extends State<PersonalPage> {
         });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -128,7 +128,7 @@ class _PersonalPageState extends State<PersonalPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      setState(() => _pwCollapseMessage = context.l10n.errorPrefix(describeApiError(e)));
+      setState(() => _pwCollapseMessage = context.l10n.errorPrefix(describeApiError(context, e)));
     }
   }
 
@@ -165,7 +165,7 @@ class _PersonalPageState extends State<PersonalPage> {
       context.go('/login');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     }
   }
 

@@ -33,7 +33,7 @@ class AuthApiService {
       return decoded;
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(error['detail'] ?? '로그인에 실패했습니다.');
+      throw ApiException.rejected(error);
     }
   }
 
@@ -62,7 +62,7 @@ class AuthApiService {
       return decoded;
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(error['detail'] ?? '소셜 로그인에 실패했습니다.');
+      throw ApiException.rejected(error);
     }
   }
 }
