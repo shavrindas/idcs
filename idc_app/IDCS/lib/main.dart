@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:idcs/services/common/fcm_service.dart';
+import 'package:idcs/services/common/facility_shortcut.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -57,6 +59,9 @@ void main() async {
 
   // 저장된 테마 선택값 복원 (config.dart는 .gitignore 대상이라 여기서 호출한다)
   await ThemeController.load();
+
+  // 제어판 겉모습 설정 복원. 첫 화면이 그려지기 전에 읽어야 깜빡임이 없다.
+  await MonitoringViewController.load();
 
   runApp(const MyApp());
 }

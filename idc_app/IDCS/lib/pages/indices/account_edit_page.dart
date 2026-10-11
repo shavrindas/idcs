@@ -220,7 +220,7 @@ class _PersonalPageState extends State<PersonalPage> {
             // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
             _LinkCard(
               title: '설정',
-              subtitle: '화면 테마, 알람 소리·진동',
+              subtitle: '화면 테마, 제어판 화면, 알람 소리·진동',
               icon: Icons.settings_outlined,
               onPressed: () => context.push('/settings'),
             ),

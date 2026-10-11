@@ -4,6 +4,8 @@ import 'package:idcs/main.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
+import 'package:idcs/theme/panel_background.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;
@@ -181,23 +183,33 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('시설 ID: ${widget.facilityId} 실시간 제어판'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ValueListenableBuilder<MonitoringViewSettings>(
+      valueListenable: MonitoringViewController.settings,
+      builder: (context, view, _) => Scaffold(
+        appBar: AppBar(
+          title: Text('시설 ID: ${widget.facilityId} 실시간 제어판'),
+          centerTitle: true,
+        ),
+        // 배경이 패널 사이로 비쳐 보이도록 Scaffold는 비워 두고 Stack 맨 아래에 깐다.
+        backgroundColor: Colors.transparent,
+        body: Stack(
           children: [
-            MonitoringCard(title: '시설 기본 정보', fields: infoData),
-            MonitoringCard(title: '실제 온도', fields: realtempData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '제상 정보', fields: deforestData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '이상 정보', fields: emergencyData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '인버터 정보', fields: inverterData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '장비 정보', fields: equipmentData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '제어 정보', fields: controlData, OnConfirm: remoteClickEvent),
+            Positioned.fill(child: PanelBackdrop(backgroundId: view.backgroundId)),
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  MonitoringCard(title: '시설 기본 정보', fields: infoData, view: view),
+                  MonitoringCard(title: '실제 온도', fields: realtempData, view: view, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: '제상 정보', fields: deforestData, view: view, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: '이상 정보', fields: emergencyData, view: view, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: '인버터 정보', fields: inverterData, view: view, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: '장비 정보', fields: equipmentData, view: view, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: '제어 정보', fields: controlData, view: view, OnConfirm: remoteClickEvent),
+                ],
+              ),
+            ),
           ],
         ),
       ),

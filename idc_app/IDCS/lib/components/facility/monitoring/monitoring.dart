@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 
 class MonitoringCard extends StatelessWidget {
@@ -8,10 +9,14 @@ class MonitoringCard extends StatelessWidget {
   // 확인 버튼을 눌렀을 때 입력값을 전달받을 콜백
   final Function(String label, String inputValue)? OnConfirm;
 
+  /// 제어판 겉모습 설정. 배경을 비치게 하는 투명도와 값 글자 크기를 여기서 받는다.
+  final MonitoringViewSettings view;
+
   const MonitoringCard({
     super.key,
     required this.title,
     required this.fields,
+    required this.view,
     this.OnConfirm,
   });
 
@@ -24,7 +29,9 @@ class MonitoringCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: context.colors.surface,
+        // Letting the backdrop show through is the whole point of the opacity
+        // setting; at 1.0 this is the solid card the panel has always had.
+        color: context.colors.surface.withValues(alpha: view.panelOpacity),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isControl ? context.colors.primary.withValues(alpha: 0.18) : context.colors.outline),
         boxShadow: isControl ? context.colors.softShadow : null,
@@ -57,6 +64,7 @@ class MonitoringCard extends StatelessWidget {
             key: ValueKey(entry.key), // label을 키값으로 설정하여 위젯 재사용성 보장
             label: entry.key,
             value: entry.value,
+            view: view,
             onConfirm: OnConfirm,
           )),
         ],
@@ -69,12 +77,14 @@ class MonitoringCard extends StatelessWidget {
 class _EditableRowItem extends StatefulWidget {
   final String label;
   final String value;
+  final MonitoringViewSettings view;
   final Function(String label, String inputValue)? onConfirm;
 
   const _EditableRowItem({
     super.key,
     required this.label,
     required this.value,
+    required this.view,
     this.onConfirm,
   });
 
@@ -113,7 +123,13 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               key: ValueKey(widget.value), // 실시간 값이 변할 때 텍스트 업데이트
               initialValue: widget.value,
               readOnly: true,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+              style: TextStyle(
+                // Only the reading scales; the label stays put so the row keeps
+                // its shape as the numbers grow.
+                fontSize: widget.view.valueFontSize,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textPrimary,
+              ),
               decoration: InputDecoration(
                 labelText: widget.label,
                 labelStyle: TextStyle(fontSize: 12, color: context.colors.textSecondary),
