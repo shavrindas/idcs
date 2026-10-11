@@ -115,4 +115,142 @@ class AppLocalizationsEn extends AppLocalizations {
   String alarmRepeatMinutes(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get fieldEmail => 'Email';
+
+  @override
+  String get fieldPassword => 'Password';
+
+  @override
+  String get fieldNewPassword => 'New password';
+
+  @override
+  String get fieldConfirmPassword => 'Re-enter password';
+
+  @override
+  String get fieldName => 'Name';
+
+  @override
+  String get fieldPhoneOptional => 'Phone (optional)';
+
+  @override
+  String get fieldVerificationCode => 'Verification code';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get actionCancel => 'Cancel';
+
+  @override
+  String get actionSubmit => 'Done';
+
+  @override
+  String get orDivider => 'or';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get login => 'Sign in';
+
+  @override
+  String get loginWelcomeTitle => 'Welcome back';
+
+  @override
+  String get loginWelcomeSubtitle => 'Enter your account details to sign in.';
+
+  @override
+  String get loginMissingFields => 'Please enter both your email and password.';
+
+  @override
+  String get keepSignedIn => 'Keep me signed in';
+
+  @override
+  String get noAccountQuestion => 'Don\'t have an account? ';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get signupTitle => 'Create an account';
+
+  @override
+  String get signupSubtitle =>
+      'Fill in the details below to create your account.';
+
+  @override
+  String get signupCreateAccount => 'Create account';
+
+  @override
+  String get signupMissingFields => 'Please fill in all required fields.';
+
+  @override
+  String get signupEmailRequired => 'Please enter an email address.';
+
+  @override
+  String get signupEmailUnavailable =>
+      'Your email could not be read. Please allow email access in settings.';
+
+  @override
+  String get signupAppleEmailMissing =>
+      'Your Apple account did not share an email address.\nPlease enter one so the service works properly.';
+
+  @override
+  String get findId => 'Find my ID';
+
+  @override
+  String get findIdSubtitle =>
+      'Enter the email you signed up with and we\'ll look up your account.';
+
+  @override
+  String get findIdEmailRequired => 'Please enter the email to look up.';
+
+  @override
+  String errorOccurred(String message) {
+    return 'Something went wrong: $message';
+  }
+
+  @override
+  String get findPassword => 'Forgot password';
+
+  @override
+  String get resetPasswordTitle => 'Reset password';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Verify your email, then set a new password.';
+
+  @override
+  String get resetStepEmail => 'Verify email';
+
+  @override
+  String get resetSendCode => 'Send code';
+
+  @override
+  String get resetStepCode => 'Enter the code';
+
+  @override
+  String get resetVerifyCode => 'Verify code';
+
+  @override
+  String get resetStepNewPassword => 'Set a new password';
+
+  @override
+  String resetTimeLeft(String time) {
+    return 'Time left $time';
+  }
+
+  @override
+  String get resetTimedOut => 'Time ran out. Please start again.';
+
+  @override
+  String get resetCodeVerified => 'Code verified.';
+
+  @override
+  String get resetPasswordMismatch => 'The passwords do not match.';
 }

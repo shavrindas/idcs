@@ -301,6 +301,264 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{minutes}분'**
   String alarmRepeatMinutes(int minutes);
+
+  /// No description provided for @fieldEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일'**
+  String get fieldEmail;
+
+  /// No description provided for @fieldPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호'**
+  String get fieldPassword;
+
+  /// No description provided for @fieldNewPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 비밀번호'**
+  String get fieldNewPassword;
+
+  /// No description provided for @fieldConfirmPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 재입력'**
+  String get fieldConfirmPassword;
+
+  /// No description provided for @fieldName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름'**
+  String get fieldName;
+
+  /// No description provided for @fieldPhoneOptional.
+  ///
+  /// In ko, this message translates to:
+  /// **'전화번호 (선택)'**
+  String get fieldPhoneOptional;
+
+  /// No description provided for @fieldVerificationCode.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 코드'**
+  String get fieldVerificationCode;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 표시'**
+  String get showPassword;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소'**
+  String get actionCancel;
+
+  /// No description provided for @actionSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'입력 완료'**
+  String get actionSubmit;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In ko, this message translates to:
+  /// **'또는'**
+  String get orDivider;
+
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In ko, this message translates to:
+  /// **'Google로 계속하기'**
+  String get continueWithGoogle;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In ko, this message translates to:
+  /// **'Apple로 계속하기'**
+  String get continueWithApple;
+
+  /// No description provided for @login.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인'**
+  String get login;
+
+  /// No description provided for @loginWelcomeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 만나서 반가워요'**
+  String get loginWelcomeTitle;
+
+  /// No description provided for @loginWelcomeSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정 정보를 입력하고 로그인해주세요.'**
+  String get loginWelcomeSubtitle;
+
+  /// No description provided for @loginMissingFields.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일과 비밀번호를 모두 입력해주세요.'**
+  String get loginMissingFields;
+
+  /// No description provided for @keepSignedIn.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인 상태 유지하기'**
+  String get keepSignedIn;
+
+  /// No description provided for @noAccountQuestion.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정이 없으신가요? '**
+  String get noAccountQuestion;
+
+  /// No description provided for @signUp.
+  ///
+  /// In ko, this message translates to:
+  /// **'회원가입'**
+  String get signUp;
+
+  /// No description provided for @signupTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정 만들기'**
+  String get signupTitle;
+
+  /// No description provided for @signupSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아래 정보를 입력하고 계정을 생성해주세요.'**
+  String get signupSubtitle;
+
+  /// No description provided for @signupCreateAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정 생성'**
+  String get signupCreateAccount;
+
+  /// No description provided for @signupMissingFields.
+  ///
+  /// In ko, this message translates to:
+  /// **'필수 항목을 모두 입력해주세요.'**
+  String get signupMissingFields;
+
+  /// No description provided for @signupEmailRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일을 입력해주세요.'**
+  String get signupEmailRequired;
+
+  /// No description provided for @signupEmailUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일 정보를 가져올 수 없습니다. 설정에서 이메일을 허용해주세요.'**
+  String get signupEmailUnavailable;
+
+  /// No description provided for @signupAppleEmailMissing.
+  ///
+  /// In ko, this message translates to:
+  /// **'애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.'**
+  String get signupAppleEmailMissing;
+
+  /// No description provided for @findId.
+  ///
+  /// In ko, this message translates to:
+  /// **'아이디 찾기'**
+  String get findId;
+
+  /// No description provided for @findIdSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가입하신 이메일을 입력하면 계정 정보를 확인해드려요.'**
+  String get findIdSubtitle;
+
+  /// No description provided for @findIdEmailRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인할 이메일을 입력해주세요.'**
+  String get findIdEmailRequired;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류 발생: {message}'**
+  String errorOccurred(String message);
+
+  /// No description provided for @findPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 찾기'**
+  String get findPassword;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 재설정'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일 인증 후 새 비밀번호를 설정해주세요.'**
+  String get resetPasswordSubtitle;
+
+  /// No description provided for @resetStepEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일 인증'**
+  String get resetStepEmail;
+
+  /// No description provided for @resetSendCode.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 코드 받기'**
+  String get resetSendCode;
+
+  /// No description provided for @resetStepCode.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 코드 입력'**
+  String get resetStepCode;
+
+  /// No description provided for @resetVerifyCode.
+  ///
+  /// In ko, this message translates to:
+  /// **'코드 확인'**
+  String get resetVerifyCode;
+
+  /// No description provided for @resetStepNewPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 비밀번호 설정'**
+  String get resetStepNewPassword;
+
+  /// No description provided for @resetTimeLeft.
+  ///
+  /// In ko, this message translates to:
+  /// **'남은 시간 {time}'**
+  String resetTimeLeft(String time);
+
+  /// No description provided for @resetTimedOut.
+  ///
+  /// In ko, this message translates to:
+  /// **'입력 시간이 초과되었습니다.'**
+  String get resetTimedOut;
+
+  /// No description provided for @resetCodeVerified.
+  ///
+  /// In ko, this message translates to:
+  /// **'코드 인증 성공!'**
+  String get resetCodeVerified;
+
+  /// No description provided for @resetPasswordMismatch.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호가 일치하지 않습니다.'**
+  String get resetPasswordMismatch;
 }
 
 class _AppLocalizationsDelegate

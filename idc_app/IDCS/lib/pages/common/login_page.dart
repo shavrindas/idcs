@@ -13,6 +13,7 @@ import 'package:idcs/services/common/social_auth_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/app_logo.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일과 비밀번호를 모두 입력해주세요.')),
+        SnackBar(content: Text(context.l10n.loginMissingFields)),
       );
       return;
     }
@@ -128,10 +129,10 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              Text('다시 만나서 반가워요', style: Theme.of(context).textTheme.headlineMedium),
+              Text(context.l10n.loginWelcomeTitle, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 6),
               Text(
-                '계정 정보를 입력하고 로그인해주세요.',
+                context.l10n.loginWelcomeSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),
@@ -156,7 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   TextButton(
                     onPressed: () => context.push('/find_pw'),
-                    child: const Text('비밀번호 찾기'),
+                    child: Text(context.l10n.findPassword),
                   ),
                 ],
               ),
@@ -174,13 +175,13 @@ class _LoginPageState extends State<LoginPage> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      '계정이 없으신가요? ',
+                      context.l10n.noAccountQuestion,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     GestureDetector(
                       onTap: () => context.push('/signup'),
                       child: Text(
-                        '회원가입',
+                        context.l10n.signUp,
                         style: TextStyle(
                           color: context.colors.primary,
                           fontWeight: FontWeight.w700,
@@ -194,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
                     GestureDetector(
                       onTap: () => context.push('/find_id'),
                       child: Text(
-                        '아이디 찾기',
+                        context.l10n.findId,
                         style: TextStyle(
                           color: context.colors.primary,
                           fontWeight: FontWeight.w700,

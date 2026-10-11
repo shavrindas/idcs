@@ -1,19 +1,15 @@
 {
   "@@locale": "ko",
-
   "settingsTitle": "설정",
   "settingsDeviceOnly": "이 설정은 이 기기에만 적용됩니다.",
-
   "settingsLanguage": "언어",
   "languageSystem": "시스템 설정",
   "languageKorean": "한국어",
   "languageEnglish": "English",
-
   "settingsTheme": "화면 테마",
   "themeSystem": "시스템 설정",
   "themeLight": "밝게",
   "themeDark": "어둡게",
-
   "settingsPanel": "제어판 화면",
   "settingsPanelNote": "호실에 들어갔을 때 보이는 실시간 제어판에만 적용됩니다.",
   "panelBackground": "배경",
@@ -22,13 +18,11 @@
   "panelLedDigits": "LED 숫자",
   "panelLedDigitsNote": "숫자를 7세그먼트 표시기 모양으로 보여줍니다.",
   "panelSampleLabel": "고내온도",
-
   "backgroundNone": "없음",
   "backgroundBlueprint": "도면",
   "backgroundCoil": "냉각 코일",
   "backgroundMetal": "금속",
   "backgroundGrid": "격자",
-
   "settingsAlarmStyle": "알림 방식",
   "alarmSound": "소리",
   "alarmSoundNote": "알람이 올 때 소리로 알립니다.",
@@ -36,19 +30,79 @@
   "alarmVibrationNote": "알람이 올 때 진동으로 알립니다.",
   "alarmLockScreen": "잠금화면에 내용 표시",
   "alarmLockScreenNote": "꺼두면 잠금화면에서는 알람이 왔다는 사실만 보입니다.",
-
   "alarmRepeat": "다시 알림",
   "alarmRepeatNote": "알람을 확인하지 못했을 때 설정한 간격으로 최대 {count}번까지 다시 알려줍니다.",
   "@alarmRepeatNote": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "alarmRepeatNone": "없음",
   "alarmRepeatMinutes": "{minutes}분",
   "@alarmRepeatMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
-  }
+  },
+  "fieldEmail": "이메일",
+  "fieldPassword": "비밀번호",
+  "fieldNewPassword": "새 비밀번호",
+  "fieldConfirmPassword": "비밀번호 재입력",
+  "fieldName": "이름",
+  "fieldPhoneOptional": "전화번호 (선택)",
+  "fieldVerificationCode": "인증 코드",
+  "showPassword": "비밀번호 표시",
+  "actionCancel": "취소",
+  "actionSubmit": "입력 완료",
+  "orDivider": "또는",
+  "continueWithGoogle": "Google로 계속하기",
+  "continueWithApple": "Apple로 계속하기",
+  "login": "로그인",
+  "loginWelcomeTitle": "다시 만나서 반가워요",
+  "loginWelcomeSubtitle": "계정 정보를 입력하고 로그인해주세요.",
+  "loginMissingFields": "이메일과 비밀번호를 모두 입력해주세요.",
+  "keepSignedIn": "로그인 상태 유지하기",
+  "noAccountQuestion": "계정이 없으신가요? ",
+  "signUp": "회원가입",
+  "signupTitle": "계정 만들기",
+  "signupSubtitle": "아래 정보를 입력하고 계정을 생성해주세요.",
+  "signupCreateAccount": "계정 생성",
+  "signupMissingFields": "필수 항목을 모두 입력해주세요.",
+  "signupEmailRequired": "이메일을 입력해주세요.",
+  "signupEmailUnavailable": "이메일 정보를 가져올 수 없습니다. 설정에서 이메일을 허용해주세요.",
+  "signupAppleEmailMissing": "애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.",
+  "findId": "아이디 찾기",
+  "findIdSubtitle": "가입하신 이메일을 입력하면 계정 정보를 확인해드려요.",
+  "findIdEmailRequired": "확인할 이메일을 입력해주세요.",
+  "errorOccurred": "오류 발생: {message}",
+  "@errorOccurred": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "findPassword": "비밀번호 찾기",
+  "resetPasswordTitle": "비밀번호 재설정",
+  "resetPasswordSubtitle": "이메일 인증 후 새 비밀번호를 설정해주세요.",
+  "resetStepEmail": "이메일 인증",
+  "resetSendCode": "인증 코드 받기",
+  "resetStepCode": "인증 코드 입력",
+  "resetVerifyCode": "코드 확인",
+  "resetStepNewPassword": "새 비밀번호 설정",
+  "resetTimeLeft": "남은 시간 {time}",
+  "@resetTimeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetTimedOut": "입력 시간이 초과되었습니다.",
+  "resetCodeVerified": "코드 인증 성공!",
+  "resetPasswordMismatch": "비밀번호가 일치하지 않습니다."
 }

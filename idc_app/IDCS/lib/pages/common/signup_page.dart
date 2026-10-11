@@ -5,6 +5,7 @@ import 'package:idcs/components/common/signup/signup_components.dart';
 import 'package:idcs/services/common/signup/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -43,7 +44,7 @@ class _SignupPageState extends State<SignupPage> {
 
     if (email.isEmpty || password.isEmpty || name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('필수 항목을 모두 입력해주세요.')),
+        SnackBar(content: Text(context.l10n.signupMissingFields)),
       );
       return;
     }
@@ -91,7 +92,7 @@ class _SignupPageState extends State<SignupPage> {
           });
           return; // 여기서 흐름을 멈추고 유저의 수동 입력을 기다립니다.
         } else {
-          throw Exception('이메일 정보를 가져올 수 없습니다. 설정에서 이메일을 허용해주세요.');
+          throw Exception(context.l10n.signupEmailUnavailable);
         }
       }
 
@@ -113,7 +114,7 @@ class _SignupPageState extends State<SignupPage> {
     final email = _fallbackEmailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일을 입력해주세요.')),
+        SnackBar(content: Text(context.l10n.signupEmailRequired)),
       );
       return;
     }
@@ -159,10 +160,10 @@ class _SignupPageState extends State<SignupPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              Text('계정 만들기', style: Theme.of(context).textTheme.headlineMedium),
+              Text(context.l10n.signupTitle, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 6),
               Text(
-                '아래 정보를 입력하고 계정을 생성해주세요.',
+                context.l10n.signupSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),
