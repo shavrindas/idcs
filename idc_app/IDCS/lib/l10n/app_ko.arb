@@ -104,5 +104,82 @@
   },
   "resetTimedOut": "입력 시간이 초과되었습니다.",
   "resetCodeVerified": "코드 인증 성공!",
-  "resetPasswordMismatch": "비밀번호가 일치하지 않습니다."
+  "resetPasswordMismatch": "비밀번호가 일치하지 않습니다.",
+  "actionSave": "저장",
+  "actionEdit": "수정",
+  "actionEditing": "수정 중",
+  "actionLink": "연동하기",
+  "actionLogout": "로그아웃",
+  "actionSearchClear": "검색어 지우기",
+  "fieldPhone": "전화번호",
+  "fieldCurrentPassword": "기존 비밀번호",
+  "loginMethod": "로그인 방식",
+  "noName": "이름 없음",
+  "profileTitle": "내 정보",
+  "profileNoChanges": "변경된 내용이 없습니다.",
+  "profileSaved": "성공적으로 변경되었습니다.",
+  "profileSettingsSubtitle": "화면 테마, 제어판 화면, 알람 소리·진동",
+  "profileTotalBoard": "통합 소요 기록",
+  "passwordSection": "비밀번호",
+  "passwordChange": "비밀번호 변경",
+  "passwordAllRequired": "비밀번호를 모두 입력해주세요.",
+  "passwordSameAsOld": "새 비밀번호가 기존 비밀번호와 동일합니다.",
+  "withdrawTitle": "계정 탈퇴",
+  "withdrawNote": "탈퇴하면 계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.",
+  "withdrawConfirmTitle": "정말 탈퇴하시겠습니까?",
+  "withdrawConfirmBody": "계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.",
+  "withdrawConfirmAction": "탈퇴하기",
+  "alarmsAllTitle": "전체 알람",
+  "alarmSearchByFacility": "시설 이름으로 검색...",
+  "alarmSearchByRoom": "룸 이름으로 검색...",
+  "alarmSearchByName": "알람 이름으로 검색...",
+  "alarmFieldName": "알람 명",
+  "alarmFieldRoom": "룸 이름",
+  "alarmFieldFacility": "시설 이름",
+  "alarmStatusAll": "전체",
+  "alarmStatusActive": "진행중",
+  "alarmStatusEnded": "종료",
+  "alarmGroupToggle": "묶어서 보기",
+  "alarmShort": "알람",
+  "statusNormal": "정상",
+  "statusActiveAlarms": "진행 중 알람",
+  "countCases": "{label} {count}건",
+  "@countCases": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "facilitiesTitle": "내 시설",
+  "facilitiesEmpty": "등록된 시설이 없습니다.",
+  "facilitiesNoneVisible": "조회할 수 있는 시설이 없습니다.",
+  "roomsEmpty": "등록된 호실이 없습니다.",
+  "roomCount": "호실 {count}개",
+  "@roomCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "permissionLoadFailed": "권한 조회 실패: {message}",
+  "@permissionLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPrefix": "오류: {message}",
+  "@errorPrefix": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  }
 }

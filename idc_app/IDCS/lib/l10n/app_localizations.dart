@@ -559,6 +559,282 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'비밀번호가 일치하지 않습니다.'**
   String get resetPasswordMismatch;
+
+  /// No description provided for @actionSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get actionSave;
+
+  /// No description provided for @actionEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정'**
+  String get actionEdit;
+
+  /// No description provided for @actionEditing.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정 중'**
+  String get actionEditing;
+
+  /// No description provided for @actionLink.
+  ///
+  /// In ko, this message translates to:
+  /// **'연동하기'**
+  String get actionLink;
+
+  /// No description provided for @actionLogout.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그아웃'**
+  String get actionLogout;
+
+  /// No description provided for @actionSearchClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색어 지우기'**
+  String get actionSearchClear;
+
+  /// No description provided for @fieldPhone.
+  ///
+  /// In ko, this message translates to:
+  /// **'전화번호'**
+  String get fieldPhone;
+
+  /// No description provided for @fieldCurrentPassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'기존 비밀번호'**
+  String get fieldCurrentPassword;
+
+  /// No description provided for @loginMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인 방식'**
+  String get loginMethod;
+
+  /// No description provided for @noName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 없음'**
+  String get noName;
+
+  /// No description provided for @profileTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 정보'**
+  String get profileTitle;
+
+  /// No description provided for @profileNoChanges.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경된 내용이 없습니다.'**
+  String get profileNoChanges;
+
+  /// No description provided for @profileSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'성공적으로 변경되었습니다.'**
+  String get profileSaved;
+
+  /// No description provided for @profileSettingsSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 테마, 제어판 화면, 알람 소리·진동'**
+  String get profileSettingsSubtitle;
+
+  /// No description provided for @profileTotalBoard.
+  ///
+  /// In ko, this message translates to:
+  /// **'통합 소요 기록'**
+  String get profileTotalBoard;
+
+  /// No description provided for @passwordSection.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호'**
+  String get passwordSection;
+
+  /// No description provided for @passwordChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 변경'**
+  String get passwordChange;
+
+  /// No description provided for @passwordAllRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호를 모두 입력해주세요.'**
+  String get passwordAllRequired;
+
+  /// No description provided for @passwordSameAsOld.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 비밀번호가 기존 비밀번호와 동일합니다.'**
+  String get passwordSameAsOld;
+
+  /// No description provided for @withdrawTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정 탈퇴'**
+  String get withdrawTitle;
+
+  /// No description provided for @withdrawNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'탈퇴하면 계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.'**
+  String get withdrawNote;
+
+  /// No description provided for @withdrawConfirmTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'정말 탈퇴하시겠습니까?'**
+  String get withdrawConfirmTitle;
+
+  /// No description provided for @withdrawConfirmBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.'**
+  String get withdrawConfirmBody;
+
+  /// No description provided for @withdrawConfirmAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'탈퇴하기'**
+  String get withdrawConfirmAction;
+
+  /// No description provided for @alarmsAllTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 알람'**
+  String get alarmsAllTitle;
+
+  /// No description provided for @alarmSearchByFacility.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 이름으로 검색...'**
+  String get alarmSearchByFacility;
+
+  /// No description provided for @alarmSearchByRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'룸 이름으로 검색...'**
+  String get alarmSearchByRoom;
+
+  /// No description provided for @alarmSearchByName.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 이름으로 검색...'**
+  String get alarmSearchByName;
+
+  /// No description provided for @alarmFieldName.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 명'**
+  String get alarmFieldName;
+
+  /// No description provided for @alarmFieldRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'룸 이름'**
+  String get alarmFieldRoom;
+
+  /// No description provided for @alarmFieldFacility.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 이름'**
+  String get alarmFieldFacility;
+
+  /// No description provided for @alarmStatusAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get alarmStatusAll;
+
+  /// No description provided for @alarmStatusActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'진행중'**
+  String get alarmStatusActive;
+
+  /// No description provided for @alarmStatusEnded.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료'**
+  String get alarmStatusEnded;
+
+  /// No description provided for @alarmGroupToggle.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶어서 보기'**
+  String get alarmGroupToggle;
+
+  /// No description provided for @alarmShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람'**
+  String get alarmShort;
+
+  /// No description provided for @statusNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'정상'**
+  String get statusNormal;
+
+  /// No description provided for @statusActiveAlarms.
+  ///
+  /// In ko, this message translates to:
+  /// **'진행 중 알람'**
+  String get statusActiveAlarms;
+
+  /// No description provided for @countCases.
+  ///
+  /// In ko, this message translates to:
+  /// **'{label} {count}건'**
+  String countCases(String label, int count);
+
+  /// No description provided for @facilitiesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 시설'**
+  String get facilitiesTitle;
+
+  /// No description provided for @facilitiesEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 시설이 없습니다.'**
+  String get facilitiesEmpty;
+
+  /// No description provided for @facilitiesNoneVisible.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회할 수 있는 시설이 없습니다.'**
+  String get facilitiesNoneVisible;
+
+  /// No description provided for @roomsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 호실이 없습니다.'**
+  String get roomsEmpty;
+
+  /// No description provided for @roomCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 {count}개'**
+  String roomCount(int count);
+
+  /// No description provided for @permissionLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 조회 실패: {message}'**
+  String permissionLoadFailed(String message);
+
+  /// No description provided for @errorPrefix.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류: {message}'**
+  String errorPrefix(String message);
 }
 
 class _AppLocalizationsDelegate

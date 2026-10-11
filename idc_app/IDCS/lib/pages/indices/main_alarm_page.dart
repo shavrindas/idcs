@@ -5,6 +5,7 @@ import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class MainAlarmPage extends StatefulWidget {
   final String userId;
@@ -51,7 +52,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('권한 조회 실패: ${describeApiError(e)}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(e)))));
       }
     } finally {
       if (mounted) {
@@ -94,17 +95,17 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     String getHintText() {
       switch (_searchTarget) {
         case 'facility':
-          return '시설 이름으로 검색...';
+          return context.l10n.alarmSearchByFacility;
         case 'room':
-          return '룸 이름으로 검색...';
+          return context.l10n.alarmSearchByRoom;
         case 'name':
         default:
-          return '알람 이름으로 검색...';
+          return context.l10n.alarmSearchByName;
       }
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('전체 알람')),
+      appBar: AppBar(title: Text(context.l10n.alarmsAllTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
@@ -126,7 +127,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                                   suffixIcon: _searchQuery.isNotEmpty
                                       ? IconButton(
-                                        tooltip: '검색어 지우기',
+                                        tooltip: context.l10n.actionSearchClear,
                                           icon: const Icon(Icons.clear_rounded, size: 20),
                                           onPressed: () {
                                             setState(() {
@@ -161,18 +162,18 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                                   value: _searchTarget,
                                   icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
                                   isDense: true,
-                                  items: const [
+                                  items: [
                                     DropdownMenuItem(
                                       value: 'name',
-                                      child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldName, style: TextStyle(fontSize: 14)),
                                     ),
                                     DropdownMenuItem(
                                       value: 'room',
-                                      child: Text('룸 이름', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldRoom, style: TextStyle(fontSize: 14)),
                                     ),
                                     DropdownMenuItem(
                                       value: 'facility',
-                                      child: Text('시설 이름', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldFacility, style: TextStyle(fontSize: 14)),
                                     ),
                                   ],
                                   onChanged: (value) {
