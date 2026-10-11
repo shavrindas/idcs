@@ -30,9 +30,9 @@ class ChartApiService {
       // 💡 JSON 디코딩 실패 시 (Internal Server Error 등) 처리
       try {
         final error = jsonDecode(responseBody);
-        throw Exception(error['detail'] ?? '차트 데이터를 불러오는데 실패했습니다.');
+        throw ApiException.rejected(error);
       } catch (_) {
-        throw Exception('서버 오류 ($responseBody)');
+        throw ApiException.rejected();
       }
     }
   }
@@ -46,7 +46,7 @@ class ChartApiService {
     if (response.statusCode == 200) {
       return jsonDecode(responseBody)['roles'] ?? [];
     } else {
-      throw Exception('포인트 롤 목록을 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -59,7 +59,7 @@ class ChartApiService {
       final decoded = jsonDecode(responseBody);
       return decoded['groups'] ?? [];
     } else {
-      throw Exception('차트 그룹 데이터를 불러오는데 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 }

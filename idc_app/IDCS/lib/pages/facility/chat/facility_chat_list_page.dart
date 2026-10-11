@@ -39,7 +39,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
         });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -93,7 +93,9 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                   await ChatApiService.leaveOrDeleteRoom(roomId, widget.userId, action: 'delete');
                   _fetchRooms();
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+                  // The await above may have outlived this screen.
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
                 }
               },
             ),

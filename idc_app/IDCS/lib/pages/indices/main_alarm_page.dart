@@ -52,7 +52,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(context, e)))));
       }
     } finally {
       if (mounted) {

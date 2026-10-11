@@ -53,7 +53,7 @@ class _PostEditPageState extends State<PostEditPage> {
       _initQuillController(postData['content']);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postSourceLoadFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postSourceLoadFailed(describeApiError(context, e)))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -97,7 +97,7 @@ class _PostEditPageState extends State<PostEditPage> {
       _newImageIds.add(uploaded.imageId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.imageAttachFailed(describeApiError(e)))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.imageAttachFailed(describeApiError(context, e)))));
     }
   }
 
@@ -121,7 +121,7 @@ class _PostEditPageState extends State<PostEditPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postUpdateFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postUpdateFailed(describeApiError(context, e)))));
       }
     }
   }

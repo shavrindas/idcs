@@ -32,7 +32,7 @@ class BoardApiService {
       final totalPages = decoded['meta']['total_pages'] ?? 1;
       return {'posts': posts, 'totalPages': totalPages};
     }
-    throw Exception('시설 게시글을 불러오는데 실패했습니다.');
+    throw ApiException.rejected();
   }
 
   /// 2. 통합 게시판 목록 조회
@@ -55,7 +55,7 @@ class BoardApiService {
       final totalPages = decoded['meta']['total_pages'] ?? 1;
       return {'posts': posts, 'totalPages': totalPages};
     }
-    throw Exception('통합 게시글을 불러오는데 실패했습니다.');
+    throw ApiException.rejected();
   }
 
   /// 3. 단일 게시글 상세 조회 (댓글 포함)
@@ -69,7 +69,7 @@ class BoardApiService {
     if (response.statusCode == 200) {
       return jsonDecode(utf8.decode(response.bodyBytes));
     }
-    throw Exception('게시글 상세 정보를 불러오는데 실패했습니다.');
+    throw ApiException.rejected();
   }
 
   /// 4. 새 게시글 생성
@@ -89,7 +89,7 @@ class BoardApiService {
     if (streamed.statusCode == 200) {
       return (imageId: decoded['image_id'] as int, imageUrl: decoded['image_url'] as String);
     }
-    throw Exception(decoded['detail'] ?? '이미지 업로드에 실패했습니다.');
+    throw ApiException.rejected(decoded);
   }
 
   static Future<int> createPost({
@@ -115,7 +115,7 @@ class BoardApiService {
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       return decoded['post_id'];
     }
-    throw Exception('게시글 작성에 실패했습니다.');
+    throw ApiException.rejected();
   }
 
   /// 5. 게시글 수정
@@ -138,7 +138,7 @@ class BoardApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('게시글 수정에 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -151,7 +151,7 @@ class BoardApiService {
     final response = await ApiClient.delete(url);
 
     if (response.statusCode != 200) {
-      throw Exception('게시글 삭제에 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -169,7 +169,7 @@ class BoardApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('댓글 작성에 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 
@@ -182,7 +182,7 @@ class BoardApiService {
     final response = await ApiClient.delete(url);
 
     if (response.statusCode != 200) {
-      throw Exception('댓글 삭제에 실패했습니다.');
+      throw ApiException.rejected();
     }
   }
 }

@@ -46,7 +46,7 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.roomLoadFailed(describeApiError(e)))),
+        SnackBar(content: Text(context.l10n.roomLoadFailed(describeApiError(context, e)))),
       );
     } finally {
       if (mounted) {

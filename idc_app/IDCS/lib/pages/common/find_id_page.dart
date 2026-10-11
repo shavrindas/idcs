@@ -45,7 +45,7 @@ class _FindIdPageState extends State<FindIdPage> {
     } catch (e) {
       setState(() {
         _isExpanded = true;
-        _resultMessage = context.l10n.errorOccurred(describeApiError(e));
+        _resultMessage = context.l10n.errorOccurred(describeApiError(context, e));
       });
     }
   }

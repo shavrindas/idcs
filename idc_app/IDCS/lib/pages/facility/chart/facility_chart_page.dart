@@ -76,7 +76,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.roomQueryFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.roomQueryFailed(describeApiError(context, e)))));
         setState(() => _isLoading = false);
       }
     }
@@ -128,7 +128,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.groupLoadFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.groupLoadFailed(describeApiError(context, e)))));
         setState(() => _isLoading = false);
       }
     }
@@ -202,7 +202,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.chartFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.chartFailed(describeApiError(context, e)))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

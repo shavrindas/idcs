@@ -60,7 +60,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
       _uploadedImageIds.add(uploaded.imageId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.imageAttachFailed(describeApiError(e)))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.imageAttachFailed(describeApiError(context, e)))));
     }
   }
 
@@ -87,7 +87,7 @@ class _PostCreatePageState extends State<PostCreatePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postCreateFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postCreateFailed(describeApiError(context, e)))));
       }
     }
   }

@@ -62,7 +62,7 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(e))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

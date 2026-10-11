@@ -860,4 +860,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notFound => 'Page not found.';
+
+  @override
+  String get errorServerUnreachable =>
+      'Cannot reach the server. Check your network connection.';
+
+  @override
+  String get errorServerTimeout =>
+      'The server did not respond. Check your network connection.';
+
+  @override
+  String get errorRequestFailed => 'The request could not be completed.';
+
+  @override
+  String get googleOnlyOnApp => 'Google sign-in is only available in the app.';
+
+  @override
+  String get appleOnlyOnApp => 'Apple sign-in is only available in the app.';
+
+  @override
+  String get googleNotConfigured =>
+      'Google sign-in is not set up yet. This app\'s OAuth client (SHA-1 fingerprint) has to be registered in the Firebase project.';
+
+  @override
+  String googleSignInFailed(String reason) {
+    return 'Google sign-in could not continue. ($reason)';
+  }
+
+  @override
+  String appleSignInFailed(String reason) {
+    return 'Apple sign-in could not continue. ($reason)';
+  }
+
+  @override
+  String get googleDefaultName => 'Google user';
+
+  @override
+  String get appleDefaultName => 'Apple user';
+
+  @override
+  String get notificationFallbackTitle => 'Notification';
+
+  @override
+  String alarmRepeatSuffix(String body, int index, int total) {
+    return '$body (reminder $index/$total)';
+  }
+
+  @override
+  String get channelSoundVibe => 'Alarms (sound + vibration)';
+
+  @override
+  String get channelSoundVibeDesc => 'Alarms that both ring and vibrate';
+
+  @override
+  String get channelSoundOnly => 'Alarms (sound only)';
+
+  @override
+  String get channelSoundOnlyDesc => 'Alarms that ring without vibrating';
+
+  @override
+  String get channelVibeOnly => 'Alarms (vibration only)';
+
+  @override
+  String get channelVibeOnlyDesc => 'Alarms that vibrate without ringing';
+
+  @override
+  String get channelSilent => 'Alarms (silent)';
+
+  @override
+  String get channelSilentDesc => 'Alarms shown without sound or vibration';
 }

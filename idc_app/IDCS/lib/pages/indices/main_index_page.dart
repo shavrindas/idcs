@@ -52,7 +52,7 @@ class _MainIndexPageState extends State<MainIndexPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(e)))),
+        SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(context, e)))),
       );
     } finally {
       if (mounted) {

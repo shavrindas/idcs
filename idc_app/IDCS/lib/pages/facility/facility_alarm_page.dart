@@ -53,7 +53,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(e)))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(context, e)))));
       }
     } finally {
       if (mounted) {
@@ -85,7 +85,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
         : searchedAlarms.map((a) => GroupedAlarm([a])).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('알람')),
+      appBar: AppBar(title: Text(context.l10n.navAlarm)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(

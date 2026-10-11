@@ -72,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeApiError(e))),
+        SnackBar(content: Text(describeApiError(context, e))),
       );
     }
   }
@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeApiError(e))),
+        SnackBar(content: Text(describeApiError(context, e))),
       );
     }
   }
