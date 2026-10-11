@@ -35,6 +35,17 @@ class MonitoringViewSettings {
   /// Base size of a value in the panel, in logical pixels.
   static const double baseValueFontSize = 14;
 
+  /// Seven-segment face, registered in pubspec. See assets/fonts/DSEG-LICENSE.txt.
+  static const String ledFontFamily = 'DSEG7';
+
+  /// Whether a reading should be drawn in the LED face.
+  ///
+  /// Only numbers: DSEG7 renders letters as seven-segment approximations, which
+  /// turns 'NA', 'ON' and the Korean status words into something unreadable.
+  /// Those keep the normal font.
+  bool usesLedFor(String value) =>
+      ledDigits && double.tryParse(value.trim()) != null;
+
   /// Scale bounds — 14sp up to 28sp.
   static const double minFontScale = 1.0;
   static const double maxFontScale = 2.0;

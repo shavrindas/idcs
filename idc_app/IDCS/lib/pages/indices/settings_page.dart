@@ -221,6 +221,14 @@ class _PanelAppearanceCard extends StatelessWidget {
           max: MonitoringViewSettings.maxFontScale,
           onChanged: (v) => _update(view.copyWith(valueFontScale: v)),
         ),
+
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('LED 숫자'),
+          subtitle: const Text('숫자를 7세그먼트 표시기 모양으로 보여줍니다.'),
+          value: view.ledDigits,
+          onChanged: (val) => _update(view.copyWith(ledDigits: val)),
+        ),
       ],
     );
   }
@@ -308,6 +316,10 @@ class _BackgroundChoice extends StatelessWidget {
 class _PanelPreview extends StatelessWidget {
   final MonitoringViewSettings view;
 
+  /// A real reading: negative and fractional, so the LED face is judged on the
+  /// kind of number the panel actually shows.
+  static const String _sampleValue = '-18.5';
+
   const _PanelPreview({required this.view});
 
   @override
@@ -343,11 +355,15 @@ class _PanelPreview extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '-18.5',
+                      _sampleValue,
                       style: TextStyle(
                         fontSize: view.valueFontSize,
                         fontWeight: FontWeight.w600,
                         color: colors.textPrimary,
+                        fontFamily: view.usesLedFor(_sampleValue)
+                            ? MonitoringViewSettings.ledFontFamily
+                            : null,
+                        letterSpacing: view.usesLedFor(_sampleValue) ? 1 : null,
                       ),
                     ),
                   ],
