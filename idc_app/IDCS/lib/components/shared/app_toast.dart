@@ -165,6 +165,32 @@ class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMi
       ToastKind.info => _ToastColors.info,
     };
 
+    final card = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          // Tinted rather than grey, so the card lifts off the page without a
+          // border drawing a hard edge around it.
+          BoxShadow(
+            color: fill.withValues(alpha: 0.38),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Text(
+        widget.message,
+        style: const TextStyle(
+          fontSize: 14.5,
+          height: 1.35,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+
     return Positioned(
       top: MediaQuery.of(context).padding.top + 12,
       left: 16,
@@ -175,37 +201,16 @@ class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMi
           opacity: _fade,
           child: Material(
             color: Colors.transparent,
-            child: Dismissible(
-              key: const ValueKey('app_toast'),
-              direction: DismissDirection.up,
-              onDismissed: (_) => widget.onFinished(),
-              child: GestureDetector(
-                onTap: _dismiss,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-                  decoration: BoxDecoration(
-                    color: fill,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      // Tinted rather than grey, so the card lifts off the page
-                      // without a border drawing a hard edge around it.
-                      BoxShadow(
-                        color: fill.withValues(alpha: 0.38),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    widget.message,
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      height: 1.35,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+            // Sized to its text rather than stretched across the screen: a
+            // three-word message in a full-width bar reads as a page banner
+            // rather than a notice. Long messages still wrap within the margins.
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Dismissible(
+                key: const ValueKey('app_toast'),
+                direction: DismissDirection.up,
+                onDismissed: (_) => widget.onFinished(),
+                child: GestureDetector(onTap: _dismiss, child: card),
               ),
             ),
           ),

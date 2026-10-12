@@ -177,91 +177,98 @@ class _PersonalPageState extends State<PersonalPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 계정 요약 + 로그아웃
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.colors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: context.colors.outline),
-              ),
-              child: Row(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // 계정 요약 + 로그아웃
                   Container(
-                    width: 42,
-                    height: 42,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: context.colors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+                      color: context.colors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: context.colors.cardShadow,
                     ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.person_rounded, color: context.colors.primary, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(
-                          _name.isEmpty ? context.l10n.noName : _name,
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: context.colors.textPrimary),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: context.colors.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(Icons.person_rounded, color: context.colors.primary, size: 22),
                         ),
-                        Text('ID ${widget.userId}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _name.isEmpty ? context.l10n.noName : _name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: context.colors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'ID ${widget.userId}',
+                                style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(onPressed: _handleLogout, child: Text(context.l10n.actionLogout)),
                       ],
                     ),
                   ),
-                  TextButton(onPressed: _handleLogout, child: Text(context.l10n.actionLogout)),
+                  const SizedBox(height: 16),
+
+                  // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
+                  _LinkCard(
+                    title: context.l10n.settingsTitle,
+                    subtitle: context.l10n.profileSettingsSubtitle,
+                    icon: Icons.settings_outlined,
+                    onPressed: () => context.push('/settings'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_isAdmin) ...[
+                    _LinkCard(
+                      title: context.l10n.profileTotalBoard,
+                      icon: Icons.assignment_outlined,
+                      onPressed: () => context.push('/total_board/${widget.userId}'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 이름·전화번호·로그인 방식. 평소엔 읽기 전용, 수정 버튼으로 연다.
+                  ProfileInfoBox(
+                    name: _name,
+                    phone: _phone,
+                    loginMethod: _loginMethodLabel(context),
+                    onSave: _handleSaveProfile,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 소셜로만 가입한 계정은 비밀번호 자체가 없으므로 숨긴다
+                  if (_hasPassword) ...[
+                    PasswordChangeBox(
+                      currentPwController: _currentPwController,
+                      newPwController: _newPwController,
+                      collapseMessage: _pwCollapseMessage,
+                      onSubmit: _handleUpdatePassword,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  WithdrawBox(onWithdraw: _handleWithdraw),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-
-            // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
-            _LinkCard(
-              title: context.l10n.settingsTitle,
-              subtitle: context.l10n.profileSettingsSubtitle,
-              icon: Icons.settings_outlined,
-              onPressed: () => context.push('/settings'),
-            ),
-            const SizedBox(height: 16),
-
-            if (_isAdmin) ...[
-              _LinkCard(
-                title: context.l10n.profileTotalBoard,
-                icon: Icons.assignment_outlined,
-                onPressed: () => context.push('/total_board/${widget.userId}'),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            // 이름·전화번호·로그인 방식. 평소엔 읽기 전용, 수정 버튼으로 연다.
-            ProfileInfoBox(
-              name: _name,
-              phone: _phone,
-              loginMethod: _loginMethodLabel(context),
-              onSave: _handleSaveProfile,
-            ),
-            const SizedBox(height: 16),
-
-            // 소셜로만 가입한 계정은 비밀번호 자체가 없으므로 숨긴다
-            if (_hasPassword) ...[
-              PasswordChangeBox(
-                currentPwController: _currentPwController,
-                newPwController: _newPwController,
-                collapseMessage: _pwCollapseMessage,
-                onSubmit: _handleUpdatePassword,
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            WithdrawBox(onWithdraw: _handleWithdraw),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -283,12 +290,8 @@ class _LinkCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onPressed,
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.colors.outline),
-          ),
           child: Row(
             children: [
               Icon(icon, color: context.colors.primary, size: 20),
@@ -297,8 +300,10 @@ class _LinkCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
+                    Text(
+                      title,
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary),
+                    ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),
                       Text(subtitle!, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
