@@ -582,5 +582,34 @@
       }
     }
   },
-  "boardSearchClear": "검색어 지우기"
+  "boardSearchClear": "검색어 지우기",
+  "panelCurrentTemp": "고내온도",
+  "panelSetpoint": "설정값",
+  "unitCelsius": "°C",
+  "panelWaitingData": "데이터를 기다리는 중",
+  "panelUpdatedJustNow": "방금 업데이트",
+  "panelUpdatedSecondsAgo": "{seconds}초 전 업데이트",
+  "@panelUpdatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "panelUpdatedMinutesAgo": "{minutes}분 전 업데이트",
+  "@panelUpdatedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "panelNoSignal": "{minutes}분째 신호가 없습니다",
+  "@panelNoSignal": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }

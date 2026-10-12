@@ -1873,6 +1873,54 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'검색어 지우기'**
   String get boardSearchClear;
+
+  /// No description provided for @panelCurrentTemp.
+  ///
+  /// In ko, this message translates to:
+  /// **'고내온도'**
+  String get panelCurrentTemp;
+
+  /// No description provided for @panelSetpoint.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정값'**
+  String get panelSetpoint;
+
+  /// No description provided for @unitCelsius.
+  ///
+  /// In ko, this message translates to:
+  /// **'°C'**
+  String get unitCelsius;
+
+  /// No description provided for @panelWaitingData.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터를 기다리는 중'**
+  String get panelWaitingData;
+
+  /// No description provided for @panelUpdatedJustNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'방금 업데이트'**
+  String get panelUpdatedJustNow;
+
+  /// No description provided for @panelUpdatedSecondsAgo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{seconds}초 전 업데이트'**
+  String panelUpdatedSecondsAgo(int seconds);
+
+  /// No description provided for @panelUpdatedMinutesAgo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{minutes}분 전 업데이트'**
+  String panelUpdatedMinutesAgo(int minutes);
+
+  /// No description provided for @panelNoSignal.
+  ///
+  /// In ko, this message translates to:
+  /// **'{minutes}분째 신호가 없습니다'**
+  String panelNoSignal(int minutes);
 }
 
 class _AppLocalizationsDelegate

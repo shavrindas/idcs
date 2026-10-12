@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
+import 'package:idcs/components/facility/monitoring/panel_summary_card.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/theme/panel_background.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -23,6 +25,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
   // 웹소켓 통신 클래스 인스턴스 생성
   final WebSocketService _webSocketService = WebSocketService();
   StreamSubscription<String>? _wsSubscription; // 스트림 구독 해제를 위한 객체
+
+  /// 마지막으로 값이 들어온 시각. 요약 카드가 이 값으로 신선도를 보여준다.
+  DateTime? _lastUpdate;
+
+  /// '몇 초 전'이 멈춰 있지 않도록 주기적으로 다시 그린다.
+  Timer? _freshnessTicker;
+
+  /// 앱바에 띄울 호실 이름. 시설 ID 보다 현장에서 쓰는 이름이 쓸모 있다.
+  String? _roomName;
 
   // 평평한 1층 딕셔너리 데이터 구조
   Map<String, String> realtempData = {'temp_comp': 'NA', 'temp_pv': 'NA', 'temp_sv': 'NA', 'temp_hey': 'NA', 'temp_zero': 'NA'};
@@ -55,6 +66,25 @@ class _MonitoringPageState extends State<MonitoringPage> {
     _wsSubscription = _webSocketService.messageStream.listen((rawJson) {
       _parseAndMapDeviceMessage(rawJson);
     });
+
+    _freshnessTicker = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) setState(() {});
+    });
+
+    _loadRoomName();
+  }
+
+  Future<void> _loadRoomName() async {
+    try {
+      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+      final match = rooms.firstWhere(
+        (r) => r['id'].toString() == widget.roomId,
+        orElse: () => null,
+      );
+      if (mounted && match != null) setState(() => _roomName = match['name']);
+    } catch (_) {
+      // 이름을 못 불러와도 제어판 자체는 그대로 쓸 수 있으므로 조용히 넘어간다.
+    }
   }
 
   // 통신 클래스로부터 넘겨받은 날것의 데이터를 매핑하는 비즈니스 로직
@@ -64,6 +94,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
       final Map<String, dynamic> parsedSJson = parsedJson['datas'];
 
       setState(() {
+        _lastUpdate = DateTime.now();
         for (var entry in parsedSJson.entries) {
           // 키는 "호실.필드" 형태로 온다 (예: "23.temp_pv")
           final List<String> parts = entry.key.split('.');
@@ -85,6 +116,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
   @override
   void dispose() {
     // 💡 매우 중요: 메모리 누수 방지를 위해 페이지를 나갈 때 스트림 구독을 해제하고 통신을 닫습니다.
+    _freshnessTicker?.cancel();
     _wsSubscription?.cancel();
     _webSocketService.disconnect();
     super.dispose();
@@ -113,7 +145,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
       valueListenable: MonitoringViewController.settings,
       builder: (context, view, _) => Scaffold(
         appBar: AppBar(
-          title: Text(context.l10n.panelPageTitle(widget.facilityId)),
+          title: Text(_roomName ?? context.l10n.panelPageTitle(widget.facilityId)),
           centerTitle: true,
         ),
         // 배경이 패널 사이로 비쳐 보이도록 Scaffold는 비워 두고 Stack 맨 아래에 깐다.
@@ -126,17 +158,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 이 카드만 장비 데이터가 아니라서 라벨을 그대로 쓴다.
-                  MonitoringCard(
-                    title: context.l10n.panelCardInfo,
-                    fields: {
-                      context.l10n.panelInfoFacilityId: widget.facilityId,
-                      context.l10n.panelInfoRoomId: widget.roomId,
-                      context.l10n.panelInfoManagerId: widget.userId,
-                      context.l10n.panelInfoStatus: context.l10n.panelStatusActive,
-                    },
+                  // 시설 ID·호실 ID·관리자 ID 를 띄우던 카드를 걷어내고, 이 화면을
+                  // 여는 이유인 '지금 몇 도인가'를 맨 위에 둔다.
+                  PanelSummaryCard(
+                    currentTemp: realtempData['temp_pv'] ?? 'NA',
+                    setpoint: realtempData['temp_sv'] ?? 'NA',
+                    lastUpdate: _lastUpdate,
                     view: view,
                   ),
+                  const SizedBox(height: 16),
                   MonitoringCard(title: context.l10n.panelCardTemp, fields: realtempData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
                   MonitoringCard(title: context.l10n.panelCardDefrost, fields: deforestData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
                   MonitoringCard(title: context.l10n.panelCardFaults, fields: emergencyData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
