@@ -11,13 +11,36 @@
 part of 'main.dart';
 
 class AppConfig {
-  // 로컬에서 백엔드를 직접 띄워 쓰는 경우
-  static const String baseUrl = 'http://localhost:8000/api';
-  static const String basewsUrl = 'ws://localhost:8000/api';
 
-  // 같은 공유기 안의 다른 PC에서 띄운 백엔드에 붙는 경우 예시
-  // static const String baseUrl = 'http://192.168.0.10:8000/api';
-  // static const String basewsUrl = 'ws://192.168.0.10:8000/api';
+  /// 개발 서버 주소. 실행 환경마다 "내 PC"를 가리키는 주소가 달라서 나눠 둔다.
+  ///
+  /// - 웹(크롬)   : 브라우저가 PC에서 돌기 때문에 localhost 그대로.
+  /// - 안드로이드 : 에뮬레이터는 10.0.2.2 가 항상 호스트 PC를 가리킨다.
+  ///               공유기 IP 와 달리 네트워크가 바뀌어도 그대로라 다시 빌드할 일이 없다.
+  ///
+  /// 실제 단말(폰)에 APK 를 넣어 테스트할 때는 10.0.2.2 가 통하지 않는다.
+  /// 그때는 아래 _host 를 PC 의 LAN IP(터미널에서 `ipconfig getifaddr en0`)로 바꾼다.
+  static const String _host = kIsWeb ? 'localhost' : '10.0.2.2';
+
+  /// v2 서버(idc_server_v2)를 볼지, 예전 서버(.legacy)를 볼지.
+  ///
+  /// v2 는 한 덩어리가 아니라 모듈(ServiceApp / ServiceWeb / CServer / FServer)로
+  /// 갈라져 있고, 앱이 쓰는 것은 그중 ServiceApp 하나다. 경로도 포트도 달라서
+  /// 주소를 통째로 갈아끼운다.
+  ///
+  /// 중앙 노드 띄우는 법 (idc_server_v2 에서):
+  ///   ENABLE_CENTER_SERVER=true ENABLE_SERVICE_WEB=true ENABLE_SERVICE_APP=true \
+  ///     uvicorn src.app:app --host 0.0.0.0 --port 8900
+  static const bool useV2 = true;
+
+  static const String _legacyHttp = 'http://$_host:8000/api';
+  static const String _legacyWs = 'ws://$_host:8000/api';
+
+  static const String _v2Http = 'http://$_host:8900/api/v1/serviceapp';
+  static const String _v2Ws = 'ws://$_host:8900/api/v1/serviceapp';
+
+  static const String baseUrl = useV2 ? _v2Http : _legacyHttp;
+  static const String basewsUrl = useV2 ? _v2Ws : _legacyWs;
 
   // 💡 향후 추가될 모든 초기화 로직은 main.dart가 아닌 여기에 추가합니다.
   static Future<void> initializeAll() async {
