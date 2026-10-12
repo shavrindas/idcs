@@ -32,7 +32,12 @@ class FacilitySummaryList extends StatelessWidget {
   /// parameter value cannot read the locale.
   final String? emptyMessage;
 
-  const FacilitySummaryList({super.key, required this.facilities, required this.onFacilityPressed, this.emptyMessage});
+  const FacilitySummaryList({
+    super.key,
+    required this.facilities,
+    required this.onFacilityPressed,
+    this.emptyMessage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +49,10 @@ class FacilitySummaryList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final facility in facilities) ...[
-          _FacilityCard(facility: facility, onTap: () => onFacilityPressed(facility.id)),
+          _FacilityCard(
+            facility: facility,
+            onTap: () => onFacilityPressed(facility.id),
+          ),
           const SizedBox(height: 10),
         ],
       ],
@@ -65,7 +73,10 @@ class _FacilityCard extends StatelessWidget {
 
     // The shadow sits outside the Material so it is not clipped by it.
     return DecoratedBox(
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: colors.cardShadow),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: colors.cardShadow,
+      ),
       child: Material(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),
@@ -87,8 +98,14 @@ class _FacilityCard extends StatelessWidget {
                     children: [
                       Text(
                         // Empty means the server had no name for it.
-                        facility.name.isEmpty ? context.l10n.facilityUnnamed : facility.name,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                        facility.name.isEmpty
+                            ? context.l10n.facilityUnnamed
+                            : facility.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -96,9 +113,18 @@ class _FacilityCard extends StatelessWidget {
                           if (facility.roomCount != null) ...[
                             Text(
                               context.l10n.roomCount(facility.roomCount!),
-                              style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colors.textSecondary,
+                              ),
                             ),
-                            Text('  ·  ', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                            Text(
+                              '  ·  ',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colors.textSecondary,
+                              ),
+                            ),
                           ],
                           _StatusText(count: facility.activeAlarmCount),
                         ],
@@ -138,12 +164,18 @@ class _StatusText extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(color: hasAlarm ? colors.error : colors.success, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: hasAlarm ? colors.error : colors.success,
+            shape: BoxShape.circle,
+          ),
         ),
         const SizedBox(width: 6),
         Text(
           hasAlarm
-              ? context.l10n.countCases(label ?? context.l10n.statusActiveAlarms, count)
+              ? context.l10n.countCases(
+                  label ?? context.l10n.statusActiveAlarms,
+                  count,
+                )
               : context.l10n.statusNormal,
           style: TextStyle(
             fontSize: 13,
@@ -174,9 +206,16 @@ class _EmptyBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.domain_disabled_outlined, color: colors.textSecondary.withValues(alpha: 0.6), size: 28),
+          Icon(
+            Icons.domain_disabled_outlined,
+            color: colors.textSecondary.withValues(alpha: 0.6),
+            size: 28,
+          ),
           const SizedBox(height: 8),
-          Text(message, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+          Text(
+            message,
+            style: TextStyle(color: colors.textSecondary, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -190,6 +229,12 @@ class RoomGrid extends StatelessWidget {
 
   /// Active alarm count per room id. A missing id simply counts as zero.
   final Map<int, int> activeAlarmCounts;
+
+  /// Latest 고내온도 per room id. The whole point of opening this screen is to
+  /// see it, so the card shows it instead of making the user tap in to find out.
+  /// A room with no reading yet is simply left blank.
+  final Map<int, double> temperatures;
+
   final Function(int) onRoomPressed;
   final String? emptyMessage;
 
@@ -198,12 +243,15 @@ class RoomGrid extends StatelessWidget {
     required this.rooms,
     required this.activeAlarmCounts,
     required this.onRoomPressed,
+    this.temperatures = const {},
     this.emptyMessage,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (rooms.isEmpty) return _EmptyBox(message: emptyMessage ?? context.l10n.roomsEmpty);
+    if (rooms.isEmpty) {
+      return _EmptyBox(message: emptyMessage ?? context.l10n.roomsEmpty);
+    }
 
     return GridView.builder(
       shrinkWrap: true,
@@ -220,9 +268,13 @@ class RoomGrid extends StatelessWidget {
         final colors = context.colors;
         final count = activeAlarmCounts[room['id']] ?? 0;
         final hasAlarm = count > 0;
+        final temp = temperatures[room['id']];
 
         return DecoratedBox(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: colors.cardShadow),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: colors.cardShadow,
+          ),
           child: Material(
             color: colors.surface,
             borderRadius: BorderRadius.circular(14),
@@ -234,17 +286,60 @@ class RoomGrid extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   border: hasAlarm ? Border.all(color: colors.error) : null,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                child: Row(
                   children: [
-                    Text(
-                      room['name'] ?? '',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: colors.textPrimary, fontSize: 14),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            room['name'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: colors.textPrimary,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          _StatusText(
+                            count: count,
+                            label: context.l10n.alarmShort,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    _StatusText(count: count, label: context.l10n.alarmShort),
+                    if (temp != null) ...[
+                      const SizedBox(width: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            temp.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 22,
+                              height: 1.1,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            context.l10n.unitCelsius,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
