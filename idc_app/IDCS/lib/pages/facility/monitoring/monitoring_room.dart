@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/main_index/main_index_components.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
+import 'package:idcs/services/chart/chart_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../../services/common/api_client.dart';
@@ -13,7 +14,11 @@ class MonitoringRoom extends StatefulWidget {
   final String userId;
   final String facilityId;
 
-  const MonitoringRoom({super.key, required this.userId, required this.facilityId});
+  const MonitoringRoom({
+    super.key,
+    required this.userId,
+    required this.facilityId,
+  });
 
   @override
   State<MonitoringRoom> createState() => _MonitoringRoomPage();
@@ -23,6 +28,7 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
   bool _isLoading = true;
   List<dynamic> _rooms = [];
   Map<int, int> _activeAlarmCounts = {};
+  Map<int, double> _temperatures = {};
 
   @override
   void initState() {
@@ -37,16 +43,23 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
     });
 
     try {
-      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+      final rooms = await FacilityApiService.getFacilityRooms(
+        widget.facilityId,
+      );
       final counts = await _loadActiveAlarmCounts();
+      final temperatures = await _loadTemperatures();
       if (!mounted) return;
       setState(() {
         _rooms = rooms;
         _activeAlarmCounts = counts;
+        _temperatures = temperatures;
       });
     } catch (e) {
       if (!mounted) return;
-      AppToast.error(context, context.l10n.roomLoadFailed(describeApiError(context, e)));
+      AppToast.error(
+        context,
+        context.l10n.roomLoadFailed(describeApiError(context, e)),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -60,7 +73,9 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
   /// A failure here only costs the badges, so the room list still opens.
   Future<Map<int, int>> _loadActiveAlarmCounts() async {
     try {
-      final alarms = await AlarmApiService.getFacilitiesAlarms(widget.facilityId);
+      final alarms = await AlarmApiService.getFacilitiesAlarms(
+        widget.facilityId,
+      );
       final counts = <int, int>{};
       for (final alarm in alarms.where(isAlarmActive)) {
         final roomId = alarm['room_id'];
@@ -69,6 +84,19 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
         }
       }
       return counts;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Latest 고내온도 for every room, in one call.
+  /// Like the alarm badges, a failure here only leaves the values blank —
+  /// the user can still pick a room and read it on the panel.
+  Future<Map<int, double>> _loadTemperatures() async {
+    final id = int.tryParse(widget.facilityId);
+    if (id == null) return {};
+    try {
+      return await ChartApiService.getLatestRoomTemperatures(id);
     } catch (_) {
       return {};
     }
@@ -101,9 +129,12 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
                   RoomGrid(
                     rooms: _rooms,
                     activeAlarmCounts: _activeAlarmCounts,
+                    temperatures: _temperatures,
                     onRoomPressed: (roomId) {
                       // 터치 시 호실 상세 제어판으로 이동
-                      context.push('/facility_monitoring/${widget.userId}/${widget.facilityId}/$roomId');
+                      context.push(
+                        '/facility_monitoring/${widget.userId}/${widget.facilityId}/$roomId',
+                      );
                     },
                   ),
                 ],
