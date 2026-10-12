@@ -541,5 +541,25 @@
   "channelVibeOnly": "알람 (진동만)",
   "channelVibeOnlyDesc": "진동만 사용하는 알람",
   "channelSilent": "알람 (무음)",
-  "channelSilentDesc": "소리와 진동 없이 표시만 하는 알람"
+  "channelSilentDesc": "소리와 진동 없이 표시만 하는 알람",
+  "panelPageTitle": "시설 ID: {id} 실시간 제어판",
+  "@panelPageTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "panelCardInfo": "시설 기본 정보",
+  "panelCardTemp": "실제 온도",
+  "panelCardDefrost": "제상 정보",
+  "panelCardFaults": "이상 정보",
+  "panelCardInverter": "인버터 정보",
+  "panelCardEquipment": "장비 정보",
+  "panelCardControl": "제어 정보",
+  "panelInfoFacilityId": "시설 ID",
+  "panelInfoRoomId": "호실 ID",
+  "panelInfoManagerId": "담당 관리자 ID",
+  "panelInfoStatus": "운영 상태",
+  "panelStatusActive": "정상 작동 중 (ACTIVE)"
 }

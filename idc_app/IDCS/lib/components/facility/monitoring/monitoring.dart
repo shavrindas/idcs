@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
@@ -13,11 +14,16 @@ class MonitoringCard extends StatelessWidget {
   /// 제어판 겉모습 설정. 배경을 비치게 하는 투명도와 값 글자 크기를 여기서 받는다.
   final MonitoringViewSettings view;
 
+  /// fields 의 키가 서버 필드 이름이면 true — 표시 이름을 DeviceLabels 에서 찾는다.
+  /// 시설 기본 정보 카드처럼 이미 사람이 읽을 라벨이면 false.
+  final bool deviceKeys;
+
   const MonitoringCard({
     super.key,
     required this.title,
     required this.fields,
     required this.view,
+    this.deviceKeys = false,
     this.OnConfirm,
   });
 
@@ -63,7 +69,8 @@ class MonitoringCard extends StatelessWidget {
           // 독립된 StatefulWidget으로 개별 Row 생성
           ...fields.entries.map((entry) => _EditableRowItem(
             key: ValueKey(entry.key), // label을 키값으로 설정하여 위젯 재사용성 보장
-            label: entry.key,
+            label: deviceKeys ? DeviceLabels.of(context, entry.key) : entry.key,
+            fieldKey: entry.key,
             value: entry.value,
             view: view,
             // Only live readings get the LED face. 시설 기본 정보 is the one card
@@ -81,6 +88,9 @@ class MonitoringCard extends StatelessWidget {
 // 입력 상태를 유지하기 위해 개별 Row를 StatefulWidget으로 분리
 class _EditableRowItem extends StatefulWidget {
   final String label;
+
+  /// What the control write addresses — the server's field name.
+  final String fieldKey;
   final String value;
   final MonitoringViewSettings view;
 
@@ -91,6 +101,7 @@ class _EditableRowItem extends StatefulWidget {
   const _EditableRowItem({
     super.key,
     required this.label,
+    required this.fieldKey,
     required this.value,
     required this.view,
     required this.ledAllowed,
@@ -178,7 +189,7 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               child: ElevatedButton(
                 onPressed: () {
                   final inputText = _inputController.text;
-                  widget.onConfirm!(widget.label, inputText);
+                  widget.onConfirm!(widget.fieldKey, inputText);
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(64, 44),

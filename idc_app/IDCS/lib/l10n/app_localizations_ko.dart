@@ -916,4 +916,45 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get channelSilentDesc => '소리와 진동 없이 표시만 하는 알람';
+
+  @override
+  String panelPageTitle(String id) {
+    return '시설 ID: $id 실시간 제어판';
+  }
+
+  @override
+  String get panelCardInfo => '시설 기본 정보';
+
+  @override
+  String get panelCardTemp => '실제 온도';
+
+  @override
+  String get panelCardDefrost => '제상 정보';
+
+  @override
+  String get panelCardFaults => '이상 정보';
+
+  @override
+  String get panelCardInverter => '인버터 정보';
+
+  @override
+  String get panelCardEquipment => '장비 정보';
+
+  @override
+  String get panelCardControl => '제어 정보';
+
+  @override
+  String get panelInfoFacilityId => '시설 ID';
+
+  @override
+  String get panelInfoRoomId => '호실 ID';
+
+  @override
+  String get panelInfoManagerId => '담당 관리자 ID';
+
+  @override
+  String get panelInfoStatus => '운영 상태';
+
+  @override
+  String get panelStatusActive => '정상 작동 중 (ACTIVE)';
 }
