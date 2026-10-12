@@ -1,14 +1,13 @@
 // ===============================================================
 // 경로: lib/components/shared/app_toast.dart
-// 명세: 상태별 색을 가진 토스트 알림 (성공/실패/주의/안내)
+// 명세: 상태별 색으로 가득 채운 토스트 알림 (성공/실패/주의/안내)
 // ===============================================================
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:idcs/theme/app_theme.dart';
 
-/// What a toast is telling the user. The colour and icon follow from this, so a
-/// screen only has to say which kind it is.
+/// What a toast is telling the user. The colour follows from this, so a screen
+/// only has to say which kind it is.
 enum ToastKind { success, error, warning, info }
 
 /// Short status messages shown over the current screen.
@@ -86,6 +85,22 @@ class AppToast {
   }
 }
 
+/// Fill colours for the toast.
+///
+/// These are the toast's own, not the page palette's. A toast is a filled
+/// surface carrying white text, and the light accents the dark theme uses for
+/// icons and borders cannot hold white — `#4ECB8D` under white is 2.05:1. One
+/// set of deeper tones serves both themes and keeps every message at 5.3:1 or
+/// better, which is what lets the colour alone carry the meaning.
+class _ToastColors {
+  const _ToastColors._();
+
+  static const success = Color(0xFF157A4D); // 5.35:1
+  static const error = Color(0xFFC62828); // 5.62:1
+  static const warning = Color(0xFFB45309); // 5.02:1 — burnt orange, not brown
+  static const info = Color(0xFF1E4FBD); // 7.22:1 — the palette's primaryDark
+}
+
 class _ToastView extends StatefulWidget {
   final String message;
   final ToastKind kind;
@@ -143,18 +158,11 @@ class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final accent = switch (widget.kind) {
-      ToastKind.success => colors.success,
-      ToastKind.error => colors.error,
-      ToastKind.warning => colors.warning,
-      ToastKind.info => colors.primary,
-    };
-    final icon = switch (widget.kind) {
-      ToastKind.success => Icons.check_circle_rounded,
-      ToastKind.error => Icons.error_rounded,
-      ToastKind.warning => Icons.warning_rounded,
-      ToastKind.info => Icons.info_rounded,
+    final fill = switch (widget.kind) {
+      ToastKind.success => _ToastColors.success,
+      ToastKind.error => _ToastColors.error,
+      ToastKind.warning => _ToastColors.warning,
+      ToastKind.info => _ToastColors.info,
     };
 
     return Positioned(
@@ -174,40 +182,28 @@ class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMi
               child: GestureDetector(
                 onTap: _dismiss,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
                   decoration: BoxDecoration(
-                    // The card stays on surface so the message keeps the same
-                    // contrast it would have anywhere else; the status colour
-                    // carries the meaning through the icon and the edge.
-                    color: colors.surface,
+                    color: fill,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: accent.withValues(alpha: 0.45)),
-                    boxShadow: colors.softShadow,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: Icon(icon, size: 18, color: accent),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          widget.message,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.35,
-                            fontWeight: FontWeight.w500,
-                            color: colors.textPrimary,
-                          ),
-                        ),
+                    boxShadow: [
+                      // Tinted rather than grey, so the card lifts off the page
+                      // without a border drawing a hard edge around it.
+                      BoxShadow(
+                        color: fill.withValues(alpha: 0.38),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
                       ),
                     ],
+                  ),
+                  child: Text(
+                    widget.message,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
