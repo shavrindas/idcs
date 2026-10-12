@@ -266,6 +266,14 @@ class AppTheme {
           fontWeight: FontWeight.w700,
         ),
       ),
+      // 머티리얼 기본값은 secondaryContainer 라서 앱의 파랑과 따로 놀았다.
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: p.primary,
+        foregroundColor: p.onPrimary,
+        elevation: 3,
+        extendedTextStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: p.primary,

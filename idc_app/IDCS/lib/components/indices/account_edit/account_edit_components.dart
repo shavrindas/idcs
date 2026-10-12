@@ -10,6 +10,7 @@ import 'package:idcs/l10n/l10n_context.dart';
 /// 지금 값이 무엇인지 읽기도 어려웠다. 평소엔 읽기 전용으로 두고
 /// 수정 버튼을 눌렀을 때만 입력칸이 열리도록 한다.
 class ProfileInfoBox extends StatefulWidget {
+  final String userId;
   final String name;
   final String phone;
 
@@ -21,6 +22,7 @@ class ProfileInfoBox extends StatefulWidget {
 
   const ProfileInfoBox({
     super.key,
+    required this.userId,
     required this.name,
     required this.phone,
     required this.loginMethod,
@@ -56,9 +58,61 @@ class _ProfileInfoBoxState extends State<ProfileInfoBox> {
 
   @override
   Widget build(BuildContext context) {
-    return _EditCard(
-      title: context.l10n.profileTitle,
-      child: _editing ? _buildEditing(context) : _buildReading(context),
+    final colors = context.colors;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: colors.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.person_rounded, color: colors.primary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.name.isEmpty ? context.l10n.noName : widget.name,
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: colors.textPrimary),
+                    ),
+                    Text(
+                      'ID ${widget.userId}',
+                      style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              // 수정은 이 카드가 보여주는 값을 바꾸는 동작이라 값 바로 옆에 둔다.
+              if (!_editing)
+                TextButton.icon(
+                  onPressed: _startEditing,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(context.l10n.actionEdit),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: colors.outline),
+          const SizedBox(height: 12),
+          _editing ? _buildEditing(context) : _buildReading(context),
+        ],
+      ),
     );
   }
 
@@ -71,12 +125,6 @@ class _ProfileInfoBoxState extends State<ProfileInfoBox> {
         // 이미 로그인한 사용자에게 '연동하기'를 권하는 대신, 지금 어떤 방식으로
         // 로그인하는지만 알려준다.
         _InfoRow(icon: Icons.login_rounded, label: context.l10n.loginMethod, value: widget.loginMethod),
-        const SizedBox(height: 14),
-        OutlinedButton.icon(
-          onPressed: _startEditing,
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          label: Text(context.l10n.actionEdit),
-        ),
       ],
     );
   }
@@ -247,47 +295,6 @@ class _PasswordChangeBoxState extends State<PasswordChangeBox> {
 }
 
 /// 계정 탈퇴 박스. 되돌릴 수 없는 동작이라 다른 카드와 분리해 경고색으로 표시한다.
-class WithdrawBox extends StatelessWidget {
-  final VoidCallback onWithdraw;
-
-  const WithdrawBox({super.key, required this.onWithdraw});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.error.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            context.l10n.withdrawTitle,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.error),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.withdrawNote,
-            style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: onWithdraw,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.colors.error,
-              side: BorderSide(color: context.colors.error.withValues(alpha: 0.5)),
-            ),
-            child: Text(context.l10n.withdrawTitle),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _EditCard extends StatelessWidget {
   final String title;
   final Widget child;

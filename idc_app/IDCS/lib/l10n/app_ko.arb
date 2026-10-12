@@ -561,5 +561,26 @@
   "panelInfoRoomId": "호실 ID",
   "panelInfoManagerId": "담당 관리자 ID",
   "panelInfoStatus": "운영 상태",
-  "panelStatusActive": "정상 작동 중 (ACTIVE)"
+  "panelStatusActive": "정상 작동 중 (ACTIVE)",
+  "chartShowAllPoints": "전체 보기 ({count})",
+  "@chartShowAllPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chartShowLess": "접기",
+  "pageOf": "{current} / {total}",
+  "@pageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "boardSearchClear": "검색어 지우기"
 }

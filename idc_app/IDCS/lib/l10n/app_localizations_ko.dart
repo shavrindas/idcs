@@ -957,4 +957,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get panelStatusActive => '정상 작동 중 (ACTIVE)';
+
+  @override
+  String chartShowAllPoints(int count) {
+    return '전체 보기 ($count)';
+  }
+
+  @override
+  String get chartShowLess => '접기';
+
+  @override
+  String pageOf(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get boardSearchClear => '검색어 지우기';
 }

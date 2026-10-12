@@ -970,4 +970,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get panelStatusActive => 'Running (ACTIVE)';
+
+  @override
+  String chartShowAllPoints(int count) {
+    return 'Show all ($count)';
+  }
+
+  @override
+  String get chartShowLess => 'Show less';
+
+  @override
+  String pageOf(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get boardSearchClear => 'Clear search';
 }

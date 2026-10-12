@@ -3,101 +3,95 @@
 // 명세: 통합/시설 게시판 공통 UI 컴포넌트 (검색, 필터, 리스트, 페이징)
 // ===============================================================
 import 'package:flutter/material.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/theme/app_theme.dart';
-import 'package:idcs/l10n/l10n_context.dart';
 
-/// Box #1: 보드 헤더 박스 (검색 및 필터)
-class BoardHeaderBox extends StatelessWidget {
-  final String title;
+/// 검색어와 검색 대상을 고르는 박스.
+///
+/// 드롭다운·입력창·버튼을 한 줄에 욱여넣으면 각 칸이 좁아져 무엇을 누르는지
+/// 알기 어렵다. 입력창이 한 줄을 다 쓰고, 대상은 그 아래 칩으로 편다 —
+/// 고를 수 있는 것이 한눈에 보이고 손가락도 편하다.
+class BoardSearchBox extends StatelessWidget {
   final TextEditingController searchController;
   final String selectedSearchType;
-  final ValueChanged<String?> onSearchTypeChanged;
+  final ValueChanged<String> onSearchTypeChanged;
   final VoidCallback onSearch;
-  final VoidCallback? onCreatePost;
 
-  const BoardHeaderBox({
+  const BoardSearchBox({
     super.key,
-    required this.title,
     required this.searchController,
     required this.selectedSearchType,
     required this.onSearchTypeChanged,
     required this.onSearch,
-    this.onCreatePost,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final types = <String, String>{
+      'all': context.l10n.boardSearchAll,
+      'title': context.l10n.boardTitle,
+      'creator': context.l10n.boardAuthor,
+      'content': context.l10n.boardBody,
+    };
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: context.colors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: context.colors.cardShadow,
+        boxShadow: colors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.textPrimary)),
-              if (onCreatePost != null)
-                ElevatedButton.icon(
-                  onPressed: onCreatePost,
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: Text(context.l10n.boardNewPost),
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
-                ),
-            ],
+          TextField(
+            controller: searchController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => onSearch(),
+            decoration: InputDecoration(
+              hintText: context.l10n.boardSearchHint,
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              // The keyboard's search key runs the query; a separate button
+              // beside the field only ate width.
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: searchController,
+                builder: (context, value, _) => value.text.isEmpty
+                    ? const SizedBox.shrink()
+                    : IconButton(
+                        tooltip: context.l10n.boardSearchClear,
+                        icon: const Icon(Icons.clear_rounded, size: 18),
+                        onPressed: () {
+                          searchController.clear();
+                          onSearch();
+                        },
+                      ),
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: context.colors.outline),
-                  borderRadius: BorderRadius.circular(14),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: types.entries.map((e) {
+              final selected = selectedSearchType == e.key;
+              return ChoiceChip(
+                showCheckmark: false,
+                label: Text(e.value),
+                selected: selected,
+                onSelected: (_) => onSearchTypeChanged(e.key),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? colors.onPrimary : colors.textPrimary,
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: selectedSearchType,
-                    icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
-                    isDense: true,
-                    items: [
-                      DropdownMenuItem(value: 'all', child: Text(context.l10n.boardSearchAll)),
-                      DropdownMenuItem(value: 'title', child: Text(context.l10n.boardTitle)),
-                      DropdownMenuItem(value: 'creator', child: Text(context.l10n.boardAuthor)),
-                      DropdownMenuItem(value: 'content', child: Text(context.l10n.boardBody)),
-                    ],
-                    onChanged: onSearchTypeChanged,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: searchController,
-                  onSubmitted: (_) => onSearch(),
-                  decoration: InputDecoration(
-                    hintText: context.l10n.boardSearchHint,
-                    isDense: true,
-                    prefixIcon: Icon(Icons.search_rounded, size: 20),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: onSearch,
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(64, 48)),
-                  child: Text(context.l10n.actionSearch),
-                ),
-              ),
-            ],
+                selectedColor: colors.primary,
+                backgroundColor: colors.background,
+                side: BorderSide(color: selected ? colors.primary : colors.outline),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -105,7 +99,11 @@ class BoardHeaderBox extends StatelessWidget {
   }
 }
 
-/// Box #2 & #3: 보드 리스트 및 페이징 박스
+/// 게시글 목록과 페이지 이동.
+///
+/// 예전에는 목록이 400px로 고정돼 있어, 글이 하나뿐이어도 빈 상자가 그만큼
+/// 남고 그 안에서 또 스크롤이 생겼다. 이제 내용만큼만 차지하고 스크롤은
+/// 페이지 하나만 갖는다.
 class BoardListAndPagingBox extends StatelessWidget {
   final List<PostModel> posts;
   final bool isLoading;
@@ -126,134 +124,192 @@ class BoardListAndPagingBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: context.colors.softShadow,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Box #2: 리스트 영역
-          SizedBox(
-            height: 400,
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : posts.isEmpty
-                ? Center(
-                    child: Text(context.l10n.boardEmpty, style: TextStyle(color: context.colors.textSecondary)),
-                  )
-                : ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              itemCount: posts.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.outline),
-              itemBuilder: (context, index) {
-                final post = posts[index];
-                return ListTile(
-                  title: Text(
-                    post.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.textPrimary),
-                  ),
-                  subtitle: Text(
-                    context.l10n.boardPostMeta(
-                      post.facilityName,
-                      // The model leaves this empty when the server had no author.
-                      post.creatorName.isEmpty ? context.l10n.noName : post.creatorName,
-                    ),
-                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-                  ),
-                  trailing: Icon(Icons.chevron_right_rounded, size: 20, color: context.colors.textSecondary),
-                  onTap: () => onPostTapped(post.postId),
-                );
-              },
-            ),
-          ),
-          Divider(height: 1, color: context.colors.outline),
+    final colors = context.colors;
 
-          // Box #3: 페이징 영역
-          _buildPagingControl(context),
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (posts.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: colors.cardShadow,
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.article_outlined, size: 28, color: colors.textSecondary.withValues(alpha: 0.6)),
+            const SizedBox(height: 8),
+            Text(context.l10n.boardEmpty, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: colors.cardShadow,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (var i = 0; i < posts.length; i++) ...[
+                if (i > 0) Divider(height: 1, indent: 16, endIndent: 16, color: colors.outline),
+                _PostRow(post: posts[i], onTap: () => onPostTapped(posts[i].postId)),
+              ],
+            ],
+          ),
+        ),
+        if (totalPages > 1) ...[
+          const SizedBox(height: 12),
+          _Paging(
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onPageChanged: onPageChanged,
+          ),
         ],
-      ),
+      ],
     );
   }
+}
 
-  Widget _buildPagingControl(BuildContext context) {
-    final int blockSize = 5;
-    final int currentBlock = ((currentPage - 1) ~/ blockSize);
-    final int startPage = currentBlock * blockSize + 1;
-    final int endPage = (startPage + blockSize - 1 > totalPages) ? totalPages : startPage + blockSize - 1;
-    final safeTotalPages = totalPages > 0 ? totalPages : 1;
+class _PostRow extends StatelessWidget {
+  final PostModel post;
+  final VoidCallback onTap;
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
+  const _PostRow({required this.post, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            IconButton(
-              tooltip: context.l10n.pageFirst,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(6),
-              icon: Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: context.colors.textSecondary),
-              onPressed: currentPage > 1 ? () => onPageChanged(1) : null,
-            ),
-            IconButton(
-              tooltip: context.l10n.pagePrev,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(6),
-              icon: Icon(Icons.chevron_left_rounded, size: 18, color: context.colors.textSecondary),
-              onPressed: startPage > 1 ? () => onPageChanged(startPage - 1) : null,
-            ),
-            const SizedBox(width: 4),
-
-            ...List.generate(endPage - startPage + 1, (index) {
-              final pageNum = startPage + index;
-              final bool isActive = currentPage == pageNum;
-              return InkWell(
-                onTap: () => onPageChanged(pageNum),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isActive ? context.colors.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '$pageNum',
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    post.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: isActive ? context.colors.onPrimary : context.colors.textPrimary,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                      fontSize: 13,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                      height: 1.3,
                     ),
                   ),
-                ),
-              );
-            }),
-
-            const SizedBox(width: 4),
-            IconButton(
-              tooltip: context.l10n.pageNext,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(6),
-              icon: Icon(Icons.chevron_right_rounded, size: 18, color: context.colors.textSecondary),
-              onPressed: endPage < safeTotalPages ? () => onPageChanged(endPage + 1) : null,
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      if (post.facilityName.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            post.facilityName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Flexible(
+                        child: Text(
+                          post.creatorName.isEmpty ? context.l10n.noName : post.creatorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            IconButton(
-              tooltip: context.l10n.pageLast,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(6),
-              icon: Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: context.colors.textSecondary),
-              onPressed: currentPage < safeTotalPages ? () => onPageChanged(safeTotalPages) : null,
-            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, size: 20, color: colors.textSecondary),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 페이지 이동.
+///
+/// 번호를 모두 늘어놓으면 손가락으로 집기엔 너무 작고, 페이지가 많아지면
+/// 가로로 넘쳐 또 스크롤이 생긴다. 지금 위치만 보여주고 앞뒤로 움직인다.
+class _Paging extends StatelessWidget {
+  final int currentPage;
+  final int totalPages;
+  final Function(int) onPageChanged;
+
+  const _Paging({
+    required this.currentPage,
+    required this.totalPages,
+    required this.onPageChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    Widget button(IconData icon, String tooltip, int? target) {
+      return IconButton(
+        tooltip: tooltip,
+        onPressed: target == null ? null : () => onPageChanged(target),
+        icon: Icon(icon, size: 20),
+        color: colors.textPrimary,
+        disabledColor: colors.textSecondary.withValues(alpha: 0.35),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        button(Icons.keyboard_double_arrow_left_rounded, context.l10n.pageFirst,
+            currentPage > 1 ? 1 : null),
+        button(Icons.chevron_left_rounded, context.l10n.pagePrev,
+            currentPage > 1 ? currentPage - 1 : null),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            context.l10n.pageOf(currentPage, totalPages),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+        ),
+        button(Icons.chevron_right_rounded, context.l10n.pageNext,
+            currentPage < totalPages ? currentPage + 1 : null),
+        button(Icons.keyboard_double_arrow_right_rounded, context.l10n.pageLast,
+            currentPage < totalPages ? totalPages : null),
+      ],
     );
   }
 }

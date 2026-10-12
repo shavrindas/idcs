@@ -94,12 +94,12 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 📌 3. 필수 전달 인자 누락 에러 수정 부분
-            BoardHeaderBox(
-              title: context.l10n.totalBoardSearch,
+            BoardSearchBox(
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
               onSearchTypeChanged: (val) {
-                if (val != null) setState(() => _selectedSearchType = val);
+                setState(() => _selectedSearchType = val);
+                _handleSearch();
               },
               onSearch: _handleSearch,
             ),

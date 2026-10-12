@@ -1849,6 +1849,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'정상 작동 중 (ACTIVE)'**
   String get panelStatusActive;
+
+  /// No description provided for @chartShowAllPoints.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 보기 ({count})'**
+  String chartShowAllPoints(int count);
+
+  /// No description provided for @chartShowLess.
+  ///
+  /// In ko, this message translates to:
+  /// **'접기'**
+  String get chartShowLess;
+
+  /// No description provided for @pageOf.
+  ///
+  /// In ko, this message translates to:
+  /// **'{current} / {total}'**
+  String pageOf(int current, int total);
+
+  /// No description provided for @boardSearchClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색어 지우기'**
+  String get boardSearchClear;
 }
 
 class _AppLocalizationsDelegate

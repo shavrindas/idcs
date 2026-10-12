@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
+import 'package:idcs/components/indices/settings/settings_sections.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/main.dart'; // AuthService 접근용
@@ -181,77 +182,21 @@ class _PersonalPageState extends State<PersonalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 계정 요약 + 로그아웃
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: context.colors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: context.colors.cardShadow,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: context.colors.primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(Icons.person_rounded, color: context.colors.primary, size: 22),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _name.isEmpty ? context.l10n.noName : _name,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: context.colors.textPrimary,
-                                ),
-                              ),
-                              Text(
-                                'ID ${widget.userId}',
-                                style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextButton(onPressed: _handleLogout, child: Text(context.l10n.actionLogout)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 앱 설정(화면 테마·알람)은 계정 정보와 성격이 달라 별도 화면으로 모았다.
-                  _LinkCard(
-                    title: context.l10n.settingsTitle,
-                    subtitle: context.l10n.profileSettingsSubtitle,
-                    icon: Icons.settings_outlined,
-                    onPressed: () => context.push('/settings'),
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (_isAdmin) ...[
-                    _LinkCard(
-                      title: context.l10n.profileTotalBoard,
-                      icon: Icons.assignment_outlined,
-                      onPressed: () => context.push('/total_board/${widget.userId}'),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
                   // 이름·전화번호·로그인 방식. 평소엔 읽기 전용, 수정 버튼으로 연다.
+                  // 계정 요약과 한 카드로 합쳤다 — 같은 내용을 두 군데 두면
+                  // 어느 쪽을 눌러야 바꿀 수 있는지 헷갈린다.
                   ProfileInfoBox(
+                    userId: widget.userId,
                     name: _name,
                     phone: _phone,
                     loginMethod: _loginMethodLabel(context),
                     onSave: _handleSaveProfile,
                   ),
+                  const SizedBox(height: 16),
+
+                  // 앱 설정은 예전엔 별도 화면이었다. 테마·언어를 바꾸려고 한 겹
+                  // 더 들어가야 해서 여기로 펼쳤다.
+                  const AppSettingsSections(),
                   const SizedBox(height: 16),
 
                   // 소셜로만 가입한 계정은 비밀번호 자체가 없으므로 숨긴다
@@ -265,7 +210,34 @@ class _PersonalPageState extends State<PersonalPage> {
                     const SizedBox(height: 16),
                   ],
 
-                  WithdrawBox(onWithdraw: _handleWithdraw),
+                  if (_isAdmin) ...[
+                    _LinkCard(
+                      title: context.l10n.profileTotalBoard,
+                      icon: Icons.assignment_outlined,
+                      onPressed: () => context.push('/total_board/${widget.userId}'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // 로그아웃은 자주 쓰는 동작이 아니라 맨 아래, 탈퇴는 그보다도
+                  // 더 아래에 조용히 둔다.
+                  OutlinedButton.icon(
+                    onPressed: _handleLogout,
+                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    label: Text(context.l10n.actionLogout),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: TextButton(
+                      onPressed: _handleWithdraw,
+                      style: TextButton.styleFrom(
+                        foregroundColor: context.colors.textSecondary,
+                        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                      child: Text(context.l10n.withdrawTitle),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -276,11 +248,10 @@ class _PersonalPageState extends State<PersonalPage> {
 /// 다른 화면으로 넘어가는 줄 카드 (설정, 관리자 전용 통합 소요 기록 등)
 class _LinkCard extends StatelessWidget {
   final String title;
-  final String? subtitle;
   final IconData icon;
   final VoidCallback onPressed;
 
-  const _LinkCard({required this.title, this.subtitle, required this.icon, required this.onPressed});
+  const _LinkCard({required this.title, required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -297,18 +268,9 @@ class _LinkCard extends StatelessWidget {
               Icon(icon, color: context.colors.primary, size: 20),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(subtitle!, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-                    ],
-                  ],
+                child: Text(
+                  title,
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary),
                 ),
               ),
               Icon(Icons.chevron_right_rounded, color: context.colors.textSecondary, size: 20),
