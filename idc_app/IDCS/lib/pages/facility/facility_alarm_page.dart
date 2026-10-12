@@ -27,7 +27,9 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
   // 💡 검색 필터 기준 상태 변수 추가 ('name' 또는 'room')
   String _searchTarget = 'name';
 
-  AlarmStatusFilter _statusFilter = AlarmStatusFilter.all;
+  // 목록을 열었을 때 궁금한 것은 '지금 뭔가 울리고 있나'다. 끝난 알람 100여 건
+  // 사이에서 그 답을 찾게 두지 않는다.
+  AlarmStatusFilter _statusFilter = AlarmStatusFilter.active;
   bool _grouped = true;
 
   @override
@@ -182,7 +184,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                 // 3. 필터링된 알람 데이터 전달
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: FacilityAlarmBox(alarms: displayAlarms, isSearching: _searchQuery.isNotEmpty),
+                  sliver: FacilityAlarmBox(
+                    alarms: displayAlarms,
+                    isSearching: _searchQuery.isNotEmpty,
+                    showingActiveOnly: _statusFilter == AlarmStatusFilter.active,
+                  ),
                 ),
               ],
             ),

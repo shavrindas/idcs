@@ -2,6 +2,7 @@
 // 명세: 알람 목록 행과 목록 가공(상태 필터·반복 묶음) — user_alarm/facility_alarm 두 화면에서 공유
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -58,6 +59,20 @@ bool isAlarmActive(dynamic alarm) {
   final endTime = DateTime.tryParse(alarm['end_time']?.toString() ?? '');
   if (endTime == null) return alarm['is_triggered'] == true;
   return endTime.isAfter(DateTime.now());
+}
+
+/// 알람 이름을 사람이 읽을 수 있는 형태로 바꾼다.
+///
+/// 서버는 "25.emergency_locked" 처럼 호실 ID 와 장비 필드명을 붙여서 내려준다.
+/// 앞의 숫자는 바로 아래 줄에 호실 이름으로 이미 적혀 있어 중복이고, 뒤쪽은
+/// 제어판에서 쓰는 것과 같은 키라서 DeviceLabels 가 그대로 번역할 수 있다.
+String alarmDisplayName(BuildContext context, dynamic rawName) {
+  final raw = rawName?.toString() ?? '';
+  if (raw.isEmpty) return context.l10n.alarmNameMissing;
+
+  final dot = raw.indexOf('.');
+  final key = dot == -1 ? raw : raw.substring(dot + 1);
+  return DeviceLabels.of(context, key);
 }
 
 /// 서버가 내려주는 ISO 시간 문자열을 목록에서 읽기 쉬운 형태로 바꾼다.

@@ -611,5 +611,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "alarmsNoneActive": "No alarms running right now"
 }

@@ -7,10 +7,15 @@ class FacilityAlarmBox extends StatelessWidget {
   final List<GroupedAlarm> alarms;
   final bool isSearching;
 
+  /// '진행중'만 보고 있는지. 비어 있을 때 '볼 알람이 없다'가 아니라
+  /// '지금 울리는 게 없다'고 안심시켜 주기 위해 필요하다.
+  final bool showingActiveOnly;
+
   const FacilityAlarmBox({
     super.key,
     required this.alarms,
     this.isSearching = false,
+    this.showingActiveOnly = false,
   });
 
   @override
@@ -19,7 +24,11 @@ class FacilityAlarmBox extends StatelessWidget {
       return SliverToBoxAdapter(
         child: EmptyListState(
           icon: Icons.notifications_off_outlined,
-          message: isSearching ? context.l10n.searchNoResults : context.l10n.alarmsNone,
+          message: isSearching
+              ? context.l10n.searchNoResults
+              : showingActiveOnly
+                  ? context.l10n.alarmsNoneActive
+                  : context.l10n.alarmsNone,
         ),
       );
     }
@@ -33,7 +42,7 @@ class FacilityAlarmBox extends StatelessWidget {
 
         return GroupedAlarmTile(
           group: group,
-          title: group.alarm['alarm_name'] ?? context.l10n.alarmNameMissing,
+          title: alarmDisplayName(context, group.alarm['alarm_name']),
           subtitle: group.alarm['room_name'] ?? context.l10n.roomNameMissing,
         );
       },

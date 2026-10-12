@@ -1921,6 +1921,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{minutes}분째 신호가 없습니다'**
   String panelNoSignal(int minutes);
+
+  /// No description provided for @alarmsNoneActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 진행 중인 알람이 없습니다'**
+  String get alarmsNoneActive;
 }
 
 class _AppLocalizationsDelegate
