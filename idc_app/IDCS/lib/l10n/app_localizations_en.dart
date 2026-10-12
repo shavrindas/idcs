@@ -986,4 +986,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get boardSearchClear => 'Clear search';
+
+  @override
+  String get panelCurrentTemp => 'Room temperature';
+
+  @override
+  String get panelSetpoint => 'Setpoint';
+
+  @override
+  String get unitCelsius => '°C';
+
+  @override
+  String get panelWaitingData => 'Waiting for data';
+
+  @override
+  String get panelUpdatedJustNow => 'Updated just now';
+
+  @override
+  String panelUpdatedSecondsAgo(int seconds) {
+    return 'Updated ${seconds}s ago';
+  }
+
+  @override
+  String panelUpdatedMinutesAgo(int minutes) {
+    return 'Updated $minutes min ago';
+  }
+
+  @override
+  String panelNoSignal(int minutes) {
+    return 'No signal for $minutes min';
+  }
 }

@@ -973,4 +973,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get boardSearchClear => '검색어 지우기';
+
+  @override
+  String get panelCurrentTemp => '고내온도';
+
+  @override
+  String get panelSetpoint => '설정값';
+
+  @override
+  String get unitCelsius => '°C';
+
+  @override
+  String get panelWaitingData => '데이터를 기다리는 중';
+
+  @override
+  String get panelUpdatedJustNow => '방금 업데이트';
+
+  @override
+  String panelUpdatedSecondsAgo(int seconds) {
+    return '$seconds초 전 업데이트';
+  }
+
+  @override
+  String panelUpdatedMinutesAgo(int minutes) {
+    return '$minutes분 전 업데이트';
+  }
+
+  @override
+  String panelNoSignal(int minutes) {
+    return '$minutes분째 신호가 없습니다';
+  }
 }

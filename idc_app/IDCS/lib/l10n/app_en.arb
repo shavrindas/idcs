@@ -582,5 +582,34 @@
       }
     }
   },
-  "boardSearchClear": "Clear search"
+  "boardSearchClear": "Clear search",
+  "panelCurrentTemp": "Room temperature",
+  "panelSetpoint": "Setpoint",
+  "unitCelsius": "°C",
+  "panelWaitingData": "Waiting for data",
+  "panelUpdatedJustNow": "Updated just now",
+  "panelUpdatedSecondsAgo": "Updated {seconds}s ago",
+  "@panelUpdatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "panelUpdatedMinutesAgo": "Updated {minutes} min ago",
+  "@panelUpdatedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "panelNoSignal": "No signal for {minutes} min",
+  "@panelNoSignal": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }
