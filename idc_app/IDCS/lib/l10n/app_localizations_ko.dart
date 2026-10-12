@@ -1003,4 +1003,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String panelNoSignal(int minutes) {
     return '$minutes분째 신호가 없습니다';
   }
+
+  @override
+  String get alarmsNoneActive => '지금 진행 중인 알람이 없습니다';
 }

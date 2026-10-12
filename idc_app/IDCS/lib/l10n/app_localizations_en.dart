@@ -1016,4 +1016,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String panelNoSignal(int minutes) {
     return 'No signal for $minutes min';
   }
+
+  @override
+  String get alarmsNoneActive => 'No alarms running right now';
 }

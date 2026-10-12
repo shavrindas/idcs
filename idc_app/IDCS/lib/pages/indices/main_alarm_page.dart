@@ -26,7 +26,9 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
   // 💡 검색 대상 상태 변수 ('name', 'room', 'facility')
   String _searchTarget = 'name';
 
-  AlarmStatusFilter _statusFilter = AlarmStatusFilter.all;
+  // 목록을 열었을 때 궁금한 것은 '지금 뭔가 울리고 있나'다. 끝난 알람 100여 건
+  // 사이에서 그 답을 찾게 두지 않는다.
+  AlarmStatusFilter _statusFilter = AlarmStatusFilter.active;
   bool _grouped = true;
 
   @override
@@ -208,6 +210,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                     alarms: displayAlarms,
                     onFacilityPressed: onPressed,
                     isSearching: _searchQuery.isNotEmpty,
+                    showingActiveOnly: _statusFilter == AlarmStatusFilter.active,
                   ),
                 ),
               ],

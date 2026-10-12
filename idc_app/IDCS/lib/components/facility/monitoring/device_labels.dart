@@ -44,7 +44,7 @@ class DeviceLabels {
     'emergency_defemg': ('역상방지이상', 'Phase reversal fault'),
     'emergency_lowsw': ('LOW 스위치', 'LOW switch'),
     'emergency_hottic': ('과열TIC', 'Overheat TIC'),
-    'emergency_emg': ('ARLAM', 'Alarm'),
+    'emergency_emg': ('ARLAM', 'Emergency'),
     'emergency_emgreset': ('RESET', 'RESET'),
 
     // 인버터 정보

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 차트 필터 박스 (해상도 및 조회 기간 설정)
@@ -662,7 +663,7 @@ class ChartCanvasBox extends StatelessWidget {
         if (ts == null) continue;
         final double x = ts.millisecondsSinceEpoch.toDouble();
         if (x < minX || x > maxX) continue;
-        final String name = a['alarm_name']?.toString() ?? context.l10n.alarmShort;
+        final String name = alarmDisplayName(context, a['alarm_name']);
         alarmLines.add(
           VerticalLine(
             x: x,
