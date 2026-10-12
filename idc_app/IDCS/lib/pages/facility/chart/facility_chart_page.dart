@@ -7,6 +7,7 @@ import 'package:idcs/services/chart/chart_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityChartPage extends StatefulWidget {
   final String userId;
@@ -76,7 +77,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.roomQueryFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.roomQueryFailed(describeApiError(context, e)));
         setState(() => _isLoading = false);
       }
     }
@@ -128,7 +129,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.groupLoadFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.groupLoadFailed(describeApiError(context, e)));
         setState(() => _isLoading = false);
       }
     }
@@ -202,7 +203,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.chartFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.chartFailed(describeApiError(context, e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

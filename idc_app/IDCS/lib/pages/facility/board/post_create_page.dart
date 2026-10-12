@@ -11,6 +11,7 @@ import 'package:idcs/components/cross_compontents/board/post_editor_components.d
 import 'package:idcs/services/board/board_api_service.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class PostCreatePage extends StatefulWidget {
   final String facilityId;
@@ -60,13 +61,13 @@ class _PostCreatePageState extends State<PostCreatePage> {
       _uploadedImageIds.add(uploaded.imageId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.imageAttachFailed(describeApiError(context, e)))));
+      AppToast.error(context, context.l10n.imageAttachFailed(describeApiError(context, e)));
     }
   }
 
   Future<void> _handleSubmit() async {
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postTitleRequired)));
+      AppToast.warning(context, context.l10n.postTitleRequired);
       return;
     }
 
@@ -82,12 +83,12 @@ class _PostCreatePageState extends State<PostCreatePage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postCreated)));
+        AppToast.success(context, context.l10n.postCreated);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postCreateFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.postCreateFailed(describeApiError(context, e)));
       }
     }
   }

@@ -4,6 +4,7 @@ import 'package:idcs/components/common/find_id/find_id_components.dart';
 import 'package:idcs/services/common/find_id/auth_api_service.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FindIdPage extends StatefulWidget {
   const FindIdPage({super.key});
@@ -28,9 +29,7 @@ class _FindIdPageState extends State<FindIdPage> {
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.findIdEmailRequired)),
-      );
+      AppToast.warning(context, context.l10n.findIdEmailRequired);
       return;
     }
 

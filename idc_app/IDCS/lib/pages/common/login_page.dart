@@ -14,6 +14,7 @@ import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/app_logo.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,9 +43,7 @@ class _LoginPageState extends State<LoginPage> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.loginMissingFields)),
-      );
+      AppToast.warning(context, context.l10n.loginMissingFields);
       return;
     }
 
@@ -62,18 +61,14 @@ class _LoginPageState extends State<LoginPage> {
       // [비동기 컨텍스트 방어 로직] 화면이 파괴되지 않았는지 확인
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      AppToast.success(context, result['message']);
 
       // 2. 메인 색인 페이지로 라우팅 (이제 리다이렉트에 걸리지 않고 정상 이동!)
       context.go('/index/$userId/home');
 
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeApiError(context, e))),
-      );
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -104,17 +99,13 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      AppToast.success(context, result['message']);
 
       context.go('/index/$userId/home');
 
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeApiError(context, e))),
-      );
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 

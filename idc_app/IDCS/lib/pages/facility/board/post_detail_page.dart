@@ -11,6 +11,7 @@ import 'package:idcs/services/board/board_api_service.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class PostDetailPage extends StatefulWidget {
   final int postId;
@@ -63,7 +64,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postLoadFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.postLoadFailed(describeApiError(context, e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -92,12 +93,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
     try {
       await BoardApiService.deletePost(postId: widget.postId, userId: widget.userId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postDeleted)));
+        AppToast.success(context, context.l10n.postDeleted);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.postDeleteFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.postDeleteFailed(describeApiError(context, e)));
       }
     }
   }
@@ -116,7 +117,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.commentFailed(describeApiError(context, e)));
       }
     }
   }
@@ -127,7 +128,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _fetchPostDetail();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.commentDeleteFailed(describeApiError(context, e)))));
+        AppToast.error(context, context.l10n.commentDeleteFailed(describeApiError(context, e)));
       }
     }
   }

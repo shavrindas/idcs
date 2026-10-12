@@ -6,6 +6,7 @@ import 'package:idcs/services/common/signup/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -43,9 +44,7 @@ class _SignupPageState extends State<SignupPage> {
     final phone = _phoneController.text.trim();
 
     if (email.isEmpty || password.isEmpty || name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.signupMissingFields)),
-      );
+      AppToast.warning(context, context.l10n.signupMissingFields);
       return;
     }
 
@@ -59,17 +58,13 @@ class _SignupPageState extends State<SignupPage> {
 
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      AppToast.success(context, result['message']);
       // 가입 성공 시 로그인 페이지로 이동
       context.go('/login');
     } catch (e) {
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeApiError(context, e))),
-      );
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -115,7 +110,7 @@ class _SignupPageState extends State<SignupPage> {
     } catch (e) {
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -123,9 +118,7 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _handleAppleFallbackSubmit() async {
     final email = _fallbackEmailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.signupEmailRequired)),
-      );
+      AppToast.warning(context, context.l10n.signupEmailRequired);
       return;
     }
 
@@ -154,12 +147,12 @@ class _SignupPageState extends State<SignupPage> {
 
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      AppToast.success(context, result['message']);
       context.go('/login');
     } catch (e) {
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
