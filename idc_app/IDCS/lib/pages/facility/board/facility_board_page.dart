@@ -87,20 +87,25 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.boardPageTitle)),
+      // 새 글은 목록 어디에 있든 닿을 수 있어야 해서 떠 있는 버튼으로 뺐다.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _handleCreatePost,
+        icon: const Icon(Icons.edit_outlined, size: 18),
+        label: Text(context.l10n.boardNewPost),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            BoardHeaderBox(
-              title: context.l10n.boardSearchTitle,
+            BoardSearchBox(
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
               onSearchTypeChanged: (val) {
-                if (val != null) setState(() => _selectedSearchType = val);
+                setState(() => _selectedSearchType = val);
+                _handleSearch();
               },
               onSearch: _handleSearch,
-              onCreatePost: _handleCreatePost,
             ),
             const SizedBox(height: 16),
             BoardListAndPagingBox(

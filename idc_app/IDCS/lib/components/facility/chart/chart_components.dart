@@ -143,7 +143,7 @@ class ChartFilterBox extends StatelessWidget {
 }
 
 /// Box #2: 데이터 포인트(시리즈) 선택 박스
-class ChartSeriesBox extends StatelessWidget {
+class ChartSeriesBox extends StatefulWidget {
   final List<Map<String, dynamic>> availableGroups; // 이제 개별 role이 아닌 Group 리스트를 받습니다.
   final int? selectedGroupId; // 라디오 버튼처럼 단일 선택으로 변경 (차트 하나당 한 그룹)
   final Function(int) onGroupSelected;
@@ -171,17 +171,28 @@ class ChartSeriesBox extends StatelessWidget {
     required this.onRoleToggled,
   });
 
+  @override
+  State<ChartSeriesBox> createState() => _ChartSeriesBoxState();
+}
+
+class _ChartSeriesBoxState extends State<ChartSeriesBox> {
+  /// 접었을 때 보여줄 칩 개수. 호실에 롤이 40개가 넘는 곳도 있어 전부 펴면
+  /// 차트가 화면 밖으로 밀려난다.
+  static const int _collapsedCount = 12;
+
+  bool _expanded = false;
+
   int? _roleId(dynamic role) => role['role_id'] is int ? role['role_id'] : int.tryParse(role['role_id'].toString());
 
   /// 체크박스로 보여줄 항목. 그룹 모드면 그룹에 묶인 것만, 직접 선택이면 전체.
   List<dynamic> get _shownRoles {
-    if (directMode) return roles;
+    if (widget.directMode) return widget.roles;
 
-    final group = availableGroups.where((g) => g['group_id'] == selectedGroupId).firstOrNull;
+    final group = widget.availableGroups.where((g) => g['group_id'] == widget.selectedGroupId).firstOrNull;
     if (group == null) return const [];
 
     final groupRoleIds = (group['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
-    return roles.where((r) => groupRoleIds.contains(_roleId(r))).toList();
+    return widget.roles.where((r) => groupRoleIds.contains(_roleId(r))).toList();
   }
 
   @override
@@ -193,7 +204,7 @@ class ChartSeriesBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (availableGroups.isEmpty && !directMode)
+          if (widget.availableGroups.isEmpty && !widget.directMode)
             Padding(
               padding: EdgeInsets.only(bottom: 8),
               child: Text(context.l10n.chartNoGroups, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
@@ -202,16 +213,16 @@ class ChartSeriesBox extends StatelessWidget {
             spacing: 8.0,
             runSpacing: 8.0,
             children: [
-              ...availableGroups.map((group) {
-                final isSelected = !directMode && selectedGroupId == group['group_id'];
+              ...widget.availableGroups.map((group) {
+                final isSelected = !widget.directMode && widget.selectedGroupId == group['group_id'];
                 return _chip(
                   context,
                   label: group['group_name'],
                   selected: isSelected,
-                  onSelected: () => onGroupSelected(group['group_id']),
+                  onSelected: () => widget.onGroupSelected(group['group_id']),
                 );
               }),
-              _chip(context, label: context.l10n.chartPickManually, selected: directMode, onSelected: onDirectModeSelected),
+              _chip(context, label: context.l10n.chartPickManually, selected: widget.directMode, onSelected: widget.onDirectModeSelected),
             ],
           ),
           if (shown.isNotEmpty) ...[
@@ -219,11 +230,11 @@ class ChartSeriesBox extends StatelessWidget {
             Divider(height: 1, color: context.colors.outline),
             const SizedBox(height: 10),
             Text(
-              directMode ? context.l10n.chartPickItems : context.l10n.chartGroupItems,
+              widget.directMode ? context.l10n.chartPickItems : context.l10n.chartGroupItems,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
             ),
             // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
-            if (visibleRoleIds.length > _readableSeriesLimit) ...[
+            if (widget.visibleRoleIds.length > _readableSeriesLimit) ...[
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -231,7 +242,7 @@ class ChartSeriesBox extends StatelessWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      context.l10n.chartTooManySeries(visibleRoleIds.length, _readableSeriesLimit),
+                      context.l10n.chartTooManySeries(widget.visibleRoleIds.length, _readableSeriesLimit),
                       style: TextStyle(fontSize: 12, color: context.colors.warning),
                     ),
                   ),
@@ -239,37 +250,60 @@ class ChartSeriesBox extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 8),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 168),
-              child: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: shown.map((role) {
-                    final id = _roleId(role);
-                    final checked = id != null && visibleRoleIds.contains(id);
-                    return FilterChip(
-                      label: Text(role['role_name']?.toString() ?? context.l10n.noName),
-                      selected: checked,
-                      onSelected: id == null ? null : (val) => onRoleToggled(id, val),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: checked ? context.colors.primary : context.colors.textSecondary,
-                      ),
-                      showCheckmark: false,
-                      selectedColor: context.colors.primary.withValues(alpha: 0.12),
-                      backgroundColor: context.colors.background,
-                      side: BorderSide(color: checked ? context.colors.primary : context.colors.outline),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-                    );
-                  }).toList(),
+            // 안쪽에 스크롤을 두면 이 영역 위에서 쓸어올릴 때 페이지 대신 칩이
+            // 움직여 화면이 멈춘 것처럼 느껴진다. 대신 일부만 보여주고
+            // 펼치기로 늘린다 — 스크롤은 페이지 하나만 갖는다.
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final role in (_expanded ? shown : shown.take(_collapsedCount)))
+                  _roleChip(context, role),
+              ],
+            ),
+            if (shown.length > _collapsedCount) ...[
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => setState(() => _expanded = !_expanded),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: const Size(0, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    _expanded
+                        ? context.l10n.chartShowLess
+                        : context.l10n.chartShowAllPoints(shown.length),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ],
       ),
+    );
+  }
+
+  Widget _roleChip(BuildContext context, dynamic role) {
+    final id = _roleId(role);
+    final checked = id != null && widget.visibleRoleIds.contains(id);
+    return FilterChip(
+      label: Text(role['role_name']?.toString() ?? context.l10n.noName),
+      selected: checked,
+      onSelected: id == null ? null : (val) => widget.onRoleToggled(id, val),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: checked ? context.colors.primary : context.colors.textSecondary,
+      ),
+      showCheckmark: false,
+      selectedColor: context.colors.primary.withValues(alpha: 0.12),
+      backgroundColor: context.colors.background,
+      side: BorderSide(color: checked ? context.colors.primary : context.colors.outline),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
     );
   }
 

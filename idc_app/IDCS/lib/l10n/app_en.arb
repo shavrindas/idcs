@@ -561,5 +561,26 @@
   "panelInfoRoomId": "Room ID",
   "panelInfoManagerId": "Manager ID",
   "panelInfoStatus": "Status",
-  "panelStatusActive": "Running (ACTIVE)"
+  "panelStatusActive": "Running (ACTIVE)",
+  "chartShowAllPoints": "Show all ({count})",
+  "@chartShowAllPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chartShowLess": "Show less",
+  "pageOf": "{current} / {total}",
+  "@pageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "boardSearchClear": "Clear search"
 }
