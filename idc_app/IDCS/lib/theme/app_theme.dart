@@ -75,7 +75,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
     // 밝은 파랑 위에는 어두운 글자라야 읽힌다 (7.12:1)
     onPrimary: Color(0xFF0F151C),
     background: Color(0xFF0F151C),
-    surface: Color(0xFF1B2531),
+    // 어두운 배경에서는 그림자가 거의 보이지 않으므로, 카드는 면을 한 단계
+    // 밝혀서 띄운다. 배경 대비 1.37:1 — 선을 두르지 않아도 가장자리가 보인다.
+    surface: Color(0xFF223040),
     outline: Color(0xFF36454F),
     outlineStrong: Color(0xFF6B7D8A),
     textPrimary: Color(0xFFE9EEF3),
@@ -87,7 +89,34 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   bool get isDark => background.computeLuminance() < 0.5;
 
-  /// 강조가 필요한 표면에만 제한적으로 사용 (리스트 행에는 사용하지 않음).
+  /// 일반 카드용 높이감. 선을 두르는 대신 이것으로 바닥에서 띄운다.
+  ///
+  /// 밝은 테마에서 카드(#FFFFFF)와 배경(#F5F8FA)의 차이는 1.07:1 뿐이라
+  /// 면 색만으로는 카드가 보이지 않는다 — 그림자가 그 역할을 한다.
+  /// 어두운 테마는 반대로 그림자가 묻히므로, surface 를 밝혀 둔 것이 주역이고
+  /// 여기서는 가장자리에 약간의 깊이만 더한다.
+  List<BoxShadow> get cardShadow => isDark
+      ? [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.32),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ]
+      : [
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ];
+
+  /// 특별히 더 띄워야 하는 표면에만 (모달, 떠 있는 패널 등).
   /// 어두운 배경에서는 그림자가 거의 보이지 않으므로 더 진하게 깐다.
   List<BoxShadow> get softShadow => [
         BoxShadow(

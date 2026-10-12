@@ -137,7 +137,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: context.colors.surface,
-                                border: Border.all(color: context.colors.outline),
+                                boxShadow: context.colors.cardShadow,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: DropdownButtonHideUnderline(

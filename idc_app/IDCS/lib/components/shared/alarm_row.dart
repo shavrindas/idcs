@@ -98,94 +98,94 @@ class AlarmRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color accent = isActive ? context.colors.error : context.colors.textSecondary.withValues(alpha: 0.4);
 
-    return Material(
-      color: context.colors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: context.colors.cardShadow),
+      child: Material(
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.colors.outline),
-          ),
-          // 좌측 색상 바는 Stack으로 높이를 맞춘다. IntrinsicHeight를 쓰면 텍스트 높이
-          // 반올림 때문에 1px 오버플로가 생긴다.
-          child: Stack(
-            children: [
-              Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
-              Padding(
-                padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  title,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: context.colors.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (count > 1) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: accent.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
+            // 좌측 색상 바는 Stack으로 높이를 맞춘다. IntrinsicHeight를 쓰면 텍스트 높이
+            // 반올림 때문에 1px 오버플로가 생긴다.
+            child: Stack(
+              children: [
+                Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
                                   child: Text(
-                                    '×$count',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.colors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                if (count > 1) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: accent.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '×$count',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            subtitle,
-                            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          isActive ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle,
+                              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        if (timestamp.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(timestamp, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-                        ],
-                      ],
-                    ),
-                    if (isExpandable)
-                      Icon(
-                        isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                        size: 20,
-                        color: context.colors.textSecondary,
                       ),
-                  ],
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            isActive ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                          ),
+                          if (timestamp.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(timestamp, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                          ],
+                        ],
+                      ),
+                      if (isExpandable)
+                        Icon(
+                          isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                          size: 20,
+                          color: context.colors.textSecondary,
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -371,7 +371,7 @@ class EmptyListState extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.outline),
+        boxShadow: context.colors.cardShadow,
       ),
       child: Column(
         children: [

@@ -27,16 +27,12 @@ class FacilitySummary {
 class FacilitySummaryList extends StatelessWidget {
   final List<FacilitySummary> facilities;
   final Function(int) onFacilityPressed;
+
   /// Null falls back to the translated default at build time — a default
   /// parameter value cannot read the locale.
   final String? emptyMessage;
 
-  const FacilitySummaryList({
-    super.key,
-    required this.facilities,
-    required this.onFacilityPressed,
-    this.emptyMessage,
-  });
+  const FacilitySummaryList({super.key, required this.facilities, required this.onFacilityPressed, this.emptyMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +44,7 @@ class FacilitySummaryList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final facility in facilities) ...[
-          _FacilityCard(
-            facility: facility,
-            onTap: () => onFacilityPressed(facility.id),
-          ),
+          _FacilityCard(facility: facility, onTap: () => onFacilityPressed(facility.id)),
           const SizedBox(height: 10),
         ],
       ],
@@ -70,54 +63,52 @@ class _FacilityCard extends StatelessWidget {
     final colors = context.colors;
     final hasAlarm = facility.activeAlarmCount > 0;
 
-    return Material(
-      color: colors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
+    // The shadow sits outside the Material so it is not clipped by it.
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: colors.cardShadow),
+      child: Material(
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: hasAlarm ? colors.error : colors.outline),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      // Empty means the server had no name for it.
-                      facility.name.isEmpty ? context.l10n.facilityUnnamed : facility.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              // Only an alarm draws an outline; otherwise the lift is enough.
+              border: hasAlarm ? Border.all(color: colors.error) : null,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        // Empty means the server had no name for it.
+                        facility.name.isEmpty ? context.l10n.facilityUnnamed : facility.name,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        if (facility.roomCount != null) ...[
-                          Text(
-                            context.l10n.roomCount(facility.roomCount!),
-                            style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                          ),
-                          Text(
-                            '  ·  ',
-                            style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                          ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (facility.roomCount != null) ...[
+                            Text(
+                              context.l10n.roomCount(facility.roomCount!),
+                              style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                            ),
+                            Text('  ·  ', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                          ],
+                          _StatusText(count: facility.activeAlarmCount),
                         ],
-                        _StatusText(count: facility.activeAlarmCount),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right, color: colors.textSecondary),
-            ],
+                Icon(Icons.chevron_right, color: colors.textSecondary),
+              ],
+            ),
           ),
         ),
       ),
@@ -147,10 +138,7 @@ class _StatusText extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: hasAlarm ? colors.error : colors.success,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: hasAlarm ? colors.error : colors.success, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
         Text(
@@ -182,12 +170,11 @@ class _EmptyBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.outline),
+        boxShadow: colors.cardShadow,
       ),
       child: Column(
         children: [
-          Icon(Icons.domain_disabled_outlined,
-              color: colors.textSecondary.withValues(alpha: 0.6), size: 28),
+          Icon(Icons.domain_disabled_outlined, color: colors.textSecondary.withValues(alpha: 0.6), size: 28),
           const SizedBox(height: 8),
           Text(message, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
         ],
@@ -234,33 +221,32 @@ class RoomGrid extends StatelessWidget {
         final count = activeAlarmCounts[room['id']] ?? 0;
         final hasAlarm = count > 0;
 
-        return Material(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
+        return DecoratedBox(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: colors.cardShadow),
+          child: Material(
+            color: colors.surface,
             borderRadius: BorderRadius.circular(14),
-            onTap: () => onRoomPressed(room['id']),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: hasAlarm ? colors.error : colors.outline),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    room['name'] ?? '',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                      fontSize: 14,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => onRoomPressed(room['id']),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: hasAlarm ? Border.all(color: colors.error) : null,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      room['name'] ?? '',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: colors.textPrimary, fontSize: 14),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  _StatusText(count: count, label: context.l10n.alarmShort),
-                ],
+                    const SizedBox(height: 4),
+                    _StatusText(count: count, label: context.l10n.alarmShort),
+                  ],
+                ),
               ),
             ),
           ),
@@ -297,7 +283,11 @@ class IntegratedFacilityBox extends StatelessWidget {
           Text(
             label!,
             style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.4),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textSecondary,
+              letterSpacing: 0.4,
+            ),
           ),
           const SizedBox(height: 10),
         ],
@@ -318,24 +308,29 @@ class IntegratedFacilityBox extends StatelessWidget {
             itemBuilder: (context, index) {
               final fac = facilities[index];
 
-              return Material(
-                color: context.colors.surface,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
+              return DecoratedBox(
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  onTap: () => onFacilityPressed(fac['id']),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: context.colors.outline),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Center(
-                      child: Text(
-                        fac['name'],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, color: context.colors.textPrimary, fontSize: 13),
+                  boxShadow: context.colors.cardShadow,
+                ),
+                child: Material(
+                  color: context.colors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => onFacilityPressed(fac['id']),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Center(
+                        child: Text(
+                          fac['name'],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: context.colors.textPrimary,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     ),
                   ),
