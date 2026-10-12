@@ -541,5 +541,25 @@
   "channelVibeOnly": "Alarms (vibration only)",
   "channelVibeOnlyDesc": "Alarms that vibrate without ringing",
   "channelSilent": "Alarms (silent)",
-  "channelSilentDesc": "Alarms shown without sound or vibration"
+  "channelSilentDesc": "Alarms shown without sound or vibration",
+  "panelPageTitle": "Live control panel — facility {id}",
+  "@panelPageTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "panelCardInfo": "Facility info",
+  "panelCardTemp": "Temperature",
+  "panelCardDefrost": "Defrost",
+  "panelCardFaults": "Faults",
+  "panelCardInverter": "Inverter",
+  "panelCardEquipment": "Equipment",
+  "panelCardControl": "Control",
+  "panelInfoFacilityId": "Facility ID",
+  "panelInfoRoomId": "Room ID",
+  "panelInfoManagerId": "Manager ID",
+  "panelInfoStatus": "Status",
+  "panelStatusActive": "Running (ACTIVE)"
 }

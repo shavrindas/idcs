@@ -1771,6 +1771,84 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'소리와 진동 없이 표시만 하는 알람'**
   String get channelSilentDesc;
+
+  /// No description provided for @panelPageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 ID: {id} 실시간 제어판'**
+  String panelPageTitle(String id);
+
+  /// No description provided for @panelCardInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 기본 정보'**
+  String get panelCardInfo;
+
+  /// No description provided for @panelCardTemp.
+  ///
+  /// In ko, this message translates to:
+  /// **'실제 온도'**
+  String get panelCardTemp;
+
+  /// No description provided for @panelCardDefrost.
+  ///
+  /// In ko, this message translates to:
+  /// **'제상 정보'**
+  String get panelCardDefrost;
+
+  /// No description provided for @panelCardFaults.
+  ///
+  /// In ko, this message translates to:
+  /// **'이상 정보'**
+  String get panelCardFaults;
+
+  /// No description provided for @panelCardInverter.
+  ///
+  /// In ko, this message translates to:
+  /// **'인버터 정보'**
+  String get panelCardInverter;
+
+  /// No description provided for @panelCardEquipment.
+  ///
+  /// In ko, this message translates to:
+  /// **'장비 정보'**
+  String get panelCardEquipment;
+
+  /// No description provided for @panelCardControl.
+  ///
+  /// In ko, this message translates to:
+  /// **'제어 정보'**
+  String get panelCardControl;
+
+  /// No description provided for @panelInfoFacilityId.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 ID'**
+  String get panelInfoFacilityId;
+
+  /// No description provided for @panelInfoRoomId.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 ID'**
+  String get panelInfoRoomId;
+
+  /// No description provided for @panelInfoManagerId.
+  ///
+  /// In ko, this message translates to:
+  /// **'담당 관리자 ID'**
+  String get panelInfoManagerId;
+
+  /// No description provided for @panelInfoStatus.
+  ///
+  /// In ko, this message translates to:
+  /// **'운영 상태'**
+  String get panelInfoStatus;
+
+  /// No description provided for @panelStatusActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'정상 작동 중 (ACTIVE)'**
+  String get panelStatusActive;
 }
 
 class _AppLocalizationsDelegate

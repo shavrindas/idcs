@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/panel_background.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;
@@ -24,85 +25,29 @@ class _MonitoringPageState extends State<MonitoringPage> {
   StreamSubscription<String>? _wsSubscription; // 스트림 구독 해제를 위한 객체
 
   // 평평한 1층 딕셔너리 데이터 구조
-  late Map<String, String> infoData;
-  Map<String, String> realtempData = {'H_COMP': 'NA', '고내온도_#1': 'NA', '설정값_#1': 'NA', '편차값_#1': 'NA', 'ZERO_#1': 'NA'};
-  Map<String, String> deforestData = {'제상용 전자변': 'NA', '제상타임_#1': 'NA', '싸이클_#1': 'NA', '시스템분_#1': 'NA', '시스템시간_#1': 'NA'};
-  Map<String, String> emergencyData = {'CINT': 'NA', 'HIGH': 'NA', 'UF/OCR': 'NA', '감금알람': 'NA', '토출온도이상': 'NA', '가스부족': 'NA', '온도센서이상': 'NA', '역상방지이상': 'NA', 'LOW 스위치': 'NA', '과열TIC': 'NA', 'ARLAM': 'NA', 'RESET': 'NA'};
-  Map<String, String> inverterData = {'인버터 에러': 'NA', 'Hz_#1': 'NA', 'KW_#1': 'NA', '출력전압_#1': 'NA', '출력전류_#1': 'NA', '출력주파수_#1': 'NA'};
-  Map<String, String> equipmentData = {'토출온도_#1': 'NA', '고압_#1': 'NA', '저압_#1': 'NA'};
-  Map<String, String> controlData = {'운전SW': 'NA', '룸온도스위치': 'NA', '방열기 팬 #1': 'NA', '방열기 팬 #2': 'NA', '액 전자변': 'NA', '전자변': 'NA', '쿨러 팬': 'NA', '아날로그TC': 'NA', '쿨러 팬 자동여부': 'NA', '히터정지': 'NA', '초기지연': 'NA', '콤프지연': 'NA', '쿨러지연': 'NA', '수동제상': 'NA', '컴퓨터 S/W': 'NA', '운전시간_#1': 'NA', '운전시간만_#1': 'NA', '초기지연_#1': 'NA', 'H_콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA'};
-  static const Map<String, String> deviceKeyMap = {
-    'control_runsw': '운전SW',
-    'emergency_cint': 'CINT',
-    'emergency_high': 'HIGH',
-    'emergency_uf_ocr': 'UF/OCR',
-    'emergency_locked': '감금알람',
-    'emergency_outtemp': '토출온도이상',
-    'emergency_gas': '가스부족',
-    'emergency_tempsensor': '온도센서이상',
-    'emergency_defemg': '역상방지이상',
-    'emergency_lowsw': 'LOW 스위치',
-    'emergency_hottic': '과열TIC',
-    'control_roomtemp': '룸온도스위치',
-    'temp_comp': 'H_COMP',
-    'control_cffan1': '방열기 팬 #1',
-    'control_cffan2': '방열기 팬 #2',
-    'control_lsv': '액 전자변',
-    'control_ingsv': '전자변',
-    'control_uffan': '쿨러 팬',
-    'deforest_def': '제상용 전자변',
-    'emergency_emg': 'ARLAM',
-    'control_tica': '아날로그TC',
-    'control_efa': '쿨러 팬 자동여부',
-    'control_heatdelflag': '히터정지',
-    'control_initdelflag': '초기지연',
-    'control_compdelflag': '콤프지연',
-    'control_coolerdelflag': '쿨러지연',
-    'control_mdf': '수동제상',
-    'control_sw': '컴퓨터 S/W',
-    'emergency_emgreset': 'RESET',
-    'inverter_error': '인버터 에러',
-    'equipment_temp1': '토출온도_#1',
-    'temp_pv': '고내온도_#1',
-    'temp_sv': '설정값_#1',
-    'temp_hey': '편차값_#1',
-    'temp_zero': 'ZERO_#1',
-    'equipment_press1': '고압_#1',
-    'equipment_press2': '저압_#1',
-    'control_runtimelow': '운전시간_#1',
-    'control_runtimehigh': '운전시간만_#1',
-    'deforest_dfcm': '제상타임_#1',
-    'deforest_dfct': '싸이클_#1',
-    'deforest_sysm': '시스템분_#1',
-    'deforest_syst': '시스템시간_#1',
-    'control_initdelst': '초기지연_#1',
-    'control_compdelst': 'H_콤프지연_#1',
-    'control_cooldelst': '쿨러지연타임_#1',
-    'control_defdelst': 'DF 지연_#1',
-    'control_initdeltm': '초기지연_#1',
-    'control_compdeltm': '콤프지연_#1',
-    'control_cooldeltm': '쿨러지연타임_#1',
-    'control_defdeltm': 'DF 지연_#1',
-    'inverter_hz': 'Hz_#1',
-    'inverter_kw': 'KW_#1',
-    'inverter_outv': '출력전압_#1',
-    'inverter_outa': '출력전류_#1',
-    'inverter_outhz': '출력주파수_#1',
-  };
-  static final Map<String, String> reverseDeviceKeyMap = Map.fromEntries(
-    deviceKeyMap.entries.map((entry) => MapEntry(entry.value, entry.key)),
-  );
+  Map<String, String> realtempData = {'temp_comp': 'NA', 'temp_pv': 'NA', 'temp_sv': 'NA', 'temp_hey': 'NA', 'temp_zero': 'NA'};
+  Map<String, String> deforestData = {'deforest_def': 'NA', 'deforest_dfcm': 'NA', 'deforest_dfct': 'NA', 'deforest_sysm': 'NA', 'deforest_syst': 'NA'};
+  Map<String, String> emergencyData = {'emergency_cint': 'NA', 'emergency_high': 'NA', 'emergency_uf_ocr': 'NA', 'emergency_locked': 'NA', 'emergency_outtemp': 'NA', 'emergency_gas': 'NA', 'emergency_tempsensor': 'NA', 'emergency_defemg': 'NA', 'emergency_lowsw': 'NA', 'emergency_hottic': 'NA', 'emergency_emg': 'NA', 'emergency_emgreset': 'NA'};
+  Map<String, String> inverterData = {'inverter_error': 'NA', 'inverter_hz': 'NA', 'inverter_kw': 'NA', 'inverter_outv': 'NA', 'inverter_outa': 'NA', 'inverter_outhz': 'NA'};
+  Map<String, String> equipmentData = {'equipment_temp1': 'NA', 'equipment_press1': 'NA', 'equipment_press2': 'NA'};
+  Map<String, String> controlData = {'control_runsw': 'NA', 'control_roomtemp': 'NA', 'control_cffan1': 'NA', 'control_cffan2': 'NA', 'control_lsv': 'NA', 'control_ingsv': 'NA', 'control_uffan': 'NA', 'control_tica': 'NA', 'control_efa': 'NA', 'control_heatdelflag': 'NA', 'control_initdelflag': 'NA', 'control_compdelflag': 'NA', 'control_coolerdelflag': 'NA', 'control_mdf': 'NA', 'control_sw': 'NA', 'control_runtimelow': 'NA', 'control_runtimehigh': 'NA', 'control_initdeltm': 'NA', 'control_compdelst': 'NA', 'control_cooldeltm': 'NA', 'control_defdeltm': 'NA'};
+  /// 그룹 맵은 모두 서버가 보내는 필드 이름을 키로 쓴다. 화면에 보여줄 이름은
+  /// DeviceLabels 가 그릴 때 붙이므로, 라벨을 바꿔도 데이터 경로는 그대로다.
+  ///
+  /// 예전에는 한국어 라벨이 키였는데, 서로 다른 필드가 같은 라벨을 쓰는 경우가
+  /// 있어(초기지연_#1 등) 역방향 조회에서 한쪽이 덮여 사라졌다.
+  Map<String, String> _groupFor(String key) {
+    if (realtempData.containsKey(key)) return realtempData;
+    if (deforestData.containsKey(key)) return deforestData;
+    if (emergencyData.containsKey(key)) return emergencyData;
+    if (inverterData.containsKey(key)) return inverterData;
+    if (equipmentData.containsKey(key)) return equipmentData;
+    return controlData;
+  }
 
   @override
   void initState() {
     super.initState();
-    infoData = {
-      '시설 ID': widget.facilityId,
-      '호실 ID': widget.roomId,
-      '담당 관리자 ID': widget.userId,
-      '운영 상태': '정상 작동 중 (ACTIVE)',
-    };
-
     // 💡 [핵심] 페이지 진입 시 웹소켓 서비스 연결 및 스트림 구독 시작
     _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/get/${widget.facilityId}');
 
@@ -120,29 +65,15 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
       setState(() {
         for (var entry in parsedSJson.entries) {
-          // 방법 1 적용 예시 (키 조립)
+          // 키는 "호실.필드" 형태로 온다 (예: "23.temp_pv")
           final List<String> parts = entry.key.split('.');
 
-          if(int.parse(widget.roomId) != int.parse(parts[0]))
-            continue;
+          if (int.parse(widget.roomId) != int.parse(parts[0])) continue;
 
-          final String? appKey = deviceKeyMap[parts[1]];
-
-          if (appKey != null) {
-            final String newValue = entry.value.toString();
-            if (realtempData.containsKey(appKey)) {
-              realtempData[appKey] = newValue;
-            } else if(deforestData.containsKey(appKey)) {
-              deforestData[appKey] = newValue;
-            } else if(emergencyData.containsKey(appKey)) {
-              emergencyData[appKey] = newValue;
-            } else if(inverterData.containsKey(appKey)) {
-              inverterData[appKey] = newValue;
-            } else if(equipmentData.containsKey(appKey)) {
-              equipmentData[appKey] = newValue;
-            } else if(controlData.containsKey(appKey)) {
-              controlData[appKey] = newValue;
-            }
+          final String key = parts[1];
+          final group = _groupFor(key);
+          if (group.containsKey(key)) {
+            group[key] = entry.value.toString();
           }
         }
       });
@@ -159,16 +90,11 @@ class _MonitoringPageState extends State<MonitoringPage> {
     super.dispose();
   }
 
-  void remoteClickEvent(String label, String input) {// 1. 한글 라벨을 원본 장비 키(예: 'control_runsw')로 변환
-    final String? rawKey = reverseDeviceKeyMap[label];
-
-    if (rawKey == null) {
-      print('매핑할 수 없는 키입니다: $label');
-      return;
-    }
-
+  /// 제어판에서 값을 보낼 때. 행이 들고 있는 키가 이미 서버 필드 이름이라
+  /// 따로 변환할 것이 없다.
+  void remoteClickEvent(String key, String input) {
     // 2. 서버 형식에 맞게 req_id 생성 (예: "1.control_runsw")
-    final String reqId = '${widget.roomId}.$rawKey';
+    final String reqId = '${widget.roomId}.$key';
 
     Map<String, String> temp = {
       'type': "WR",
@@ -187,7 +113,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
       valueListenable: MonitoringViewController.settings,
       builder: (context, view, _) => Scaffold(
         appBar: AppBar(
-          title: Text('시설 ID: ${widget.facilityId} 실시간 제어판'),
+          title: Text(context.l10n.panelPageTitle(widget.facilityId)),
           centerTitle: true,
         ),
         // 배경이 패널 사이로 비쳐 보이도록 Scaffold는 비워 두고 Stack 맨 아래에 깐다.
@@ -200,13 +126,23 @@ class _MonitoringPageState extends State<MonitoringPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  MonitoringCard(title: '시설 기본 정보', fields: infoData, view: view),
-                  MonitoringCard(title: '실제 온도', fields: realtempData, view: view, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: '제상 정보', fields: deforestData, view: view, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: '이상 정보', fields: emergencyData, view: view, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: '인버터 정보', fields: inverterData, view: view, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: '장비 정보', fields: equipmentData, view: view, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: '제어 정보', fields: controlData, view: view, OnConfirm: remoteClickEvent),
+                  // 이 카드만 장비 데이터가 아니라서 라벨을 그대로 쓴다.
+                  MonitoringCard(
+                    title: context.l10n.panelCardInfo,
+                    fields: {
+                      context.l10n.panelInfoFacilityId: widget.facilityId,
+                      context.l10n.panelInfoRoomId: widget.roomId,
+                      context.l10n.panelInfoManagerId: widget.userId,
+                      context.l10n.panelInfoStatus: context.l10n.panelStatusActive,
+                    },
+                    view: view,
+                  ),
+                  MonitoringCard(title: context.l10n.panelCardTemp, fields: realtempData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: context.l10n.panelCardDefrost, fields: deforestData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: context.l10n.panelCardFaults, fields: emergencyData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: context.l10n.panelCardInverter, fields: inverterData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: context.l10n.panelCardEquipment, fields: equipmentData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: context.l10n.panelCardControl, fields: controlData, view: view, deviceKeys: true, OnConfirm: remoteClickEvent),
                 ],
               ),
             ),

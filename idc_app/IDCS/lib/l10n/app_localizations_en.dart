@@ -929,4 +929,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channelSilentDesc => 'Alarms shown without sound or vibration';
+
+  @override
+  String panelPageTitle(String id) {
+    return 'Live control panel — facility $id';
+  }
+
+  @override
+  String get panelCardInfo => 'Facility info';
+
+  @override
+  String get panelCardTemp => 'Temperature';
+
+  @override
+  String get panelCardDefrost => 'Defrost';
+
+  @override
+  String get panelCardFaults => 'Faults';
+
+  @override
+  String get panelCardInverter => 'Inverter';
+
+  @override
+  String get panelCardEquipment => 'Equipment';
+
+  @override
+  String get panelCardControl => 'Control';
+
+  @override
+  String get panelInfoFacilityId => 'Facility ID';
+
+  @override
+  String get panelInfoRoomId => 'Room ID';
+
+  @override
+  String get panelInfoManagerId => 'Manager ID';
+
+  @override
+  String get panelInfoStatus => 'Status';
+
+  @override
+  String get panelStatusActive => 'Running (ACTIVE)';
 }
