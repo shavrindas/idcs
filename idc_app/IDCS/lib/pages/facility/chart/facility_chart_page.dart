@@ -115,7 +115,12 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             _selectedGroupId = null;
           }
 
-          _visibleRoleIds = _directMode ? _allRoleIds() : _roleIdsOfGroup(_selectedGroupId);
+          // 직접 선택 모드였다면 보고 있던 항목을 그대로 둔다 — 호실이 바뀌어
+          // 없어진 롤만 떨어진다. 그룹 모드면 그룹의 항목을 읽을 수 있는
+          // 개수까지만 켠다.
+          _visibleRoleIds = _directMode
+              ? _visibleRoleIds.intersection(_allRoleIds())
+              : _cappedAuto(_roleIdsOfGroup(_selectedGroupId));
         });
 
         if (_visibleRoleIds.isNotEmpty) {
@@ -140,6 +145,60 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       .whereType<int>()
       .toSet();
 
+  /// 자동 선택에서 먼저 집을 항목.
+  ///
+  /// 차트를 여는 이유는 대부분 "온도가 어땠나" 하나다. 등록 순서대로 앞에서
+  /// 자르면 이름순으로 앞에 오는 제어 플래그(control_cffan1 …)만 켜져, 정작
+  /// 보려던 고내온도가 빠진 차트가 열린다.
+  static const List<String> _autoPriority = [
+    'temp_pv',
+    'temp_sv',
+    'temp_hey',
+    'equipment_temp1',
+    'equipment_press1',
+    'equipment_press2',
+    'inverter_hz',
+    'inverter_kw',
+  ];
+
+  /// 자동으로 켤 항목을 읽을 수 있는 개수까지만 줄인다.
+  ///
+  /// 웹 어드민에서 만든 그룹에는 호실의 롤이 50개 넘게 묶여 있는 경우가 있다.
+  /// 그대로 그리면 차트가 실오라기 뭉치가 되어 아무것도 읽히지 않는다.
+  /// 위 우선순위를 먼저 채우고, 모자라면 호실의 롤 순서(= 등록 순서)로 메운다
+  /// — Set 의 순서에 기대면 같은 그룹을 다시 열 때마다 다른 선이 뜰 수 있다.
+  Set<int> _cappedAuto(Set<int> ids) {
+    if (ids.length <= readableSeriesLimit) return ids;
+
+    final candidates = _roles.where((r) {
+      final id = r['role_id'] is int ? r['role_id'] as int : int.tryParse(r['role_id'].toString());
+      return id != null && ids.contains(id);
+    }).toList();
+
+    // 롤 목록을 못 받은 경우에도 개수는 지킨다.
+    if (candidates.isEmpty) return ids.take(readableSeriesLimit).toSet();
+
+    int rank(dynamic role) {
+      final index = _autoPriority.indexOf(role['role_name']?.toString() ?? '');
+      return index == -1 ? _autoPriority.length : index;
+    }
+
+    // 같은 순위끼리는 원래 순서를 지켜야 하므로 안정 정렬이 필요하다. Dart 의
+    // List.sort 는 안정성을 보장하지 않아, 원래 위치를 2차 기준으로 넣는다.
+    final indexed = [for (var i = 0; i < candidates.length; i++) (i, candidates[i])];
+    indexed.sort((a, b) {
+      final byRank = rank(a.$2).compareTo(rank(b.$2));
+      return byRank != 0 ? byRank : a.$1.compareTo(b.$1);
+    });
+
+    return indexed
+        .take(readableSeriesLimit)
+        .map((e) => e.$2['role_id'] is int
+            ? e.$2['role_id'] as int
+            : int.parse(e.$2['role_id'].toString()))
+        .toSet();
+  }
+
   Set<int> _roleIdsOfGroup(int? groupId) {
     final group = _availableGroups.where((g) => g['group_id'] == groupId).firstOrNull;
     return (group?['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
@@ -149,7 +208,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
     setState(() {
       _directMode = false;
       _selectedGroupId = groupId;
-      _visibleRoleIds = _roleIdsOfGroup(groupId);
+      _visibleRoleIds = _cappedAuto(_roleIdsOfGroup(groupId));
     });
     _fetchChartData();
   }

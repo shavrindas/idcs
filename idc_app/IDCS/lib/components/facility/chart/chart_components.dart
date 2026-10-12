@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/l10n/l10n_context.dart';
@@ -235,7 +236,7 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
             ),
             // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
-            if (widget.visibleRoleIds.length > _readableSeriesLimit) ...[
+            if (widget.visibleRoleIds.length > readableSeriesLimit) ...[
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -243,7 +244,7 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      context.l10n.chartTooManySeries(widget.visibleRoleIds.length, _readableSeriesLimit),
+                      context.l10n.chartTooManySeries(widget.visibleRoleIds.length, readableSeriesLimit),
                       style: TextStyle(fontSize: 12, color: context.colors.warning),
                     ),
                   ),
@@ -292,7 +293,7 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
     final id = _roleId(role);
     final checked = id != null && widget.visibleRoleIds.contains(id);
     return FilterChip(
-      label: Text(role['role_name']?.toString() ?? context.l10n.noName),
+      label: Text(_pointLabel(context, role['role_name'])),
       selected: checked,
       onSelected: id == null ? null : (val) => widget.onRoleToggled(id, val),
       labelStyle: TextStyle(
@@ -335,7 +336,33 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
 }
 
 /// 한 차트에 이 개수를 넘게 그리면 선이 서로 가려 추세를 읽기 어렵다.
-const int _readableSeriesLimit = 6;
+/// 측정 항목의 표시 이름.
+///
+/// 서버가 내려주는 role_name 은 `control_cffan1` 같은 DB 필드 이름이라, 그대로
+/// 두면 현장에서 어느 장비인지 알아볼 수 없다. 제어판과 같은 사전을 쓰므로
+/// 두 화면에서 같은 항목이 같은 이름으로 보인다.
+String _pointLabel(BuildContext context, dynamic roleName) {
+  final raw = roleName?.toString() ?? '';
+  return raw.isEmpty ? context.l10n.noName : DeviceLabels.of(context, raw);
+}
+
+/// 차트 범례에 쓸 이름. 서버가 따로 붙여 둔 이름이 있으면 그쪽을 존중한다.
+String _seriesLabel(BuildContext context, dynamic dataset, int index) {
+  final display = dataset['display_name']?.toString();
+  if (display != null && display.isNotEmpty) return display;
+
+  final raw = dataset['role_name']?.toString();
+  if (raw == null || raw.isEmpty) return context.l10n.chartSeriesN(index + 1);
+  return DeviceLabels.of(context, raw);
+}
+
+/// 한 차트에 겹쳐 그려도 읽을 수 있는 선의 개수.
+///
+/// 이 숫자는 보기 좋으라고 정한 값이 아니다. 선이 이보다 많아지면 눈금 범위가
+/// 가장 큰 값에 맞춰 늘어나 온도처럼 좁은 범위의 값은 바닥에 눌려 평평해지고,
+/// 색도 서로 구별되지 않는다. 그래서 자동 선택은 여기서 멈추고, 더 보려면
+/// 사용자가 직접 켠다.
+const int readableSeriesLimit = 6;
 
 /// 차트 위에 붙는 범례. 어떤 선이 어떤 항목인지 차트 안에서 바로 알 수 있게 한다.
 /// 색 표시만으로는 부족하므로 선 모양(실선/파선/점선)도 함께 그린다.
@@ -475,7 +502,7 @@ class ChartStatsBox extends StatelessWidget {
 
       stats.add(
         _SeriesStat(
-          name: ds['display_name'] ?? ds['role_name'] ?? context.l10n.chartSeriesN(i + 1),
+          name: _seriesLabel(context, ds, i),
           color: context.colors.chartSeries[i % context.colors.chartSeries.length],
           min: minVal,
           avg: count > 0 ? sum / count : null,
@@ -623,7 +650,7 @@ class ChartCanvasBox extends StatelessWidget {
       if (spots.isNotEmpty) {
         // 색만으로 시리즈를 구분하면 색각 이상이나 흑백 출력(포스터·인쇄)에서 구분이 안 된다.
         // 실선/파선/점선을 함께 돌려 색 없이도 구분되게 한다.
-        seriesNames.add(ds['display_name'] ?? ds['role_name'] ?? context.l10n.chartSeriesN(i + 1));
+        seriesNames.add(_seriesLabel(context, ds, i));
         final dash = _seriesDashPatterns[i % _seriesDashPatterns.length];
         seriesDashes.add(dash);
 

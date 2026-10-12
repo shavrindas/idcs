@@ -83,6 +83,14 @@ class DeviceLabels {
     'control_cooldeltm': ('쿨러지연타임_#1', 'Cooler delay #1'),
     'control_defdeltm': ('DF 지연_#1', 'DF delay #1'),
 
+    // 차트의 포인트 롤 이름. 웹 어드민에 등록된 이름이 실시간 스트림의 필드
+    // 이름과 조금씩 달라(오타 포함) 그대로 두면 차트에서만 영문 키가 그대로
+    // 보인다. 이름을 고치는 건 DB 를 손대는 일이라, 여기서 같은 뜻으로 받는다.
+    'control_comdelflag': ('콤프지연', 'Compressor delay'),
+    'control_runtime': ('운전시간', 'Run time'),
+    'control_hottic': ('과열TIC', 'Overheat TIC'),
+    'control_lowsw': ('LOW 스위치', 'LOW switch'),
+
     // 같은 이름을 쓰던 짝. 예전 구조에서는 한국어 라벨이 겹쳐 서로를 덮어썼다.
     'control_initdelst': ('초기지연 설정_#1', 'Initial delay (set) #1'),
     'control_compdelst': ('H_콤프지연_#1', 'H compressor delay #1'),
