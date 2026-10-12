@@ -7,6 +7,7 @@ import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class MonitoringRoom extends StatefulWidget {
   final String userId;
@@ -45,9 +46,7 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.roomLoadFailed(describeApiError(context, e)))),
-      );
+      AppToast.error(context, context.l10n.roomLoadFailed(describeApiError(context, e)));
     } finally {
       if (mounted) {
         setState(() {

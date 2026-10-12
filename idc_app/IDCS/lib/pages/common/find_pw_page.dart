@@ -7,6 +7,7 @@ import 'package:idcs/services/common/find_pw/auth_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FindPwPage extends StatefulWidget {
   const FindPwPage({super.key});
@@ -122,7 +123,7 @@ class _FindPwPageState extends State<FindPwPage> {
       final res = await AuthApiService.resetPassword(_resetToken, pw1);
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+      AppToast.success(context, res['message']);
       context.go('/login'); // 완료 시 로그인 페이지 이동
     } catch (e) {
       setState(() => _box3Message = describeApiError(context, e));

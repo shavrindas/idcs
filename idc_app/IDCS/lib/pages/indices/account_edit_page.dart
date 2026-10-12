@@ -6,6 +6,7 @@ import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/main.dart'; // AuthService 접근용
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class PersonalPage extends StatefulWidget {
   final String userId;
@@ -73,7 +74,7 @@ class _PersonalPageState extends State<PersonalPage> {
         });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -94,7 +95,7 @@ class _PersonalPageState extends State<PersonalPage> {
     if (!mounted) return;
 
     if (messages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.profileNoChanges)));
+      AppToast.warning(context, context.l10n.profileNoChanges);
       return;
     }
 
@@ -102,7 +103,7 @@ class _PersonalPageState extends State<PersonalPage> {
       _name = name;
       _phone = phone;
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(messages.join(' / '))));
+    AppToast.success(context, messages.join(' / '));
   }
 
   Future<void> _handleUpdatePassword() async {
@@ -126,7 +127,7 @@ class _PersonalPageState extends State<PersonalPage> {
         _currentPwController.clear();
         _newPwController.clear();
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      AppToast.success(context, msg);
     } catch (e) {
       setState(() => _pwCollapseMessage = context.l10n.errorPrefix(describeApiError(context, e)));
     }
@@ -161,11 +162,11 @@ class _PersonalPageState extends State<PersonalPage> {
       final msg = await UserApiService.withdraw(widget.userId);
       await AuthService.setUserId(null);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      AppToast.success(context, msg);
       context.go('/login');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 

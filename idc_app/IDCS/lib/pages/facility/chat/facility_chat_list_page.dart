@@ -6,6 +6,7 @@ import 'package:idcs/components/cross_compontents/chat/chat_list_components.dart
 import 'package:idcs/services/chat/chat_api_service.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityChatListPage extends StatefulWidget {
   final String userId;
@@ -39,7 +40,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
         });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -95,7 +96,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                 } catch (e) {
                   // The await above may have outlived this screen.
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+                  AppToast.error(context, describeApiError(context, e));
                 }
               },
             ),

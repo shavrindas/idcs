@@ -9,6 +9,7 @@ import 'package:idcs/components/cross_compontents/board/shared_board_compontents
 import 'package:idcs/services/board/board_api_service.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityBoardPage extends StatefulWidget {
   final String userId;
@@ -62,7 +63,7 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+        AppToast.error(context, describeApiError(context, e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -8,6 +8,7 @@ import 'package:idcs/components/cross_compontents/chat/chat_room_components.dart
 import 'package:idcs/theme/app_theme.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class ChatRoomPage extends StatefulWidget {
   final String userId;
@@ -43,7 +44,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       _participants = await ChatApiService.getParticipants(widget.roomId);
       await _loadMessages();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoadingHistory = false);
     }
@@ -108,7 +109,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       } catch (e) {
         // The await above may have outlived this screen.
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+        AppToast.error(context, describeApiError(context, e));
       }
     }
   }

@@ -8,6 +8,7 @@ import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class MainIndexPage extends StatefulWidget {
   final String userId;
@@ -51,9 +52,7 @@ class _MainIndexPageState extends State<MainIndexPage> {
       _maybeOpenOnlyFacility(summaries);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.permissionLoadFailed(describeApiError(context, e)))),
-      );
+      AppToast.error(context, context.l10n.permissionLoadFailed(describeApiError(context, e)));
     } finally {
       if (mounted) {
         setState(() {

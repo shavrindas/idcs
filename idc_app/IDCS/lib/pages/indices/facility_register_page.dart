@@ -4,6 +4,7 @@ import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityRegisterPage extends StatefulWidget {
   final String userId;
@@ -37,7 +38,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
         _facilities = await FacilityApiService.getFacilities(widget.userId);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -68,12 +69,12 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
       final msg = await FacilityApiService.unlinkFacility(widget.userId, facilityId);
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      AppToast.success(context, msg);
       await _loadData();
     } catch (e) {
       // The await above may have outlived this screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
