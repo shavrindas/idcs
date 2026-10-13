@@ -18,10 +18,27 @@ interface Props {
   loadedRange?: { start: number; end: number } | null;
   // 💡 [신규] 반전된 상태를 출력할 BOOL 롤 ID 목록
   invertedBools?: number[];
+  /** y축 위아래로 둘 여백. 'auto' 는 구간 폭의 10%, 숫자는 그 값만큼, 0은 딱 맞춤. */
+  yBuffer?: number | 'auto';
 }
 
 const SYNC_GROUP_NAME = 'idcool-chart-group';
 echarts.connect(SYNC_GROUP_NAME);
+
+/**
+ * 툴팁에 찍을 값.
+ *
+ * 온도는 DB 에 REAL 로 들어 있어 그대로 내보내면 -20.299999237060547 처럼
+ * 뜬다. 현장에서 의미 있는 자리는 소수점 아래 한두 자리뿐이라, 셋째 자리에서
+ * 끊고 뒤에 남는 0 은 지운다 (-20.3, 12.45, 380).
+ */
+const round3 = (n: number) => Number(n.toFixed(3));
+
+const formatValue = (v: any) => {
+  const n = Array.isArray(v) ? v[1] : v;
+  if (typeof n !== 'number' || Number.isNaN(n)) return '-';
+  return String(Number(n.toFixed(3)));
+};
 
 const formatShortTime = (ts: number) => {
   const d = new Date(ts);
@@ -48,7 +65,7 @@ const generatePostSegments = (validPosts: any[]) => {
 // ==========================================
 // 1. 수치형 데이터 전용 메인 차트
 // ==========================================
-export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick, onDataZoomPan: _onDataZoomPan, loadedRange }) => {
+export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo = true, showGrid = true, echartsRef, activeGuidelines = [], isLoading = false, posts = [], alarms = [], onChartClick, onDataZoomPan: _onDataZoomPan, loadedRange, yBuffer = 'auto' }) => {
   useEffect(() => {
     if (echartsRef && echartsRef.current) {
       const instance = echartsRef.current.getEchartsInstance();
@@ -61,6 +78,11 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
       });
     }
   }, [echartsRef, onChartClick]);
+
+  // 'auto' 는 구간 폭에 비례해서 둔다. 고정값은 온도(-22~-16)처럼 폭이 좁은
+  // 그래프에서는 선을 납작하게 만들고, Hz·전압처럼 폭이 넓은 쪽에서는 티도 안 난다.
+  const pad = (value: any) =>
+    yBuffer === 'auto' ? Math.max((value.max - value.min) * 0.1, 0.1) : (yBuffer as number);
 
   const getOption = () => {
     const seriesData: any[] = (datasets || []).map(ds => {
@@ -124,7 +146,7 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
     }
 
     return {
-      tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
+      tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' }, valueFormatter: formatValue },
       axisPointer: { link: [{ xAxisIndex: 'all' }] },
       grid: { left: 60, right: 50, top: 40, bottom: 25 },
       xAxis: { 
@@ -135,7 +157,20 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
         axisTick: { show: false },
         splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb' } }
       },
-      yAxis: { type: 'value', name: '수치 (Main)', splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb' } }, scale: true },
+      // scale: true 는 데이터에 딱 맞춰 눈금을 잡아, 선이 위아래 테두리에 붙어
+      // 버린다. 위아래로 여백을 둬야 꼭대기와 바닥이 보인다. 여백 폭은 툴바에서
+      // 조절한다 (0이면 예전과 같은 동작).
+      yAxis: {
+        type: 'value',
+        name: '수치 (Main)',
+        splitLine: { show: showGrid, lineStyle: { color: '#e5e7eb' } },
+        scale: true,
+        // 여백을 준 값도 반올림해서 넘긴다. 그대로 넘기면 축 끝에
+        // 3302.2709999084473 같은 숫자가 그대로 찍힌다.
+        min: yBuffer === 0 ? undefined : (value: any) => round3(value.min - pad(value)),
+        max: yBuffer === 0 ? undefined : (value: any) => round3(value.max + pad(value)),
+        axisLabel: { formatter: formatValue },
+      },
       dataZoom: [{ type: 'inside', filterMode: 'empty' }],
       series: seriesData
     }; 
@@ -207,7 +242,7 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
     }
 
     return {
-      tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' } },
+      tooltip: { show: showInfo, trigger: 'axis', axisPointer: { type: 'cross' }, valueFormatter: formatValue },
       grid: { left: 60, right: 50, top: 10, bottom: 25 },
       xAxis: {
         type: 'time',

@@ -12,7 +12,13 @@ import { ChartStatsPanel } from '../components/chart/viewer/panels/ChartStatsPan
 import { CHART_SCOPING_CONFIG} from '../constants/chartConfig'; 
 import type{ ChartMode, ChartScale } from '../constants/chartConfig'; 
 import { apiService } from '../services/apiService';
-import type { Role, ChartGroup } from '../types';
+import { copyToClipboard } from '../services/clipboard';
+import { extractDateTime, removeName } from '../services/omnibox';
+import type { Role, ChartGroup, SessionUser } from '../types';
+
+interface Props {
+  user: SessionUser;
+}
 
 const getLocalDatetimeString = (date: Date) => {
   const offset = date.getTimezoneOffset() * 60000;
@@ -30,7 +36,7 @@ function useDebouncedCallback<T extends (...args: any[]) => void>(callback: T, d
   }, [callback, delay]);
 }
 
-export const ChartViewerPage: React.FC = () => {
+export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   const [mode, setMode] = useState<ChartMode>('DEFAULT');
   const [scale, setScale] = useState<ChartScale>('1m');
   const [targetDate, setTargetDate] = useState<string>(getLocalDatetimeString(new Date()));
@@ -66,6 +72,8 @@ export const ChartViewerPage: React.FC = () => {
 
   const [omniboxInput, setOmniboxInput] = useState('');
   const [omniboxSuggestions, setOmniboxSuggestions] = useState<any[]>([]);
+  /// 드롭다운에서 키보드로 짚고 있는 줄.
+  const [omniboxActive, setOmniboxActive] = useState(0);
 
   const mainChartRef = useRef<ReactECharts | null>(null);
   const subChartRef = useRef<ReactECharts | null>(null); 
@@ -73,13 +81,12 @@ export const ChartViewerPage: React.FC = () => {
   const [loadedRangeState, setLoadedRangeState] = useState<{ start: number, end: number } | null>(null);
   const [currentViewStart, setCurrentViewStart] = useState<number | null>(null);
 
-  // useEffect(() => { 
-  //   //apiService.getFacilities().then(res => setFacilities(res.facilities || [])); 
-  //   apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || [])); 
-  // }, [user.id]);
-  useEffect(() => { 
-    apiService.getFacilities().then(res => setFacilities(res.facilities || [])); 
-  }, []);
+  /// 메인 차트 y축 위아래 여백. 툴바에서 고른다.
+  const [yBuffer, setYBuffer] = useState<number | 'auto'>('auto');
+
+  useEffect(() => {
+    apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || []));
+  }, [user.id]);
 
   // useEffect(() => {
   //   if (selectedFacility) {
@@ -160,53 +167,62 @@ export const ChartViewerPage: React.FC = () => {
   }, [selectedGroupId, groups]); 
 
   useEffect(() => {
-    const q = omniboxInput.replace(/\s+/g, '').toLowerCase();
-    if (!q) { setOmniboxSuggestions([]); return; }
+    // 날짜·시각은 이름이 아니다. 먼저 걷어내지 않으면 '냉동 1호 8/17 11:30' 이
+    // 통째로 한 덩어리가 되어 아무것도 못 찾는다 — 복사한 문장을 그대로
+    // 붙여 넣을 수 없던 이유다.
+    const { remaining } = extractDateTime(omniboxInput);
+
+    // 낱말마다 따로 맞춘다. 호실 이름에 공백이 있어서('냉동 1호') 공백을 모두
+    // 지운 형태로도 함께 본다.
+    const words = remaining.split(/\s+/).filter(Boolean);
+    const squashed = remaining.replace(/\s+/g, '');
+    const needles = Array.from(new Set([...words, squashed].map(w => w.toLowerCase()).filter(Boolean)));
+    if (needles.length === 0) { setOmniboxSuggestions([]); return; }
+
+    const hit = (name: string) => {
+      const flat = name.replace(/\s+/g, '').toLowerCase();
+      return needles.some(n => flat.includes(n.replace(/\s+/g, '')));
+    };
+
     const sugs: any[] = [];
-    facilities.forEach(f => { if (f.name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'facility', id: f.id, name: f.name, label: `${f.name} (시설)` }); });
+    facilities.forEach(f => { if (hit(f.name)) sugs.push({ type: 'facility', id: f.id, name: f.name, label: `${f.name} (시설)` }); });
     if (selectedFacility) {
-      rooms.forEach(r => { if (r.name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'room', id: r.id, name: r.name, label: `${r.name} (호실)` }); });
+      rooms.forEach(r => { if (hit(r.name)) sugs.push({ type: 'room', id: r.id, name: r.name, label: `${r.name} (호실)` }); });
     }
     if (selectedRoom) {
-      groups.forEach(g => { if (g.group_name.replace(/\s+/g, '').toLowerCase().includes(q)) sugs.push({ type: 'group', id: g.group_id, name: g.group_name, label: `${g.group_name} (맵핑)` }); });
+      groups.forEach(g => { if (hit(g.group_name)) sugs.push({ type: 'group', id: g.group_id, name: g.group_name, label: `${g.group_name} (맵핑)` }); });
     }
-    sugs.sort((a, b) => a.name.length - b.name.length);
+
+    // 시설 → 호실 → 맵핑 순으로, 같은 종류끼리는 짧은 이름이 먼저.
+    const order = { facility: 0, room: 1, group: 2 } as Record<string, number>;
+    sugs.sort((a, b) => (order[a.type] - order[b.type]) || (a.name.length - b.name.length));
     setOmniboxSuggestions(sugs);
+    setOmniboxActive(0);
   }, [omniboxInput, facilities, rooms, groups, selectedFacility, selectedRoom]);
 
   const handleOmniboxSelect = (sug: any) => {
     if (sug.type === 'facility') setSelectedFacility(sug.id);
     else if (sug.type === 'room') setSelectedRoom(sug.id);
     else if (sug.type === 'group') setSelectedGroupId(sug.id);
-    setOmniboxInput('');
+
+    // 고른 이름만 지우고 나머지는 남긴다. '다온인터내셔널 냉동 1호' 처럼 한
+    // 문장에 여럿이 들어 있을 때, 시설을 고르고 나면 호실이 그제서야 불러와지는데
+    // 입력을 통째로 비워 버리면 거기서 끊긴다. 남겨 두면 이어서 고를 수 있다.
+    setOmniboxInput(prev => removeName(prev, sug.name));
+    setOmniboxActive(0);
   };
 
   const handleOmniboxSubmit = () => {
-    let remain = omniboxInput;
-    let updatedDate = new Date(targetDate);
-    let dateChanged = false; let timeChanged = false;
+    const { date, dateChanged, timeChanged, remaining } = extractDateTime(omniboxInput, new Date(targetDate));
+    if (dateChanged || timeChanged) setTargetDate(getLocalDatetimeString(date));
 
-    const dateRegex1 = /(?:^|\s)(\d{4})[./-](\d{1,2})[./-](\d{1,2})(?:\s|$)/; 
-    const dateRegex2 = /(?:^|\s)(\d{1,2})[./-](\d{1,2})(?:\s|$)/;             
-    const dateRegex3 = /(?:^|\s)(\d{1,2})\s*월\s*(\d{1,2})\s*일(?:\s|$)/;     
-
-    let m;
-    if ((m = remain.match(dateRegex1))) { updatedDate.setFullYear(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3])); remain = remain.replace(m[0], ' '); dateChanged = true; } 
-    else if ((m = remain.match(dateRegex3))) { updatedDate.setMonth(parseInt(m[1]) - 1, parseInt(m[2])); remain = remain.replace(m[0], ' '); dateChanged = true; } 
-    else if ((m = remain.match(dateRegex2))) { updatedDate.setMonth(parseInt(m[1]) - 1, parseInt(m[2])); remain = remain.replace(m[0], ' '); dateChanged = true; }
-
-    const timeRegex1 = /(?:^|\s)([01]\d|2[0-3]):([0-5]\d)(?:\s|$)/; 
-    const timeRegex2 = /(?:^|\s)([01]\d|2[0-3])([0-5]\d)(?:\s|$)/;  
-    
-    if ((m = remain.match(timeRegex1))) { updatedDate.setHours(parseInt(m[1]), parseInt(m[2]), 0, 0); remain = remain.replace(m[0], ' '); timeChanged = true; } 
-    else if ((m = remain.match(timeRegex2))) { updatedDate.setHours(parseInt(m[1]), parseInt(m[2]), 0, 0); remain = remain.replace(m[0], ' '); timeChanged = true; }
-
-    if (dateChanged && !timeChanged) updatedDate.setHours(0, 0, 0, 0);
-    if (dateChanged || timeChanged) setTargetDate(getLocalDatetimeString(updatedDate));
-
-    const q = remain.replace(/\s+/g, '');
-    if (q && omniboxSuggestions.length > 0) handleOmniboxSelect(omniboxSuggestions[0]);
-    else setOmniboxInput('');
+    // 이름이 남아 있으면 지금 고른 줄을 적용한다. 날짜만 적은 경우에는 날짜만
+    // 반영하고 입력을 비운다.
+    if (remaining.replace(/\s+/g, '') && omniboxSuggestions.length > 0) {
+      handleOmniboxSelect(omniboxSuggestions[Math.min(omniboxActive, omniboxSuggestions.length - 1)]);
+    } else {
+      setOmniboxInput('');
+    }
   };
 
   const fetchAndMergeChunk = async (fetchStartMs: number, fetchEndMs: number, direction: 'replace' | 'append' | 'prepend') => {
@@ -306,6 +322,15 @@ export const ChartViewerPage: React.FC = () => {
     setCheckedRoles(prev => prev.includes(roleId) ? prev.filter(id => id !== roleId) : (mode === 'EXTENT' && !isBool ? [...prev.filter(id => isBoolRole(id)), roleId] : [...prev, roleId]));
   }; 
 
+  /// 분류 단위로 한꺼번에 켜고 끈다. EXTENT 모드는 수치 롤을 하나만 허용하므로
+  /// 패널이 그때는 이 버튼을 내보내지 않는다.
+  const handleRolesToggle = (roleIds: number[], checked: boolean) => {
+    if (isChartLoading) return;
+    setCheckedRoles(prev => checked
+      ? Array.from(new Set([...prev, ...roleIds]))
+      : prev.filter(id => !roleIds.includes(id)));
+  };
+
   const handleInvertToggle = (roleId: number) => setInvertedBools(prev => prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]);
   const handleColorChange = (roleId: number, color: string) => setRoleColors(prev => ({ ...prev, [roleId]: color }));
   const handleGuidelineToggle = (roleId: number) => setActiveGuidelines(prev => prev.includes(roleId) ? prev.filter(id => id !== roleId) : [...prev, roleId]);
@@ -356,13 +381,39 @@ export const ChartViewerPage: React.FC = () => {
     try { await apiService.showPostInGroup(Number(selectedGroupId), postId); setRefreshTrigger(prev => prev + 1); } catch (e) {}
   };
 
-  const handleCopySearchQuery = () => {
-    if (!selectedFacility || !selectedRoom || !currentViewStart) return;
+  /**
+   * 지금 보고 있는 시점을 스마트 검색에 붙여 넣을 수 있는 문장으로 복사한다.
+   *
+   * 두 가지가 고장나 있었다.
+   *
+   * 1) navigator.clipboard 는 보안 컨텍스트(https 또는 localhost)에서만 있다.
+   *    이 화면은 백엔드가 http 로 서빙하므로 사내 IP 로 열면 undefined 이고,
+   *    writeText 를 부르는 순간 TypeError 로 조용히 죽었다. 예전 방식
+   *    (textarea + execCommand)으로 떨어지게 한다.
+   * 2) 조건이 하나라도 안 맞으면 아무 말 없이 return 했다. 누른 사람은
+   *    복사가 됐는지 안 됐는지 알 수가 없다. 이유를 알린다.
+   */
+  const handleCopySearchQuery = async () => {
+    if (!selectedFacility || !selectedRoom) {
+      alert('먼저 시설과 호실을 고르세요.');
+      return;
+    }
+    if (!currentViewStart) {
+      alert('먼저 차트를 불러오세요. 조회된 구간이 있어야 그 시점을 복사할 수 있습니다.');
+      return;
+    }
+
     const facName = facilities.find(f => f.id === selectedFacility)?.name || '';
     const roomName = rooms.find(r => r.id === selectedRoom)?.name || '';
     const d = new Date(currentViewStart);
     const query = `${facName} ${roomName} ${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-    navigator.clipboard.writeText(query).then(() => alert(`클립보드에 복사되었습니다:\n${query}`));
+
+    if (await copyToClipboard(query)) {
+      alert(`클립보드에 복사되었습니다:\n${query}`);
+    } else {
+      // 붙여넣기는 못 해 줘도 무엇을 복사하려 했는지는 보여 준다.
+      window.prompt('복사가 막혀 있습니다. 아래 내용을 직접 복사하세요.', query);
+    }
   };
 
   const mainDataSets = chartDataSets.filter(ds => ds.role_name && !isBoolRole(ds.role_id));
@@ -377,9 +428,9 @@ export const ChartViewerPage: React.FC = () => {
 
         {/* 왼쪽 차트 영역 */}
         <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <TopToolBar showInfo={showMainInfo} showGrid={showMainGrid} targetDate={targetDate} isChartLoading={isChartLoading} onCopy={handleCopySearchQuery} onToggleInfo={() => setShowMainInfo(!showMainInfo)} onToggleGrid={() => setShowMainGrid(!showMainGrid)} onOneHourView={applyOneHourView} onDateChange={setTargetDate} />
+          <TopToolBar showInfo={showMainInfo} showGrid={showMainGrid} targetDate={targetDate} isChartLoading={isChartLoading} onCopy={handleCopySearchQuery} onToggleInfo={() => setShowMainInfo(!showMainInfo)} onToggleGrid={() => setShowMainGrid(!showMainGrid)} onOneHourView={applyOneHourView} onDateChange={setTargetDate} yBuffer={yBuffer} onYBufferChange={setYBuffer} />
           <div className="card" style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, padding: 12 }}>
-            <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} />
+            <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />
           </div>
           <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
           <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: 12 }}>
@@ -389,7 +440,7 @@ export const ChartViewerPage: React.FC = () => {
 
         {/* 오른쪽 패널 영역 */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <SmartOmniboxPanel input={omniboxInput} suggestions={omniboxSuggestions} isChartLoading={isChartLoading} onInputChange={setOmniboxInput} onSubmit={handleOmniboxSubmit} onSelect={handleOmniboxSelect} />
+          <SmartOmniboxPanel input={omniboxInput} suggestions={omniboxSuggestions} isChartLoading={isChartLoading} activeIndex={omniboxActive} onActiveIndexChange={setOmniboxActive} onInputChange={setOmniboxInput} onSubmit={handleOmniboxSubmit} onSelect={handleOmniboxSelect} />
           <ScopingPanel mode={mode} scale={scale} facilities={facilities} rooms={rooms} selectedFacility={selectedFacility} selectedRoom={selectedRoom} isChartLoading={isChartLoading} onModeToggle={handleModeToggle} onScaleChange={setScale} onFacilityChange={setSelectedFacility} onRoomChange={setSelectedRoom} onQuickTime={handleQuickTimeSelect} onQuickDay={handleQuickDaySelect} />
           <PostViewerPanel selectedPostIds={selectedPostViewerIds} posts={posts} selectedGroupId={selectedGroupId} onHidePost={handleHidePost} />
           <ChartStatsPanel datasets={mainDataSets} roleColors={roleColors} />
@@ -398,7 +449,7 @@ export const ChartViewerPage: React.FC = () => {
 
       {/* 하단: 맵핑 활성화 + 블랙리스트 (내용에 따라 자동 확장) */}
       <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
-        <MappingActivePanel groups={groups} allRoles={allRoles} roleColors={roleColors} selectedGroupId={selectedGroupId} selectedRoom={selectedRoom} isChartLoading={isChartLoading} checkedRoles={checkedRoles} activeGuidelines={activeGuidelines} invertedBools={invertedBools} openMenuRoleId={openMenuRoleId} onGroupChange={setSelectedGroupId} onRoleToggle={handleRoleToggle} onMenuToggle={setOpenMenuRoleId} onColorChange={handleColorChange} onGuidelineToggle={handleGuidelineToggle} onInvertToggle={handleInvertToggle} isBoolRole={isBoolRole} />
+        <MappingActivePanel groups={groups} allRoles={allRoles} roleColors={roleColors} selectedGroupId={selectedGroupId} selectedRoom={selectedRoom} isChartLoading={isChartLoading} checkedRoles={checkedRoles} activeGuidelines={activeGuidelines} invertedBools={invertedBools} openMenuRoleId={openMenuRoleId} onGroupChange={setSelectedGroupId} onRoleToggle={handleRoleToggle} onRolesToggle={handleRolesToggle} singleNumericMode={mode === 'EXTENT'} onMenuToggle={setOpenMenuRoleId} onColorChange={handleColorChange} onGuidelineToggle={handleGuidelineToggle} onInvertToggle={handleInvertToggle} isBoolRole={isBoolRole} />
         <BlacklistPanel hiddenPosts={hiddenPosts} onRestore={handleRestorePost} />
       </div>
 

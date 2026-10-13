@@ -32,8 +32,16 @@ export const apiService = {
     if (!res.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
     return res.json();
   },
-  getFacilities: async () => {
-    const res = await fetch(`${BASE_URL}/facilities/1`);
+  /**
+   * 로그인한 사용자가 속한 시설만 돌려준다.
+   *
+   * 예전에는 사용자 id 가 1로 박혀 있어서, 누가 로그인하든 1번 계정의 시설
+   * 목록(지금 9곳)이 떴다. 다른 회사 창고가 그대로 보였다는 뜻이다.
+   *
+   * 시설 전체가 필요한 곳은 시설 관리 화면뿐이고, 그건 getAllFacilitiesAdmin 이다.
+   */
+  getUserFacilities: async (userId: number) => {
+    const res = await fetch(`${BASE_URL}/facilities/${userId}`);
     return res.json();
   },
   getRooms: async (facilityId: number) => {
