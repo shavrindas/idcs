@@ -373,12 +373,24 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
 
   const handleHidePost = async (postId: number) => {
     if (!selectedGroupId) return;
-    try { await apiService.hidePostFromGroup(Number(selectedGroupId), postId); setSelectedPostViewerIds(prev => prev.filter(id => id !== postId)); setRefreshTrigger(prev => prev + 1); } catch (e) {}
+    // 실패를 삼키면, 눌렀는데 목록이 그대로인 이유를 알 수가 없다.
+    try {
+      await apiService.hidePostFromGroup(Number(selectedGroupId), postId);
+      setSelectedPostViewerIds(prev => prev.filter(id => id !== postId));
+      setRefreshTrigger(prev => prev + 1);
+    } catch {
+      alert('소요기록을 제외하지 못했습니다.');
+    }
   };
 
   const handleRestorePost = async (postId: number) => {
     if (!selectedGroupId) return;
-    try { await apiService.showPostInGroup(Number(selectedGroupId), postId); setRefreshTrigger(prev => prev + 1); } catch (e) {}
+    try {
+      await apiService.showPostInGroup(Number(selectedGroupId), postId);
+      setRefreshTrigger(prev => prev + 1);
+    } catch {
+      alert('소요기록을 복구하지 못했습니다.');
+    }
   };
 
   /**

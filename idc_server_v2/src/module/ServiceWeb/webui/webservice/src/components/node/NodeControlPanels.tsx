@@ -1,5 +1,6 @@
 // 경로: src/module/ServiceWeb/webui/webservice/src/components/node/NodeControlPanels.tsx
 import React from 'react';
+import { describeSignalAge } from '../../services/timeAgo';
 
 interface CreateFormProps {
   facilities: { id: number; name: string }[];
@@ -101,7 +102,7 @@ export const NodeListTable: React.FC<TableProps> = ({ nodes, onRefresh, onEdit, 
                 </span>
               </td>
               <td style={{ padding: 10, fontSize: 12, color: 'var(--text-secondary)' }}>
-                {node.last_heartbeat_at ? new Date(node.last_heartbeat_at).toLocaleTimeString() : '-'}
+                {describeSignalAge(node.last_heartbeat_at)}
               </td>
               <td style={{ padding: 10, display: 'flex', gap: 6 }}>
                 <button onClick={() => onEdit(node)} className="btn btn-outline btn-sm">수정</button>

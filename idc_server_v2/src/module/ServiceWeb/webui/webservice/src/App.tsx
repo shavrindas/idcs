@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { loadSession, saveSession } from './services/session';
 import type { SessionUser } from './types';
 //import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { HashRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
@@ -13,9 +14,16 @@ import { Monogram, Wordmark } from './components/Brand';
 
 function App() {
   // 로그인한 유저. 각 화면이 '내 시설'만 불러오려면 이 값이 필요하다.
-  const [user, setUser] = useState<SessionUser | null>(null);
+  // 새로고침이나 주소 직접 입력에도 남아 있도록 브라우저에 맡겨 둔다.
+  const [user, setUser] = useState<SessionUser | null>(loadSession);
+
+  const handleLogin = (next: SessionUser) => {
+    saveSession(next);
+    setUser(next);
+  };
 
   const handleLogout = () => {
+    saveSession(null);
     setUser(null);
   };
 
@@ -88,7 +96,7 @@ function App() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', background: 'var(--bg)' }}>
           <Routes>
             {/* 비로그인 상태일 때 접근 가능한 Route */}
-            <Route path="/login" element={<LoginPage onLogin={setUser} />} />
+            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
 
             {/* 로그인 상태 체크 */}
             {!user ? (
