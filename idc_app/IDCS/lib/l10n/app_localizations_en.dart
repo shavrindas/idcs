@@ -607,6 +607,34 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get chatGroupPickMembers => 'Who to include';
+
+  @override
+  String get chatGroupNoMembers =>
+      'Nobody else is registered at this facility.';
+
+  @override
+  String get chatGroupNameRequired => 'Enter a room name.';
+
+  @override
+  String get chatGroupMemberRequired => 'Pick at least one person.';
+
+  @override
+  String chatGroupSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String chatGroupCreated(String name) {
+    return 'Created \'$name\'.';
+  }
+
+  @override
+  String chatMembersLoadFailed(String reason) {
+    return 'Could not load the member list. $reason';
+  }
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

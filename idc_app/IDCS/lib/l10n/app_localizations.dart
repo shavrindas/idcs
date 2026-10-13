@@ -1190,6 +1190,48 @@ abstract class AppLocalizations {
   /// **'{item} 설정이 거부되었습니다.'**
   String panelCommandFailed(String item);
 
+  /// No description provided for @chatGroupPickMembers.
+  ///
+  /// In ko, this message translates to:
+  /// **'함께할 사람'**
+  String get chatGroupPickMembers;
+
+  /// No description provided for @chatGroupNoMembers.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 시설에 등록된 다른 사람이 없습니다.'**
+  String get chatGroupNoMembers;
+
+  /// No description provided for @chatGroupNameRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'방 이름을 입력하세요.'**
+  String get chatGroupNameRequired;
+
+  /// No description provided for @chatGroupMemberRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 명 이상 선택하세요.'**
+  String get chatGroupMemberRequired;
+
+  /// No description provided for @chatGroupSelected.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}명 선택'**
+  String chatGroupSelected(int count);
+
+  /// No description provided for @chatGroupCreated.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\' 방을 만들었습니다.'**
+  String chatGroupCreated(String name);
+
+  /// No description provided for @chatMembersLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'구성원 목록을 불러오지 못했습니다. {reason}'**
+  String chatMembersLoadFailed(String reason);
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:

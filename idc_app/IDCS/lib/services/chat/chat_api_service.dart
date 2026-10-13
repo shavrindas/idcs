@@ -13,6 +13,20 @@ class ChatApiService {
     throw ApiException.rejected();
   }
 
+  /// 시설에 등록된 사람들. 단체방을 만들 때 누구를 넣을지 고르는 데 쓴다.
+  ///
+  /// 예전에는 화면에서 사용자 ID 를 쉼표로 직접 받아 적게 했는데, 현장에서
+  /// 남의 ID 번호를 아는 사람은 없다.
+  static Future<List<Map<String, dynamic>>> getFacilityMembers(int facilityId) async {
+    final url = Uri.parse('${AppConfig.webUrl}/facility-manager/facility/$facilityId/users');
+    final response = await ApiClient.get(url);
+    if (response.statusCode != 200) throw ApiException.rejected();
+
+    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+    final users = decoded['users'];
+    return users is List ? users.whereType<Map<String, dynamic>>().toList() : const [];
+  }
+
   static Future<void> createGroupChat(String userId, String roomName, List<int> userIds) async {
     final url = Uri.parse('$_baseUrl/group?user_id=$userId');
     final response = await ApiClient.post(url, headers: {'Content-Type': 'application/json'},
