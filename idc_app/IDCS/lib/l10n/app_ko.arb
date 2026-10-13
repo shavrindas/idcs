@@ -243,12 +243,8 @@
       }
     }
   },
-  "chartTools": "탐색 도구",
-  "chartPanDisabled": "이동 (비활성)",
   "chartHideBaseline": "기준선 숨기기",
   "chartShowBaseline": "기준선 표시",
-  "chartNoteDisabled": "메모 (비활성)",
-  "chartResetView": "시점 초기화",
   "backToFacilities": "내 시설 목록으로",
   "facilityFallbackName": "시설 {id}",
   "@facilityFallbackName": {
@@ -347,6 +343,9 @@
   "discardDraftLeave": "버리고 나가기",
   "discardChangesTitle": "바꾼 내용을 버릴까요?",
   "discardChangesBody": "아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.",
+  "chartSafeRangeTitle": "안전 범위 선",
+  "chartSafeRangeHint": "항목마다 정해 둔 상·하한을 가로 점선으로 겹쳐 그립니다.",
+  "chartSafeRangeNone": "선택한 항목에 정해진 상·하한이 없습니다.",
   "searchNoResults": "검색 결과가 없습니다.",
   "alarmsNone": "조회할 수 있는 알람이 없습니다.",
   "alarmNameMissing": "알람 이름 없음",

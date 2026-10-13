@@ -493,22 +493,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get chartTools => '탐색 도구';
-
-  @override
-  String get chartPanDisabled => '이동 (비활성)';
-
-  @override
   String get chartHideBaseline => '기준선 숨기기';
 
   @override
   String get chartShowBaseline => '기준선 표시';
-
-  @override
-  String get chartNoteDisabled => '메모 (비활성)';
-
-  @override
-  String get chartResetView => '시점 초기화';
 
   @override
   String get backToFacilities => '내 시설 목록으로';
@@ -699,6 +687,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get discardChangesBody => '아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.';
+
+  @override
+  String get chartSafeRangeTitle => '안전 범위 선';
+
+  @override
+  String get chartSafeRangeHint => '항목마다 정해 둔 상·하한을 가로 점선으로 겹쳐 그립니다.';
+
+  @override
+  String get chartSafeRangeNone => '선택한 항목에 정해진 상·하한이 없습니다.';
 
   @override
   String get searchNoResults => '검색 결과가 없습니다.';

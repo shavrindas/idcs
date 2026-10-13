@@ -243,12 +243,8 @@
       }
     }
   },
-  "chartTools": "Tools",
-  "chartPanDisabled": "Pan (off)",
   "chartHideBaseline": "Hide safe range",
   "chartShowBaseline": "Show safe range",
-  "chartNoteDisabled": "Note (off)",
-  "chartResetView": "Reset view",
   "backToFacilities": "Back to my facilities",
   "facilityFallbackName": "Facility {id}",
   "@facilityFallbackName": {
@@ -347,6 +343,9 @@
   "discardDraftLeave": "Discard",
   "discardChangesTitle": "Discard your changes?",
   "discardChangesBody": "They have not been saved. Leaving will lose them.",
+  "chartSafeRangeTitle": "Safe range lines",
+  "chartSafeRangeHint": "Draws each point's high and low limit as a dashed line across the chart.",
+  "chartSafeRangeNone": "The selected points have no limits set.",
   "searchNoResults": "No matches.",
   "alarmsNone": "No alarms to show.",
   "alarmNameMissing": "Unnamed alarm",

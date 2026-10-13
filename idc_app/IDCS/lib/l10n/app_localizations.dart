@@ -1016,18 +1016,6 @@ abstract class AppLocalizations {
   /// **'상한 {value}'**
   String chartUpperLimit(String value);
 
-  /// No description provided for @chartTools.
-  ///
-  /// In ko, this message translates to:
-  /// **'탐색 도구'**
-  String get chartTools;
-
-  /// No description provided for @chartPanDisabled.
-  ///
-  /// In ko, this message translates to:
-  /// **'이동 (비활성)'**
-  String get chartPanDisabled;
-
   /// No description provided for @chartHideBaseline.
   ///
   /// In ko, this message translates to:
@@ -1039,18 +1027,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기준선 표시'**
   String get chartShowBaseline;
-
-  /// No description provided for @chartNoteDisabled.
-  ///
-  /// In ko, this message translates to:
-  /// **'메모 (비활성)'**
-  String get chartNoteDisabled;
-
-  /// No description provided for @chartResetView.
-  ///
-  /// In ko, this message translates to:
-  /// **'시점 초기화'**
-  String get chartResetView;
 
   /// No description provided for @backToFacilities.
   ///
@@ -1375,6 +1351,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.'**
   String get discardChangesBody;
+
+  /// No description provided for @chartSafeRangeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'안전 범위 선'**
+  String get chartSafeRangeTitle;
+
+  /// No description provided for @chartSafeRangeHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'항목마다 정해 둔 상·하한을 가로 점선으로 겹쳐 그립니다.'**
+  String get chartSafeRangeHint;
+
+  /// No description provided for @chartSafeRangeNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택한 항목에 정해진 상·하한이 없습니다.'**
+  String get chartSafeRangeNone;
 
   /// No description provided for @searchNoResults.
   ///
