@@ -53,8 +53,13 @@ class ChartFilterBox extends StatelessWidget {
             items: rooms
                 .map(
                   (room) => DropdownMenuItem<int>(
-                    value: room['id'] is int ? room['id'] : int.tryParse(room['id'].toString()),
-                    child: Text(room['name']?.toString() ?? context.l10n.chartRoomUnnamed, overflow: TextOverflow.ellipsis),
+                    value: room['id'] is int
+                        ? room['id']
+                        : int.tryParse(room['id'].toString()),
+                    child: Text(
+                      room['name']?.toString() ?? context.l10n.chartRoomUnnamed,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 )
                 .toList(),
@@ -70,23 +75,37 @@ class ChartFilterBox extends StatelessWidget {
                 child: DropdownButtonFormField<String>(
                   value: currentScale,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: context.l10n.chartResolution),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.chartResolution,
+                  ),
                   items: [
                     DropdownMenuItem(
                       value: '10s',
-                      child: Text(context.l10n.chartRes10s, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRes10s,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '1m',
-                      child: Text(context.l10n.chartRes1m, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRes1m,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '5m',
-                      child: Text(context.l10n.chartRes5m, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRes5m,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '1h',
-                      child: Text(context.l10n.chartRes1h, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRes1h,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                   onChanged: (val) {
@@ -99,27 +118,44 @@ class ChartFilterBox extends StatelessWidget {
                 child: DropdownButtonFormField<String>(
                   value: currentTimeRange,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: context.l10n.chartRange),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.chartRange,
+                  ),
                   items: [
                     DropdownMenuItem(
                       value: '1h',
-                      child: Text(context.l10n.chartRange1h, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRange1h,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '12h',
-                      child: Text(context.l10n.chartRange12h, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRange12h,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '1d',
-                      child: Text(context.l10n.chartRange1d, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRange1d,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '7d',
-                      child: Text(context.l10n.chartRange7d, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRange7d,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     DropdownMenuItem(
                       value: '15d',
-                      child: Text(context.l10n.chartRange15d, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        context.l10n.chartRange15d,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                   onChanged: (val) {
@@ -132,7 +168,9 @@ class ChartFilterBox extends StatelessWidget {
                 height: 58,
                 child: ElevatedButton(
                   onPressed: onApply,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18)),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                  ),
                   child: Text(context.l10n.chartApply),
                 ),
               ),
@@ -146,7 +184,8 @@ class ChartFilterBox extends StatelessWidget {
 
 /// Box #2: 데이터 포인트(시리즈) 선택 박스
 class ChartSeriesBox extends StatefulWidget {
-  final List<Map<String, dynamic>> availableGroups; // 이제 개별 role이 아닌 Group 리스트를 받습니다.
+  final List<Map<String, dynamic>>
+  availableGroups; // 이제 개별 role이 아닌 Group 리스트를 받습니다.
   final int? selectedGroupId; // 라디오 버튼처럼 단일 선택으로 변경 (차트 하나당 한 그룹)
   final Function(int) onGroupSelected;
 
@@ -184,17 +223,52 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
 
   bool _expanded = false;
 
-  int? _roleId(dynamic role) => role['role_id'] is int ? role['role_id'] : int.tryParse(role['role_id'].toString());
+  /// 카드 자체를 펼쳐 둘지.
+  ///
+  /// 기본은 접어 둔다. 그룹 칩과 항목 칩이 모두 펼쳐져 있으면 카드 하나가
+  /// 화면 두 배 높이가 되어, 정작 보러 온 차트까지 한참을 쓸어내려야 했다.
+  /// 무엇이 켜져 있는지는 접은 상태에서도 제목 옆에 보인다.
+  bool _open = false;
+
+  int? _roleId(dynamic role) => role['role_id'] is int
+      ? role['role_id']
+      : int.tryParse(role['role_id'].toString());
 
   /// 체크박스로 보여줄 항목. 그룹 모드면 그룹에 묶인 것만, 직접 선택이면 전체.
   List<dynamic> get _shownRoles {
     if (widget.directMode) return widget.roles;
 
-    final group = widget.availableGroups.where((g) => g['group_id'] == widget.selectedGroupId).firstOrNull;
+    final group = widget.availableGroups
+        .where((g) => g['group_id'] == widget.selectedGroupId)
+        .firstOrNull;
     if (group == null) return const [];
 
-    final groupRoleIds = (group['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
-    return widget.roles.where((r) => groupRoleIds.contains(_roleId(r))).toList();
+    final groupRoleIds =
+        (group['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
+    return widget.roles
+        .where((r) => groupRoleIds.contains(_roleId(r)))
+        .toList();
+  }
+
+  /// 접었을 때 제목 옆에 붙는 한 줄. 지금 무엇을 보고 있는지 알려 준다.
+  String _summary(BuildContext context) {
+    final l10n = context.l10n;
+    if (widget.directMode) {
+      return l10n.chartSeriesSummary(
+        l10n.chartPickManually,
+        widget.visibleRoleIds.length,
+      );
+    }
+
+    final group = widget.availableGroups
+        .where((g) => g['group_id'] == widget.selectedGroupId)
+        .firstOrNull;
+    if (group == null) return l10n.chartNoGroups;
+
+    return l10n.chartSeriesSummary(
+      group['group_name']?.toString() ?? l10n.noName,
+      widget.visibleRoleIds.length,
+    );
   }
 
   @override
@@ -203,89 +277,137 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
 
     return _SectionCard(
       title: context.l10n.chartGroups,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (widget.availableGroups.isEmpty && !widget.directMode)
-            Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Text(context.l10n.chartNoGroups, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
-            ),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: [
-              ...widget.availableGroups.map((group) {
-                final isSelected = !widget.directMode && widget.selectedGroupId == group['group_id'];
-                return _chip(
-                  context,
-                  label: group['group_name'],
-                  selected: isSelected,
-                  onSelected: () => widget.onGroupSelected(group['group_id']),
-                );
-              }),
-              _chip(context, label: context.l10n.chartPickManually, selected: widget.directMode, onSelected: widget.onDirectModeSelected),
-            ],
-          ),
-          if (shown.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Divider(height: 1, color: context.colors.outline),
-            const SizedBox(height: 10),
-            Text(
-              widget.directMode ? context.l10n.chartPickItems : context.l10n.chartGroupItems,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
-            ),
-            // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
-            if (widget.visibleRoleIds.length > readableSeriesLimit) ...[
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(Icons.info_outline_rounded, size: 14, color: context.colors.warning),
-                  const SizedBox(width: 5),
-                  Expanded(
+      onHeaderTap: () => setState(() => _open = !_open),
+      headerSummary: _open ? null : _summary(context),
+      trailing: Icon(
+        _open ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+        color: context.colors.textSecondary,
+      ),
+      child: !_open
+          ? const SizedBox.shrink()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.availableGroups.isEmpty && !widget.directMode)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      context.l10n.chartTooManySeries(widget.visibleRoleIds.length, readableSeriesLimit),
-                      style: TextStyle(fontSize: 12, color: context.colors.warning),
+                      context.l10n.chartNoGroups,
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
+                  children: [
+                    ...widget.availableGroups.map((group) {
+                      final isSelected =
+                          !widget.directMode &&
+                          widget.selectedGroupId == group['group_id'];
+                      return _chip(
+                        context,
+                        label: group['group_name'],
+                        selected: isSelected,
+                        onSelected: () =>
+                            widget.onGroupSelected(group['group_id']),
+                      );
+                    }),
+                    _chip(
+                      context,
+                      label: context.l10n.chartPickManually,
+                      selected: widget.directMode,
+                      onSelected: widget.onDirectModeSelected,
+                    ),
+                  ],
+                ),
+                if (shown.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Divider(height: 1, color: context.colors.outline),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.directMode
+                        ? context.l10n.chartPickItems
+                        : context.l10n.chartGroupItems,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: context.colors.textSecondary,
+                    ),
+                  ),
+                  // 선이 6개를 넘어가면 서로 가려서 추세를 읽기 어려워진다.
+                  if (widget.visibleRoleIds.length > readableSeriesLimit) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: context.colors.warning,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            context.l10n.chartTooManySeries(
+                              widget.visibleRoleIds.length,
+                              readableSeriesLimit,
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  // 안쪽에 스크롤을 두면 이 영역 위에서 쓸어올릴 때 페이지 대신 칩이
+                  // 움직여 화면이 멈춘 것처럼 느껴진다. 대신 일부만 보여주고
+                  // 펼치기로 늘린다 — 스크롤은 페이지 하나만 갖는다.
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final role
+                          in (_expanded ? shown : shown.take(_collapsedCount)))
+                        _roleChip(context, role),
+                    ],
+                  ),
+                  if (shown.length > _collapsedCount) ...[
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () => setState(() => _expanded = !_expanded),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: const Size(0, 36),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          _expanded
+                              ? context.l10n.chartShowLess
+                              : context.l10n.chartShowAllPoints(shown.length),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ),
-            ],
-            const SizedBox(height: 8),
-            // 안쪽에 스크롤을 두면 이 영역 위에서 쓸어올릴 때 페이지 대신 칩이
-            // 움직여 화면이 멈춘 것처럼 느껴진다. 대신 일부만 보여주고
-            // 펼치기로 늘린다 — 스크롤은 페이지 하나만 갖는다.
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final role in (_expanded ? shown : shown.take(_collapsedCount)))
-                  _roleChip(context, role),
+                // 카드 아래 여백. 접었을 때는 제목만 남아야 해서 _SectionCard 가
+                // 아래쪽 여백을 주지 않는다.
+                const SizedBox(height: 16),
               ],
             ),
-            if (shown.length > _collapsedCount) ...[
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () => setState(() => _expanded = !_expanded),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    minimumSize: const Size(0, 36),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    _expanded
-                        ? context.l10n.chartShowLess
-                        : context.l10n.chartShowAllPoints(shown.length),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ],
-      ),
     );
   }
 
@@ -304,7 +426,9 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
       showCheckmark: false,
       selectedColor: context.colors.primary.withValues(alpha: 0.12),
       backgroundColor: context.colors.background,
-      side: BorderSide(color: checked ? context.colors.primary : context.colors.outline),
+      side: BorderSide(
+        color: checked ? context.colors.primary : context.colors.outline,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
     );
   }
@@ -329,7 +453,9 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
       ),
       selectedColor: context.colors.primary,
       backgroundColor: context.colors.background,
-      side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
+      side: BorderSide(
+        color: selected ? context.colors.primary : context.colors.outline,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
@@ -371,7 +497,11 @@ class _ChartLegend extends StatelessWidget {
   final List<List<int>?> dashes;
   final List<Color> colors;
 
-  const _ChartLegend({required this.names, required this.dashes, required this.colors});
+  const _ChartLegend({
+    required this.names,
+    required this.dashes,
+    required this.colors,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +524,11 @@ class _ChartLegend extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 names[i],
-                style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           );
@@ -429,7 +563,11 @@ class _LegendLinePainter extends CustomPainter {
     while (x < size.width) {
       final len = dash![i % dash!.length].toDouble();
       if (i.isEven) {
-        canvas.drawLine(Offset(x, y), Offset((x + len).clamp(0, size.width), y), paint);
+        canvas.drawLine(
+          Offset(x, y),
+          Offset((x + len).clamp(0, size.width), y),
+          paint,
+        );
       }
       x += len;
       i++;
@@ -437,7 +575,8 @@ class _LegendLinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LegendLinePainter old) => old.color != color || old.dash != dash;
+  bool shouldRepaint(_LegendLinePainter old) =>
+      old.color != color || old.dash != dash;
 }
 
 /// 시리즈별 선 모양. 색을 못 쓰는 상황(색각 이상, 흑백 인쇄)에서도 구분되게 한다.
@@ -483,18 +622,28 @@ class ChartStatsBox extends StatelessWidget {
         final double? mean = (p['mean'] as num?)?.toDouble();
         final double? pMin = (p['min'] as num?)?.toDouble() ?? mean;
         final double? pMax = (p['max'] as num?)?.toDouble() ?? mean;
-        final double? statusVal = p.containsKey('status') ? (p['status'] == true ? 1.0 : 0.0) : null;
+        final double? statusVal = p.containsKey('status')
+            ? (p['status'] == true ? 1.0 : 0.0)
+            : null;
 
         final double? value = mean ?? statusVal;
         if (value != null) {
           sum += value;
           count++;
         }
-        if (pMin != null) minVal = (minVal == null) ? pMin : (pMin < minVal ? pMin : minVal);
-        if (pMax != null) maxVal = (maxVal == null) ? pMax : (pMax > maxVal ? pMax : maxVal);
+        if (pMin != null) {
+          minVal = (minVal == null) ? pMin : (pMin < minVal ? pMin : minVal);
+        }
+        if (pMax != null) {
+          maxVal = (maxVal == null) ? pMax : (pMax > maxVal ? pMax : maxVal);
+        }
         if (statusVal != null) {
-          minVal = (minVal == null) ? statusVal : (statusVal < minVal ? statusVal : minVal);
-          maxVal = (maxVal == null) ? statusVal : (statusVal > maxVal ? statusVal : maxVal);
+          minVal = (minVal == null)
+              ? statusVal
+              : (statusVal < minVal ? statusVal : minVal);
+          maxVal = (maxVal == null)
+              ? statusVal
+              : (statusVal > maxVal ? statusVal : maxVal);
         }
       }
 
@@ -503,7 +652,8 @@ class ChartStatsBox extends StatelessWidget {
       stats.add(
         _SeriesStat(
           name: _seriesLabel(context, ds, i),
-          color: context.colors.chartSeries[i % context.colors.chartSeries.length],
+          color:
+              context.colors.chartSeries[i % context.colors.chartSeries.length],
           min: minVal,
           avg: count > 0 ? sum / count : null,
           max: maxVal,
@@ -526,13 +676,20 @@ class ChartStatsBox extends StatelessWidget {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: s.color,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         s.name,
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.textPrimary,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -553,10 +710,17 @@ class ChartStatsBox extends StatelessWidget {
   Widget _statChip(BuildContext context, String label, double? value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: context.colors.background, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: context.colors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Text(
         '$label ${value != null ? value.toStringAsFixed(1) : '-'}',
-        style: TextStyle(fontSize: 12, color: context.colors.textSecondary, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: 12,
+          color: context.colors.textSecondary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -569,7 +733,13 @@ class _SeriesStat {
   final double? avg;
   final double? max;
 
-  _SeriesStat({required this.name, required this.color, this.min, this.avg, this.max});
+  _SeriesStat({
+    required this.name,
+    required this.color,
+    this.min,
+    this.avg,
+    this.max,
+  });
 }
 
 /// Box #3: 차트 렌더링 캔버스 영역
@@ -578,12 +748,20 @@ class ChartCanvasBox extends StatelessWidget {
   final bool isLoading;
   final bool showTargetLines;
 
-  const ChartCanvasBox({super.key, required this.chartData, required this.isLoading, this.showTargetLines = true});
+  const ChartCanvasBox({
+    super.key,
+    required this.chartData,
+    required this.isLoading,
+    this.showTargetLines = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return _buildContainer(context, child: const Center(child: CircularProgressIndicator()));
+      return _buildContainer(
+        context,
+        child: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (chartData == null ||
@@ -592,7 +770,10 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(
         context,
         child: Center(
-          child: Text(context.l10n.chartNoData, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+          child: Text(
+            context.l10n.chartNoData,
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+          ),
         ),
       );
     }
@@ -624,7 +805,9 @@ class ChartCanvasBox extends StatelessWidget {
       final String? rawLow = ds['target_low_limit'];
       final String? rawHigh = ds['target_high_limit'];
       final double? targetLow = rawLow != null ? double.tryParse(rawLow) : null;
-      final double? targetHigh = rawHigh != null ? double.tryParse(rawHigh) : null;
+      final double? targetHigh = rawHigh != null
+          ? double.tryParse(rawHigh)
+          : null;
 
       for (var point in dataPoints) {
         final DateTime dt = DateTime.parse(point['timestamp']).toLocal();
@@ -669,12 +852,24 @@ class ChartCanvasBox extends StatelessWidget {
 
         if (showTargetLines) {
           if (targetLow != null) {
-            targetLines.add(_targetLine(targetLow, seriesColor, context.l10n.chartLowerLimit(targetLow.toStringAsFixed(1))));
+            targetLines.add(
+              _targetLine(
+                targetLow,
+                seriesColor,
+                context.l10n.chartLowerLimit(targetLow.toStringAsFixed(1)),
+              ),
+            );
             if (targetLow < minY) minY = targetLow;
             if (targetLow > maxY) maxY = targetLow;
           }
           if (targetHigh != null) {
-            targetLines.add(_targetLine(targetHigh, seriesColor, context.l10n.chartUpperLimit(targetHigh.toStringAsFixed(1))));
+            targetLines.add(
+              _targetLine(
+                targetHigh,
+                seriesColor,
+                context.l10n.chartUpperLimit(targetHigh.toStringAsFixed(1)),
+              ),
+            );
             if (targetHigh < minY) minY = targetHigh;
             if (targetHigh > maxY) maxY = targetHigh;
           }
@@ -686,7 +881,9 @@ class ChartCanvasBox extends StatelessWidget {
     List<VerticalLine> alarmLines = [];
     if (minX != double.infinity && maxX != -double.infinity) {
       for (final a in alarms) {
-        final DateTime? ts = DateTime.tryParse(a['timestamp']?.toString() ?? '')?.toLocal();
+        final DateTime? ts = DateTime.tryParse(
+          a['timestamp']?.toString() ?? '',
+        )?.toLocal();
         if (ts == null) continue;
         final double x = ts.millisecondsSinceEpoch.toDouble();
         if (x < minX || x > maxX) continue;
@@ -701,7 +898,11 @@ class ChartCanvasBox extends StatelessWidget {
               show: true,
               alignment: Alignment.topLeft,
               padding: const EdgeInsets.only(left: 4, bottom: 2),
-              style: TextStyle(fontSize: 12, color: context.colors.error, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 12,
+                color: context.colors.error,
+                fontWeight: FontWeight.w700,
+              ),
               labelResolver: (line) => name,
             ),
           ),
@@ -725,7 +926,10 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(
         context,
         child: Center(
-          child: Text(context.l10n.chartNoValidData, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+          child: Text(
+            context.l10n.chartNoValidData,
+            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+          ),
         ),
       );
     }
@@ -735,7 +939,11 @@ class ChartCanvasBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ChartLegend(names: seriesNames, dashes: seriesDashes, colors: colors),
+          _ChartLegend(
+            names: seriesNames,
+            dashes: seriesDashes,
+            colors: colors,
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 8.0),
@@ -749,14 +957,19 @@ class ChartCanvasBox extends StatelessWidget {
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
                       // 기본 배경은 어두운 회색 고정이라 어두운 테마에서 차트와 섞인다.
-                      getTooltipColor: (_) =>
-                          context.colors.isDark ? context.colors.background : const Color(0xFF2B3843),
+                      getTooltipColor: (_) => context.colors.isDark
+                          ? context.colors.background
+                          : const Color(0xFF2B3843),
                       getTooltipItems: (touchedSpots) {
                         return touchedSpots.map((spot) {
-                          final dt = DateTime.fromMillisecondsSinceEpoch(spot.x.toInt());
+                          final dt = DateTime.fromMillisecondsSinceEpoch(
+                            spot.x.toInt(),
+                          );
                           final timeStr = DateFormat('MM-dd HH:mm').format(dt);
                           // 여러 선이 겹칠 때 어느 시리즈의 값인지 알 수 없어 이름을 함께 보여준다.
-                          final name = spot.barIndex < seriesNames.length ? seriesNames[spot.barIndex] : '';
+                          final name = spot.barIndex < seriesNames.length
+                              ? seriesNames[spot.barIndex]
+                              : '';
                           return LineTooltipItem(
                             '$name\n$timeStr\n${spot.y.toStringAsFixed(1)}',
                             const TextStyle(color: Colors.white, fontSize: 12),
@@ -768,24 +981,37 @@ class ChartCanvasBox extends StatelessWidget {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: true,
-                    getDrawingHorizontalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
-                    getDrawingVerticalLine: (value) => FlLine(color: context.colors.outline, strokeWidth: 1),
+                    getDrawingHorizontalLine: (value) =>
+                        FlLine(color: context.colors.outline, strokeWidth: 1),
+                    getDrawingVerticalLine: (value) =>
+                        FlLine(color: context.colors.outline, strokeWidth: 1),
                   ),
                   titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
-                          if (value == minX || value == maxX) return const SizedBox.shrink();
-                          final dt = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+                          if (value == minX || value == maxX) {
+                            return const SizedBox.shrink();
+                          }
+                          final dt = DateTime.fromMillisecondsSinceEpoch(
+                            value.toInt(),
+                          );
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
                               DateFormat('HH:mm').format(dt),
-                              style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.colors.textSecondary,
+                              ),
                             ),
                           );
                         },
@@ -798,14 +1024,20 @@ class ChartCanvasBox extends StatelessWidget {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             value.toStringAsFixed(1),
-                            style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.colors.textSecondary,
+                            ),
                           );
                         },
                       ),
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  extraLinesData: ExtraLinesData(horizontalLines: targetLines, verticalLines: alarmLines),
+                  extraLinesData: ExtraLinesData(
+                    horizontalLines: targetLines,
+                    verticalLines: alarmLines,
+                  ),
                 ),
               ),
             ),
@@ -826,7 +1058,11 @@ class ChartCanvasBox extends StatelessWidget {
         show: true,
         alignment: Alignment.topRight,
         padding: const EdgeInsets.only(right: 4, bottom: 2),
-        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          fontSize: 12,
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
         labelResolver: (line) => label,
       ),
     );
@@ -852,7 +1088,11 @@ class ChartToolBox extends StatelessWidget {
   final bool showTargetLines;
   final ValueChanged<bool> onToggleTargetLines;
 
-  const ChartToolBox({super.key, required this.showTargetLines, required this.onToggleTargetLines});
+  const ChartToolBox({
+    super.key,
+    required this.showTargetLines,
+    required this.onToggleTargetLines,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -862,20 +1102,30 @@ class ChartToolBox extends StatelessWidget {
         children: [
           const Spacer(),
           IconButton(
-            icon: Icon(Icons.pan_tool_outlined, color: context.colors.textSecondary),
+            icon: Icon(
+              Icons.pan_tool_outlined,
+              color: context.colors.textSecondary,
+            ),
             onPressed: null,
             tooltip: context.l10n.chartPanDisabled,
           ),
           IconButton(
             icon: Icon(
               Icons.show_chart_rounded,
-              color: showTargetLines ? context.colors.primary : context.colors.textSecondary,
+              color: showTargetLines
+                  ? context.colors.primary
+                  : context.colors.textSecondary,
             ),
             onPressed: () => onToggleTargetLines(!showTargetLines),
-            tooltip: showTargetLines ? context.l10n.chartHideBaseline : context.l10n.chartShowBaseline,
+            tooltip: showTargetLines
+                ? context.l10n.chartHideBaseline
+                : context.l10n.chartShowBaseline,
           ),
           IconButton(
-            icon: Icon(Icons.text_fields_rounded, color: context.colors.textSecondary),
+            icon: Icon(
+              Icons.text_fields_rounded,
+              color: context.colors.textSecondary,
+            ),
             onPressed: null,
             tooltip: context.l10n.chartNoteDisabled,
           ),
@@ -895,32 +1145,86 @@ class _SectionCard extends StatelessWidget {
   final Widget child;
   final Widget? trailing;
 
-  const _SectionCard({required this.title, required this.child, this.trailing});
+  /// 제목 줄을 눌러 카드를 접고 펼 수 있게 한다.
+  final VoidCallback? onHeaderTap;
+
+  /// 접혀 있을 때 제목 아래에 붙는 한 줄. 열어 보지 않아도 지금 무엇이
+  /// 선택돼 있는지 알 수 있어야 접어 두는 의미가 있다.
+  final String? headerSummary;
+
+  const _SectionCard({
+    required this.title,
+    required this.child,
+    this.trailing,
+    this.onHeaderTap,
+    this.headerSummary,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final header = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.textSecondary,
+                ),
+              ),
+              if (headerSummary != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  headerSummary!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.colors.textPrimary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
+    );
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: context.colors.cardShadow,
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
-              ),
-              if (trailing != null) trailing!,
-            ],
+          // 제목 줄 전체가 손가락에 닿아야 한다. 화살표만 누를 수 있으면
+          // 접히는 카드인 줄 모른다.
+          if (onHeaderTap != null)
+            InkWell(
+              onTap: onHeaderTap,
+              child: Padding(padding: const EdgeInsets.all(16), child: header),
+            )
+          else
+            Padding(padding: const EdgeInsets.all(16), child: header),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              0,
+              16,
+              onHeaderTap != null ? 0 : 16,
+            ),
+            child: child,
           ),
-          const SizedBox(height: 12),
-          child,
         ],
       ),
     );

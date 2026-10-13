@@ -667,6 +667,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get withdrawDone => 'Your account has been deleted.';
 
   @override
+  String chartSeriesSummary(String group, int count) {
+    return '$group · $count shown';
+  }
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

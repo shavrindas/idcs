@@ -331,6 +331,8 @@
   "facilityRegisterDone": "Facility added.",
   "facilityUnlinkDone": "Facility unlinked.",
   "withdrawDone": "Your account has been deleted.",
+  "chartSeriesSummary": "{group} · {count} shown",
+  "@chartSeriesSummary": {"placeholders": {"group": {"type": "String"}, "count": {"type": "int"}}},
   "searchNoResults": "No matches.",
   "alarmsNone": "No alarms to show.",
   "alarmNameMissing": "Unnamed alarm",
