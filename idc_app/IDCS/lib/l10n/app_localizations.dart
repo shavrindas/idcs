@@ -1334,6 +1334,48 @@ abstract class AppLocalizations {
   /// **'기록이 없는 항목: {names}'**
   String chartNoRecordsFor(String names);
 
+  /// No description provided for @editorBodyHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'작업 내용을 적어 주세요.'**
+  String get editorBodyHint;
+
+  /// No description provided for @discardDraftTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'쓰던 글을 버릴까요?'**
+  String get discardDraftTitle;
+
+  /// No description provided for @discardDraftBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 올리지 않았습니다. 나가면 쓴 내용이 사라집니다.'**
+  String get discardDraftBody;
+
+  /// No description provided for @discardDraftKeep.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 쓰기'**
+  String get discardDraftKeep;
+
+  /// No description provided for @discardDraftLeave.
+  ///
+  /// In ko, this message translates to:
+  /// **'버리고 나가기'**
+  String get discardDraftLeave;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾼 내용을 버릴까요?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.'**
+  String get discardChangesBody;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:
@@ -1607,8 +1649,8 @@ abstract class AppLocalizations {
   /// No description provided for @postCreateTitle.
   ///
   /// In ko, this message translates to:
-  /// **'새 게시글 작성 (시설 {id})'**
-  String postCreateTitle(String id);
+  /// **'새 게시글'**
+  String get postCreateTitle;
 
   /// No description provided for @postCreateSubmit.
   ///
