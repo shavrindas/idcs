@@ -338,6 +338,8 @@
   "roomStatusCompressor": "Comp",
   "roomStatusOn": "ON",
   "roomStatusOff": "OFF",
+  "chartNoRecordsFor": "No records for: {names}",
+  "@chartNoRecordsFor": {"placeholders": {"names": {"type": "String"}}},
   "searchNoResults": "No matches.",
   "alarmsNone": "No alarms to show.",
   "alarmNameMissing": "Unnamed alarm",
