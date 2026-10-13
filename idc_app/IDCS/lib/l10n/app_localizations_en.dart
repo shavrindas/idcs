@@ -503,22 +503,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get chartTools => 'Tools';
-
-  @override
-  String get chartPanDisabled => 'Pan (off)';
-
-  @override
   String get chartHideBaseline => 'Hide safe range';
 
   @override
   String get chartShowBaseline => 'Show safe range';
-
-  @override
-  String get chartNoteDisabled => 'Note (off)';
-
-  @override
-  String get chartResetView => 'Reset view';
 
   @override
   String get backToFacilities => 'Back to my facilities';
@@ -713,6 +701,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get discardChangesBody =>
       'They have not been saved. Leaving will lose them.';
+
+  @override
+  String get chartSafeRangeTitle => 'Safe range lines';
+
+  @override
+  String get chartSafeRangeHint =>
+      'Draws each point\'s high and low limit as a dashed line across the chart.';
+
+  @override
+  String get chartSafeRangeNone => 'The selected points have no limits set.';
 
   @override
   String get searchNoResults => 'No matches.';

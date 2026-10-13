@@ -1126,55 +1126,86 @@ class ChartCanvasBox extends StatelessWidget {
 }
 
 /// Box #4: 차트 도구 박스 (제어 및 어노테이션 도구)
+/// 차트 위에 안전 범위 선을 겹쳐 그릴지 고르는 자리.
+///
+/// 예전에는 '탐색 도구' 라는 이름으로 아이콘 네 개가 오른쪽에 몰려 있었는데,
+/// 그중 실제로 동작하는 건 하나뿐이었다. 이동·메모는 아예 비활성이었고
+/// 새로고침은 빈 함수(onPressed: () {})라 눌러도 아무 일이 없었다. 무엇을 하는
+/// 단추인지도 아이콘만 봐서는 알 수 없었다.
+///
+/// 되는 것 하나만 남기고, 이름과 설명을 붙였다.
 class ChartToolBox extends StatelessWidget {
   final bool showTargetLines;
   final ValueChanged<bool> onToggleTargetLines;
+
+  /// 지금 그려진 시리즈. 상·하한이 하나도 없으면 켜도 달라지는 게 없으므로
+  /// 그 사실을 알려 준다 — 눌러도 아무 일이 없는 이유가 바로 이것이었다.
+  final Map<String, dynamic>? chartData;
 
   const ChartToolBox({
     super.key,
     required this.showTargetLines,
     required this.onToggleTargetLines,
+    this.chartData,
   });
+
+  /// 실제로 기준선이 그려질 항목이 있는지.
+  ///
+  /// 상·하한이 정해져 있어도 그 기간에 기록이 없으면 선은 그려지지 않는다
+  /// (차트가 점이 있는 시리즈에만 기준선을 붙인다). 그래서 둘 다 본다 —
+  /// 켤 수는 있는데 아무 일도 일어나지 않는 상태를 만들지 않기 위해서다.
+  bool get _hasAnyLimit {
+    final datasets = chartData?['data']?['datasets'];
+    if (datasets is! List) return false;
+
+    return datasets.any((ds) {
+      if (ds is! Map) return false;
+      final hasLimit = ds['target_low_limit'] != null || ds['target_high_limit'] != null;
+      final points = ds['data'];
+      return hasLimit && points is List && points.isNotEmpty;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _SectionCard(
-      title: context.l10n.chartTools,
+    final colors = context.colors;
+    final usable = _hasAnyLimit;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: colors.cardShadow,
+      ),
       child: Row(
         children: [
-          const Spacer(),
-          IconButton(
-            icon: Icon(
-              Icons.pan_tool_outlined,
-              color: context.colors.textSecondary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.chartSafeRangeTitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: usable ? colors.textPrimary : colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  usable
+                      ? context.l10n.chartSafeRangeHint
+                      : context.l10n.chartSafeRangeNone,
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
+                ),
+              ],
             ),
-            onPressed: null,
-            tooltip: context.l10n.chartPanDisabled,
           ),
-          IconButton(
-            icon: Icon(
-              Icons.show_chart_rounded,
-              color: showTargetLines
-                  ? context.colors.primary
-                  : context.colors.textSecondary,
-            ),
-            onPressed: () => onToggleTargetLines(!showTargetLines),
-            tooltip: showTargetLines
-                ? context.l10n.chartHideBaseline
-                : context.l10n.chartShowBaseline,
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.text_fields_rounded,
-              color: context.colors.textSecondary,
-            ),
-            onPressed: null,
-            tooltip: context.l10n.chartNoteDisabled,
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh_rounded, color: context.colors.primary),
-            onPressed: () {},
-            tooltip: context.l10n.chartResetView,
+          const SizedBox(width: 8),
+          Switch(
+            value: showTargetLines && usable,
+            onChanged: usable ? onToggleTargetLines : null,
           ),
         ],
       ),

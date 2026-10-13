@@ -316,6 +316,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ChartToolBox(
               showTargetLines: _showTargetLines,
               onToggleTargetLines: (val) => setState(() => _showTargetLines = val),
+              chartData: _chartData,
             ),
             const SizedBox(height: 8),
 
