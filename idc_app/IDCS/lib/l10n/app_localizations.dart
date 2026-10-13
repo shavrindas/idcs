@@ -1232,6 +1232,30 @@ abstract class AppLocalizations {
   /// **'구성원 목록을 불러오지 못했습니다. {reason}'**
   String chatMembersLoadFailed(String reason);
 
+  /// No description provided for @signupPasswordConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 확인'**
+  String get signupPasswordConfirm;
+
+  /// No description provided for @signupPasswordMismatch.
+  ///
+  /// In ko, this message translates to:
+  /// **'두 비밀번호가 다릅니다.'**
+  String get signupPasswordMismatch;
+
+  /// No description provided for @signupPasswordTooShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호는 {min}자 이상이어야 합니다.'**
+  String signupPasswordTooShort(int min);
+
+  /// No description provided for @signupEmailInvalid.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일 주소 형식이 맞는지 확인하세요.'**
+  String get signupEmailInvalid;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:

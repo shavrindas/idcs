@@ -65,7 +65,7 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
 
 /// Box #2: 소셜 로그인 박스
 class SocialLoginBox extends StatelessWidget {
-  final Function(String) onSocialLoginPressed;
+  final Future<void> Function(String) onSocialLoginPressed;
 
   const SocialLoginBox({super.key, required this.onSocialLoginPressed});
 
@@ -89,13 +89,10 @@ class SocialLoginBox extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialLoginPressed('google'),
-          icon: const _ProviderBadge(
-            label: 'G',
-            background: Color(0xFF4285F4),
-          ),
-          label: Text(context.l10n.continueWithGoogle),
+          icon: const _ProviderBadge(label: 'G', background: Color(0xFF4285F4)),
+          label: context.l10n.continueWithGoogle,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
@@ -103,14 +100,10 @@ class SocialLoginBox extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialLoginPressed('apple'),
-          icon: const _ProviderBadge(
-            label: '',
-            background: Colors.black,
-            icon: Icons.apple,
-          ),
-          label: Text(context.l10n.continueWithApple),
+          icon: const _ProviderBadge(label: '', background: Colors.black, icon: Icons.apple),
+          label: context.l10n.continueWithApple,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),

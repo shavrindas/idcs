@@ -623,6 +623,20 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get signupPasswordConfirm => '비밀번호 확인';
+
+  @override
+  String get signupPasswordMismatch => '두 비밀번호가 다릅니다.';
+
+  @override
+  String signupPasswordTooShort(int min) {
+    return '비밀번호는 $min자 이상이어야 합니다.';
+  }
+
+  @override
+  String get signupEmailInvalid => '이메일 주소 형식이 맞는지 확인하세요.';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

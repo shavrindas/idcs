@@ -27,8 +27,11 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // 로그인 상태 유지 여부를 상위에서 관리
-  bool _keepLogin = false;
+  /// 로그인 상태 유지 여부를 상위에서 관리.
+  ///
+  /// 기본을 켜 둔다. 현장에서 하루에도 몇 번씩 여는 앱이라, 끌 때마다 다시
+  /// 로그인하게 만들 이유가 없다. 공용 단말이면 체크를 풀면 된다.
+  bool _keepLogin = true;
 
   @override
   void dispose() {

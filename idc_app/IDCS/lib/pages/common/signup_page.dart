@@ -18,6 +18,11 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  /// 비밀번호를 한 번 더 받는다. 오타가 나면 계정이 그대로 잠기는데, 지금은
+  /// 비밀번호 재설정도 서버에서 열려 있지 않아 되돌릴 방법이 없다.
+  final TextEditingController _passwordConfirmController = TextEditingController();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
@@ -31,10 +36,21 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordConfirmController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
+    _fallbackEmailController.dispose();
     super.dispose();
   }
+
+  /// 너무 짧은 비밀번호를 막는 최소 길이. 서버가 따로 규칙을 두고 있지 않아
+  /// 여기서만 거른다.
+  static const int _minPasswordLength = 8;
+
+  /// 완전한 이메일 검증은 보내 봐야 알 수 있다. 여기서는 오타로 흔한
+  /// '@ 가 없다' / '점이 없다' 정도만 걸러 헛걸음을 줄인다.
+  static bool _looksLikeEmail(String value) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
 
   // API 연동: 일반 계정 생성 처리
   Future<void> _handleGeneralSignup() async {
@@ -43,8 +59,25 @@ class _SignupPageState extends State<SignupPage> {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
 
+    final l10n = context.l10n;
+
     if (email.isEmpty || password.isEmpty || name.isEmpty) {
-      AppToast.warning(context, context.l10n.signupMissingFields);
+      AppToast.warning(context, l10n.signupMissingFields);
+      return;
+    }
+
+    // 서버에 다녀와서야 알게 되는 것들을 먼저 거른다. 특히 비밀번호 오타는
+    // 서버가 잡아 줄 수 없다.
+    if (!_looksLikeEmail(email)) {
+      AppToast.warning(context, l10n.signupEmailInvalid);
+      return;
+    }
+    if (password.length < _minPasswordLength) {
+      AppToast.warning(context, l10n.signupPasswordTooShort(_minPasswordLength));
+      return;
+    }
+    if (password != _passwordConfirmController.text.trim()) {
+      AppToast.warning(context, l10n.signupPasswordMismatch);
       return;
     }
 
@@ -178,6 +211,7 @@ class _SignupPageState extends State<SignupPage> {
               StandardSignupBox(
                 emailController: _emailController,
                 passwordController: _passwordController,
+                passwordConfirmController: _passwordConfirmController,
                 nameController: _nameController,
                 phoneController: _phoneController,
                 onSignupPressed: _handleGeneralSignup, // 기존 로직
