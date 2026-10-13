@@ -692,6 +692,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get editorBodyHint => 'Write what happened.';
+
+  @override
+  String get discardDraftTitle => 'Discard this post?';
+
+  @override
+  String get discardDraftBody =>
+      'It has not been published. Leaving will lose what you wrote.';
+
+  @override
+  String get discardDraftKeep => 'Keep writing';
+
+  @override
+  String get discardDraftLeave => 'Discard';
+
+  @override
+  String get discardChangesTitle => 'Discard your changes?';
+
+  @override
+  String get discardChangesBody =>
+      'They have not been saved. Leaving will lose them.';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override
@@ -848,9 +871,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String postCreateTitle(String id) {
-    return 'New post (facility $id)';
-  }
+  String get postCreateTitle => 'New post';
 
   @override
   String get postCreateSubmit => 'Publish';

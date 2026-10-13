@@ -340,6 +340,13 @@
   "roomStatusOff": "OFF",
   "chartNoRecordsFor": "No records for: {names}",
   "@chartNoRecordsFor": {"placeholders": {"names": {"type": "String"}}},
+  "editorBodyHint": "Write what happened.",
+  "discardDraftTitle": "Discard this post?",
+  "discardDraftBody": "It has not been published. Leaving will lose what you wrote.",
+  "discardDraftKeep": "Keep writing",
+  "discardDraftLeave": "Discard",
+  "discardChangesTitle": "Discard your changes?",
+  "discardChangesBody": "They have not been saved. Leaving will lose them.",
   "searchNoResults": "No matches.",
   "alarmsNone": "No alarms to show.",
   "alarmNameMissing": "Unnamed alarm",
@@ -461,14 +468,7 @@
       }
     }
   },
-  "postCreateTitle": "New post (facility {id})",
-  "@postCreateTitle": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
+  "postCreateTitle": "New post",
   "postCreateSubmit": "Publish",
   "postSourceLoadFailed": "Could not load the original: {message}",
   "@postSourceLoadFailed": {

@@ -340,6 +340,13 @@
   "roomStatusOff": "OFF",
   "chartNoRecordsFor": "기록이 없는 항목: {names}",
   "@chartNoRecordsFor": {"placeholders": {"names": {"type": "String"}}},
+  "editorBodyHint": "작업 내용을 적어 주세요.",
+  "discardDraftTitle": "쓰던 글을 버릴까요?",
+  "discardDraftBody": "아직 올리지 않았습니다. 나가면 쓴 내용이 사라집니다.",
+  "discardDraftKeep": "계속 쓰기",
+  "discardDraftLeave": "버리고 나가기",
+  "discardChangesTitle": "바꾼 내용을 버릴까요?",
+  "discardChangesBody": "아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.",
   "searchNoResults": "검색 결과가 없습니다.",
   "alarmsNone": "조회할 수 있는 알람이 없습니다.",
   "alarmNameMissing": "알람 이름 없음",
@@ -461,14 +468,7 @@
       }
     }
   },
-  "postCreateTitle": "새 게시글 작성 (시설 {id})",
-  "@postCreateTitle": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
+  "postCreateTitle": "새 게시글",
   "postCreateSubmit": "게시글 등록하기",
   "postSourceLoadFailed": "원문 로드 실패: {message}",
   "@postSourceLoadFailed": {

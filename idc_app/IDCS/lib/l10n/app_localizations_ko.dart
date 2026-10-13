@@ -680,6 +680,27 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get editorBodyHint => '작업 내용을 적어 주세요.';
+
+  @override
+  String get discardDraftTitle => '쓰던 글을 버릴까요?';
+
+  @override
+  String get discardDraftBody => '아직 올리지 않았습니다. 나가면 쓴 내용이 사라집니다.';
+
+  @override
+  String get discardDraftKeep => '계속 쓰기';
+
+  @override
+  String get discardDraftLeave => '버리고 나가기';
+
+  @override
+  String get discardChangesTitle => '바꾼 내용을 버릴까요?';
+
+  @override
+  String get discardChangesBody => '아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override
@@ -835,9 +856,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String postCreateTitle(String id) {
-    return '새 게시글 작성 (시설 $id)';
-  }
+  String get postCreateTitle => '새 게시글';
 
   @override
   String get postCreateSubmit => '게시글 등록하기';
