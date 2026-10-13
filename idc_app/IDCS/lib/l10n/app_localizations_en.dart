@@ -672,6 +672,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get roomSetpointShort => 'Set';
+
+  @override
+  String get roomStatusDefrost => 'Defrost';
+
+  @override
+  String get roomStatusCompressor => 'Comp';
+
+  @override
+  String get roomStatusOn => 'ON';
+
+  @override
+  String get roomStatusOff => 'OFF';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

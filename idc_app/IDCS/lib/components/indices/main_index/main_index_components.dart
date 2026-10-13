@@ -224,16 +224,23 @@ class _EmptyBox extends StatelessWidget {
 
 /// Room picker grid. Carries the same alarm state as the facility card above it,
 /// so the room that needs attention is visible before opening anything.
+/// 호실 목록. 한 칸이 그 호실의 '지금'을 요약한다.
+///
+/// 예전에는 이름과 알람 배지뿐이라, 어느 호실이 몇 도인지 알려면 하나씩 열어
+/// 봐야 했다. 10개 호실이면 열 번이다. 창고를 맡은 사람이 아침에 확인하고 싶은
+/// 것은 그 열 번이 아니라 "지금 다 괜찮은가" 한 가지다. 그래서 한 칸에 네 가지를
+/// 담는다 — 현재온도, 목표온도, 이상 유무, 제상·콤프 상태.
 class RoomGrid extends StatelessWidget {
   final List<dynamic> rooms;
 
   /// Active alarm count per room id. A missing id simply counts as zero.
   final Map<int, int> activeAlarmCounts;
 
-  /// Latest 고내온도 per room id. The whole point of opening this screen is to
-  /// see it, so the card shows it instead of making the user tap in to find out.
-  /// A room with no reading yet is simply left blank.
+  /// 저장된 마지막 고내온도. 설비와 연결이 끊겨 실시간 값이 없을 때 쓴다.
   final Map<int, double> temperatures;
+
+  /// 실시간 값. 호실 id -> (서버 필드 이름 -> 값).
+  final Map<int, Map<String, String>> liveValues;
 
   final Function(int) onRoomPressed;
   final String? emptyMessage;
@@ -244,8 +251,19 @@ class RoomGrid extends StatelessWidget {
     required this.activeAlarmCounts,
     required this.onRoomPressed,
     this.temperatures = const {},
+    this.liveValues = const {},
     this.emptyMessage,
   });
+
+  /// 설비가 보내는 참/거짓은 "ON"/"OFF" 로 오기도 하고 "1"/"0" 으로 오기도 한다.
+  /// 둘 다 같은 뜻으로 읽는다. 알 수 없는 값이면 아예 보여주지 않는다.
+  static bool? _asSwitch(String? raw) {
+    final v = raw?.trim().toUpperCase();
+    if (v == null || v.isEmpty || v == 'NA') return null;
+    if (v == 'ON' || v == '1' || v == 'TRUE') return true;
+    if (v == 'OFF' || v == '0' || v == 'FALSE') return false;
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -260,15 +278,25 @@ class RoomGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 2.1,
+        // 네 가지를 담되, 호실이 열 개여도 첫 화면에 다 들어와야 한다.
+        // 한 칸이라도 더 높으면 마지막 줄이 잘린다.
+        childAspectRatio: 1.55,
       ),
       itemCount: rooms.length,
       itemBuilder: (context, index) {
         final room = rooms[index];
         final colors = context.colors;
-        final count = activeAlarmCounts[room['id']] ?? 0;
+        final roomId = room['id'];
+        final count = activeAlarmCounts[roomId] ?? 0;
         final hasAlarm = count > 0;
-        final temp = temperatures[room['id']];
+
+        final live = liveValues[roomId] ?? const <String, String>{};
+
+        // 실시간 값이 있으면 그것이 맞다. 없으면 마지막으로 저장된 값이라도 보인다.
+        final temp = double.tryParse(live['temp_pv'] ?? '') ?? temperatures[roomId];
+        final setpoint = double.tryParse(live['temp_sv'] ?? '');
+        final defrost = _asSwitch(live['deforest_def']);
+        final compressor = _asSwitch(live['control_runsw']);
 
         return DecoratedBox(
           decoration: BoxDecoration(
@@ -280,55 +308,42 @@ class RoomGrid extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: () => onRoomPressed(room['id']),
+              onTap: () => onRoomPressed(roomId),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   border: hasAlarm ? Border.all(color: colors.error) : null,
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            room['name'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          _StatusText(
-                            count: count,
-                            label: context.l10n.alarmShort,
-                          ),
-                        ],
+                    Text(
+                      room['name'] ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                        fontSize: 14,
                       ),
                     ),
-                    if (temp != null) ...[
-                      const SizedBox(width: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            temp.toStringAsFixed(1),
-                            style: TextStyle(
-                              fontSize: 22,
-                              height: 1.1,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
+                    const SizedBox(height: 2),
+
+                    // 이 칸에서 가장 먼저 눈에 들어와야 하는 값.
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          temp == null ? '—' : temp.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 24,
+                            height: 1.15,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textPrimary,
                           ),
+                        ),
+                        if (temp != null)
                           Text(
                             context.l10n.unitCelsius,
                             style: TextStyle(
@@ -337,6 +352,36 @@ class RoomGrid extends StatelessWidget {
                               color: colors.textSecondary,
                             ),
                           ),
+                        const Spacer(),
+                        if (setpoint != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              '${context.l10n.roomSetpointShort} ${setpoint.toStringAsFixed(1)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+
+                    const Spacer(),
+                    _StatusText(count: count, label: context.l10n.alarmShort),
+
+                    // 제상·콤프는 값이 들어온 것만 내건다. 설비가 안 보내는
+                    // 항목을 'OFF' 로 보여주면 꺼져 있다는 뜻으로 읽힌다.
+                    if (defrost != null || compressor != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (defrost != null)
+                            _StatePill(label: context.l10n.roomStatusDefrost, on: defrost),
+                          if (defrost != null && compressor != null) const SizedBox(width: 6),
+                          if (compressor != null)
+                            _StatePill(label: context.l10n.roomStatusCompressor, on: compressor),
                         ],
                       ),
                     ],
@@ -351,8 +396,35 @@ class RoomGrid extends StatelessWidget {
   }
 }
 
-/// Box #2: 통합 시설 박스
-/// Still used by the room picker, where entries are just names to choose from.
+/// 켜짐/꺼짐 한 가지를 작게 표시한다.
+///
+/// 켜진 것만 색을 입힌다. 둘 다 색이 있으면 칸마다 알록달록해져서, 정작
+/// 눈에 띄어야 할 알람 테두리가 묻힌다.
+class _StatePill extends StatelessWidget {
+  final String label;
+  final bool on;
+
+  const _StatePill({required this.label, required this.on});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final color = on ? colors.primary : colors.textSecondary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: on ? colors.primary.withValues(alpha: 0.10) : colors.background,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        '$label ${on ? context.l10n.roomStatusOn : context.l10n.roomStatusOff}',
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+      ),
+    );
+  }
+}
+
 class IntegratedFacilityBox extends StatelessWidget {
   final List<dynamic> facilities;
   final Function(int) onFacilityPressed;

@@ -660,6 +660,21 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get roomSetpointShort => '목표';
+
+  @override
+  String get roomStatusDefrost => '제상';
+
+  @override
+  String get roomStatusCompressor => '콤프';
+
+  @override
+  String get roomStatusOn => 'ON';
+
+  @override
+  String get roomStatusOff => 'OFF';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override
