@@ -15,6 +15,17 @@ String _format(String raw, String pattern) {
   return DateFormat(pattern).format(parsed.toLocal());
 }
 
+/// 채팅은 `2026-08-20 11:30` 처럼 타임존이 빠진 문자열로 온다. 서버가
+/// timestamptz 를 strftime 으로 찍으면서 시간대 표시를 떨어뜨린 것인데, 값
+/// 자체는 UTC다 — 같은 시각이 방 목록 API 에서는 `...+00:00` 으로 돌아온다.
+///
+/// 그래서 시간대 표시가 없으면 UTC 로 읽는다. 그냥 두면 한국에서 9시간 이른
+/// 시각이 뜬다. 서버가 ISO 로 내려주게 되면 이 분기는 저절로 쓰이지 않는다.
+String formatChatTime(String raw) {
+  final hasZone = raw.endsWith('Z') || RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(raw);
+  return _format(hasZone ? raw : '${raw.replaceFirst(' ', 'T')}Z', 'MM/dd HH:mm');
+}
+
 /// 목록에서 쓰는 짧은 형태. 올해 안의 일이 대부분이라 연도는 빼 둔다.
 String formatListTime(String raw) => _format(raw, 'MM/dd HH:mm');
 

@@ -1,5 +1,6 @@
 // 경로: lib/components/cross_compontents/chat/chat_room_components.dart
 import 'package:flutter/material.dart';
+import 'package:idcs/components/shared/time_format.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -38,7 +39,16 @@ class ChatMessageListBox extends StatelessWidget {
   final String currentUserId;
   final Function(Map<String, dynamic>, String action) onAction; // 메뉴 이벤트 상위 전달
 
-  const ChatMessageListBox({super.key, required this.messages, required this.currentUserId, required this.onAction});
+  /// 보낸 사람 id -> 이름. 메시지에는 user_id 밖에 없다.
+  final Map<int, String> senderNames;
+
+  const ChatMessageListBox({
+    super.key,
+    required this.messages,
+    required this.currentUserId,
+    required this.onAction,
+    this.senderNames = const {},
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +84,12 @@ class ChatMessageListBox extends StatelessWidget {
                     if (!isMine)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2, left: 4),
-                        child: Text('User ${msg['user_id']}', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                        child: Text(
+                          // 참여자 목록에서 못 찾으면 — 방을 떠난 사람 등 —
+                          // 번호라도 보여 준다. 빈칸보다는 낫다.
+                          senderNames[msg['user_id']] ?? '#${msg['user_id']}',
+                          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                        ),
                       ),
 
                     Container(
@@ -124,7 +139,10 @@ class ChatMessageListBox extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
-                      child: Text(msg['created_at'] ?? '', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                      child: Text(
+                        formatChatTime(msg['created_at']?.toString() ?? ''),
+                        style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                      ),
                     ),
                   ],
                 ),

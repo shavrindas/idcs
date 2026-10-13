@@ -14,7 +14,15 @@ class ChatRoomPage extends StatefulWidget {
   final String userId;
   final int roomId;
 
-  const ChatRoomPage({super.key, required this.userId, required this.roomId});
+  /// 목록에서 넘겨받은 방 이름. 없으면 방 번호로 대신한다.
+  final String? roomName;
+
+  const ChatRoomPage({
+    super.key,
+    required this.userId,
+    required this.roomId,
+    this.roomName,
+  });
 
   @override
   State<ChatRoomPage> createState() => _ChatRoomPageState();
@@ -29,6 +37,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   List<dynamic> _messages = [];
   List<dynamic> _participants = [];
   Map<String, dynamic>? _replyingTo; // 답장 대상 메시지 저장
+
+  /// 보낸 사람 id -> 이름. 메시지 API 는 user_id 만 주기 때문에, 참여자 목록에서
+  /// 맞춰 둬야 'User 11' 대신 사람 이름이 뜬다.
+  Map<int, String> _senderNames = {};
   bool _isLoadingHistory = true;
   bool _isSearchMode = false;
 
@@ -42,6 +54,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     try {
       await ChatApiService.markAsRead(widget.roomId, widget.userId);
       _participants = await ChatApiService.getParticipants(widget.roomId);
+      _senderNames = {
+        for (final p in _participants)
+          if (p['id'] is int && p['name'] != null) p['id'] as int: p['name'].toString(),
+      };
       await _loadMessages();
     } catch (e) {
       if (mounted) AppToast.error(context, describeApiError(context, e));
@@ -126,8 +142,13 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           style: TextStyle(color: context.colors.textPrimary),
           onSubmitted: (val) => _loadMessages(keyword: val),
         )
-            : Text(context.l10n.chatRoom),
+            : Text(widget.roomName ?? context.l10n.chatRoomFallback('${widget.roomId}')),
         actions: [
+          IconButton(
+            tooltip: context.l10n.chatMembers,
+            icon: const Icon(Icons.group_outlined),
+            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
           IconButton(
             tooltip: context.l10n.actionClose,
             icon: Icon(_isSearchMode ? Icons.close_rounded : Icons.search_rounded),
@@ -178,16 +199,15 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ChatRoomHeaderBox(
-            roomName: context.l10n.chatRoomFallback('${widget.roomId}'),
-            onMenuPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-          ),
+          // 앱바가 'Chat', 그 아래 상자가 'Chat 5' 라 제목이 두 줄로 겹쳐 있었다.
+          // 방 이름을 앱바에 올리고 상자는 걷어냈다 — 대화가 보이는 높이가 늘었다.
           Expanded(
             child: _isLoadingHistory
                 ? const Center(child: CircularProgressIndicator())
                 : ChatMessageListBox(
               messages: _messages,
               currentUserId: widget.userId,
+              senderNames: _senderNames,
               onAction: _handleMessageAction, // 액션 핸들러 연동
             ),
           ),

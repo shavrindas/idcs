@@ -161,7 +161,7 @@ class CommentBox extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: comments.length,
-            separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.outline),
+            separatorBuilder: (_, _) => Divider(height: 1, color: context.colors.outline),
             itemBuilder: (context, index) {
               final comment = comments[index];
               final bool isCreator = comment['creator_id'].toString() == currentUserId;

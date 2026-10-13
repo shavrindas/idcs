@@ -157,9 +157,20 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                   ],
                   ChatRoomListBox(
                     rooms: _rooms,
-                    onRoomTapped: (roomId) => context
-                        .push('/chat_room/${widget.userId}/$roomId')
-                        .then((_) => _fetchRooms()),
+                    // 방 이름은 이 목록이 이미 들고 있다. 상세가 다시 묻지
+                    // 않도록 같이 넘긴다.
+                    onRoomTapped: (roomId) {
+                      final room = _rooms.firstWhere(
+                        (r) => r['room_id'] == roomId,
+                        orElse: () => const <String, dynamic>{},
+                      );
+                      context
+                          .push(
+                            '/chat_room/${widget.userId}/$roomId',
+                            extra: room['room_name'],
+                          )
+                          .then((_) => _fetchRooms());
+                    },
                     onRoomLongPressed: _handleRoomLongPress,
                   ),
                 ],

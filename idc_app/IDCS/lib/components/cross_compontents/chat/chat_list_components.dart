@@ -75,7 +75,7 @@ class ChatRoomListBox extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: rooms.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.outline),
+        separatorBuilder: (_, _) => Divider(height: 1, color: context.colors.outline),
         itemBuilder: (context, index) {
           final room = rooms[index];
           final isPinned = room['sort_priority'] < 4;
