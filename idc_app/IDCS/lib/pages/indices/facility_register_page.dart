@@ -51,9 +51,9 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
     // Read before awaiting: context may no longer be valid in the catch.
     final l10n = context.l10n;
     try {
-      final msg = await FacilityApiService.registerFacility(widget.userId, code);
+      await FacilityApiService.registerFacility(widget.userId, code);
       setState(() {
-        _collapseMessage = msg;
+        _collapseMessage = l10n.facilityRegisterDone;
         _codeController.clear();
       });
       await _loadData(); // 목록 새로고침
@@ -66,10 +66,10 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
 
   Future<void> _handleUnlink(int facilityId) async {
     try {
-      final msg = await FacilityApiService.unlinkFacility(widget.userId, facilityId);
+      await FacilityApiService.unlinkFacility(widget.userId, facilityId);
       // The await above may have outlived this screen.
       if (!mounted) return;
-      AppToast.success(context, msg);
+      AppToast.success(context, context.l10n.facilityUnlinkDone);
       await _loadData();
     } catch (e) {
       // The await above may have outlived this screen.

@@ -649,6 +649,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupEmailInvalid => 'Check the email address format.';
 
   @override
+  String get loginSuccess => 'Signed in.';
+
+  @override
+  String get signupSuccess => 'Account created. Please sign in.';
+
+  @override
+  String get resetPasswordDone => 'Your password has been changed.';
+
+  @override
+  String get facilityRegisterDone => 'Facility added.';
+
+  @override
+  String get facilityUnlinkDone => 'Facility unlinked.';
+
+  @override
+  String get withdrawDone => 'Your account has been deleted.';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

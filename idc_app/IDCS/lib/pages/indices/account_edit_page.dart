@@ -84,18 +84,22 @@ class _PersonalPageState extends State<PersonalPage> {
   /// 수정 모드에서 저장. 실제로 바뀐 값만 서버에 보낸다.
   /// 실패하면 예외를 그대로 올려 수정 모드가 닫히지 않게 한다.
   Future<void> _handleSaveProfile(String name, String phone) async {
-    final List<String> messages = [];
+    // 바뀐 것만 보낸다. 서버가 돌려주는 문구는 한국어로 고정돼 있어 쓰지 않고,
+    // 무엇이 저장됐는지만 세어 둔다.
+    var changed = 0;
 
     if (name != _name) {
-      messages.add(await UserApiService.updateName(widget.userId, name));
+      await UserApiService.updateName(widget.userId, name);
+      changed++;
     }
     if (phone != _phone) {
-      messages.add(await UserApiService.updatePhone(widget.userId, phone));
+      await UserApiService.updatePhone(widget.userId, phone);
+      changed++;
     }
 
     if (!mounted) return;
 
-    if (messages.isEmpty) {
+    if (changed == 0) {
       AppToast.warning(context, context.l10n.profileNoChanges);
       return;
     }
@@ -104,7 +108,7 @@ class _PersonalPageState extends State<PersonalPage> {
       _name = name;
       _phone = phone;
     });
-    AppToast.success(context, messages.join(' / '));
+    AppToast.success(context, context.l10n.profileSaved);
   }
 
   Future<void> _handleUpdatePassword() async {
@@ -121,14 +125,14 @@ class _PersonalPageState extends State<PersonalPage> {
     }
 
     try {
-      final msg = await UserApiService.updatePassword(widget.userId, currentPw, newPw);
+      await UserApiService.updatePassword(widget.userId, currentPw, newPw);
       if (!mounted) return;
       setState(() {
         _pwCollapseMessage = context.l10n.profileSaved;
         _currentPwController.clear();
         _newPwController.clear();
       });
-      AppToast.success(context, msg);
+      AppToast.success(context, context.l10n.profileSaved);
     } catch (e) {
       setState(() => _pwCollapseMessage = context.l10n.errorPrefix(describeApiError(context, e)));
     }
@@ -160,10 +164,10 @@ class _PersonalPageState extends State<PersonalPage> {
     if (confirmed != true) return;
 
     try {
-      final msg = await UserApiService.withdraw(widget.userId);
+      await UserApiService.withdraw(widget.userId);
       await AuthService.setUserId(null);
       if (!mounted) return;
-      AppToast.success(context, msg);
+      AppToast.success(context, context.l10n.withdrawDone);
       context.go('/login');
     } catch (e) {
       if (!mounted) return;

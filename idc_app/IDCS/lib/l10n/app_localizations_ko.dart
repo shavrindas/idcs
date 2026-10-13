@@ -637,6 +637,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get signupEmailInvalid => '이메일 주소 형식이 맞는지 확인하세요.';
 
   @override
+  String get loginSuccess => '로그인되었습니다.';
+
+  @override
+  String get signupSuccess => '계정이 만들어졌습니다. 로그인해 주세요.';
+
+  @override
+  String get resetPasswordDone => '비밀번호가 변경되었습니다.';
+
+  @override
+  String get facilityRegisterDone => '시설이 등록되었습니다.';
+
+  @override
+  String get facilityUnlinkDone => '시설 연결을 해제했습니다.';
+
+  @override
+  String get withdrawDone => '계정이 삭제되었습니다.';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

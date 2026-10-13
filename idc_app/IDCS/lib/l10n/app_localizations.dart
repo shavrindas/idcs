@@ -1256,6 +1256,42 @@ abstract class AppLocalizations {
   /// **'이메일 주소 형식이 맞는지 확인하세요.'**
   String get signupEmailInvalid;
 
+  /// No description provided for @loginSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인되었습니다.'**
+  String get loginSuccess;
+
+  /// No description provided for @signupSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정이 만들어졌습니다. 로그인해 주세요.'**
+  String get signupSuccess;
+
+  /// No description provided for @resetPasswordDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호가 변경되었습니다.'**
+  String get resetPasswordDone;
+
+  /// No description provided for @facilityRegisterDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설이 등록되었습니다.'**
+  String get facilityRegisterDone;
+
+  /// No description provided for @facilityUnlinkDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 연결을 해제했습니다.'**
+  String get facilityUnlinkDone;
+
+  /// No description provided for @withdrawDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정이 삭제되었습니다.'**
+  String get withdrawDone;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:
