@@ -42,6 +42,12 @@ class AppConfig {
   static const String baseUrl = useV2 ? _v2Http : _legacyHttp;
   static const String basewsUrl = useV2 ? _v2Ws : _legacyWs;
 
+  /// 시설 구성원 목록처럼 아직 ServiceApp 에 없는 조회는 ServiceWeb 쪽을 본다.
+  /// ServiceApp 으로 옮겨지면 이 상수만 baseUrl 로 바꾸면 된다.
+  static const String webUrl = useV2
+      ? 'http://$_host:8900/api/v1/serviceweb'
+      : _legacyHttp;
+
   // 💡 향후 추가될 모든 초기화 로직은 main.dart가 아닌 여기에 추가합니다.
   static Future<void> initializeAll() async {
     await initializeDateFormatting('ko_KR', null);

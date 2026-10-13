@@ -596,6 +596,33 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get chatGroupPickMembers => '함께할 사람';
+
+  @override
+  String get chatGroupNoMembers => '이 시설에 등록된 다른 사람이 없습니다.';
+
+  @override
+  String get chatGroupNameRequired => '방 이름을 입력하세요.';
+
+  @override
+  String get chatGroupMemberRequired => '한 명 이상 선택하세요.';
+
+  @override
+  String chatGroupSelected(int count) {
+    return '$count명 선택';
+  }
+
+  @override
+  String chatGroupCreated(String name) {
+    return '\'$name\' 방을 만들었습니다.';
+  }
+
+  @override
+  String chatMembersLoadFailed(String reason) {
+    return '구성원 목록을 불러오지 못했습니다. $reason';
+  }
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override
