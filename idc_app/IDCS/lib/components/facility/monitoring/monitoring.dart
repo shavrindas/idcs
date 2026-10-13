@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/components/facility/monitoring/controllable_fields.dart';
 import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
@@ -30,8 +31,10 @@ class MonitoringCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 제어 가능한(OnConfirm이 있는) 카드는 정적 정보 카드보다 시각적으로 한 단계 부각시킨다.
-    final bool isControl = OnConfirm != null;
+    // 쓸 수 있는 항목이 하나라도 있는 카드만 '제어' 로 본다. 예전에는 콜백이
+    // 달려 있다는 이유만으로 여섯 카드 모두 제어 카드처럼 보였는데, 실제로
+    // 설비에 닿는 항목은 그중 다섯 행뿐이다.
+    final bool isControl = OnConfirm != null && ControllableFields.anyIn(fields.keys);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -77,8 +80,12 @@ class MonitoringCard extends StatelessWidget {
             // Only live readings get the LED face. 시설 기본 정보 is the one card
             // without 제어, and its numbers are identifiers (시설/호실/관리자 ID),
             // not measurements — a seven-segment display would imply a gauge.
-            ledAllowed: isControl,
-            onConfirm: OnConfirm,
+            // 쓰기 가능 여부와는 상관없이, 이 카드들의 값은 모두 설비에서
+            // 실시간으로 올라오는 계측값이다. LED 서체는 그 기준으로 붙인다.
+            ledAllowed: OnConfirm != null,
+            // 쓸 수 없는 항목에는 입력칸을 내보내지 않는다. 눌러도 아무 일이
+            // 일어나지 않는 버튼이 51개 있으면, 되는 다섯 개도 못 믿게 된다.
+            onConfirm: ControllableFields.has(entry.key) ? OnConfirm : null,
           )),
         ],
       ),
