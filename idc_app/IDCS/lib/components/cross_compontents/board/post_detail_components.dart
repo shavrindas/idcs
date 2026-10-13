@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
+import 'package:idcs/components/shared/time_format.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -61,7 +62,7 @@ class _PostContentBoxState extends State<PostContentBox> {
           ),
           const SizedBox(height: 8),
           Text(
-            context.l10n.postMeta('${post['creator_name']}', '${post['created_at']}'),
+            context.l10n.postMeta('${post['creator_name']}', formatPostTime('${post['created_at']}')),
             style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
           ),
           Divider(height: 28, color: context.colors.outline),
@@ -170,7 +171,7 @@ class CommentBox extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(comment['content'] ?? '', style: TextStyle(fontSize: 14, color: context.colors.textPrimary)),
                 subtitle: Text(
-                  '${comment['creator_name']} · ${comment['created_at']}',
+                  '${comment['creator_name']} · ${formatListTime('${comment['created_at']}')}',
                   style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
                 ),
                 trailing: (isCreator || isAdmin)

@@ -1,9 +1,9 @@
 // 경로: lib/components/shared/alarm_row.dart
 // 명세: 알람 목록 행과 목록 가공(상태 필터·반복 묶음) — user_alarm/facility_alarm 두 화면에서 공유
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/components/shared/time_format.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 /// 알람 목록 상태 필터.
@@ -76,11 +76,7 @@ String alarmDisplayName(BuildContext context, dynamic rawName) {
 }
 
 /// 서버가 내려주는 ISO 시간 문자열을 목록에서 읽기 쉬운 형태로 바꾼다.
-String formatAlarmTime(String raw) {
-  final parsed = DateTime.tryParse(raw);
-  if (parsed == null) return raw;
-  return DateFormat('MM/dd HH:mm').format(parsed.toLocal());
-}
+String formatAlarmTime(String raw) => formatListTime(raw);
 
 /// 알람 상태를 아이콘 대신 좌측 색상 바로 표현하는 리스트 행.
 class AlarmRow extends StatelessWidget {
