@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { SessionUser } from './types';
 //import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { HashRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { ChartMappingPage } from './pages/ChartMappingPage';
@@ -11,7 +12,8 @@ import { MainPage } from './pages/MainPage';
 import { Monogram, Wordmark } from './components/Brand';
 
 function App() {
-  const [user, setUser] = useState<any>(null); // 로그인한 유저 정보 상태
+  // 로그인한 유저. 각 화면이 '내 시설'만 불러오려면 이 값이 필요하다.
+  const [user, setUser] = useState<SessionUser | null>(null);
 
   const handleLogout = () => {
     setUser(null);
@@ -97,15 +99,15 @@ function App() {
                 {isAdmin && (
                   <>
                     <Route path="/main" element={<MainPage />} />
-                    <Route path="/mapping" element={<ChartMappingPage />} />
-                    <Route path="/indexing" element={<PRIndexingPage />} />
+                    <Route path="/mapping" element={<ChartMappingPage user={user} />} />
+                    <Route path="/indexing" element={<PRIndexingPage user={user} />} />
                     <Route path="/facility-manager" element={<FacilityManagerPage />} />
-                    <Route path="/compare" element={<RoomComparePage />} />
+                    <Route path="/compare" element={<RoomComparePage user={user} />} />
                   </>
                 )}
 
                 {/* User/Admin 공통 라우트 */}
-                <Route path="/viewer" element={<ChartViewerPage />} />
+                <Route path="/viewer" element={<ChartViewerPage user={user} />} />
 
                 {/* 기본 리다이렉트 (관리자는 메인, 유저는 뷰어로) */}
                 <Route path="*" element={

@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { MainChartViewer } from '../components/chart/viewer/EChartsViewer';
 import { apiService } from '../services/apiService';
 
+import type { SessionUser } from '../types';
+
+interface Props {
+  user: SessionUser;
+}
+
 const COLOR_PALETTE = ['#2e6bef', '#d64545', '#1f8f5f', '#b6791f', '#1e4fbd', '#0c8599', '#9a60b4', '#ea7ccc'];
 
 const SCALE_OPTIONS = [
@@ -19,7 +25,7 @@ const RANGE_OPTIONS = [
   { value: '15d', label: '최근 15일' },
 ];
 
-export const RoomComparePage: React.FC = () => {
+export const RoomComparePage: React.FC<Props> = ({ user }) => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<number | ''>('');
 
@@ -35,8 +41,8 @@ export const RoomComparePage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    apiService.getAllFacilitiesAdmin().then(res => setFacilities(res.facilities || []));
-  }, []);
+    apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || []));
+  }, [user.id]);
 
   useEffect(() => {
     setSelectedRole('');
