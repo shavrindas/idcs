@@ -82,7 +82,7 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     try {
-      final result = await AuthApiService.signupGeneral(
+      await AuthApiService.signupGeneral(
         email: email,
         password: password,
         name: name,
@@ -91,7 +91,9 @@ class _SignupPageState extends State<SignupPage> {
 
       // The await above may have outlived this screen.
       if (!mounted) return;
-      AppToast.success(context, result['message']);
+      // 서버가 내려주는 문구는 한국어로 고정돼 있어, 앱을 영어로 쓰는 사람에게도
+      // 한국어가 그대로 떴다. 결과가 정해져 있는 자리는 앱이 제 말로 알린다.
+      AppToast.success(context, l10n.signupSuccess);
       // 가입 성공 시 로그인 페이지로 이동
       context.go('/login');
     } catch (e) {
@@ -171,7 +173,7 @@ class _SignupPageState extends State<SignupPage> {
     required String name
   }) async {
     try {
-      final result = await AuthApiService.signupSocial(
+      await AuthApiService.signupSocial(
         provider: provider,
         providerId: providerId,
         email: email,
@@ -180,7 +182,7 @@ class _SignupPageState extends State<SignupPage> {
 
       // The await above may have outlived this screen.
       if (!mounted) return;
-      AppToast.success(context, result['message']);
+      AppToast.success(context, context.l10n.signupSuccess);
       context.go('/login');
     } catch (e) {
       // The await above may have outlived this screen.

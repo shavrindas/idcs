@@ -121,10 +121,10 @@ class _FindPwPageState extends State<FindPwPage> {
     }
 
     try {
-      final res = await AuthApiService.resetPassword(_resetToken, pw1);
+      await AuthApiService.resetPassword(_resetToken, pw1);
       // The await above may have outlived this screen.
       if (!mounted) return;
-      AppToast.success(context, res['message']);
+      AppToast.success(context, context.l10n.resetPasswordDone);
       context.go('/login'); // 완료 시 로그인 페이지 이동
     } catch (e) {
       setState(() => _box3Message = describeApiError(context, e));

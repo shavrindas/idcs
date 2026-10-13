@@ -64,7 +64,9 @@ class _LoginPageState extends State<LoginPage> {
       // [비동기 컨텍스트 방어 로직] 화면이 파괴되지 않았는지 확인
       if (!mounted) return;
 
-      AppToast.success(context, result['message']);
+      // 서버가 내려주는 문구는 한국어로 고정돼 있어, 앱을 영어로 쓰는 사람에게도
+      // 한국어가 그대로 떴다. 결과가 정해져 있는 자리는 앱이 제 말로 알린다.
+      AppToast.success(context, context.l10n.loginSuccess);
 
       // 2. 메인 색인 페이지로 라우팅 (이제 리다이렉트에 걸리지 않고 정상 이동!)
       context.go('/index/$userId/home');
@@ -102,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      AppToast.success(context, result['message']);
+      AppToast.success(context, context.l10n.loginSuccess);
 
       context.go('/index/$userId/home');
 
