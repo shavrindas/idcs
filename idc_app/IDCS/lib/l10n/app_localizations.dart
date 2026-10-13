@@ -1298,6 +1298,36 @@ abstract class AppLocalizations {
   /// **'{group} · {count}개 표시'**
   String chartSeriesSummary(String group, int count);
 
+  /// No description provided for @roomSetpointShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표'**
+  String get roomSetpointShort;
+
+  /// No description provided for @roomStatusDefrost.
+  ///
+  /// In ko, this message translates to:
+  /// **'제상'**
+  String get roomStatusDefrost;
+
+  /// No description provided for @roomStatusCompressor.
+  ///
+  /// In ko, this message translates to:
+  /// **'콤프'**
+  String get roomStatusCompressor;
+
+  /// No description provided for @roomStatusOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'ON'**
+  String get roomStatusOn;
+
+  /// No description provided for @roomStatusOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'OFF'**
+  String get roomStatusOff;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:
