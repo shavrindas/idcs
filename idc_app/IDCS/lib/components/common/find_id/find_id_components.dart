@@ -1,12 +1,13 @@
 // 경로: lib/components/common/find_id/find_id_components.dart
 import 'package:flutter/material.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 아이디(이메일) 가입 여부 확인 박스
 class FindIdBox extends StatelessWidget {
   final TextEditingController emailController;
-  final VoidCallback onSubmit;
+  final Future<void> Function() onSubmit;
   final String resultMessage;
   final bool isExpanded; // collapse 출력을 제어할 상태값
 
@@ -34,10 +35,7 @@ class FindIdBox extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: onSubmit,
-          child: Text(context.l10n.findIdCheck),
-        ),
+        AsyncActionButton(label: context.l10n.findIdCheck, onPressed: onSubmit),
 
         // 결과 영역: isExpanded가 true일 때만 노출
         if (isExpanded) ...[

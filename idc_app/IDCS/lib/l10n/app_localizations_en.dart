@@ -635,6 +635,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get signupPasswordConfirm => 'Confirm password';
+
+  @override
+  String get signupPasswordMismatch => 'The two passwords do not match.';
+
+  @override
+  String signupPasswordTooShort(int min) {
+    return 'Use at least $min characters.';
+  }
+
+  @override
+  String get signupEmailInvalid => 'Check the email address format.';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

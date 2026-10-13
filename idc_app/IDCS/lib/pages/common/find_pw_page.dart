@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:idcs/services/common/find_pw/auth_api_service.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
@@ -163,9 +164,10 @@ class _FindPwPageState extends State<FindPwPage> {
                       isEnabled: _currentStep == 1,
                     ),
                     const SizedBox(height: 14),
-                    ElevatedButton(
-                      onPressed: _currentStep == 1 ? _handleEmailSubmit : null,
-                      child: Text(context.l10n.resetSendCode),
+                    AsyncActionButton(
+                      label: context.l10n.resetSendCode,
+                      enabled: _currentStep == 1,
+                      onPressed: _handleEmailSubmit,
                     ),
                     if (_box1Message.isNotEmpty) ...[
                       const SizedBox(height: 10),
@@ -205,9 +207,10 @@ class _FindPwPageState extends State<FindPwPage> {
                               ],
                             ),
                             const SizedBox(height: 14),
-                            ElevatedButton(
-                              onPressed: _currentStep == 2 ? _handleCodeSubmit : null,
-                              child: Text(context.l10n.resetVerifyCode),
+                            AsyncActionButton(
+                              label: context.l10n.resetVerifyCode,
+                              enabled: _currentStep == 2,
+                              onPressed: _handleCodeSubmit,
                             ),
                             if (_box2Message.isNotEmpty) ...[
                               const SizedBox(height: 10),
@@ -251,9 +254,9 @@ class _FindPwPageState extends State<FindPwPage> {
                               _buildMessage(_box3Message),
                             ],
                             const SizedBox(height: 14),
-                            ElevatedButton(
+                            AsyncActionButton(
+                              label: context.l10n.resetPasswordTitle,
                               onPressed: _handlePasswordReset,
-                              child: Text(context.l10n.resetPasswordTitle),
                             ),
                           ],
                         ),

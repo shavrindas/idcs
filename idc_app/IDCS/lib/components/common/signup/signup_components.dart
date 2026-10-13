@@ -1,6 +1,7 @@
 // 경로: lib/components/signup/signup_components.dart
 import 'package:flutter/material.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -8,14 +9,16 @@ import 'package:idcs/l10n/l10n_context.dart';
 class StandardSignupBox extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
+  final TextEditingController passwordConfirmController;
   final TextEditingController nameController;
   final TextEditingController phoneController;
-  final VoidCallback onSignupPressed;
+  final Future<void> Function() onSignupPressed;
 
   const StandardSignupBox({
     super.key,
     required this.emailController,
     required this.passwordController,
+    required this.passwordConfirmController,
     required this.nameController,
     required this.phoneController,
     required this.onSignupPressed,
@@ -59,6 +62,17 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
           ),
         ),
         const SizedBox(height: 14),
+        // 가린 글자를 다시 한 번 받는다. 두 칸 모두 같은 가리기 상태를 쓰므로,
+        // 눈 아이콘을 켜면 양쪽을 나란히 확인할 수 있다.
+        TextField(
+          controller: widget.passwordConfirmController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: context.l10n.signupPasswordConfirm,
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+          ),
+        ),
+        const SizedBox(height: 14),
         TextField(
           controller: widget.nameController,
           decoration: InputDecoration(
@@ -76,9 +90,9 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
           ),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
+        AsyncActionButton(
+          label: context.l10n.signupCreateAccount,
           onPressed: widget.onSignupPressed,
-          child: Text(context.l10n.signupCreateAccount),
         ),
       ],
     );
@@ -87,7 +101,7 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
 
 /// Box #2: 외부 프로바이더 사용 계정 생성 박스
 class SocialSignupBox extends StatelessWidget {
-  final Function(String) onSocialSignupPressed;
+  final Future<void> Function(String) onSocialSignupPressed;
 
   const SocialSignupBox({super.key, required this.onSocialSignupPressed});
 
@@ -111,13 +125,10 @@ class SocialSignupBox extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialSignupPressed('google'),
-          icon: const _ProviderBadge(
-            label: 'G',
-            background: Color(0xFF4285F4),
-          ),
-          label: Text(context.l10n.continueWithGoogle),
+          icon: const _ProviderBadge(label: 'G', background: Color(0xFF4285F4)),
+          label: context.l10n.continueWithGoogle,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
@@ -125,14 +136,10 @@ class SocialSignupBox extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialSignupPressed('apple'),
-          icon: const _ProviderBadge(
-            label: '',
-            background: Colors.black,
-            icon: Icons.apple,
-          ),
-          label: Text(context.l10n.continueWithApple),
+          icon: const _ProviderBadge(label: '', background: Colors.black, icon: Icons.apple),
+          label: context.l10n.continueWithApple,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
