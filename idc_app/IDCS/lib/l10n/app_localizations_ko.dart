@@ -655,6 +655,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get withdrawDone => '계정이 삭제되었습니다.';
 
   @override
+  String chartSeriesSummary(String group, int count) {
+    return '$group · $count개 표시';
+  }
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

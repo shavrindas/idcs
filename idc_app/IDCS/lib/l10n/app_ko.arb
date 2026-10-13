@@ -331,6 +331,8 @@
   "facilityRegisterDone": "시설이 등록되었습니다.",
   "facilityUnlinkDone": "시설 연결을 해제했습니다.",
   "withdrawDone": "계정이 삭제되었습니다.",
+  "chartSeriesSummary": "{group} · {count}개 표시",
+  "@chartSeriesSummary": {"placeholders": {"group": {"type": "String"}, "count": {"type": "int"}}},
   "searchNoResults": "검색 결과가 없습니다.",
   "alarmsNone": "조회할 수 있는 알람이 없습니다.",
   "alarmNameMissing": "알람 이름 없음",

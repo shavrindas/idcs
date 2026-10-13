@@ -1292,6 +1292,12 @@ abstract class AppLocalizations {
   /// **'계정이 삭제되었습니다.'**
   String get withdrawDone;
 
+  /// No description provided for @chartSeriesSummary.
+  ///
+  /// In ko, this message translates to:
+  /// **'{group} · {count}개 표시'**
+  String chartSeriesSummary(String group, int count);
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:
