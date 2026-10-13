@@ -9,6 +9,8 @@ import 'package:idcs/components/facility/monitoring/panel_summary_card.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/theme/panel_background.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;
@@ -34,6 +36,12 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   /// 앱바에 띄울 호실 이름. 시설 ID 보다 현장에서 쓰는 이름이 쓸모 있다.
   String? _roomName;
+
+  /// 보내 놓고 설비 응답을 기다리는 제어 명령. req_id -> 화면에 쓸 항목 이름.
+  ///
+  /// 설비가 값을 실제로 바꾸기까지는 시간이 걸리고, 거부할 수도 있다. 보낸
+  /// 사실과 반영된 사실을 구분해서 알려 주려면 어느 요청이 떠 있는지 알아야 한다.
+  final Map<String, String> _pendingCommands = {};
 
   // 평평한 1층 딕셔너리 데이터 구조
   Map<String, String> realtempData = {'temp_comp': 'NA', 'temp_pv': 'NA', 'temp_sv': 'NA', 'temp_hey': 'NA', 'temp_zero': 'NA'};
@@ -91,7 +99,21 @@ class _MonitoringPageState extends State<MonitoringPage> {
   void _parseAndMapDeviceMessage(String rawJsonString) {
     try {
       final Map<String, dynamic> parsedJson = jsonDecode(rawJsonString);
-      final Map<String, dynamic> parsedSJson = parsedJson['datas'];
+
+      // 제어 응답은 계측값과 같은 소켓으로 돌아온다. 서버 버전에 따라 그대로
+      // 오기도 하고 datas 안에 싸여 오기도 해서 양쪽을 다 본다.
+      if (parsedJson['status'] != null) {
+        _handleCommandResponse(parsedJson);
+        return;
+      }
+
+      final dynamic rawDatas = parsedJson['datas'];
+      if (rawDatas is! Map<String, dynamic>) return;
+      if (rawDatas['status'] != null) {
+        _handleCommandResponse(rawDatas);
+        return;
+      }
+      final Map<String, dynamic> parsedSJson = rawDatas;
 
       setState(() {
         _lastUpdate = DateTime.now();
@@ -124,18 +146,55 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   /// 제어판에서 값을 보낼 때. 행이 들고 있는 키가 이미 서버 필드 이름이라
   /// 따로 변환할 것이 없다.
-  void remoteClickEvent(String key, String input) {
-    // 2. 서버 형식에 맞게 req_id 생성 (예: "1.control_runsw")
-    final String reqId = '${widget.roomId}.$key';
+  /// 제어판에서 '확인'을 눌렀을 때. 보냈으면 true 를 돌려주고, 그때만 입력칸을
+  /// 비운다.
+  ///
+  /// 예전에는 연결이 끊겨 있으면 아무 일도 없이 조용히 넘어갔다. 누른 사람은
+  /// 값이 들어간 줄 알고 자리를 뜨는데, 실제로는 아무것도 보내지지 않았다.
+  bool remoteClickEvent(String key, String input) {
+    final l10n = context.l10n;
+    final label = DeviceLabels.of(context, key);
+    final value = input.trim();
 
-    Map<String, String> temp = {
-      'type': "WR",
+    if (value.isEmpty) {
+      AppToast.warning(context, l10n.panelValueRequired);
+      return false;
+    }
+
+    if (!_webSocketService.isConnected) {
+      AppToast.error(context, l10n.panelNotConnected);
+      return false;
+    }
+
+    // 서버 형식에 맞게 req_id 생성 (예: "23.control_runsw")
+    final String reqId = '${widget.roomId}.$key';
+    _pendingCommands[reqId] = label;
+
+    _webSocketService.send(jsonEncode({
+      'type': 'WR',
       'req_id': reqId,
-      'req_val': input
-    };
-    if(_webSocketService.isConnected) {
-      print(jsonEncode(temp));
-      _webSocketService.send(jsonEncode(temp));
+      'req_val': value,
+    }));
+
+    AppToast.info(context, l10n.panelCommandSent(label));
+    return true;
+  }
+
+  /// 설비가 제어 명령에 답했을 때. 응답이 영영 안 올 수도 있으므로, 이건
+  /// 보낸 사실을 알리는 토스트를 대신하는 게 아니라 그 뒤에 덧붙는다.
+  void _handleCommandResponse(Map<String, dynamic> packet) {
+    final reqId = packet['request_id']?.toString() ?? packet['req_id']?.toString();
+    if (reqId == null) return;
+
+    final label = _pendingCommands.remove(reqId);
+    if (label == null || !mounted) return;
+
+    final ok = (packet['status']?.toString() ?? '').toUpperCase().contains('SUCCESS');
+    final l10n = context.l10n;
+    if (ok) {
+      AppToast.success(context, l10n.panelCommandOk(label));
+    } else {
+      AppToast.error(context, l10n.panelCommandFailed(label));
     }
   }
 

@@ -8,8 +8,9 @@ class MonitoringCard extends StatelessWidget {
   final String title;
   final Map<String, String> fields; // 평평한 1층짜리 딕셔너리 (속성명: 속성값)
 
-  // 확인 버튼을 눌렀을 때 입력값을 전달받을 콜백
-  final Function(String label, String inputValue)? OnConfirm;
+  /// 확인 버튼을 눌렀을 때 입력값을 전달받을 콜백.
+  /// 실제로 보냈으면 true 를 돌려준다 — 그때만 입력칸을 비운다.
+  final bool Function(String label, String inputValue)? OnConfirm;
 
   /// 제어판 겉모습 설정. 배경을 비치게 하는 투명도와 값 글자 크기를 여기서 받는다.
   final MonitoringViewSettings view;
@@ -96,7 +97,7 @@ class _EditableRowItem extends StatefulWidget {
 
   /// False on the static info card, where numbers are identifiers.
   final bool ledAllowed;
-  final Function(String label, String inputValue)? onConfirm;
+  final bool Function(String label, String inputValue)? onConfirm;
 
   const _EditableRowItem({
     super.key,
@@ -174,6 +175,13 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               child: TextField(
                 controller: _inputController,
                 style: const TextStyle(fontSize: 14),
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) {
+                  if (widget.onConfirm == null) return;
+                  if (widget.onConfirm!(widget.fieldKey, _inputController.text)) {
+                    _inputController.clear();
+                  }
+                },
                 decoration: InputDecoration(
                   hintText: context.l10n.panelInputHint,
                   isDense: true,
@@ -188,8 +196,10 @@ class _EditableRowItemState extends State<_EditableRowItem> {
               height: 44,
               child: ElevatedButton(
                 onPressed: () {
-                  final inputText = _inputController.text;
-                  widget.onConfirm!(widget.fieldKey, inputText);
+                  // 보내지 못했을 때(값이 비었거나 연결이 끊겼을 때)는 입력을
+                  // 그대로 둬야 한다. 지워 버리면 다시 처음부터 쳐야 한다.
+                  final sent = widget.onConfirm!(widget.fieldKey, _inputController.text);
+                  if (sent) _inputController.clear();
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(64, 44),

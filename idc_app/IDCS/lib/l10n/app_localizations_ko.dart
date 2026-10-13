@@ -575,6 +575,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get panelConfirm => '확인';
 
   @override
+  String get panelValueRequired => '보낼 값을 먼저 입력하세요.';
+
+  @override
+  String get panelNotConnected => '설비와 연결이 끊겨 있어 보낼 수 없습니다.';
+
+  @override
+  String panelCommandSent(String item) {
+    return '$item 값을 보냈습니다. 설비가 반영하면 값이 바뀝니다.';
+  }
+
+  @override
+  String panelCommandOk(String item) {
+    return '$item 설정이 반영되었습니다.';
+  }
+
+  @override
+  String panelCommandFailed(String item) {
+    return '$item 설정이 거부되었습니다.';
+  }
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

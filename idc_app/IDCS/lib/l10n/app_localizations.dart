@@ -1160,6 +1160,36 @@ abstract class AppLocalizations {
   /// **'확인'**
   String get panelConfirm;
 
+  /// No description provided for @panelValueRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'보낼 값을 먼저 입력하세요.'**
+  String get panelValueRequired;
+
+  /// No description provided for @panelNotConnected.
+  ///
+  /// In ko, this message translates to:
+  /// **'설비와 연결이 끊겨 있어 보낼 수 없습니다.'**
+  String get panelNotConnected;
+
+  /// No description provided for @panelCommandSent.
+  ///
+  /// In ko, this message translates to:
+  /// **'{item} 값을 보냈습니다. 설비가 반영하면 값이 바뀝니다.'**
+  String panelCommandSent(String item);
+
+  /// No description provided for @panelCommandOk.
+  ///
+  /// In ko, this message translates to:
+  /// **'{item} 설정이 반영되었습니다.'**
+  String panelCommandOk(String item);
+
+  /// No description provided for @panelCommandFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'{item} 설정이 거부되었습니다.'**
+  String panelCommandFailed(String item);
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:

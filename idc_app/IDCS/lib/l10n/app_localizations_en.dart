@@ -585,6 +585,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get panelConfirm => 'Set';
 
   @override
+  String get panelValueRequired => 'Enter a value first.';
+
+  @override
+  String get panelNotConnected =>
+      'Not connected to the equipment — nothing was sent.';
+
+  @override
+  String panelCommandSent(String item) {
+    return 'Sent to $item. The reading will change once the equipment applies it.';
+  }
+
+  @override
+  String panelCommandOk(String item) {
+    return '$item was applied.';
+  }
+
+  @override
+  String panelCommandFailed(String item) {
+    return '$item was rejected.';
+  }
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override
