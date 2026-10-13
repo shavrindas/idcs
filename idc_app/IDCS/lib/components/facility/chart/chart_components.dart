@@ -794,11 +794,20 @@ class ChartCanvasBox extends StatelessWidget {
 
     final List<Color> colors = context.colors.chartSeries;
 
+    // 고른 항목인데 기간 안에 기록이 하나도 없는 것들. 예전에는 그냥 안 그려져서,
+    // 사용자는 왜 아무 일도 일어나지 않는지 알 수 없었다.
+    final List<String> emptySeries = [];
+
     for (int i = 0; i < datasets.length; i++) {
       final ds = datasets[i];
       final List<dynamic> dataPoints = ds['data'];
       List<FlSpot> spots = [];
       final Color seriesColor = colors[i % colors.length];
+
+      // 켜짐/꺼짐 값은 그 사이를 부드럽게 잇는 곡선으로 그리면 안 된다.
+      // 중간값이 존재하지 않는데도 0.4 쯤을 지나는 것처럼 보인다.
+      final bool isSwitchSeries =
+          dataPoints.isNotEmpty && (dataPoints.first as Map).containsKey('status');
 
       // target_value, target_low_limit 등은 Null일 수 있으므로 파싱 방어 추가.
       // 데이터 자체 범위와 무관하게 "안전 기준선"을 그리는 데 사용한다.
@@ -830,6 +839,10 @@ class ChartCanvasBox extends StatelessWidget {
         if (y > maxY) maxY = y;
       }
 
+      if (spots.isEmpty) {
+        emptySeries.add(_seriesLabel(context, ds, i));
+      }
+
       if (spots.isNotEmpty) {
         // 색만으로 시리즈를 구분하면 색각 이상이나 흑백 출력(포스터·인쇄)에서 구분이 안 된다.
         // 실선/파선/점선을 함께 돌려 색 없이도 구분되게 한다.
@@ -840,7 +853,8 @@ class ChartCanvasBox extends StatelessWidget {
         lineBars.add(
           LineChartBarData(
             spots: spots,
-            isCurved: true,
+            isCurved: !isSwitchSeries,
+            isStepLineChart: isSwitchSeries,
             color: seriesColor,
             barWidth: 2,
             isStrokeCapRound: true,
@@ -926,9 +940,25 @@ class ChartCanvasBox extends StatelessWidget {
       return _buildContainer(
         context,
         child: Center(
-          child: Text(
-            context.l10n.chartNoValidData,
-            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                context.l10n.chartNoValidData,
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+              ),
+              if (emptySeries.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    context.l10n.chartNoRecordsFor(emptySeries.join(', ')),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       );
@@ -944,6 +974,18 @@ class ChartCanvasBox extends StatelessWidget {
             dashes: seriesDashes,
             colors: colors,
           ),
+          // 그려진 것이 있어도, 고른 항목 중 기록이 없는 게 있으면 말해 준다.
+          // 말하지 않으면 사용자는 그 항목을 껐다 켜기만 반복하게 된다.
+          if (emptySeries.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                context.l10n.chartNoRecordsFor(emptySeries.join(', ')),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+              ),
+            ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(right: 16.0, top: 8.0),

@@ -338,6 +338,8 @@
   "roomStatusCompressor": "콤프",
   "roomStatusOn": "ON",
   "roomStatusOff": "OFF",
+  "chartNoRecordsFor": "기록이 없는 항목: {names}",
+  "@chartNoRecordsFor": {"placeholders": {"names": {"type": "String"}}},
   "searchNoResults": "검색 결과가 없습니다.",
   "alarmsNone": "조회할 수 있는 알람이 없습니다.",
   "alarmNameMissing": "알람 이름 없음",

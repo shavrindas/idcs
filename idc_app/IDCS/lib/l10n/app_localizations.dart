@@ -1328,6 +1328,12 @@ abstract class AppLocalizations {
   /// **'OFF'**
   String get roomStatusOff;
 
+  /// No description provided for @chartNoRecordsFor.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록이 없는 항목: {names}'**
+  String chartNoRecordsFor(String names);
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:

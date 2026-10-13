@@ -675,6 +675,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get roomStatusOff => 'OFF';
 
   @override
+  String chartNoRecordsFor(String names) {
+    return '기록이 없는 항목: $names';
+  }
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

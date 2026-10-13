@@ -687,6 +687,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomStatusOff => 'OFF';
 
   @override
+  String chartNoRecordsFor(String names) {
+    return 'No records for: $names';
+  }
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override
