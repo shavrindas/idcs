@@ -85,142 +85,47 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
       return;
     }
 
-    final nameCtrl = TextEditingController();
-    final selected = <int>{};
-
-    await showDialog(
+    final result = await showDialog<({String name, List<int> userIds})>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text(l10n.chatGroupCreate),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  autofocus: true,
-                  decoration: InputDecoration(labelText: l10n.chatRoomName),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l10n.chatGroupPickMembers,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: context.colors.textSecondary,
-                      ),
-                    ),
-                    if (selected.isNotEmpty)
-                      Text(
-                        l10n.chatGroupSelected(selected.length),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.colors.primary,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                // 시설 인원이 많아질 수 있어 목록만 스크롤한다.
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      for (final member in members)
-                        CheckboxListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                          value: selected.contains(member['id']),
-                          title: Text(
-                            (member['name'] ?? '').toString().isEmpty
-                                ? l10n.noName
-                                : member['name'].toString(),
-                          ),
-                          subtitle: Text(
-                            member['email']?.toString() ?? '',
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          onChanged: (on) => setDialogState(() {
-                            if (on == true) {
-                              selected.add(member['id'] as int);
-                            } else {
-                              selected.remove(member['id']);
-                            }
-                          }),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.actionCancel),
-            ),
-            ElevatedButton(
-              // 왜 안 되는지 말해 주지 않고 조용히 닫히던 자리다.
-              onPressed: () async {
-                final name = nameCtrl.text.trim();
-                if (name.isEmpty) {
-                  AppToast.warning(dialogContext, l10n.chatGroupNameRequired);
-                  return;
-                }
-                if (selected.isEmpty) {
-                  AppToast.warning(dialogContext, l10n.chatGroupMemberRequired);
-                  return;
-                }
-
-                Navigator.pop(dialogContext);
-                try {
-                  await ChatApiService.createGroupChat(
-                    widget.userId,
-                    name,
-                    selected.toList(),
-                  );
-                  if (!mounted) return;
-                  AppToast.success(context, l10n.chatGroupCreated(name));
-                  _fetchRooms();
-                } catch (e) {
-                  if (!mounted) return;
-                  AppToast.error(context, describeApiError(context, e));
-                }
-              },
-              child: Text(l10n.actionCreate),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _CreateGroupDialog(members: members),
     );
+    if (result == null || !mounted) return;
 
-    nameCtrl.dispose();
+    try {
+      await ChatApiService.createGroupChat(
+        widget.userId,
+        result.name,
+        result.userIds,
+      );
+      if (!mounted) return;
+      AppToast.success(context, l10n.chatGroupCreated(result.name));
+      _fetchRooms();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
+    }
   }
 
   void _handleRoomLongPress(int roomId) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
+      // 시트가 닫힌 뒤에도 토스트는 띄워야 하므로, 시트의 context 와 화면의
+      // context 를 섞지 않는다.
+      builder: (sheetContext) => SafeArea(
         child: Wrap(
           children: [
             ListTile(
-              leading: Icon(Icons.exit_to_app, color: context.colors.error),
-              title: Text(context.l10n.chatLeaveRoom),
+              leading: Icon(Icons.exit_to_app, color: sheetContext.colors.error),
+              title: Text(sheetContext.l10n.chatLeaveRoom),
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 try {
                   await ChatApiService.leaveOrDeleteRoom(
                     roomId,
                     widget.userId,
                     action: 'delete',
                   );
+                  if (!mounted) return;
                   _fetchRooms();
                 } catch (e) {
                   // The await above may have outlived this screen.
@@ -260,6 +165,135 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// 단체방 만들기 창.
+///
+/// 입력 컨트롤러를 들고 있어야 해서 별도 위젯이다. 호출한 쪽에서 showDialog 가
+/// 끝나자마자 dispose 하면, 아직 닫히는 중인 창이 버려진 컨트롤러를 다시 그리려다
+/// 터진다. 창 자신이 들고 있다가 자기 dispose 에서 정리하는 게 맞다.
+class _CreateGroupDialog extends StatefulWidget {
+  final List<Map<String, dynamic>> members;
+
+  const _CreateGroupDialog({required this.members});
+
+  @override
+  State<_CreateGroupDialog> createState() => _CreateGroupDialogState();
+}
+
+class _CreateGroupDialogState extends State<_CreateGroupDialog> {
+  final TextEditingController _nameCtrl = TextEditingController();
+  final Set<int> _selected = {};
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final l10n = context.l10n;
+    final name = _nameCtrl.text.trim();
+
+    // 왜 안 되는지 말해 주지 않고 조용히 닫히던 자리다.
+    if (name.isEmpty) {
+      AppToast.warning(context, l10n.chatGroupNameRequired);
+      return;
+    }
+    if (_selected.isEmpty) {
+      AppToast.warning(context, l10n.chatGroupMemberRequired);
+      return;
+    }
+
+    Navigator.pop(context, (name: name, userIds: _selected.toList()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return AlertDialog(
+      title: Text(l10n.chatGroupCreate),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(labelText: l10n.chatRoomName),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.chatGroupPickMembers,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+                if (_selected.isNotEmpty)
+                  Text(
+                    l10n.chatGroupSelected(_selected.length),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.colors.primary,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            // 인원이 적으면 그만큼만 차지하고, 많아지면 여기서만 스크롤한다.
+            // Flexible 로 두면 높이가 정해지지 않은 창 안에서 폭주한다.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 280),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final member in widget.members)
+                    CheckboxListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: _selected.contains(member['id']),
+                      title: Text(
+                        (member['name'] ?? '').toString().isEmpty
+                            ? l10n.noName
+                            : member['name'].toString(),
+                      ),
+                      subtitle: Text(
+                        member['email']?.toString() ?? '',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      onChanged: (on) => setState(() {
+                        if (on == true) {
+                          _selected.add(member['id'] as int);
+                        } else {
+                          _selected.remove(member['id']);
+                        }
+                      }),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.actionCancel),
+        ),
+        ElevatedButton(onPressed: _submit, child: Text(l10n.actionCreate)),
+      ],
     );
   }
 }
