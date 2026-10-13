@@ -117,7 +117,7 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
       });
       alert('생성 완료!');
       handleRoomChange(selectedRoom);
-    } catch (e) {
+    } catch {
       alert('저장 실패');
     }
   };
