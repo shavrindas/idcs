@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:idcs/l10n/app_localizations.dart';
@@ -129,7 +129,7 @@ Future<void> showAlarmNotification(
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print("🌙 [백그라운드 수신] ID: ${message.messageId}");
+  debugPrint("🌙 [백그라운드 수신] ID: ${message.messageId}");
 
   final FlutterLocalNotificationsPlugin localNotifications = FlutterLocalNotificationsPlugin();
 
@@ -174,7 +174,7 @@ class FcmService {
       sound: true,
     );
 
-    print("Notification permission status: ${settings.authorizationStatus}");
+    debugPrint("Notification permission status: ${settings.authorizationStatus}");
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional) {
@@ -203,29 +203,29 @@ class FcmService {
 
       // 💡 5. 포그라운드 메시지 수신 리스너
       FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-        print("🔥 [포그라운드 수신] ID: ${message.messageId}");
-        print("🔥 [Notification]: ${message.notification?.title} / ${message.notification?.body}");
-        print("🔥 [Data]: ${message.data}");
+        debugPrint("🔥 [포그라운드 수신] ID: ${message.messageId}");
+        debugPrint("🔥 [Notification]: ${message.notification?.title} / ${message.notification?.body}");
+        debugPrint("🔥 [Data]: ${message.data}");
 
         String title = message.notification?.title ?? message.data['title'] ?? (await _strings()).notificationFallbackTitle;
         String body = message.notification?.body ?? message.data['body'] ?? '';
 
         try {
           await showAlarmNotification(_localNotifications, title, body);
-          print("✅ 로컬 알림 show() 정상 실행 완료");
+          debugPrint("✅ 로컬 알림 show() 정상 실행 완료");
         } catch (e) {
-          print("❌ 로컬 알림 show() 실행 중 에러 발생: $e");
+          debugPrint("❌ 로컬 알림 show() 실행 중 에러 발생: $e");
         }
       });
 
       // 6. 알림 클릭 이벤트
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        print('알림 클릭으로 앱 실행: ${message.data}');
+        debugPrint('알림 클릭으로 앱 실행: ${message.data}');
       });
 
       // 7. 토큰 갱신 리스너
       _messaging.onTokenRefresh.listen((newToken) {
-        print("FCM 토큰 변경됨: $newToken");
+        debugPrint("FCM 토큰 변경됨: $newToken");
         if (AuthService.getCurrentUserId() != null) {
           registToken();
         }
@@ -238,7 +238,7 @@ class FcmService {
       String? token = await _messaging.getToken();
       return token;
     } catch (e) {
-      print("FCM 토큰 가져오기 실패: $e");
+      debugPrint("FCM 토큰 가져오기 실패: $e");
       return null;
     }
   }
@@ -247,11 +247,11 @@ class FcmService {
     try {
       String? token = await getToken();
       if (token == null) {
-        print("FCM 토큰이 없어 서버 등록을 건너뜁니다.");
+        debugPrint("FCM 토큰이 없어 서버 등록을 건너뜁니다.");
         return null;
       }
 
-      print("발급된 토큰: $token");
+      debugPrint("발급된 토큰: $token");
       final url = Uri.parse('${AppConfig.baseUrl}/alarms/register');
       final response = await ApiClient.post(
         url,
@@ -269,7 +269,7 @@ class FcmService {
         throw ApiException.rejected(error);
       }
     } catch (e) {
-      print("registToken 에러: $e");
+      debugPrint("registToken 에러: $e");
       rethrow;
     }
   }

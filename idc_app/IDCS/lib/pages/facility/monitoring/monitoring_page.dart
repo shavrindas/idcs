@@ -131,7 +131,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
         }
       });
     } catch (e) {
-      print('에러: $e');
+      debugPrint('에러: $e');
     }
   }
 

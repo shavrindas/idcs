@@ -187,9 +187,11 @@ final GoRouter appRouter = GoRouter(
     // [chat_room] - 채팅방 상세. 셸 위로 풀스크린 push.
     GoRoute(
       path: '/chat_room/:userId/:roomId',
+      // 방 이름은 목록이 이미 알고 있다. 상세에서 다시 묻지 않고 넘겨 받는다.
       builder: (context, state) => ChatRoomPage(
         userId: state.pathParameters['userId']!,
         roomId: int.parse(state.pathParameters['roomId']!),
+        roomName: state.extra is String ? state.extra as String : null,
       ),
     ),
 
