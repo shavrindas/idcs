@@ -3,8 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
 from fastapi import WebSocket, WebSocketDisconnect
+from starlette.websockets import WebSocketState
 from src.module.CServer.controllers.sys_auth_controller import stream_bridge
 import json
+import asyncio
 
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
@@ -107,7 +109,7 @@ async def app_facility_monitoring_ws(websocket: WebSocket, facility_id: int):
 
     # 접속 즉시 마지막 캐싱된 상태가 있다면 1회 전송
     if facility_id in stream_bridge.latest_data:
-        await websocket.send_text(json.dumps({"datas": stream_bridge.latest_data[facility_id]}))
+        await websocket.send_text(json.dumps(stream_bridge.latest_data[facility_id]))
 
     try:
         while True:
@@ -116,3 +118,48 @@ async def app_facility_monitoring_ws(websocket: WebSocket, facility_id: int):
             await stream_bridge.send_command_to_fserver(facility_id, cmd_text)
     except WebSocketDisconnect:
         stream_bridge.client_Listeners[facility_id].discard(websocket)
+
+'''개괄 모니터링 브로드캐스팅 용'''
+@router.websocket("/data/outget/{user_id}")
+async def app_facility_monitoring_ws(websocket: WebSocket, user_id: int):
+    facility_list = []
+    # 유저에게 연결된 퍼실리티 리스트 추출
+    async for db in get_db():
+        stmt = select(User.role).where(User.id == user_id)
+        res = await db.execute(stmt)
+        role = res.scalars().first()
+
+        if role == UserRole.ADMIN:
+            stmt = select(Facility.id).distinct()
+        else:
+            stmt = select(FacilityUser.facility_id).where(FacilityUser.user_id == user_id).distinct()
+
+        res2 = await db.execute(stmt)
+        facility_list = res2.scalars().all()
+
+    await websocket.accept()
+
+    try:
+        while True:
+            for f_id in facility_list:
+                if f_id in stream_bridge.latest_data:
+                    filtered_datas = {}
+                    
+                    if isinstance(stream_bridge.latest_data[f_id].get("datas"), dict):
+                        for key, val in stream_bridge.latest_data[f_id]["datas"].items():
+                            if any(keyword in key for keyword in ["temp_pv", "temp_sv", "temp_comp", "deforest_def", "emergency_emg", "emergency_cint", "emergency_high"]):
+                                filtered_datas[key] = val
+                                
+                    if filtered_datas:
+                        await websocket.send_text(json.dumps({"facility_id": f_id, "datas": filtered_datas}))
+
+            #연결상태 점검용
+            try:
+                await asyncio.wait_for(websocket.receive_text(), timeout=0.1)
+            except asyncio.TimeoutError:
+                pass
+            
+            await asyncio.sleep(1)
+            
+    except WebSocketDisconnect:
+        print(f"[CServer] 개괄 모니터링 유저({user_id}) 연결 단절됨 (WebSocketDisconnect)")

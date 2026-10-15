@@ -32,7 +32,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
   void initState() {
     super.initState();
     _fetchFacilities();
-    _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/allget/${widget.userId}');
+    _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}');
     _wsSubscription = _webSocketService.messageStream.listen((rawJson) {
       _parseAndMapDeviceMessage(rawJson);
     });
@@ -286,9 +286,21 @@ class _FacilityMonitoringCardState extends State<_FacilityMonitoringCard> {
     // 💡 현재 선택된 호실의 실시간 데이터 가로채기
     final roomRealtimeData = widget.deviceDataMap[roomId] ?? {};
     final tempPvValue = roomRealtimeData['temp_pv']?.toString() ?? '-';
+    final tempSValue = roomRealtimeData['temp_sv']?.toString() ?? '-';
+    final tempCompvalue = roomRealtimeData['temp_comp']?.toString() ?? '-';
+    final defvalue = roomRealtimeData['deforest_def']?.toString() ?? '-';
+    final emgvalue = roomRealtimeData['emergency_emg']?.toString() ?? '-';
+    final emgcintvalue = roomRealtimeData['emergency_cint']?.toString() ?? '-';
+    final emghighvalue = roomRealtimeData['emergency_high']?.toString() ?? '-';
 
     final Map<String, String> cardFields = {
       '현재 온도': tempPvValue != '-' ? '$tempPvValue ℃' : '-', // 💡 temp_pv 값 매핑
+      '설정 온도': tempSValue != '-' ? '$tempSValue ℃' : '-', // 💡 temp_sv 값 매핑
+      '컴프레셔 작동': tempCompvalue != '-' ? (tempCompvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
+      '제상 작동': defvalue != '-' ? (tempCompvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
+      '이상 발생': emgvalue != '-' ? (emgvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
+      'CINT 발생': emgcintvalue != '-' ? (emgcintvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
+      'high 발생': emghighvalue != '-' ? (emghighvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
     };
 
     return Container(

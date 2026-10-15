@@ -8,6 +8,9 @@ import aiohttp
 import websockets
 import json
 import os
+from src.module.FServer.controllers.connection_facility import facility_ethernet as facilityconn
+from src.module.Mapper.WriteList import DataLists as RD
+import queue
 
 CENTER_API_URL = os.getenv("CENTER_API_URL", "http://127.0.0.1:8900/api/v1/cserver/sys-auth/login")
 CENTER_WS_URL = os.getenv("CENTER_WS_URL", "ws://127.0.0.1:8900/api/v1/cserver/data-stream")
@@ -52,7 +55,8 @@ class FacilityConnectionManager:
 
             headers = {"X-System-Token": self.token}
             ws_url = f"{CENTER_WS_URL}/{self.facility_id}?token={self.token}"
-            
+            recv_task = None
+
             try:
                 print(f"🔄 [FServer] 중앙 데이터 스트리밍 연결 시도 중... ({ws_url})")
                 try:
@@ -61,14 +65,18 @@ class FacilityConnectionManager:
                     ws_ctx = websockets.connect(ws_url, extra_headers=headers)
 
                 async with ws_ctx as ws:
+                    static_task = asyncio.create_task(facilityconn.calculate_periodic_stats())
+                    recv_task = asyncio.create_task(self.receive_loop(ws))
                     self.active_ws = ws
                     self.is_connected = True
                     print(f"[FServer] 중앙 시스템과 데이터 연결 확립 (Facility ID: {self.facility_id})")
                     
                     while True:
-                        dummy_payload = {"status": "OK", "temp_pv": 24.5} 
-                        await ws.send(json.dumps(dummy_payload))
-                        await asyncio.sleep(1)
+                        payload = json.dumps(await facilityconn.get_current_payload())
+                        if payload:
+                            await ws.send(payload)
+                        
+                        await asyncio.sleep(0.5)
                         
             except websockets.exceptions.ConnectionClosed as e:
                 self.is_connected = False
@@ -85,8 +93,37 @@ class FacilityConnectionManager:
                 self.is_connected = False
                 self.active_ws = None
                 print(f"[FServer] 예상치 못한 네트워크 에러: {e}")
+            finally:
+                # 연결이 끊겼을 때(에러나 정상 종료 포함) 백그라운드 수신 태스크도 확실히 종료시킴
+                if recv_task and not recv_task.done():
+                    recv_task.cancel()
+                if static_task and not static_task.done():
+                    static_task.cancel()
             
             await asyncio.sleep(3)
+
+    #명령 받기용 루프
+    async def receive_loop(self, ws):
+        while True:
+            try:
+                # 데이터가 올 때까지 비동기로 대기하다가 받음
+                message = await ws.recv()
+
+                packet = json.loads(message)
+
+                if packet.get("type") == "WR":
+                    req_id = packet.get("req_id")
+                    req_val = packet.get("req_val")
+                    print(f"📩 사용자 요청 들어옴! [ID: {req_id}, Val: {req_val}]")
+
+                    cmd_text = f"Wr\xFF{RD[req_id]}^{req_val}\n"
+                    cmd_bytes = cmd_text.encode('utf-8', errors='ignore')
+
+                    await facilityconn.send_to_facility(cmd_bytes, req_id, req_val)
+                    
+            except Exception as e:
+                print(f"수신 에러: {e}")
+                await asyncio.sleep(1)
 
     async def graceful_shutdown(self):
         """프로세스 종료 시 중앙에 정상 종료를 알림"""
