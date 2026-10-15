@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from src.config.database import get_db, AsyncSessionLocal
 from src.module.Core.models.Facility import FacilityNode, NodeStatusType
 from src.module.Core.security import create_system_token, verify_system_token, hash_api_key
+from src.module.CServer.services.data_service import facility_log_check, facility_alarm_check, facility_remote_record
 
 router = APIRouter(prefix="/sys-auth", tags=["System Authentication"])
 stream_router = APIRouter(tags=["System Stream"])
@@ -33,7 +34,7 @@ class FacilityStreamBridge:
         listeners = self.client_Listeners.get(facility_id, set()).copy()
         for client_ws in listeners:
             try:
-                await client_ws.send_text(json.dumps({"datas": payload}))
+                await client_ws.send_text(json.dumps(payload))
             except Exception:
                 self.client_Listeners[facility_id].discard(client_ws)
 
@@ -100,7 +101,16 @@ async def facility_data_stream(websocket: WebSocket, facility_id: int):
             # FServer로부터 수신한 계측 데이터를 클라이언트(App/Web)에 브로드캐스트
             try:
                 parsed = json.loads(data)
-                await stream_bridge.broadcast_to_clients(facility_id, parsed)
+                #데이터 브로드캐스트 및 알람 체크
+                if "datas" in parsed:
+                    await facility_alarm_check(parsed, facility_id)
+                    await stream_bridge.broadcast_to_clients(facility_id, parsed)
+                #1분 단위 정리분
+                if "time" in parsed:
+                    await facility_log_check(parsed, facility_id)
+                #쓰기 응답 처리
+                if "status" in parsed:
+                    await facility_remote_record(parsed)
             except json.JSONDecodeError:
                 pass
 

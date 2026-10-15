@@ -11,20 +11,25 @@ import firebase_admin
 from firebase_admin import credentials
 from src.module.module_router import api_router
 from src.module.FServer.controllers.connection_manager import fserver_conn_manager
+from src.module.FServer.controllers.connection_facility import facility_ethernet
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("LOG[STARTUP] : IDCool Server is starting up...")
     
     bg_task = None
+    et_task = None
     if os.getenv("ENABLE_FACILITY_SERVER", "false").lower() == "true":
         bg_task = asyncio.create_task(fserver_conn_manager.maintain_connection())
+        et_task = asyncio.create_task(facility_ethernet.to_facility_connect())
+    
     yield
-
     
     print("LOG[SHUTDOWN] : Shutting down IDCool Server...")
     if bg_task:
         bg_task.cancel()
+    if et_task:
+        et_task.cancel()
     await engine.dispose()
 
 app = FastAPI(
@@ -42,6 +47,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+# ===============================================================
+# ─── 파이어베이스 서비스 ───
+# ===============================================================
+if not firebase_admin._apps:
+    cred = credentials.Certificate("src/config/idcs-project-e7dc3-firebase-adminsdk-fbsvc-fc8edb116e.json") # 다운받은 키 경로
+    firebase_admin.initialize_app(cred)
 
 
 app.include_router(api_router, prefix="/api/v1")
