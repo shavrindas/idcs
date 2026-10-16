@@ -67,7 +67,10 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
   void _handleLiveMessage(String rawJson) {
     try {
       final decoded = jsonDecode(rawJson);
-      final datas = decoded is Map ? decoded['datas'] : null;
+      if (decoded is! Map) return;
+
+      // 서버가 감싸서 보내던 때도 있고 그대로 보내는 때도 있다. 둘 다 받는다.
+      final datas = decoded['datas'] ?? decoded;
       if (datas is! Map) return;
 
       for (final entry in datas.entries) {

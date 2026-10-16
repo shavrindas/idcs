@@ -73,7 +73,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
         });
       });
     } catch (e) {
-      print('웹소켓 데이터 파싱 에러: $e');
+      debugPrint('웹소켓 데이터 파싱 에러: $e');
     }
   }
 
