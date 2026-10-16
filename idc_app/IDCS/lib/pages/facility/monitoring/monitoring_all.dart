@@ -1,11 +1,30 @@
+// ===============================================================
+// 경로: lib/pages/facility/monitoring/monitoring_all.dart
+// 명세: 내가 맡은 모든 시설의 호실을 한 화면에서 본다
+// ===============================================================
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:idcs/components/facility/monitoring/Allmonitoring.dart';
+import 'package:go_router/go_router.dart';
+import 'package:idcs/components/indices/main_index/main_index_components.dart';
+import 'package:idcs/components/shared/app_toast.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/main.dart';
+import 'package:idcs/services/common/api_client.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
-import 'package:idcs/main.dart';
+import 'package:idcs/theme/app_theme.dart';
 
+/// 맡은 시설이 여럿인 사람을 위한 화면.
+///
+/// 예전에는 시설 카드 하나가 호실 하나만 보여주고 ‹ 1/10 › 로 넘겨야 했다.
+/// 열 개짜리 시설이면 전부 보는 데 열 번을 눌러야 하는데, 이 화면을 여는
+/// 이유는 "지금 다 괜찮은가" 한 가지라 그 열 번이 통째로 군더더기다.
+/// 이제 호실을 전부 펼치고, 시설이 늘어나면 아래로 이어진다.
+///
+/// 카드 안에 버튼을 두지 않는다. 카드 자체가 버튼이고, 누르면 그 호실의
+/// 제어판으로 들어간다.
 class MonitoringAll extends StatefulWidget {
   final String userId;
 
@@ -16,14 +35,18 @@ class MonitoringAll extends StatefulWidget {
 }
 
 class _MonitoringAllState extends State<MonitoringAll> {
-  List<dynamic> facilityList = [];
-  bool isLoading = true;
+  List<dynamic> _facilities = [];
 
-  // 💡 호실 ID(roomId)별 실시간 데이터를 저장할 상태 (예: {"25": {"temp_pv": 13}, "26": {"temp_pv": 14}})
-  final Map<String, Map<String, dynamic>> deviceDataMap = {};
+  /// 시설 id -> 그 시설의 호실 목록.
+  final Map<String, List<dynamic>> _roomsByFacility = {};
+
+  /// 호실 id -> (필드 이름 -> 값). 소켓 하나가 내 시설 전부를 실어 보낸다.
+  final Map<int, Map<String, String>> _live = {};
+
+  bool _isLoading = true;
 
   final TextEditingController _searchController = TextEditingController();
-  String searchQuery = '';
+  String _query = '';
 
   final WebSocketService _webSocketService = WebSocketService();
   StreamSubscription<String>? _wsSubscription;
@@ -31,67 +54,10 @@ class _MonitoringAllState extends State<MonitoringAll> {
   @override
   void initState() {
     super.initState();
-    _fetchFacilities();
+    _load();
+
     _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}');
-    _wsSubscription = _webSocketService.messageStream.listen((rawJson) {
-      _parseAndMapDeviceMessage(rawJson);
-    });
-  }
-
-  List<dynamic> get filteredFacilityList {
-    if (searchQuery.trim().isEmpty) {
-      return facilityList;
-    }
-    final query = searchQuery.toLowerCase().trim();
-    return facilityList.where((facility) {
-      final facilityId = (facility['id']?.toString() ?? '').toLowerCase();
-      final facilityName = (facility['name']?.toString() ?? '').toLowerCase();
-
-      return facilityName.contains(query) || facilityId.contains(query);
-    }).toList();
-  }
-
-  // 💡 웹소켓 메시지 파싱 및 호실 ID별 데이터 매핑
-  void _parseAndMapDeviceMessage(String rawJsonString) {
-    try {
-      final Map<String, dynamic> parsedJson = jsonDecode(rawJsonString);
-      // 'datas' 또는 최상위 Map 구조에 맞게 처리
-      final Map<String, dynamic> parsedSJson = parsedJson['datas'] ?? parsedJson;
-
-      setState(() {
-        parsedSJson.forEach((key, value) {
-          // 키 형식 예시: "25.temp_pv"
-          final List<String> parts = key.split('.');
-          if (parts.length >= 2) {
-            final String roomId = parts[0];     // "25"
-            final String sensorKey = parts[1];  // "temp_pv"
-
-            // 해당 호실의 데이터 맵 초기화 및 값 업데이트
-            deviceDataMap.putIfAbsent(roomId, () => {});
-            deviceDataMap[roomId]![sensorKey] = value;
-          }
-        });
-      });
-    } catch (e) {
-      debugPrint('웹소켓 데이터 파싱 에러: $e');
-    }
-  }
-
-  Future<void> _fetchFacilities() async {
-    try {
-      final facilities = await FacilityApiService.getFacilities(widget.userId);
-      setState(() {
-        facilityList = facilities;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('시설 목록을 불러오는 중 오류가 발생했습니다: $e')),
-        );
-      }
-    }
+    _wsSubscription = _webSocketService.messageStream.listen(_handleLiveMessage);
   }
 
   @override
@@ -102,258 +68,223 @@ class _MonitoringAllState extends State<MonitoringAll> {
     super.dispose();
   }
 
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    try {
+      final facilities = await FacilityApiService.getFacilities(widget.userId);
+
+      // 시설마다 호실을 한 번씩 묻는다. 순서대로 기다리면 시설 수만큼 느려지므로
+      // 한꺼번에 보낸다.
+      final rooms = await Future.wait(
+        facilities.map((f) async {
+          final id = f['id'].toString();
+          try {
+            return MapEntry(id, await FacilityApiService.getFacilityRooms(id));
+          } catch (_) {
+            // 한 시설이 실패해도 나머지는 보여준다.
+            return MapEntry(id, <dynamic>[]);
+          }
+        }),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _facilities = facilities;
+        _roomsByFacility
+          ..clear()
+          ..addEntries(rooms);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// 키는 "호실.필드" 형태로 온다 (예: "23.temp_pv").
+  void _handleLiveMessage(String rawJson) {
+    try {
+      final decoded = jsonDecode(rawJson);
+      if (decoded is! Map) return;
+
+      // 서버가 감싸서 보내던 때도 있고 그대로 보내는 때도 있다. 둘 다 받는다.
+      final datas = decoded['datas'] ?? decoded;
+      if (datas is! Map) return;
+
+      for (final entry in datas.entries) {
+        final parts = entry.key.toString().split('.');
+        if (parts.length != 2) continue;
+
+        final roomId = int.tryParse(parts[0]);
+        if (roomId == null) continue;
+
+        (_live[roomId] ??= {})[parts[1]] = entry.value.toString();
+      }
+      if (mounted) setState(() {});
+    } catch (_) {
+      // 한 묶음이 깨져 있어도 화면은 계속 돌아가야 한다.
+    }
+  }
+
+  List<dynamic> get _shownFacilities {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return _facilities;
+    return _facilities
+        .where((f) => (f['name']?.toString() ?? '').toLowerCase().contains(q))
+        .toList();
+  }
+
+  /// 이 호실에 지금 올라온 이상이 있는지.
+  ///
+  /// 알람 API 를 시설마다 또 부르지 않고, 이미 받고 있는 실시간 값에서 읽는다.
+  /// emergency_* 중 하나라도 켜져 있으면 이상으로 본다.
+  int _faultCount(int roomId) {
+    final values = _live[roomId];
+    if (values == null) return 0;
+
+    return values.entries
+        .where((e) => e.key.startsWith('emergency_') && _isOn(e.value))
+        .length;
+  }
+
+  static bool _isOn(String raw) {
+    final v = raw.trim().toUpperCase();
+    return v == 'ON' || v == '1' || v == 'TRUE';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final displayList = filteredFacilityList;
+    final facilities = _shownFacilities;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('시설 및 호실 실시간 제어판'),
-        centerTitle: true,
-      ),
-      body: isLoading
+      appBar: AppBar(title: Text(context.l10n.overviewTitle), centerTitle: true),
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: '시설 이름 또는 ID로 검색...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: searchQuery.isNotEmpty
-                    ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      searchQuery = '';
-                    });
-                  },
-                )
-                    : null,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _query = v),
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: context.l10n.overviewSearchHint,
+                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                      suffixIcon: _query.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: context.l10n.boardSearchClear,
+                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _query = '');
+                              },
+                            ),
+                    ),
+                  ),
                 ),
-                isDense: true,
-              ),
-            ),
-          ),
+                Expanded(
+                  child: facilities.isEmpty
+                      ? Center(
+                          child: Text(
+                            _query.isEmpty
+                                ? context.l10n.overviewNoFacilities
+                                : context.l10n.searchNoResults,
+                            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _load,
+                          // 시설이 늘어나면 아래로 이어진다.
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                            itemCount: facilities.length,
+                            itemBuilder: (context, index) {
+                              final facility = facilities[index];
+                              final facilityId = facility['id'].toString();
+                              final rooms = _roomsByFacility[facilityId] ?? const [];
 
-          Expanded(
-            child: displayList.isEmpty
-                ? Center(
-              child: Text(
-                searchQuery.isEmpty ? '등록된 시설이 없습니다.' : '검색 결과가 없습니다.',
-                style: const TextStyle(color: Colors.grey),
-              ),
-            )
-                : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: displayList.length,
-              itemBuilder: (context, index) {
-                final facility = displayList[index];
-                final facilityId = facility['id']?.toString() ?? '';
-                final facilityName = facility['name'] ?? '시설 $facilityId';
-
-                return _FacilityMonitoringCard(
-                  key: ValueKey(facilityId),
-                  userId: widget.userId,
-                  facilityId: facilityId,
-                  facilityName: facilityName,
-                  // 💡 파싱된 실시간 데이터 맵 전달
-                  deviceDataMap: deviceDataMap,
-                );
-              },
+                              return _FacilitySection(
+                                name: facility['name']?.toString() ?? context.l10n.facilityUnnamed,
+                                rooms: rooms,
+                                liveValues: _live,
+                                faultCounts: {
+                                  for (final r in rooms)
+                                    if (r['id'] is int) r['id'] as int: _faultCount(r['id'] as int),
+                                },
+                                onRoomPressed: (roomId) => context.push(
+                                  '/facility_monitoring/${widget.userId}/$facilityId/$roomId',
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
 
-// ------------------------------------------------------------------
-// 시설별 카드 위젯
-// ------------------------------------------------------------------
-class _FacilityMonitoringCard extends StatefulWidget {
-  final String userId;
-  final String facilityId;
-  final String facilityName;
-  final Map<String, Map<String, dynamic>> deviceDataMap; // 💡 추가
+/// 시설 한 곳: 이름 한 줄과 그 아래 호실 전부.
+class _FacilitySection extends StatelessWidget {
+  final String name;
+  final List<dynamic> rooms;
+  final Map<int, Map<String, String>> liveValues;
+  final Map<int, int> faultCounts;
+  final Function(int) onRoomPressed;
 
-  const _FacilityMonitoringCard({
-    super.key,
-    required this.userId,
-    required this.facilityId,
-    required this.facilityName,
-    required this.deviceDataMap,
+  const _FacilitySection({
+    required this.name,
+    required this.rooms,
+    required this.liveValues,
+    required this.faultCounts,
+    required this.onRoomPressed,
   });
 
   @override
-  State<_FacilityMonitoringCard> createState() => _FacilityMonitoringCardState();
-}
-
-class _FacilityMonitoringCardState extends State<_FacilityMonitoringCard> {
-  List<dynamic> roomList = [];
-  int currentRoomIndex = 0;
-  bool isRoomLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchRooms();
-  }
-
-  Future<void> _fetchRooms() async {
-    try {
-      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
-
-      // 💡 위젯이 화면에 살아있는지 확인 (위젯이 파괴되었다면 이하 실행 중단)
-      if (!mounted) return;
-
-      setState(() {
-        roomList = rooms;
-        isRoomLoading = false;
-      });
-    } catch (e) {
-      // 💡 에러 발생 후 setState 전에도 확인 필요
-      if (!mounted) return;
-
-      setState(() => isRoomLoading = false);
-    }
-  }
-
-  void _nextRoom() {
-    if (roomList.isNotEmpty) {
-      setState(() {
-        currentRoomIndex = (currentRoomIndex + 1) % roomList.length;
-      });
-    }
-  }
-
-  void _prevRoom() {
-    if (roomList.isNotEmpty) {
-      setState(() {
-        currentRoomIndex = (currentRoomIndex - 1 + roomList.length) % roomList.length;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (isRoomLoading) {
-      return const Card(
-        margin: EdgeInsets.only(bottom: 16.0),
-        child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
+    final colors = context.colors;
 
-    if (roomList.isEmpty) {
-      return Card(
-        margin: const EdgeInsets.only(bottom: 16.0),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.facilityName,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text('등록된 호실이 없습니다.', style: TextStyle(color: Colors.grey)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final currentRoom = roomList[currentRoomIndex];
-    final roomId = currentRoom['roomId']?.toString() ?? currentRoom['id']?.toString() ?? '-';
-    final roomName = currentRoom['roomName'] ?? currentRoom['name'] ?? '$roomId호';
-
-    // 💡 현재 선택된 호실의 실시간 데이터 가로채기
-    final roomRealtimeData = widget.deviceDataMap[roomId] ?? {};
-    final tempPvValue = roomRealtimeData['temp_pv']?.toString() ?? '-';
-    final tempSValue = roomRealtimeData['temp_sv']?.toString() ?? '-';
-    final tempCompvalue = roomRealtimeData['temp_comp']?.toString() ?? '-';
-    final defvalue = roomRealtimeData['deforest_def']?.toString() ?? '-';
-    final emgvalue = roomRealtimeData['emergency_emg']?.toString() ?? '-';
-    final emgcintvalue = roomRealtimeData['emergency_cint']?.toString() ?? '-';
-    final emghighvalue = roomRealtimeData['emergency_high']?.toString() ?? '-';
-
-    final Map<String, String> cardFields = {
-      '현재 온도': tempPvValue != '-' ? '$tempPvValue ℃' : '-', // 💡 temp_pv 값 매핑
-      '설정 온도': tempSValue != '-' ? '$tempSValue ℃' : '-', // 💡 temp_sv 값 매핑
-      '컴프레셔 작동': tempCompvalue != '-' ? (tempCompvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
-      '제상 작동': defvalue != '-' ? (tempCompvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
-      '이상 발생': emgvalue != '-' ? (emgvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
-      'CINT 발생': emgcintvalue != '-' ? (emgcintvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
-      'high 발생': emghighvalue != '-' ? (emghighvalue == '1' ? 'ON' : "OFF") : '-', // 💡 temp_sv 값 매핑
-    };
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
-                    widget.facilityName,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, size: 16),
-                      onPressed: roomList.length > 1 ? _prevRoom : null,
-                      tooltip: '이전 방',
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(6),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        '${currentRoomIndex + 1}/${roomList.length}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onPressed: roomList.length > 1 ? _nextRoom : null,
-                      tooltip: '다음 방',
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(6),
-                    ),
-                  ],
-                ),
+                if (rooms.isNotEmpty)
+                  Text(
+                    context.l10n.overviewRoomCount(rooms.length),
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
               ],
             ),
           ),
-          AllmonitoringCard(
-            title: '$roomName 실시간 정보',
-            fields: cardFields,
+          // 호실 카드는 '내 시설' 안의 호실 목록과 같은 것을 쓴다. 같은 값을
+          // 두 화면에서 다르게 그리면 같은 것인지 알아보기 어렵다.
+          RoomGrid(
+            rooms: rooms,
+            activeAlarmCounts: faultCounts,
+            liveValues: liveValues,
+            onRoomPressed: onRoomPressed,
           ),
         ],
       ),

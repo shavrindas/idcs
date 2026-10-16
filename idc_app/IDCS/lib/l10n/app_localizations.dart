@@ -1376,6 +1376,30 @@ abstract class AppLocalizations {
   /// **'개괄'**
   String get navOverview;
 
+  /// No description provided for @overviewTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 현황'**
+  String get overviewTitle;
+
+  /// No description provided for @overviewSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 이름으로 찾기'**
+  String get overviewSearchHint;
+
+  /// No description provided for @overviewRoomCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 {count}곳'**
+  String overviewRoomCount(int count);
+
+  /// No description provided for @overviewNoFacilities.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 시설이 없습니다.'**
+  String get overviewNoFacilities;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:
