@@ -716,6 +716,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navOverview => 'Overview';
 
   @override
+  String get overviewTitle => 'All facilities';
+
+  @override
+  String get overviewSearchHint => 'Find a facility';
+
+  @override
+  String overviewRoomCount(int count) {
+    return '$count rooms';
+  }
+
+  @override
+  String get overviewNoFacilities => 'No facilities registered.';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

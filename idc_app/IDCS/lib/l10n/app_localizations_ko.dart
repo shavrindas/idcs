@@ -701,6 +701,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get navOverview => '개괄';
 
   @override
+  String get overviewTitle => '전체 현황';
+
+  @override
+  String get overviewSearchHint => '시설 이름으로 찾기';
+
+  @override
+  String overviewRoomCount(int count) {
+    return '호실 $count곳';
+  }
+
+  @override
+  String get overviewNoFacilities => '등록된 시설이 없습니다.';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override
