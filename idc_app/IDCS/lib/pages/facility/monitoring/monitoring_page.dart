@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/components/facility/monitoring/controllable_fields.dart';
+import 'package:idcs/components/facility/monitoring/control_card.dart';
 import 'package:idcs/components/facility/monitoring/panel_status_card.dart';
 import 'package:idcs/components/facility/monitoring/panel_summary_card.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
@@ -262,22 +263,16 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
                   // 실제로 설비에 닿는 다섯 줄. 이것만 늘 펼쳐 둔다 —
                   // 할 수 있는 일이 어디 있는지는 찾아다니게 두면 안 된다.
-                  MonitoringCard(
-                    title: context.l10n.panelControlTitle,
-                    fields: _writableFields,
-                    view: view,
-                    deviceKeys: true,
-                    OnConfirm: remoteClickEvent,
-                  ),
+                  ControlCard(fields: _writableFields, view: view, onSend: remoteClickEvent),
 
                   // 나머지는 접어 둔다. 없애지는 않는다 — 설비를 보는 사람에게는
                   // 언젠가 전부 필요하고, '상세' 안에 다 있어야 찾을 수 있다.
-                  MonitoringCard(title: context.l10n.panelCardTemp, fields: realtempData, view: view, deviceKeys: true, collapsible: true, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: context.l10n.panelCardDefrost, fields: deforestData, view: view, deviceKeys: true, collapsible: true, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: context.l10n.panelCardFaults, fields: emergencyData, view: view, deviceKeys: true, collapsible: true, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: context.l10n.panelCardInverter, fields: inverterData, view: view, deviceKeys: true, collapsible: true, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: context.l10n.panelCardEquipment, fields: equipmentData, view: view, deviceKeys: true, collapsible: true, OnConfirm: remoteClickEvent),
-                  MonitoringCard(title: context.l10n.panelCardControl, fields: controlData, view: view, deviceKeys: true, collapsible: true, OnConfirm: remoteClickEvent),
+                  MonitoringCard(title: context.l10n.panelCardTemp, fields: realtempData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardDefrost, fields: deforestData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardFaults, fields: emergencyData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardInverter, fields: inverterData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardEquipment, fields: equipmentData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardControl, fields: controlData, view: view, deviceKeys: true, collapsible: true),
                 ],
               ),
             ),

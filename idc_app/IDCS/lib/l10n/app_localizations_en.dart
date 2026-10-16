@@ -1107,6 +1107,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get panelControlConfirm => 'Send this value?';
+
+  @override
+  String get panelControlSend => 'Send';
+
+  @override
+  String get panelControlWire => 'Value sent to the equipment';
+
+  @override
+  String get panelControlReadOnly =>
+      'Read-only here. Use the Controls card at the top to change it.';
+
+  @override
   String get panelControlTitle => 'Controls';
 
   @override
