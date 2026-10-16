@@ -1107,6 +1107,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get panelControlTitle => 'Controls';
+
+  @override
+  String get panelNowTitle => 'Right now';
+
+  @override
+  String get panelNoFaults => 'No faults';
+
+  @override
+  String panelFaultCount(int count) {
+    return '$count faults';
+  }
+
+  @override
+  String get panelDetails => 'Details';
+
+  @override
+  String get panelNoLimit =>
+      'No limits registered, so this value is not judged.';
+
+  @override
   String get panelCardInfo => 'Facility info';
 
   @override
