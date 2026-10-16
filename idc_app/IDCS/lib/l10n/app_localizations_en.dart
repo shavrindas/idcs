@@ -713,6 +713,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartSafeRangeNone => 'The selected points have no limits set.';
 
   @override
+  String get navOverview => 'Overview';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override

@@ -346,6 +346,7 @@
   "chartSafeRangeTitle": "Safe range lines",
   "chartSafeRangeHint": "Draws each point's high and low limit as a dashed line across the chart.",
   "chartSafeRangeNone": "The selected points have no limits set.",
+  "navOverview": "Overview",
   "searchNoResults": "No matches.",
   "alarmsNone": "No alarms to show.",
   "alarmNameMissing": "Unnamed alarm",

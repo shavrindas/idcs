@@ -346,6 +346,7 @@
   "chartSafeRangeTitle": "안전 범위 선",
   "chartSafeRangeHint": "항목마다 정해 둔 상·하한을 가로 점선으로 겹쳐 그립니다.",
   "chartSafeRangeNone": "선택한 항목에 정해진 상·하한이 없습니다.",
+  "navOverview": "개괄",
   "searchNoResults": "검색 결과가 없습니다.",
   "alarmsNone": "조회할 수 있는 알람이 없습니다.",
   "alarmNameMissing": "알람 이름 없음",

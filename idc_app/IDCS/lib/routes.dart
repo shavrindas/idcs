@@ -49,6 +49,15 @@ final GoRouter appRouter = GoRouter(
                 builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!),
               ),
             ]),
+            // 개괄 모니터링. 맨 뒤에 붙어 있던 것을 '내 시설' 바로 옆으로 옮겼다 —
+            // 둘 다 '지금 어떤가' 를 보는 자리라 나란히 있어야 하고, 아래 탭의
+            // 순서는 이 branch 순서를 그대로 따른다.
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'allmonitoring',
+                builder: (context, state) => MonitoringAll(userId: state.pathParameters['userId']!),
+              ),
+            ]),
             StatefulShellBranch(routes: [
               GoRoute(
                 path: 'alarm',
@@ -182,6 +191,7 @@ final GoRouter appRouter = GoRouter(
         roomId: state.pathParameters['roomId']!,
       ),
     ),
+    
     //모니터링 끝-------------------------------------------------------------------
 
     // [chat_room] - 채팅방 상세. 셸 위로 풀스크린 push.
