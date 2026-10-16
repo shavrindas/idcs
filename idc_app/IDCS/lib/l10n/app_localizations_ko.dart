@@ -698,6 +698,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chartSafeRangeNone => '선택한 항목에 정해진 상·하한이 없습니다.';
 
   @override
+  String get navOverview => '개괄';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

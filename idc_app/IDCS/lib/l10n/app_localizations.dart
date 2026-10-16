@@ -1370,6 +1370,12 @@ abstract class AppLocalizations {
   /// **'선택한 항목에 정해진 상·하한이 없습니다.'**
   String get chartSafeRangeNone;
 
+  /// No description provided for @navOverview.
+  ///
+  /// In ko, this message translates to:
+  /// **'개괄'**
+  String get navOverview;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:

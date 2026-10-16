@@ -5,6 +5,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:idcs/pages/facility/monitoring/monitoring_all.dart';
 import 'package:idcs/services/common/fcm_service.dart';
 import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
