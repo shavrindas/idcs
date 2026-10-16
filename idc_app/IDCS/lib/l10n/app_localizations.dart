@@ -2066,6 +2066,30 @@ abstract class AppLocalizations {
   /// **'시설 ID: {id} 실시간 제어판'**
   String panelPageTitle(String id);
 
+  /// No description provided for @panelControlConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 값을 보낼까요?'**
+  String get panelControlConfirm;
+
+  /// No description provided for @panelControlSend.
+  ///
+  /// In ko, this message translates to:
+  /// **'보내기'**
+  String get panelControlSend;
+
+  /// No description provided for @panelControlWire.
+  ///
+  /// In ko, this message translates to:
+  /// **'설비로 보낼 값'**
+  String get panelControlWire;
+
+  /// No description provided for @panelControlReadOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'값만 보는 칸입니다. 바꾸려면 맨 위 \'조작\' 카드를 쓰세요.'**
+  String get panelControlReadOnly;
+
   /// No description provided for @panelControlTitle.
   ///
   /// In ko, this message translates to:

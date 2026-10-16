@@ -1089,6 +1089,18 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get panelControlConfirm => '이 값을 보낼까요?';
+
+  @override
+  String get panelControlSend => '보내기';
+
+  @override
+  String get panelControlWire => '설비로 보낼 값';
+
+  @override
+  String get panelControlReadOnly => '값만 보는 칸입니다. 바꾸려면 맨 위 \'조작\' 카드를 쓰세요.';
+
+  @override
   String get panelControlTitle => '조작';
 
   @override

@@ -603,6 +603,10 @@
       }
     }
   },
+  "panelControlConfirm": "이 값을 보낼까요?",
+  "panelControlSend": "보내기",
+  "panelControlWire": "설비로 보낼 값",
+  "panelControlReadOnly": "값만 보는 칸입니다. 바꾸려면 맨 위 '조작' 카드를 쓰세요.",
   "panelControlTitle": "조작",
   "panelNowTitle": "지금",
   "panelNoFaults": "이상 없음",

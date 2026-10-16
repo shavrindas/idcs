@@ -603,6 +603,10 @@
       }
     }
   },
+  "panelControlConfirm": "Send this value?",
+  "panelControlSend": "Send",
+  "panelControlWire": "Value sent to the equipment",
+  "panelControlReadOnly": "Read-only here. Use the Controls card at the top to change it.",
   "panelControlTitle": "Controls",
   "panelNowTitle": "Right now",
   "panelNoFaults": "No faults",
