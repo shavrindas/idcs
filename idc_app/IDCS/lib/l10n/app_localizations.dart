@@ -1400,6 +1400,24 @@ abstract class AppLocalizations {
   /// **'등록된 시설이 없습니다.'**
   String get overviewNoFacilities;
 
+  /// No description provided for @roomStatusFault.
+  ///
+  /// In ko, this message translates to:
+  /// **'이상'**
+  String get roomStatusFault;
+
+  /// No description provided for @roomStatusCint.
+  ///
+  /// In ko, this message translates to:
+  /// **'CINT'**
+  String get roomStatusCint;
+
+  /// No description provided for @roomStatusHigh.
+  ///
+  /// In ko, this message translates to:
+  /// **'HIGH'**
+  String get roomStatusHigh;
+
   /// No description provided for @searchNoResults.
   ///
   /// In ko, this message translates to:

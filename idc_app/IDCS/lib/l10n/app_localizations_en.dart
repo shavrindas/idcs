@@ -730,6 +730,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get overviewNoFacilities => 'No facilities registered.';
 
   @override
+  String get roomStatusFault => 'Fault';
+
+  @override
+  String get roomStatusCint => 'CINT';
+
+  @override
+  String get roomStatusHigh => 'HIGH';
+
+  @override
   String get searchNoResults => 'No matches.';
 
   @override
