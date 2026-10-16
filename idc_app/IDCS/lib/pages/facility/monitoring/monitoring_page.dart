@@ -107,7 +107,8 @@ class _MonitoringPageState extends State<MonitoringPage> {
         return;
       }
 
-      final dynamic rawDatas = parsedJson['datas'];
+      // 서버가 감싸서 보내던 때도 있고 그대로 보내는 때도 있다. 둘 다 받는다.
+      final dynamic rawDatas = parsedJson['datas'] ?? parsedJson;
       if (rawDatas is! Map<String, dynamic>) return;
       if (rawDatas['status'] != null) {
         _handleCommandResponse(rawDatas);
