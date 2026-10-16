@@ -83,12 +83,21 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
         actions: [
-          if (FacilityShortcut.isSoleFacility)
-            IconButton(
-              icon: const Icon(Icons.person_outline_rounded),
-              tooltip: context.l10n.profileTitle,
-              onPressed: () => context.push('/index/${widget.userId}/profile'),
+          // 메신저와 내 정보는 아래 탭이 아니라 여기에 둔다. 아래 네 칸은
+          // '설비를 본다'는 한 가지 일로 묶이고, 이 둘은 그 일과 상관없이
+          // 언제든 열리는 화면이다.
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            tooltip: context.l10n.navMessenger,
+            onPressed: () => context.push(
+              '/facility_chat/${widget.userId}/${widget.facilityId}',
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_outline_rounded),
+            tooltip: context.l10n.profileTitle,
+            onPressed: () => context.push('/index/${widget.userId}/profile'),
+          ),
         ],
       ),
       body: widget.navigationShell,
@@ -102,7 +111,6 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
           NavigationDestination(icon: Icon(Icons.sensors_outlined), selectedIcon: Icon(Icons.sensors_rounded), label: context.l10n.navMonitoring),
           NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: context.l10n.navChart),
           NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: context.l10n.navBoard),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline_rounded), selectedIcon: Icon(Icons.chat_bubble_rounded), label: context.l10n.navMessenger),
           NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
         ],
       ),

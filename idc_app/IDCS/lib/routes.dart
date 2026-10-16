@@ -32,45 +32,37 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/find_pw', builder: (context, state) => const FindPwPage()),
     // GoRoute(path: '/reset_pw', builder: (context, state) => const ResetPwPage()),
 
-    // [index] - 유저 레벨 3개 섹션(홈/알람/내 정보) 하단 네비게이션 셸.
-    // 시설 셸과 동일한 이유로 상위 라우트가 :userId를 소유하고 브랜치는 상대 경로만 갖는다.
+    // [index] - 유저 레벨. 하단 네비게이션이 없다.
+    //
+    // 예전에는 여기에도 탭 바가 하나 있었다(홈/개괄/알람/내 정보). 시설에 들어가면
+    // 그 바가 통째로 다른 다섯 개로 바뀌고, '알람'은 양쪽에 하나씩 있어서 같은
+    // 이름이 서로 다른 화면을 가리켰다. 바가 발밑에서 바뀌는 화면은 어디에 있는지
+    // 알기 어렵다.
+    //
+    // 이제 유저 레벨은 화면 하나다 — '전체 현황'이 그 자리를 맡는다. '내 시설'은
+    // 따로 둘 이유가 없었다. 전체 현황이 이미 시설마다 이름과 호실을 다 보여주고,
+    // 시설 이름 줄을 누르면 그 시설로 들어간다. 알람과 내 정보는 헤더로 올라갔고,
+    // 눌렀을 때 이 화면 위로 풀스크린 push 된다.
+    //
+    // 'home' 경로를 그대로 둔 것은 로그인·스플래시·시설 셸이 모두 이 경로로
+    // 돌아오기 때문이다. 가리키는 화면만 바뀐다.
     GoRoute(
       path: '/index/:userId',
       redirect: (context, state) => state.matchedLocation == state.uri.toString()
           ? '${state.matchedLocation}/home'
           : null,
       routes: [
-        StatefulShellRoute.indexedStack(
-          builder: (context, state, navigationShell) => UserShellPage(navigationShell: navigationShell),
-          branches: [
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: 'home',
-                builder: (context, state) => MainIndexPage(userId: state.pathParameters['userId']!),
-              ),
-            ]),
-            // 개괄 모니터링. 맨 뒤에 붙어 있던 것을 '내 시설' 바로 옆으로 옮겼다 —
-            // 둘 다 '지금 어떤가' 를 보는 자리라 나란히 있어야 하고, 아래 탭의
-            // 순서는 이 branch 순서를 그대로 따른다.
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: 'allmonitoring',
-                builder: (context, state) => MonitoringAll(userId: state.pathParameters['userId']!),
-              ),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: 'alarm',
-                builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!),
-              ),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: 'profile',
-                builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!),
-              ),
-            ]),
-          ],
+        GoRoute(
+          path: 'home',
+          builder: (context, state) => MonitoringAll(userId: state.pathParameters['userId']!),
+        ),
+        GoRoute(
+          path: 'alarm',
+          builder: (context, state) => MainAlarmPage(userId: state.pathParameters['userId']!),
+        ),
+        GoRoute(
+          path: 'profile',
+          builder: (context, state) => PersonalPage(userId: state.pathParameters['userId']!),
         ),
       ],
     ),
@@ -132,15 +124,6 @@ final GoRouter appRouter = GoRouter(
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
-                path: 'chat',
-                builder: (context, state) => FacilityChatListPage(
-                  userId: state.pathParameters['userId']!,
-                  facilityId: state.pathParameters['facilityId']!,
-                ),
-              ),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
                 path: 'alarm',
                 builder: (context, state) => FacilityAlarmPage(
                   userId: state.pathParameters['userId']!,
@@ -183,6 +166,17 @@ final GoRouter appRouter = GoRouter(
     //여기서부터는 모니터링 관련
     //--------------------------------------------------------------------------------
     // [facility_monitoring] - 호실 상세(라이브 제어판). 셸 위로 풀스크린 push.
+    // 메신저. 하단 탭에서 헤더 아이콘으로 옮겼다 — 탭 다섯 개 중 이것만
+    // 설비 상태와 무관한 '사람끼리 주고받는' 화면이라, 나머지 넷과 같은 줄에
+    // 있으면 무엇을 고르는 자리인지가 흐려진다. 셸 위로 풀스크린 push 된다.
+    GoRoute(
+      path: '/facility_chat/:userId/:facilityId',
+      builder: (context, state) => FacilityChatListPage(
+        userId: state.pathParameters['userId']!,
+        facilityId: state.pathParameters['facilityId']!,
+      ),
+    ),
+
     GoRoute(
       path: '/facility_monitoring/:userId/:facilityId/:roomId',
       builder: (context, state) => MonitoringPage(
