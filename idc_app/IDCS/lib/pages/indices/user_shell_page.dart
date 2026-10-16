@@ -25,9 +25,10 @@ class UserShellPage extends StatelessWidget {
         destinations: [
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard_rounded), label: context.l10n.navHome),
           // 개괄 모니터링. 설민이 추가한 탭을 번역해서 가져왔다. 아이콘은
-          // '내 정보' 와 같은 사람 모양이었는데, 탭 두 개가 같은 그림이면
-          // 어느 쪽인지 알 수 없어 여러 칸이 보이는 모양으로 바꿨다.
-          NavigationDestination(icon: Icon(Icons.grid_view_outlined), selectedIcon: Icon(Icons.grid_view_rounded), label: context.l10n.navOverview),
+          // 원래 '내 정보' 와 같은 사람 모양이었다. 격자로 바꿔 봤더니 이번엔
+          // '내 시설'(dashboard)과 거의 같아 보여서, 이 화면이 실제로 보여주는
+          // 것 — 온도 — 을 그대로 쓴다.
+          NavigationDestination(icon: Icon(Icons.thermostat_outlined), selectedIcon: Icon(Icons.thermostat_rounded), label: context.l10n.navOverview),
           NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
           NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: context.l10n.profileTitle),
         ],
