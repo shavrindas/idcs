@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/components/shared/app_toast.dart';
+import 'package:idcs/components/shared/skeleton.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
@@ -20,6 +21,7 @@ import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/motion.dart';
 
 /// 맡은 시설이 여럿인 사람을 위한 화면.
 ///
@@ -249,7 +251,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
           ],
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const _OverviewSkeleton()
             : Column(
                 children: [
                   if (statuses.isNotEmpty) _OverviewSummaryBand(statuses: statuses.values.toList()),
@@ -324,6 +326,69 @@ class _MonitoringAllState extends State<MonitoringAll> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+/// 불러오는 동안 들어올 것의 모양을 깔아 둔다.
+///
+/// 요약 띠, 검색창, 시설 이름 줄, 호실 격자 — 순서와 높이가 실제와 같아서
+/// 값이 도착해도 자리가 움직이지 않는다.
+class _OverviewSkeleton extends StatelessWidget {
+  const _OverviewSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Skeleton(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 58,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.outline),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                child: Row(
+                  children: [
+                    SkeletonBox(width: 34, height: 34, radius: 17),
+                    SizedBox(width: 11),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SkeletonBox(width: 120, height: 14),
+                        SizedBox(height: 5),
+                        SkeletonBox(width: 90, height: 11),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const SkeletonBox(height: 48, radius: 14),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                SkeletonBox(width: 120, height: 15),
+                SkeletonBox(width: 56, height: 12),
+              ],
+            ),
+            const SizedBox(height: 11),
+            const RoomGridSkeleton(aspectRatio: 1.46, count: 6),
+          ],
+        ),
       ),
     );
   }
@@ -747,7 +812,16 @@ class _OverviewRoomCard extends StatelessWidget {
                 ),
                 // 상태 띠. 카드 아래를 가로로 긋는다 — 격자를 훑을 때
                 // 색 줄만 따라가면 걸린 칸이 보인다.
-                Container(height: 4, color: status.railColor(colors)),
+                //
+                // 색이 톡 바뀌면 바뀐 줄도 모르고 지나간다. 정상에서 이상으로
+                // 넘어가는 순간은 이 화면에서 가장 중요한 변화라, 눈이 따라갈
+                // 만큼만 끌어 준다.
+                AnimatedContainer(
+                  duration: Motion.of(context, Motion.normal),
+                  curve: Motion.enter,
+                  height: 4,
+                  color: status.railColor(colors),
+                ),
               ],
             ),
           ),
