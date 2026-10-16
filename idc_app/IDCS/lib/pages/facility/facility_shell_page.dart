@@ -65,6 +65,18 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 모니터링 탭을 눕히면 호실 하나를 지켜보는 화면이 된다. 가로 높이는
+    // 세로의 절반도 안 되는데 앱바와 탭 줄이 그중 3분의 1을 먹어서, 정작
+    // 멀리서 읽으라고 키운 숫자가 들어갈 자리가 없다. 그 화면에서만 걷어낸다.
+    // 차트·소요기록·알람은 가로에서도 평소대로 둔다 — 그쪽은 눕혀도 하는 일이
+    // 달라지지 않으니 길을 없애면 갇힌다.
+    final watching = widget.navigationShell.currentIndex == 0 &&
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
+    if (watching) {
+      return Scaffold(body: widget.navigationShell);
+    }
+
     return Scaffold(
       appBar: AppBar(
         // 시설이 하나뿐인 계정은 이 셸이 홈이라 돌아갈 목록이 없다. 대신 그 경우에만

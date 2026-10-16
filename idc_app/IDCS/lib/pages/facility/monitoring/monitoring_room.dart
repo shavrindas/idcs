@@ -3,11 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:idcs/components/facility/monitoring/room_watch_view.dart';
 import 'package:idcs/components/indices/main_index/main_index_components.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/theme/app_theme.dart';
@@ -156,11 +158,30 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+
+    // 눕히면 호실 하나를 지켜보는 화면으로 바뀐다. 목록은 "어디가 문제인가"를
+    // 찾는 자리고, 찾고 난 뒤에는 그 호실이 어떻게 움직이는지 한동안 봐야 할
+    // 때가 있다 — 제상 뒤에 온도가 제대로 내려오는지 같은 것이다. 이미 이
+    // 화면이 시설의 모든 호실 값을 받고 있어서 따로 물을 것이 없다.
+    //
+    // 셸이 가로에서 앱바와 탭 줄을 걷어낸다(FacilityShellPage). 가로 높이는
+    // 세로의 절반도 안 되는데 그 둘이 3분의 1을 먹는다.
+    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+      return ValueListenableBuilder<MonitoringViewSettings>(
+        valueListenable: MonitoringViewController.settings,
+        builder: (context, view, _) => RoomWatchPager(
+          rooms: _rooms,
+          liveValues: _live,
+          alarmCounts: _activeAlarmCounts,
+          ledDigits: view.ledDigits,
+        ),
+      );
+    }
+
     // The facility shell already provides the app bar (facility name + back) and
     // the bottom nav, so this page only draws its own section.
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : RefreshIndicator(
+    return RefreshIndicator(
             onRefresh: _fetchFacilityData,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
