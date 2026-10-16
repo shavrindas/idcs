@@ -1,187 +1,15 @@
 // 경로: lib/components/indices/main_index/main_index_components.dart
-// 명세: 홈(내 시설) 카드 목록과, 호실 선택 화면이 함께 쓰는 격자 박스
+// 명세: 시설 안 호실 선택 격자
+//
+// 원래는 '내 시설' 홈 화면의 시설 카드 목록도 여기 있었다. 그 화면이 전체
+// 현황에 흡수되면서 쓰는 곳이 없어져 걷어냈다 — 파일 이름은 그대로 두었다.
+// 옮기면 다른 사람 브랜치와 부딪힌다.
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
-/// One facility's at-a-glance state on the home screen.
-/// [roomCount] is null while the room list is still loading or failed to load,
-/// so the card can simply omit that line instead of showing a wrong "0 rooms".
-class FacilitySummary {
-  final int id;
-  final String name;
-  final int? roomCount;
-  final int activeAlarmCount;
-
-  const FacilitySummary({
-    required this.id,
-    required this.name,
-    required this.roomCount,
-    required this.activeAlarmCount,
-  });
-}
-
-/// Home screen list of facilities.
-/// Each row is full width because a facility carries more than a name: how many
-/// rooms it has and whether anything is alarming right now.
-class FacilitySummaryList extends StatelessWidget {
-  final List<FacilitySummary> facilities;
-  final Function(int) onFacilityPressed;
-
-  /// Null falls back to the translated default at build time — a default
-  /// parameter value cannot read the locale.
-  final String? emptyMessage;
-
-  const FacilitySummaryList({
-    super.key,
-    required this.facilities,
-    required this.onFacilityPressed,
-    this.emptyMessage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (facilities.isEmpty) {
-      return _EmptyBox(message: emptyMessage ?? context.l10n.facilitiesEmpty);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final facility in facilities) ...[
-          _FacilityCard(
-            facility: facility,
-            onTap: () => onFacilityPressed(facility.id),
-          ),
-          const SizedBox(height: 10),
-        ],
-      ],
-    );
-  }
-}
-
-class _FacilityCard extends StatelessWidget {
-  final FacilitySummary facility;
-  final VoidCallback onTap;
-
-  const _FacilityCard({required this.facility, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final hasAlarm = facility.activeAlarmCount > 0;
-
-    // The shadow sits outside the Material so it is not clipped by it.
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: colors.cardShadow,
-      ),
-      child: Material(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              // Only an alarm draws an outline; otherwise the lift is enough.
-              border: hasAlarm ? Border.all(color: colors.error) : null,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        // Empty means the server had no name for it.
-                        facility.name.isEmpty
-                            ? context.l10n.facilityUnnamed
-                            : facility.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          if (facility.roomCount != null) ...[
-                            Text(
-                              context.l10n.roomCount(facility.roomCount!),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '  ·  ',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                          _StatusText(count: facility.activeAlarmCount),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: colors.textSecondary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Alarm state as words, not just a coloured dot, so the meaning is readable
-/// without having to learn what the colour stands for.
-class _StatusText extends StatelessWidget {
-  final int count;
-
-  const _StatusText({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final hasAlarm = count > 0;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: hasAlarm ? colors.error : colors.success,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          hasAlarm
-              ? context.l10n.countCases(context.l10n.statusActiveAlarms, count)
-              : context.l10n.statusNormal,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: hasAlarm ? FontWeight.w600 : FontWeight.w400,
-            color: hasAlarm ? colors.error : colors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _EmptyBox extends StatelessWidget {
   final String message;
@@ -223,8 +51,9 @@ class _EmptyBox extends StatelessWidget {
 ///
 /// 예전에는 이름과 알람 배지뿐이라, 어느 호실이 몇 도인지 알려면 하나씩 열어
 /// 봐야 했다. 10개 호실이면 열 번이다. 창고를 맡은 사람이 아침에 확인하고 싶은
-/// 것은 그 열 번이 아니라 "지금 다 괜찮은가" 한 가지다. 그래서 한 칸에 네 가지를
-/// 담는다 — 현재온도, 목표온도, 이상 유무, 제상·콤프 상태.
+/// 것은 그 열 번이 아니라 "지금 다 괜찮은가" 한 가지다. 그래서 한 칸이 그 답을
+/// 바로 보여준다 — 현재온도, 목표온도, 설정값과의 차이, 제상·콤프, 알람 수,
+/// 그리고 아래쪽 상태 띠.
 class RoomGrid extends StatelessWidget {
   final List<dynamic> rooms;
 
@@ -314,14 +143,12 @@ class RoomGrid extends StatelessWidget {
                         ? Border.all(color: accent.withValues(alpha: 0.55), width: 1.2)
                         : null,
                   ),
-                  child: Row(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // 상태 띠. 격자를 훑을 때 눈이 제일 먼저 집는 자리다.
-                      Container(width: 4, color: accent),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -444,6 +271,8 @@ class RoomGrid extends StatelessWidget {
                           ),
                         ),
                       ),
+                      // 상태 띠. 개괄 화면과 같은 자리, 같은 색이다.
+                      Container(height: 4, color: status.railColor(colors)),
                     ],
                   ),
                 ),
@@ -456,87 +285,3 @@ class RoomGrid extends StatelessWidget {
   }
 }
 
-class IntegratedFacilityBox extends StatelessWidget {
-  final List<dynamic> facilities;
-  final Function(int) onFacilityPressed;
-  final String? label;
-  final String? emptyMessage;
-
-  const IntegratedFacilityBox({
-    super.key,
-    required this.facilities,
-    required this.onFacilityPressed,
-    this.label,
-    this.emptyMessage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // A null or empty label means the screen already names this section in
-        // its app bar.
-        if (label != null && label!.isNotEmpty) ...[
-          Text(
-            label!,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: context.colors.textSecondary,
-              letterSpacing: 0.4,
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-
-        if (facilities.isEmpty)
-          _EmptyBox(message: emptyMessage ?? context.l10n.facilitiesNoneVisible)
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 2.5,
-            ),
-            itemCount: facilities.length,
-            itemBuilder: (context, index) {
-              final fac = facilities[index];
-
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: context.colors.cardShadow,
-                ),
-                child: Material(
-                  color: context.colors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () => onFacilityPressed(fac['id']),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Center(
-                        child: Text(
-                          fac['name'],
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: context.colors.textPrimary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-}

@@ -125,7 +125,16 @@ class RoomStatus {
   bool get needsAttention =>
       condition == RoomCondition.fault || condition == RoomCondition.drifting;
 
-  /// 이 상태를 나타내는 색. 카드 띠·숫자·요약 띠가 모두 이 색을 쓴다.
+  /// 카드 아래쪽 띠 색.
+  ///
+  /// 정상일 때만 한 단계 연하게 쓴다. 열 칸이 전부 정상인 화면에서 진한 초록
+  /// 열 줄이 깔리면 그쪽이 먼저 눈에 들어와서, 정작 찾아야 할 빨간 한 줄과
+  /// 경쟁한다. 이상·이탈은 진하게 그대로 둔다.
+  Color railColor(AppPalette colors) => condition == RoomCondition.normal
+      ? Color.lerp(colors.success, Colors.white, 0.3)!
+      : accent(colors);
+
+  /// 이 상태를 나타내는 색. 숫자·요약 띠가 이 색을 쓴다.
   Color accent(AppPalette colors) => switch (condition) {
         RoomCondition.fault => colors.error,
         RoomCondition.drifting => colors.warning,

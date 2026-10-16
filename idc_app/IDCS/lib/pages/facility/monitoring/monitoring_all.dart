@@ -15,7 +15,9 @@ import 'package:idcs/main.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/services/common/api_client.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
+import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 
@@ -55,6 +57,13 @@ class _MonitoringAllState extends State<MonitoringAll> {
 
   bool _isLoading = true;
 
+  /// 관리자는 웹 콘솔에서 시설을 관리하므로 코드 등록 버튼을 내보내지 않는다.
+  bool _isAdmin = false;
+
+  /// 시설이 하나뿐일 때 그 시설로 한 번 넘어갔는지. 당겨서 새로고침할 때마다
+  /// 다시 넘어가면 이 화면에 머무를 수가 없다.
+  bool _jumped = false;
+
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
@@ -81,6 +90,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
+      final role = await UserApiService.getUserRole(widget.userId);
       final facilities = await FacilityApiService.getFacilities(widget.userId);
 
       // 시설마다 호실과 알람을 한 번씩 묻는다. 순서대로 기다리면 시설 수만큼
@@ -120,6 +130,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
 
       if (!mounted) return;
       setState(() {
+        _isAdmin = role == 'ADMIN' || role == 'DEVELOPER';
         _facilities = facilities;
         _roomsByFacility
           ..clear()
@@ -128,12 +139,27 @@ class _MonitoringAllState extends State<MonitoringAll> {
           ..clear()
           ..addAll(counts);
       });
+      _maybeOpenOnlyFacility(facilities);
     } catch (e) {
       if (!mounted) return;
       AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// 시설이 하나뿐이면 이 화면은 한 줄짜리 목록이라 매번 한 번씩 더 눌러야
+  /// 하는 자리밖에 안 된다. 그 시설로 바로 들어간다.
+  ///
+  /// push 가 아니라 go 로 간다. 스택을 갈아 끼우지 않으면 시설에서 뒤로 왔을 때
+  /// 여기로 돌아오고, 돌아오자마자 또 들어가는 되돌이가 된다. 그 대신 시설 셸이
+  /// 내 정보로 가는 길을 쥐고 있어야 해서 [FacilityShortcut] 을 먼저 세운다.
+  void _maybeOpenOnlyFacility(List<dynamic> facilities) {
+    final sole = facilities.length == 1;
+    FacilityShortcut.markSoleFacility(sole);
+    if (!sole || _jumped || !mounted) return;
+    _jumped = true;
+    context.go('/facility/${widget.userId}/${facilities.first['id']}/monitoring');
   }
 
   /// 키는 "호실.필드" 형태로 온다 (예: "23.temp_pv").
@@ -198,7 +224,30 @@ class _MonitoringAllState extends State<MonitoringAll> {
     return ValueListenableBuilder<MonitoringViewSettings>(
       valueListenable: MonitoringViewController.settings,
       builder: (context, view, _) => Scaffold(
-        appBar: AppBar(title: Text(context.l10n.overviewTitle), centerTitle: true),
+        // 알람과 내 정보는 아래 탭이 아니라 헤더에 둔다. 이 화면이 하는 일은
+        // '지금 어떤가'를 보는 것 하나뿐이라 아래에 탭 줄을 둘 이유가 없다.
+        appBar: AppBar(
+          title: Text(context.l10n.overviewTitle),
+          centerTitle: true,
+          actions: [
+            if (!_isAdmin)
+              IconButton(
+                icon: const Icon(Icons.add_business_outlined),
+                tooltip: context.l10n.facilityRegister,
+                onPressed: () => context.push('/facility_register/${widget.userId}'),
+              ),
+            IconButton(
+              icon: const Icon(Icons.notifications_none_rounded),
+              tooltip: context.l10n.navAlarm,
+              onPressed: () => context.push('/index/${widget.userId}/alarm'),
+            ),
+            IconButton(
+              icon: const Icon(Icons.person_outline_rounded),
+              tooltip: context.l10n.profileTitle,
+              onPressed: () => context.push('/index/${widget.userId}/profile'),
+            ),
+          ],
+        ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
@@ -242,7 +291,14 @@ class _MonitoringAllState extends State<MonitoringAll> {
                             // 시설이 늘어나면 아래로 이어진다.
                             child: ListView.builder(
                               physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                            // 아래 탭 줄이 없는 화면이라 제스처 바가 마지막
+                            // 카드 위에 겹친다. 그만큼을 바닥에 더 둔다.
+                            padding: EdgeInsets.fromLTRB(
+                              16,
+                              10,
+                              16,
+                              20 + MediaQuery.of(context).padding.bottom,
+                            ),
                               itemCount: facilities.length,
                               itemBuilder: (context, index) {
                                 final facility = facilities[index];
@@ -257,6 +313,9 @@ class _MonitoringAllState extends State<MonitoringAll> {
                                   ledDigits: view.ledDigits,
                                   onRoomPressed: (roomId) => context.push(
                                     '/facility_monitoring/${widget.userId}/$facilityId/$roomId',
+                                  ),
+                                  onFacilityPressed: () => context.push(
+                                    '/facility/${widget.userId}/$facilityId/monitoring',
                                   ),
                                 );
                               },
@@ -378,6 +437,10 @@ class _FacilitySection extends StatelessWidget {
   final bool ledDigits;
   final Function(int) onRoomPressed;
 
+  /// 시설 이름 줄을 누르면 그 시설 안(차트·기록·알람)으로 들어간다.
+  /// '내 시설' 목록이 없어진 뒤로는 여기가 유일한 입구다.
+  final VoidCallback onFacilityPressed;
+
   const _FacilitySection({
     required this.name,
     required this.rooms,
@@ -385,6 +448,7 @@ class _FacilitySection extends StatelessWidget {
     required this.statuses,
     required this.ledDigits,
     required this.onRoomPressed,
+    required this.onFacilityPressed,
   });
 
   @override
@@ -403,39 +467,54 @@ class _FacilitySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 9, left: 2),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
+            padding: const EdgeInsets.only(bottom: 7),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onFacilityPressed,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(2, 5, 2, 5),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      // 누를 수 있는 줄이라는 표시. 이 줄이 시설 안으로 가는
+                      // 유일한 입구라 눈에 띄어야 한다.
+                      Icon(Icons.chevron_right_rounded, size: 19, color: colors.textSecondary),
+                      const Spacer(),
+                      if (attention > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.error.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '$attention',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: colors.error),
+                          ),
+                        )
+                      else if (rooms.isNotEmpty)
+                        Text(
+                          context.l10n.overviewRoomCount(rooms.length),
+                          style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                        ),
+                    ],
                   ),
                 ),
-                if (attention > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: colors.error.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '$attention',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: colors.error),
-                    ),
-                  )
-                else if (rooms.isNotEmpty)
-                  Text(
-                    context.l10n.overviewRoomCount(rooms.length),
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                  ),
-              ],
+              ),
             ),
           ),
           // '내 시설' 안의 호실 목록보다 한 칸에 더 많이 담는다. 그쪽은 호실을
@@ -544,15 +623,12 @@ class _OverviewRoomCard extends StatelessWidget {
                   ? Border.all(color: accent.withValues(alpha: 0.55), width: 1.2)
                   : null,
             ),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 상태 띠. 카드를 세로로 잘라 색 하나만 남긴 것 — 격자를
-                // 훑을 때 눈이 제일 먼저 집는 자리다.
-                Container(width: 4, color: accent),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -669,6 +745,9 @@ class _OverviewRoomCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // 상태 띠. 카드 아래를 가로로 긋는다 — 격자를 훑을 때
+                // 색 줄만 따라가면 걸린 칸이 보인다.
+                Container(height: 4, color: status.railColor(colors)),
               ],
             ),
           ),
