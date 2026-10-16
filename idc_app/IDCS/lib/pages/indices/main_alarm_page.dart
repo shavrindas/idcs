@@ -84,8 +84,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
         final room = (alarm['room_name'] ?? '').toString().toLowerCase();
         return room.contains(query);
       } else {
-        final name = (alarm['alarm_name'] ?? '').toString().toLowerCase();
-        return name.contains(query);
+        return alarmNameMatches(context, alarm, query);
       }
     }).toList();
 
@@ -111,7 +110,12 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
       appBar: AppBar(title: Text(context.l10n.alarmsAllTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
+          // 알람 목록에는 당겨서 새로고침이 없었다. 이 화면을 여는 이유가
+          // "방금 뭐 울렸나"인데, 다시 보려면 탭을 나갔다 들어와야 했다.
+          : RefreshIndicator(
+              onRefresh: _fetchUserData,
+              child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -194,6 +198,11 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                         const SizedBox(height: 8),
 
                         AlarmFilterBar(
+                          counts: {
+                            AlarmStatusFilter.all: _alarms.length,
+                            AlarmStatusFilter.active: _alarms.where(isAlarmActive).length,
+                            AlarmStatusFilter.ended: _alarms.where((a) => !isAlarmActive(a)).length,
+                          },
                           statusFilter: _statusFilter,
                           onStatusChanged: (val) => setState(() => _statusFilter = val),
                           grouped: _grouped,
@@ -214,6 +223,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                   ),
                 ),
               ],
+            ),
             ),
     );
   }

@@ -106,6 +106,15 @@ final GoRouter appRouter = GoRouter(
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
+                path: 'alarm',
+                builder: (context, state) => FacilityAlarmPage(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
                 path: 'chart',
                 builder: (context, state) => FacilityChartPage(
                   userId: state.pathParameters['userId']!,
@@ -117,15 +126,6 @@ final GoRouter appRouter = GoRouter(
               GoRoute(
                 path: 'board',
                 builder: (context, state) => FacilityBoardPage(
-                  userId: state.pathParameters['userId']!,
-                  facilityId: state.pathParameters['facilityId']!,
-                ),
-              ),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: 'alarm',
-                builder: (context, state) => FacilityAlarmPage(
                   userId: state.pathParameters['userId']!,
                   facilityId: state.pathParameters['facilityId']!,
                 ),

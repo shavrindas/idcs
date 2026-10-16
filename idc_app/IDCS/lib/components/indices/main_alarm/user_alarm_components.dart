@@ -26,6 +26,8 @@ class UserAlarmBox extends StatelessWidget {
       return SliverToBoxAdapter(
         child: EmptyListState(
           icon: Icons.notifications_off_outlined,
+          // 검색이 빈손인 것과 '지금 울리는 게 없다'는 다른 소식이다.
+          good: !isSearching && showingActiveOnly,
           message: isSearching
               ? context.l10n.searchNoResults
               : showingActiveOnly
