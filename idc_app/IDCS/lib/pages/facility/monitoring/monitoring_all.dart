@@ -278,15 +278,161 @@ class _FacilitySection extends StatelessWidget {
               ],
             ),
           ),
-          // 호실 카드는 '내 시설' 안의 호실 목록과 같은 것을 쓴다. 같은 값을
-          // 두 화면에서 다르게 그리면 같은 것인지 알아보기 어렵다.
-          RoomGrid(
-            rooms: rooms,
-            activeAlarmCounts: faultCounts,
-            liveValues: liveValues,
-            onRoomPressed: onRoomPressed,
+          // '내 시설' 안의 호실 목록보다 한 칸에 더 많이 담는다. 그쪽은 호실을
+          // 고르러 가는 목록이고, 이 화면은 여러 시설을 한눈에 훑는 자리라
+          // 보여줄 것이 다르다. 생김새(그림자·모서리·알람 테두리)는 같이 간다.
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              // 칩이 두 줄까지 늘어난다. 더 납작하게 두면 마지막 줄이 잘린다.
+              childAspectRatio: 1.32,
+            ),
+            itemCount: rooms.length,
+            itemBuilder: (context, index) {
+              final room = rooms[index];
+              final roomId = room['id'];
+
+              return _OverviewRoomCard(
+                name: room['name']?.toString() ?? '',
+                values: liveValues[roomId] ?? const {},
+                hasFault: (faultCounts[roomId] ?? 0) > 0,
+                onTap: () => onRoomPressed(roomId),
+              );
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 개괄 화면의 호실 한 칸.
+///
+/// 설민이 처음 만든 카드가 보여주던 일곱 가지를 그대로 담는다 — 현재 온도,
+/// 설정 온도, 콤프, 제상, 이상, CINT, HIGH. 호실을 하나씩 넘겨 보던 것을
+/// 전부 펼치면서 값이 줄어 버리면, 넘겨 보던 때보다 못해진다.
+class _OverviewRoomCard extends StatelessWidget {
+  final String name;
+  final Map<String, String> values;
+  final bool hasFault;
+  final VoidCallback onTap;
+
+  const _OverviewRoomCard({
+    required this.name,
+    required this.values,
+    required this.hasFault,
+    required this.onTap,
+  });
+
+  /// 설비는 ON/OFF 로 보내기도 하고 1/0 으로 보내기도 한다. 알 수 없는 값이면
+  /// null — 그 칸은 아예 내보내지 않는다. 안 오는 값을 'OFF' 로 그리면
+  /// 꺼져 있다는 뜻으로 읽힌다.
+  bool? _switchOf(String key) {
+    final v = values[key]?.trim().toUpperCase();
+    if (v == null || v.isEmpty || v == 'NA' || v == '-') return null;
+    if (v == 'ON' || v == 'TRUE') return true;
+    if (v == 'OFF' || v == 'FALSE') return false;
+
+    // 같은 상태가 숫자로 오기도 한다 — '1'/'0' 뿐 아니라 '0.0' 처럼도 온다
+    // (temp_comp 가 그렇다). 0이면 꺼짐, 그 밖의 수는 켜짐으로 읽는다.
+    final n = double.tryParse(v);
+    return n == null ? null : n != 0;
+  }
+
+  double? _numberOf(String key) => double.tryParse(values[key]?.trim() ?? '');
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = context.l10n;
+
+    final temp = _numberOf('temp_pv');
+    final setpoint = _numberOf('temp_sv');
+
+    // 값이 들어온 것만 칩으로 내건다.
+    final pills = <Widget>[
+      for (final entry in <(String, String, bool)>[
+        ('deforest_def', l10n.roomStatusDefrost, false),
+        ('temp_comp', l10n.roomStatusCompressor, false),
+        ('emergency_emg', l10n.roomStatusFault, true),
+        ('emergency_cint', l10n.roomStatusCint, true),
+        ('emergency_high', l10n.roomStatusHigh, true),
+      ])
+        if (_switchOf(entry.$1) != null)
+          StatePill(label: entry.$2, on: _switchOf(entry.$1)!, danger: entry.$3),
+    ];
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: colors.cardShadow,
+      ),
+      child: Material(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: hasFault ? Border.all(color: colors.error) : null,
+            ),
+            padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      temp == null ? '—' : temp.toStringAsFixed(1),
+                      style: TextStyle(
+                        fontSize: 24,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    if (temp != null)
+                      Text(
+                        l10n.unitCelsius,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textSecondary),
+                      ),
+                    const Spacer(),
+                    if (setpoint != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          '${l10n.roomSetpointShort} ${setpoint.toStringAsFixed(1)}',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textSecondary),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: Wrap(
+                    spacing: 5,
+                    runSpacing: 5,
+                    children: pills,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

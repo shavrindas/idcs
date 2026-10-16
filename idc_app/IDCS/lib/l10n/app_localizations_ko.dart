@@ -715,6 +715,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get overviewNoFacilities => '등록된 시설이 없습니다.';
 
   @override
+  String get roomStatusFault => '이상';
+
+  @override
+  String get roomStatusCint => 'CINT';
+
+  @override
+  String get roomStatusHigh => 'HIGH';
+
+  @override
   String get searchNoResults => '검색 결과가 없습니다.';
 
   @override

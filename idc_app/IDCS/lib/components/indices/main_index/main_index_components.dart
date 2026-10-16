@@ -378,10 +378,10 @@ class RoomGrid extends StatelessWidget {
                       Row(
                         children: [
                           if (defrost != null)
-                            _StatePill(label: context.l10n.roomStatusDefrost, on: defrost),
+                            StatePill(label: context.l10n.roomStatusDefrost, on: defrost),
                           if (defrost != null && compressor != null) const SizedBox(width: 6),
                           if (compressor != null)
-                            _StatePill(label: context.l10n.roomStatusCompressor, on: compressor),
+                            StatePill(label: context.l10n.roomStatusCompressor, on: compressor),
                         ],
                       ),
                     ],
@@ -400,21 +400,27 @@ class RoomGrid extends StatelessWidget {
 ///
 /// 켜진 것만 색을 입힌다. 둘 다 색이 있으면 칸마다 알록달록해져서, 정작
 /// 눈에 띄어야 할 알람 테두리가 묻힌다.
-class _StatePill extends StatelessWidget {
+/// 켜짐/꺼짐 한 가지를 작게 표시한다. 개괄 화면도 같은 것을 쓴다.
+class StatePill extends StatelessWidget {
   final String label;
   final bool on;
 
-  const _StatePill({required this.label, required this.on});
+  /// 켜진 것이 '나쁜 소식'인 항목인지. 이상·CINT·HIGH 처럼 고장 플래그는
+  /// 켜졌을 때 빨갛게 보여야 하고, 콤프·제상처럼 평소 동작은 그러면 안 된다.
+  final bool danger;
+
+  const StatePill({super.key, required this.label, required this.on, this.danger = false});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final color = on ? colors.primary : colors.textSecondary;
+    final accent = danger ? colors.error : colors.primary;
+    final color = on ? accent : colors.textSecondary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: on ? colors.primary.withValues(alpha: 0.10) : colors.background,
+        color: on ? accent.withValues(alpha: 0.10) : colors.background,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
