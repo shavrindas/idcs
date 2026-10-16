@@ -715,6 +715,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get overviewNoFacilities => '등록된 시설이 없습니다.';
 
   @override
+  String get overviewAllNormal => '모든 호실 정상';
+
+  @override
+  String overviewWatching(int count) {
+    return '호실 $count곳 감시 중';
+  }
+
+  @override
+  String overviewAttention(int count) {
+    return '확인할 호실 $count곳';
+  }
+
+  @override
+  String get roomStateDrift => '이탈';
+
+  @override
+  String get roomStateNoData => '값 없음';
+
+  @override
   String get roomStatusFault => '이상';
 
   @override
