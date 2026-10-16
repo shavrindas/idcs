@@ -5,6 +5,7 @@ import 'package:idcs/components/facility/monitoring/field_meaning.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/motion.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 /// 한 묶음의 값을 보여 주는 카드.
@@ -109,10 +110,20 @@ class _MonitoringCardState extends State<MonitoringCard> {
             ],
             ),
           ),
-          if (expanded) const SizedBox(height: 12),
-          if (expanded)
-          // 독립된 StatefulWidget으로 개별 Row 생성
-          ...fields.entries.map((entry) => _EditableRowItem(
+          // 톡 나타나고 톡 사라지면 접힌 것이 펼쳐졌다기보다 다른 화면으로
+          // 바뀐 것처럼 보인다. 높이가 자라는 동안 눈이 따라갈 수 있다.
+          AnimatedSize(
+            duration: Motion.of(context, Motion.normal),
+            curve: Motion.enter,
+            alignment: Alignment.topCenter,
+            child: !expanded
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 12),
+                      // 독립된 StatefulWidget으로 개별 Row 생성
+                      ...fields.entries.map((entry) => _EditableRowItem(
             key: ValueKey(entry.key), // label을 키값으로 설정하여 위젯 재사용성 보장
             label: deviceKeys ? DeviceLabels.of(context, entry.key) : entry.key,
             fieldKey: entry.key,
@@ -126,8 +137,11 @@ class _MonitoringCardState extends State<MonitoringCard> {
             ledAllowed: OnConfirm != null,
             // 쓸 수 없는 항목에는 입력칸을 내보내지 않는다. 눌러도 아무 일이
             // 일어나지 않는 버튼이 51개 있으면, 되는 다섯 개도 못 믿게 된다.
-            onConfirm: ControllableFields.has(entry.key) ? OnConfirm : null,
-          )),
+                        onConfirm: ControllableFields.has(entry.key) ? OnConfirm : null,
+                      )),
+                    ],
+                  ),
+          ),
         ],
       ),
     );

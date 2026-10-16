@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/main_alarm/user_alarm_components.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
+import 'package:idcs/components/shared/skeleton.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
 import '../../services/common/api_client.dart';
@@ -109,7 +110,20 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.alarmsAllTitle)),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 검색창은 실제로 가로를 다 쓰고, 칩 줄은 아니다.
+                  SizedBox(width: double.infinity, child: SkeletonBox(height: 48, radius: 14)),
+                  SizedBox(height: 14),
+                  SkeletonBox(width: 250, height: 34, radius: 9),
+                  SizedBox(height: 18),
+                  SizedBox(width: double.infinity, child: AlarmListSkeleton()),
+                ],
+              ),
+            )
           // 알람 목록에는 당겨서 새로고침이 없었다. 이 화면을 여는 이유가
           // "방금 뭐 울렸나"인데, 다시 보려면 탭을 나갔다 들어와야 했다.
           : RefreshIndicator(

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/facility/monitoring/room_watch_view.dart';
 import 'package:idcs/components/indices/main_index/main_index_components.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
+import 'package:idcs/components/shared/skeleton.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
@@ -158,7 +159,24 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    // 한가운데 도는 동그라미 대신, 들어올 카드의 모양을 미리 깔아 둔다.
+    // 동그라미는 "뭔가 돌고 있다"만 말하고, 끝나는 순간 화면이 통째로
+    // 바뀌면서 덜컥거린다. 자리를 잡아 두면 안쪽만 채워진다.
+    if (_isLoading) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          // stretch 를 쓰면 가로폭 지정이 무시돼서 짧은 라벨 자리가 화면을
+          // 가로지른다. 실제와 같은 폭이어야 자리를 잡아 두는 뜻이 있다.
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            SkeletonBox(width: 90, height: 12),
+            SizedBox(height: 14),
+            RoomGridSkeleton(aspectRatio: 1.62, count: 6),
+          ],
+        ),
+      );
+    }
 
     // 눕히면 호실 하나를 지켜보는 화면으로 바뀐다. 목록은 "어디가 문제인가"를
     // 찾는 자리고, 찾고 난 뒤에는 그 호실이 어떻게 움직이는지 한동안 봐야 할

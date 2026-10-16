@@ -9,6 +9,7 @@ import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/motion.dart';
 
 /// 제어판을 열었을 때 온도 다음으로 알고 싶은 두 가지.
 ///
@@ -79,16 +80,26 @@ class _PanelStatusCardState extends State<PanelStatusCard> {
           ),
           const SizedBox(height: 10),
           _verdict(context, faults, accent, clear),
-          if (_expanded) ...[
-            const SizedBox(height: 10),
-            Divider(height: 1, color: colors.outline),
-            const SizedBox(height: 8),
-            ..._allFaultKeys.map((k) => _FaultRow(
-                  label: DeviceLabels.of(context, k),
-                  on: RoomStatus.asSwitch(widget.values[k]) ?? false,
-                  meaning: FieldMeaning.forKey(k),
-                )),
-          ],
+          AnimatedSize(
+            duration: Motion.of(context, Motion.normal),
+            curve: Motion.enter,
+            alignment: Alignment.topCenter,
+            child: !_expanded
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 10),
+                      Divider(height: 1, color: colors.outline),
+                      const SizedBox(height: 8),
+                      ..._allFaultKeys.map((k) => _FaultRow(
+                            label: DeviceLabels.of(context, k),
+                            on: RoomStatus.asSwitch(widget.values[k]) ?? false,
+                            meaning: FieldMeaning.forKey(k),
+                          )),
+                    ],
+                  ),
+          ),
           const SizedBox(height: 12),
           Divider(height: 1, color: colors.outline),
           const SizedBox(height: 12),
