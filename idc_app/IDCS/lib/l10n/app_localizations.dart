@@ -2066,6 +2066,42 @@ abstract class AppLocalizations {
   /// **'시설 ID: {id} 실시간 제어판'**
   String panelPageTitle(String id);
 
+  /// No description provided for @panelControlTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'조작'**
+  String get panelControlTitle;
+
+  /// No description provided for @panelNowTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금'**
+  String get panelNowTitle;
+
+  /// No description provided for @panelNoFaults.
+  ///
+  /// In ko, this message translates to:
+  /// **'이상 없음'**
+  String get panelNoFaults;
+
+  /// No description provided for @panelFaultCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'이상 {count}건'**
+  String panelFaultCount(int count);
+
+  /// No description provided for @panelDetails.
+  ///
+  /// In ko, this message translates to:
+  /// **'자세히'**
+  String get panelDetails;
+
+  /// No description provided for @panelNoLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'기준값이 등록되지 않아 정상 여부를 판단하지 않습니다.'**
+  String get panelNoLimit;
+
   /// No description provided for @panelCardInfo.
   ///
   /// In ko, this message translates to:

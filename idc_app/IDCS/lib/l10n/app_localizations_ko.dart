@@ -1089,6 +1089,26 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get panelControlTitle => '조작';
+
+  @override
+  String get panelNowTitle => '지금';
+
+  @override
+  String get panelNoFaults => '이상 없음';
+
+  @override
+  String panelFaultCount(int count) {
+    return '이상 $count건';
+  }
+
+  @override
+  String get panelDetails => '자세히';
+
+  @override
+  String get panelNoLimit => '기준값이 등록되지 않아 정상 여부를 판단하지 않습니다.';
+
+  @override
   String get panelCardInfo => '시설 기본 정보';
 
   @override

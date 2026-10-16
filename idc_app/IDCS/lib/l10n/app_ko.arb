@@ -603,6 +603,13 @@
       }
     }
   },
+  "panelControlTitle": "조작",
+  "panelNowTitle": "지금",
+  "panelNoFaults": "이상 없음",
+  "panelFaultCount": "이상 {count}건",
+  "@panelFaultCount": {"placeholders": {"count": {"type": "int"}}},
+  "panelDetails": "자세히",
+  "panelNoLimit": "기준값이 등록되지 않아 정상 여부를 판단하지 않습니다.",
   "panelCardInfo": "시설 기본 정보",
   "panelCardTemp": "실제 온도",
   "panelCardDefrost": "제상 정보",

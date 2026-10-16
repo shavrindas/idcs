@@ -603,6 +603,13 @@
       }
     }
   },
+  "panelControlTitle": "Controls",
+  "panelNowTitle": "Right now",
+  "panelNoFaults": "No faults",
+  "panelFaultCount": "{count} faults",
+  "@panelFaultCount": {"placeholders": {"count": {"type": "int"}}},
+  "panelDetails": "Details",
+  "panelNoLimit": "No limits registered, so this value is not judged.",
   "panelCardInfo": "Facility info",
   "panelCardTemp": "Temperature",
   "panelCardDefrost": "Defrost",
