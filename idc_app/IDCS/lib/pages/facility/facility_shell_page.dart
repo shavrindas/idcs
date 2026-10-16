@@ -120,10 +120,16 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
           initialLocation: index == widget.navigationShell.currentIndex,
         ),
         destinations: [
+          // 순서는 라우터의 branch 순서를 그대로 따라야 한다.
+          //
+          // 알람을 맨 끝에서 모니터링 바로 옆으로 옮겼다. 이 둘은 같은 질문의
+          // 앞뒤다 — '지금 어떤가'와 '뭐가 잘못됐나'. 차트와 소요기록은 둘 다
+          // 지나간 것을 들춰 보는 자리라 뒤로 묶인다. 맨 끝은 엄지가 제일 늦게
+          // 닿는 칸이기도 해서, 이 앱에서 가장 급한 화면을 둘 자리가 아니다.
           NavigationDestination(icon: Icon(Icons.sensors_outlined), selectedIcon: Icon(Icons.sensors_rounded), label: context.l10n.navMonitoring),
+          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
           NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: context.l10n.navChart),
           NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: context.l10n.navBoard),
-          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
         ],
       ),
     );

@@ -75,6 +75,22 @@ String alarmDisplayName(BuildContext context, dynamic rawName) {
   return DeviceLabels.of(context, key);
 }
 
+/// 알람 이름으로 거른다.
+///
+/// 목록에 보이는 것은 번역된 이름("감금알람")인데, 서버가 내려주는
+/// alarm_name 은 "25.emergency_locked" 다. 그동안 검색은 뒤쪽만 보고 있어서,
+/// 화면에 보이는 대로 쳐 넣으면 한 건도 안 걸렸다. 둘 다 본다 — 설비 키로
+/// 찾는 사람도 있다.
+bool alarmNameMatches(BuildContext context, dynamic alarm, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return true;
+
+  final raw = (alarm['alarm_name'] ?? '').toString().toLowerCase();
+  if (raw.contains(q)) return true;
+
+  return alarmDisplayName(context, alarm['alarm_name']).toLowerCase().contains(q);
+}
+
 /// 서버가 내려주는 ISO 시간 문자열을 목록에서 읽기 쉬운 형태로 바꾼다.
 String formatAlarmTime(String raw) => formatListTime(raw);
 
@@ -323,33 +339,58 @@ class AlarmFilterBar extends StatelessWidget {
     required this.onStatusChanged,
     required this.grouped,
     required this.onGroupedChanged,
+    this.counts,
   });
+
+  /// 상태별 건수. null 이면 숫자를 적지 않는다.
+  final Map<AlarmStatusFilter, int>? counts;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    // 칩과 묶어보기 스위치를 한 줄에 같이 두면, 칩에 건수가 붙는 순간
+    // 폭이 모자라 '종료' 칩이 아랫줄로 떨어지고 스위치만 허공에 남는다.
+    // 줄을 나눈다 — 거르는 일과 묶어 보는 일은 어차피 다른 일이다.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Wrap(
-            spacing: 6,
-            children: [
-              _chip(context, context.l10n.alarmStatusAll, AlarmStatusFilter.all),
-              _chip(context, context.l10n.alarmStatusActive, AlarmStatusFilter.active),
-              _chip(context, context.l10n.alarmStatusEnded, AlarmStatusFilter.ended),
-            ],
-          ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            _chip(context, context.l10n.alarmStatusAll, AlarmStatusFilter.all),
+            _chip(context, context.l10n.alarmStatusActive, AlarmStatusFilter.active),
+            _chip(context, context.l10n.alarmStatusEnded, AlarmStatusFilter.ended),
+          ],
         ),
-        Text(context.l10n.alarmGroupToggle, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-        Switch(value: grouped, onChanged: onGroupedChanged),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              context.l10n.alarmGroupToggle,
+              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+            ),
+            const SizedBox(width: 4),
+            Transform.scale(
+              scale: 0.85,
+              child: Switch(value: grouped, onChanged: onGroupedChanged),
+            ),
+          ],
+        ),
       ],
     );
   }
 
   Widget _chip(BuildContext context, String label, AlarmStatusFilter value) {
     final selected = statusFilter == value;
+    // 건수를 같이 적는다. '진행중'이 비어 있을 때 그게 정말 없는 것인지,
+    // 아니면 아직 안 불러온 것인지 칩만 보고는 알 수 없었다.
+    final count = counts?[value];
     return ChoiceChip(
-      label: Text(label),
+      label: Text(count == null ? label : '$label $count'),
       selected: selected,
+      // 앱의 다른 칩은 모두 체크 표시를 끈다. 여기만 남아 있었다 — 파란 배경
+      // 위에 어두운 체크가 얹혀 글자보다 체크가 먼저 보였다.
+      showCheckmark: false,
       onSelected: (_) => onStatusChanged(value),
       labelStyle: TextStyle(
         fontSize: 12,
@@ -369,7 +410,19 @@ class EmptyListState extends StatelessWidget {
   final String message;
   final IconData icon;
 
-  const EmptyListState({super.key, required this.message, this.icon = Icons.inbox_outlined});
+  /// 비어 있는 것이 좋은 소식인지.
+  ///
+  /// 알람 목록에서 '진행중'이 비어 있다는 건 아무것도 없다는 뜻이 아니라
+  /// 지금 다 괜찮다는 뜻이다. 회색 종에 빗금 친 그림은 그 반대로 읽힌다 —
+  /// 뭔가 잘못돼서 못 불러온 것처럼 보인다.
+  final bool good;
+
+  const EmptyListState({
+    super.key,
+    required this.message,
+    this.icon = Icons.inbox_outlined,
+    this.good = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -383,9 +436,21 @@ class EmptyListState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
+          Icon(
+            good ? Icons.verified_rounded : icon,
+            color: good ? context.colors.success : context.colors.textSecondary.withValues(alpha: 0.6),
+            size: good ? 32 : 28,
+          ),
           const SizedBox(height: 8),
-          Text(message, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: good ? context.colors.textPrimary : context.colors.textSecondary,
+              fontSize: good ? 14 : 13,
+              fontWeight: good ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
         ],
       ),
     );
