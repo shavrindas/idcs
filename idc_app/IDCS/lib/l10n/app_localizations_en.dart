@@ -730,6 +730,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get overviewNoFacilities => 'No facilities registered.';
 
   @override
+  String get overviewAllNormal => 'All rooms normal';
+
+  @override
+  String overviewWatching(int count) {
+    return 'Watching $count rooms';
+  }
+
+  @override
+  String overviewAttention(int count) {
+    return '$count rooms to check';
+  }
+
+  @override
+  String get roomStateDrift => 'Off target';
+
+  @override
+  String get roomStateNoData => 'No data';
+
+  @override
   String get roomStatusFault => 'Fault';
 
   @override

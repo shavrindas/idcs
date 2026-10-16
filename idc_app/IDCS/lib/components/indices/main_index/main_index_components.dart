@@ -1,6 +1,8 @@
 // 경로: lib/components/indices/main_index/main_index_components.dart
 // 명세: 홈(내 시설) 카드 목록과, 호실 선택 화면이 함께 쓰는 격자 박스
 import 'package:flutter/material.dart';
+import 'package:idcs/components/facility/monitoring/room_status.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -147,11 +149,7 @@ class _FacilityCard extends StatelessWidget {
 class _StatusText extends StatelessWidget {
   final int count;
 
-  /// Wording differs by level: a facility says 진행 중 알람 N건, a room just 알람 N건.
-  /// Null means the facility-level wording; a room passes its own.
-  final String? label;
-
-  const _StatusText({required this.count, this.label});
+  const _StatusText({required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -172,10 +170,7 @@ class _StatusText extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           hasAlarm
-              ? context.l10n.countCases(
-                  label ?? context.l10n.statusActiveAlarms,
-                  count,
-                )
+              ? context.l10n.countCases(context.l10n.statusActiveAlarms, count)
               : context.l10n.statusNormal,
           style: TextStyle(
             fontSize: 13,
@@ -256,14 +251,6 @@ class RoomGrid extends StatelessWidget {
   });
 
   /// 설비가 보내는 참/거짓은 "ON"/"OFF" 로 오기도 하고 "1"/"0" 으로 오기도 한다.
-  /// 둘 다 같은 뜻으로 읽는다. 알 수 없는 값이면 아예 보여주지 않는다.
-  static bool? _asSwitch(String? raw) {
-    final v = raw?.trim().toUpperCase();
-    if (v == null || v.isEmpty || v == 'NA') return null;
-    if (v == 'ON' || v == '1' || v == 'TRUE') return true;
-    if (v == 'OFF' || v == '0' || v == 'FALSE') return false;
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,161 +258,199 @@ class RoomGrid extends StatelessWidget {
       return _EmptyBox(message: emptyMessage ?? context.l10n.roomsEmpty);
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        // 네 가지를 담되, 호실이 열 개여도 첫 화면에 다 들어와야 한다.
-        // 한 칸이라도 더 높으면 마지막 줄이 잘린다.
-        childAspectRatio: 1.55,
-      ),
-      itemCount: rooms.length,
-      itemBuilder: (context, index) {
-        final room = rooms[index];
-        final colors = context.colors;
-        final roomId = room['id'];
-        final count = activeAlarmCounts[roomId] ?? 0;
-        final hasAlarm = count > 0;
+    // 개괄 화면과 생김새를 맞춘다. 같은 호실 카드가 화면마다 다르게 생기면
+    // 어느 쪽이 무슨 뜻인지 두 번 배워야 한다.
+    return ValueListenableBuilder<MonitoringViewSettings>(
+      valueListenable: MonitoringViewController.settings,
+      builder: (context, view, _) => GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          // 표시등 한 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.
+          childAspectRatio: 1.62,
+        ),
+        itemCount: rooms.length,
+        itemBuilder: (context, index) {
+          final room = rooms[index];
+          final colors = context.colors;
+          final roomId = room['id'];
+          final count = activeAlarmCounts[roomId] ?? 0;
 
-        final live = liveValues[roomId] ?? const <String, String>{};
+          final live = liveValues[roomId] ?? const <String, String>{};
 
-        // 실시간 값이 있으면 그것이 맞다. 없으면 마지막으로 저장된 값이라도 보인다.
-        final temp = double.tryParse(live['temp_pv'] ?? '') ?? temperatures[roomId];
-        final setpoint = double.tryParse(live['temp_sv'] ?? '');
-        final defrost = _asSwitch(live['deforest_def']);
-        final compressor = _asSwitch(live['control_runsw']);
+          // 실시간 값이 있으면 그것이 맞다. 없으면 마지막으로 저장된 값이라도 보인다.
+          final status = RoomStatus.from(
+            live,
+            fallbackTemp: temperatures[roomId],
+            alarmCount: count,
+          );
+          final accent = status.accent(colors);
+          final attention = status.needsAttention;
+          final temp = status.temp;
+          final deviation = status.deviation;
 
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: colors.cardShadow,
-          ),
-          child: Material(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
+          final defrost = RoomStatus.asSwitch(live['deforest_def']);
+          final compressor = RoomStatus.asSwitch(live['control_runsw']);
+
+          return DecoratedBox(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              onTap: () => onRoomPressed(roomId),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: hasAlarm ? Border.all(color: colors.error) : null,
-                ),
-                padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      room['name'] ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+              boxShadow: colors.cardShadow,
+            ),
+            child: Material(
+              color: attention
+                  ? Color.alphaBlend(accent.withValues(alpha: 0.07), colors.surface)
+                  : colors.surface,
+              borderRadius: BorderRadius.circular(14),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => onRoomPressed(roomId),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: attention
+                        ? Border.all(color: accent.withValues(alpha: 0.55), width: 1.2)
+                        : null,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 상태 띠. 격자를 훑을 때 눈이 제일 먼저 집는 자리다.
+                      Container(width: 4, color: accent),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      room['name'] ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.textPrimary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                  if (count > 0)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: colors.error.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      child: Text(
+                                        '$count',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: colors.error,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
 
-                    // 이 칸에서 가장 먼저 눈에 들어와야 하는 값.
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          temp == null ? '—' : temp.toStringAsFixed(1),
-                          style: TextStyle(
-                            fontSize: 24,
-                            height: 1.15,
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
+                              // 이 칸에서 가장 먼저 눈에 들어와야 하는 값.
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    temp == null ? '—' : temp.toStringAsFixed(1),
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      height: 1,
+                                      fontWeight: FontWeight.w700,
+                                      color: attention ? accent : colors.textPrimary,
+                                      // 제어판과 같은 7세그먼트 서체. 수치일 때만 쓴다.
+                                      fontFamily: temp != null && view.ledDigits
+                                          ? MonitoringViewSettings.ledFontFamily
+                                          : null,
+                                      letterSpacing: temp != null && view.ledDigits ? 1 : null,
+                                    ),
+                                  ),
+                                  if (temp != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 2, bottom: 2),
+                                      child: Text(
+                                        context.l10n.unitCelsius,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: colors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+
+                              // 숫자 하나만으로는 그게 정상인지 알 수 없다.
+                              Row(
+                                children: [
+                                  if (status.setpoint != null)
+                                    Text(
+                                      '${context.l10n.roomSetpointShort} ${status.setpoint!.toStringAsFixed(1)}',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: colors.textSecondary,
+                                      ),
+                                    ),
+                                  if (deviation != null) ...[
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Δ ${deviation >= 0 ? '+' : ''}${deviation.toStringAsFixed(1)}',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: status.condition == RoomCondition.drifting
+                                            ? colors.warning
+                                            : colors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+
+                              // 제상·콤프는 값이 들어온 것만 내건다. 설비가 안 보내는
+                              // 항목을 꺼진 등으로 보여주면 꺼져 있다는 뜻으로 읽힌다.
+                              Expanded(
+                                child: ClipRect(
+                                  child: Align(
+                                    alignment: Alignment.bottomLeft,
+                                    child: Wrap(
+                                      spacing: 4,
+                                      runSpacing: 4,
+                                      children: [
+                                        if (defrost != null)
+                                          StateLamp(label: context.l10n.roomStatusDefrost, on: defrost),
+                                        if (compressor != null)
+                                          StateLamp(label: context.l10n.roomStatusCompressor, on: compressor),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        if (temp != null)
-                          Text(
-                            context.l10n.unitCelsius,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        const Spacer(),
-                        if (setpoint != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              '${context.l10n.roomSetpointShort} ${setpoint.toStringAsFixed(1)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-
-                    const Spacer(),
-                    _StatusText(count: count, label: context.l10n.alarmShort),
-
-                    // 제상·콤프는 값이 들어온 것만 내건다. 설비가 안 보내는
-                    // 항목을 'OFF' 로 보여주면 꺼져 있다는 뜻으로 읽힌다.
-                    if (defrost != null || compressor != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          if (defrost != null)
-                            StatePill(label: context.l10n.roomStatusDefrost, on: defrost),
-                          if (defrost != null && compressor != null) const SizedBox(width: 6),
-                          if (compressor != null)
-                            StatePill(label: context.l10n.roomStatusCompressor, on: compressor),
-                        ],
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// 켜짐/꺼짐 한 가지를 작게 표시한다.
-///
-/// 켜진 것만 색을 입힌다. 둘 다 색이 있으면 칸마다 알록달록해져서, 정작
-/// 눈에 띄어야 할 알람 테두리가 묻힌다.
-/// 켜짐/꺼짐 한 가지를 작게 표시한다. 개괄 화면도 같은 것을 쓴다.
-class StatePill extends StatelessWidget {
-  final String label;
-  final bool on;
-
-  /// 켜진 것이 '나쁜 소식'인 항목인지. 이상·CINT·HIGH 처럼 고장 플래그는
-  /// 켜졌을 때 빨갛게 보여야 하고, 콤프·제상처럼 평소 동작은 그러면 안 된다.
-  final bool danger;
-
-  const StatePill({super.key, required this.label, required this.on, this.danger = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final accent = danger ? colors.error : colors.primary;
-    final color = on ? accent : colors.textSecondary;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: on ? accent.withValues(alpha: 0.10) : colors.background,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        '$label ${on ? context.l10n.roomStatusOn : context.l10n.roomStatusOff}',
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+          );
+        },
       ),
     );
   }

@@ -1400,6 +1400,36 @@ abstract class AppLocalizations {
   /// **'등록된 시설이 없습니다.'**
   String get overviewNoFacilities;
 
+  /// No description provided for @overviewAllNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 호실 정상'**
+  String get overviewAllNormal;
+
+  /// No description provided for @overviewWatching.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 {count}곳 감시 중'**
+  String overviewWatching(int count);
+
+  /// No description provided for @overviewAttention.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인할 호실 {count}곳'**
+  String overviewAttention(int count);
+
+  /// No description provided for @roomStateDrift.
+  ///
+  /// In ko, this message translates to:
+  /// **'이탈'**
+  String get roomStateDrift;
+
+  /// No description provided for @roomStateNoData.
+  ///
+  /// In ko, this message translates to:
+  /// **'값 없음'**
+  String get roomStateNoData;
+
   /// No description provided for @roomStatusFault.
   ///
   /// In ko, this message translates to:
