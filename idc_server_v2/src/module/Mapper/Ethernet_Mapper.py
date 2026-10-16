@@ -1,6 +1,7 @@
 from typing import Dict
 
-DataMaps: Dict[str:int] = {}
+# DataMaps: Dict[str:int] = {}
+DataMaps: dict[str, int] = {} # Python 3.9+ 기본 문법
 
 DataMaps["C02_MX3004"] = 0
 DataMaps["C02_MX3034"] = 1
