@@ -9,6 +9,8 @@ import { PostViewerPanel } from '../components/chart/viewer/panels/PostViewerPan
 import { MappingActivePanel } from '../components/chart/viewer/panels/MappingActivePanel';
 import { BlacklistPanel } from '../components/chart/viewer/panels/BlacklistPanel';
 import { ChartStatsPanel } from '../components/chart/viewer/panels/ChartStatsPanel';
+import { ChartEmptyState } from '../components/chart/viewer/ChartEmptyState';
+import type { EmptyReason } from '../components/chart/viewer/ChartEmptyState';
 import { CHART_SCOPING_CONFIG} from '../constants/chartConfig'; 
 import type{ ChartMode, ChartScale } from '../constants/chartConfig'; 
 import { apiService } from '../services/apiService';
@@ -431,6 +433,24 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   const mainDataSets = chartDataSets.filter(ds => ds.role_name && !isBoolRole(ds.role_id));
   const subDataSets = chartDataSets.filter(ds => ds.role_name && isBoolRole(ds.role_id)); 
 
+  /**
+   * 차트가 비어 있다면 그 이유.
+   *
+   * null 이면 그릴 것이 있다는 뜻이다. 불러오는 중에는 ECharts 가 제 로딩
+   * 표시를 내므로 안내를 겹쳐 띄우지 않는다 — 둘이 같이 뜨면 "없다"와
+   * "오는 중"이 한 화면에 적히게 된다.
+   */
+  const emptyReason: EmptyReason | null = (() => {
+    if (isChartLoading) return null;
+    if (!selectedFacility) return 'pick-facility';
+    if (!selectedRoom) return 'pick-room';
+    // 호실까지 골랐는데 묶인 항목이 하나도 없으면 고르는 문제가 아니라 설정 문제다.
+    if (groups.length === 0 || checkedRoles.length === 0) return 'no-mapping';
+    // 요청은 갔는데 이 구간에 기록이 없는 경우.
+    if (!chartDataSets.some(ds => ds.data?.length)) return 'no-data';
+    return null;
+  })();
+
   // 💡 [UI 핵심 수정] 최상위 컨테이너에 overflowY: 'auto' 적용
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', gap: 12, boxSizing: 'border-box', padding: 24 }}>
@@ -442,11 +462,11 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
         <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <TopToolBar showInfo={showMainInfo} showGrid={showMainGrid} targetDate={targetDate} isChartLoading={isChartLoading} onCopy={handleCopySearchQuery} onToggleInfo={() => setShowMainInfo(!showMainInfo)} onToggleGrid={() => setShowMainGrid(!showMainGrid)} onOneHourView={applyOneHourView} onDateChange={setTargetDate} yBuffer={yBuffer} onYBufferChange={setYBuffer} />
           <div className="card" style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, padding: 12 }}>
-            <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />
+            {emptyReason ? <ChartEmptyState reason={emptyReason} /> : <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />}
           </div>
           <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
           <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: 12 }}>
-            <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />
+            {emptyReason ? <ChartEmptyState reason={emptyReason} compact /> : <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />}
           </div>
         </div>
 
