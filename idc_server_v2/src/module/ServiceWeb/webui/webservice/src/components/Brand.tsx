@@ -1,20 +1,22 @@
 import React from 'react';
 
-/** 그라디언트 모노그램 — 앱 쪽 AppMonogram과 동일한 브랜드 마크 */
+/** 브랜드 마크 — 앱의 런처 아이콘과 같은 그림을 쓴다.
+ *
+ * 전에는 'ic' 두 글자를 그라디언트 사각형에 얹은 자리표시자였다. 앱이 실제
+ * 로고로 바뀐 뒤로는 같은 제품인데 앱과 웹의 표식이 서로 달랐다. */
 export const Monogram: React.FC<{ size?: number }> = ({ size = 32 }) => (
-  <div
+  <img
+    src="/webui/logo.png"
+    alt=""
+    width={size}
+    height={size}
     style={{
-      width: size, height: size, borderRadius: size * 0.28,
-      background: 'linear-gradient(135deg, var(--primary-light, #5c8def), var(--primary-dark, #1e4fbd))',
-      color: '#fff',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 800, fontSize: size * 0.42, letterSpacing: -1,
-      boxShadow: `0 ${size * 0.14}px ${size * 0.32}px -${size * 0.1}px rgba(46,107,239,0.45)`,
+      borderRadius: '50%',
+      display: 'block',
       flexShrink: 0,
+      boxShadow: `0 ${size * 0.12}px ${size * 0.3}px -${size * 0.1}px rgba(46,107,239,0.4)`,
     }}
-  >
-    ic
-  </div>
+  />
 );
 
 /** 2색 워드마크 — "ID"(기본 텍스트색) + "Cool"(브랜드 블루) */
