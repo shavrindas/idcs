@@ -10,7 +10,6 @@ import 'package:idcs/components/facility/monitoring/control_card.dart';
 import 'package:idcs/components/facility/monitoring/panel_status_card.dart';
 import 'package:idcs/components/facility/monitoring/panel_summary_card.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
-import 'package:idcs/theme/panel_background.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/components/shared/app_toast.dart';
@@ -228,11 +227,12 @@ class _MonitoringPageState extends State<MonitoringPage> {
           title: Text(_roomName ?? context.l10n.panelPageTitle(widget.facilityId)),
           centerTitle: true,
         ),
-        // 배경이 패널 사이로 비쳐 보이도록 Scaffold는 비워 두고 Stack 맨 아래에 깐다.
+        // 배경은 앱 전체가 한 장으로 깐다(SnowfallBackground). 예전에는 이
+        // 화면만 따로 무늬를 깔았는데, 카드가 비치게 된 뒤로는 그 무늬가
+        // 눈과 겹쳐 지저분해졌다.
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            Positioned.fill(child: PanelBackdrop(backgroundId: view.backgroundId)),
             SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
