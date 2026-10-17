@@ -21,7 +21,6 @@ import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/theme/app_theme.dart';
-import 'package:idcs/theme/motion.dart';
 
 /// 맡은 시설이 여럿인 사람을 위한 화면.
 ///
@@ -601,6 +600,7 @@ class _FacilitySection extends StatelessWidget {
               final roomId = room['id'];
 
               return _OverviewRoomCard(
+                index: index,
                 name: room['name']?.toString() ?? '',
                 values: liveValues[roomId] ?? const {},
                 status: statuses[roomId] ?? RoomStatus.from(const {}),
@@ -626,6 +626,9 @@ class _FacilitySection extends StatelessWidget {
 /// 말지를 정한 뒤에 본다.
 class _OverviewRoomCard extends StatelessWidget {
   final String name;
+
+  /// 격자에서 몇 번째 칸인지. 상태 띠가 차오르는 순서에만 쓴다.
+  final int index;
   final Map<String, String> values;
   final RoomStatus status;
   final bool ledDigits;
@@ -633,6 +636,7 @@ class _OverviewRoomCard extends StatelessWidget {
 
   const _OverviewRoomCard({
     required this.name,
+    required this.index,
     required this.values,
     required this.status,
     required this.ledDigits,
@@ -816,12 +820,7 @@ class _OverviewRoomCard extends StatelessWidget {
                 // 색이 톡 바뀌면 바뀐 줄도 모르고 지나간다. 정상에서 이상으로
                 // 넘어가는 순간은 이 화면에서 가장 중요한 변화라, 눈이 따라갈
                 // 만큼만 끌어 준다.
-                AnimatedContainer(
-                  duration: Motion.of(context, Motion.normal),
-                  curve: Motion.enter,
-                  height: 4,
-                  color: status.railColor(colors),
-                ),
+                StatusRail(color: status.railColor(colors), index: index),
               ],
             ),
           ),

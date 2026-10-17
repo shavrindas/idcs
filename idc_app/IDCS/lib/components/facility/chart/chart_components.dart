@@ -1142,11 +1142,16 @@ class ChartToolBox extends StatelessWidget {
   /// 그 사실을 알려 준다 — 눌러도 아무 일이 없는 이유가 바로 이것이었다.
   final Map<String, dynamic>? chartData;
 
+  /// 기준값을 직접 넣는 창을 여는 손잡이. 자주 쓸 자리가 아니라서 작은
+  /// 글자 버튼 하나로만 내보낸다 — 평소에는 눈에 걸리지 않아야 한다.
+  final VoidCallback? onEditLimits;
+
   const ChartToolBox({
     super.key,
     required this.showTargetLines,
     required this.onToggleTargetLines,
     this.chartData,
+    this.onEditLimits,
   });
 
   /// 실제로 기준선이 그려질 항목이 있는지.
@@ -1199,6 +1204,27 @@ class ChartToolBox extends StatelessWidget {
                       : context.l10n.chartSafeRangeNone,
                   style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.3),
                 ),
+                if (onEditLimits != null) ...[
+                  const SizedBox(height: 2),
+                  // 밑줄 친 작은 글자 하나. 버튼처럼 칠해 두면 이 카드에서
+                  // 제일 먼저 눈에 들어오는데, 실제로는 거의 쓰지 않는 길이다.
+                  InkWell(
+                    onTap: onEditLimits,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        context.l10n.chartLimitsEdit,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: colors.textSecondary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: colors.textSecondary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

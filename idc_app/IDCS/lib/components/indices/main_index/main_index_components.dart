@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
-import 'package:idcs/theme/motion.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 
@@ -273,12 +272,7 @@ class RoomGrid extends StatelessWidget {
                         ),
                       ),
                       // 상태 띠. 개괄 화면과 같은 자리, 같은 색, 같은 속도다.
-                      AnimatedContainer(
-                        duration: Motion.of(context, Motion.normal),
-                        curve: Motion.enter,
-                        height: 4,
-                        color: status.railColor(colors),
-                      ),
+                      StatusRail(color: status.railColor(colors), index: index),
                     ],
                   ),
                 ),
