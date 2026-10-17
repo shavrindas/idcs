@@ -11,6 +11,7 @@ import { RoomComparePage } from './pages/RoomComparePage';
 import { LoginPage } from './pages/LoginPage';
 import { MainPage } from './pages/MainPage';
 import { Monogram, Wordmark } from './components/Brand';
+import { ThemeProvider, ThemeToggle } from './services/theme';
 
 function App() {
   // 로그인한 유저. 각 화면이 '내 시설'만 불러오려면 이 값이 필요하다.
@@ -34,6 +35,7 @@ function App() {
     `nav-link${isActive ? ' active' : ''}`;
 
   return (
+    <ThemeProvider>
     <Router>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box' }}>
 
@@ -52,14 +54,15 @@ function App() {
             <Monogram size={32} />
             <Wordmark size={17} />
           </div>
-          {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {user && (
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                 {user.name} <span className="chip" style={{ marginLeft: 6 }}>{user.role}</span>
               </span>
-              <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>
-            </div>
-          )}
+            )}
+            <ThemeToggle />
+            {user && <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>}
+          </div>
         </header>
 
         {/* 글로벌 네비게이션 바 (로그인한 유저에게만 노출) */}
@@ -127,6 +130,7 @@ function App() {
         </div>
       </div>
     </Router>
+    </ThemeProvider>
   );
 }
 

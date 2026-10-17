@@ -226,3 +226,83 @@ button, input, select, textarea {
 .field-inline > .label {
   white-space: nowrap;
 }
+
+/* ===================== 어두운 테마 ===================== */
+
+/*
+ * 색은 앱(idc_app)의 AppPalette.dark 를 그대로 가져온다. 같은 시스템을 폰에서
+ * 보다가 모니터로 옮겨 앉았을 때 다른 제품처럼 보이면 안 된다.
+ *
+ * 토큰만 바꾸고 규칙은 손대지 않는다 — 화면마다 어두운 색을 따로 적기 시작하면
+ * 어느 한 곳은 반드시 빠진다.
+ *
+ * color-scheme 을 같이 바꾸는 것이 중요하다. 이 화면에는 select 와
+ * datetime-local 이 있는데, 이것들은 브라우저가 직접 그리므로 color-scheme 이
+ * light 인 채로 두면 어두운 화면 한가운데에 흰 상자만 남는다.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --primary: #6fa0ff;
+  --primary-light: #9bbeff;
+  --primary-dark: #3f79e0;
+  --primary-bg: rgba(111, 160, 255, 0.16);
+
+  --bg: #0f151c;
+  --surface: #223040;
+  --border: #36454f;
+
+  --text: #e9eef3;
+  --text-secondary: #9fb0bc;
+
+  --error: #ff6b6b;
+  --error-bg: rgba(255, 107, 107, 0.14);
+
+  --shadow: rgba(0, 0, 0, 0.45) 0 4px 14px -2px, rgba(0, 0, 0, 0.3) 0 2px 4px -2px;
+}
+
+/* 아직 직접 고르지 않았다면 운영체제 설정을 따른다. 'light' 로 고정해 둔
+   사람에게는 적용되지 않도록 그 경우를 빼 둔다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --primary: #6fa0ff;
+    --primary-light: #9bbeff;
+    --primary-dark: #3f79e0;
+    --primary-bg: rgba(111, 160, 255, 0.16);
+
+    --bg: #0f151c;
+    --surface: #223040;
+    --border: #36454f;
+
+    --text: #e9eef3;
+    --text-secondary: #9fb0bc;
+
+    --error: #ff6b6b;
+    --error-bg: rgba(255, 107, 107, 0.14);
+
+    --shadow: rgba(0, 0, 0, 0.45) 0 4px 14px -2px, rgba(0, 0, 0, 0.3) 0 2px 4px -2px;
+  }
+}
+
+/* 어두운 테마에서 진한 파랑 위의 흰 글씨는 눈이 아프다. 앱과 같이 바탕보다
+   어두운 글씨를 쓴다. */
+:root[data-theme="dark"] .btn-primary,
+:root[data-theme="dark"] .chip {
+  color: #0f151c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-primary,
+  :root:not([data-theme="light"]) .chip {
+    color: #0f151c;
+  }
+}
+:root[data-theme="dark"] .chip {
+  background: var(--primary);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip {
+    background: var(--primary);
+  }
+}
