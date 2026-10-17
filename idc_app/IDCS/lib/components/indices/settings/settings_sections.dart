@@ -12,6 +12,7 @@ import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/motion.dart';
 import 'package:idcs/theme/locale_controller.dart';
 import 'package:idcs/theme/panel_background.dart';
 import 'package:idcs/theme/theme_controller.dart';
@@ -62,31 +63,6 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
     }
   }
 
-  Widget _radioRow({
-    required bool selected,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      dense: true,
-      onTap: onTap,
-      leading: Icon(
-        selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
-        color: selected ? context.colors.primary : context.colors.textSecondary,
-        size: 20,
-      ),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          color: context.colors.textPrimary,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -94,17 +70,21 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // 세 줄짜리 라디오 목록을 한 줄짜리 선택기로 바꿨다. 테마와 언어는
+        // 한 번 고르면 그대로 두는 것들인데, 둘이 합쳐 여섯 줄을 차지해서
+        // 그 아래 항목에 닿으려면 계속 쓸어내려야 했다.
         ValueListenableBuilder<ThemeMode>(
           valueListenable: ThemeController.mode,
           builder: (context, mode, _) => SettingsCard(
             title: l10n.settingsTheme,
-            children: ThemeMode.values
-                .map((m) => _radioRow(
-                      selected: mode == m,
-                      label: ThemeController.labelOf(m, l10n),
-                      onTap: () => ThemeController.set(m),
-                    ))
-                .toList(),
+            children: [
+              _Choices<ThemeMode>(
+                options: ThemeMode.values,
+                selected: mode,
+                labelOf: (m) => ThemeController.labelOf(m, l10n),
+                onSelected: ThemeController.set,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -113,14 +93,38 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
           valueListenable: LocaleController.locale,
           builder: (context, selected, _) => SettingsCard(
             title: l10n.settingsLanguage,
-            // null = follow the device, then one row per supported language.
-            children: [null, ...LocaleController.supported]
-                .map((option) => _radioRow(
-                      selected: selected?.languageCode == option?.languageCode,
-                      label: _languageLabel(option, l10n),
-                      onTap: () => LocaleController.set(option),
-                    ))
-                .toList(),
+            children: [
+              _Choices<Locale?>(
+                // null = 기기 설정을 따른다.
+                options: [null, ...LocaleController.supported],
+                selected: selected == null
+                    ? null
+                    : LocaleController.supported.firstWhere(
+                        (o) => o.languageCode == selected.languageCode,
+                        orElse: () => selected,
+                      ),
+                labelOf: (o) => _languageLabel(o, l10n),
+                onSelected: LocaleController.set,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 눈은 앱 전체에 걸리는 설정이라 제어판 카드가 아니라 여기 둔다.
+        ValueListenableBuilder<MonitoringViewSettings>(
+          valueListenable: MonitoringViewController.settings,
+          builder: (context, view, _) => SettingsCard(
+            title: l10n.settingsBackground,
+            children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(l10n.settingsSnow, style: const TextStyle(fontSize: 14)),
+                value: view.snow,
+                onChanged: (val) => MonitoringViewController.set(view.copyWith(snow: val)),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -201,6 +205,52 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
 /// The three controls are shown under one live sample rather than as separate
 /// sliders: opacity only means something against a backdrop, and a number size
 /// is hard to judge as a percentage. The sample is the panel in miniature.
+/// 몇 안 되는 보기를 한 줄에 늘어놓는 선택기.
+///
+/// 라디오 목록은 보기가 많거나 설명이 붙을 때 쓸 만하지만, 여기처럼 셋뿐이고
+/// 이름이 한두 단어면 세로로 세 줄을 쓰는 것이 아깝다.
+class _Choices<T> extends StatelessWidget {
+  final List<T> options;
+  final T selected;
+  final String Function(T) labelOf;
+  final void Function(T) onSelected;
+
+  const _Choices({
+    required this.options,
+    required this.selected,
+    required this.labelOf,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final option in options)
+          ChoiceChip(
+            label: Text(labelOf(option)),
+            selected: option == selected,
+            showCheckmark: false,
+            onSelected: (_) => onSelected(option),
+            labelStyle: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: option == selected ? colors.onPrimary : colors.textPrimary,
+            ),
+            selectedColor: colors.primary,
+            backgroundColor: colors.background,
+            side: BorderSide(color: option == selected ? colors.primary : colors.outline),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+          ),
+      ],
+    );
+  }
+}
+
 class _PanelAppearanceCard extends StatelessWidget {
   final MonitoringViewSettings view;
 
@@ -215,6 +265,10 @@ class _PanelAppearanceCard extends StatelessWidget {
     final colors = context.colors;
 
     return SettingsCard(
+      // 이 카드가 제일 길다 — 배경 고르기, 투명도, 글자 크기, 미리보기까지
+      // 들어 있다. 한 번 맞춰 두면 거의 안 건드리므로 접어 둔다.
+      collapsible: true,
+      summary: '${(view.panelOpacity * 100).round()}%',
       title: l10n.settingsPanel,
       children: [
         Text(
@@ -422,30 +476,102 @@ class _PanelPreview extends StatelessWidget {
   }
 }
 
-class SettingsCard extends StatelessWidget {
+class SettingsCard extends StatefulWidget {
   final String title;
   final List<Widget> children;
 
-  const SettingsCard({super.key, required this.title, required this.children});
+  /// 접을 수 있는 카드인지. 접히면 처음에는 닫혀 있다.
+  ///
+  /// 설정은 한 번 맞춰 두고 거의 안 들어오는 화면인데, 카드가 전부 펼쳐져
+  /// 있으면 아래쪽 항목에 닿는 데만 몇 번을 쓸어내려야 한다. 길고 자주 안
+  /// 쓰는 것만 접어 둔다.
+  final bool collapsible;
+
+  /// 접혀 있을 때 제목 옆에 붙는 한 줄. 열어 보지 않아도 지금 무엇이
+  /// 설정돼 있는지 알 수 있어야 접어 두는 의미가 있다.
+  final String? summary;
+
+  const SettingsCard({
+    super.key,
+    required this.title,
+    required this.children,
+    this.collapsible = false,
+    this.summary,
+  });
+
+  @override
+  State<SettingsCard> createState() => _SettingsCardState();
+}
+
+class _SettingsCardState extends State<SettingsCard> {
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final expanded = !widget.collapsible || _open;
+
+    final header = Row(
+      children: [
+        Text(
+          widget.title,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary),
+        ),
+        if (widget.collapsible) ...[
+          const Spacer(),
+          if (widget.summary != null && !expanded)
+            Flexible(
+              child: Text(
+                widget.summary!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: TextStyle(fontSize: 12, color: colors.textSecondary.withValues(alpha: 0.8)),
+              ),
+            ),
+          const SizedBox(width: 6),
+          Icon(
+            expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+            size: 20,
+            color: colors.textSecondary,
+          ),
+        ],
+      ],
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.colors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: context.colors.cardShadow,
+        boxShadow: colors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary),
+          if (widget.collapsible)
+            Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _open = !_open),
+                child: Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: header),
+              ),
+            )
+          else
+            header,
+          AnimatedSize(
+            duration: Motion.of(context, Motion.normal),
+            curve: Motion.enter,
+            alignment: Alignment.topCenter,
+            child: !expanded
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [const SizedBox(height: 8), ...widget.children],
+                  ),
           ),
-          const SizedBox(height: 8),
-          ...children,
         ],
       ),
     );

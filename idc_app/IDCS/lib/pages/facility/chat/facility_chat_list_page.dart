@@ -27,6 +27,9 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
   bool _isLoading = true;
   List<dynamic> _rooms = [];
 
+  /// 방이 하나뿐일 때 그 방으로 한 번 넘어갔는지.
+  bool _jumped = false;
+
   @override
   void initState() {
     super.initState();
@@ -45,12 +48,34 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
           _isAdmin = res['is_admin'];
           _rooms = res['rooms'];
         });
+        _maybeOpenOnlyRoom();
       }
     } catch (e) {
       if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// 방이 하나뿐이면 그 방으로 바로 들어간다.
+  ///
+  /// 한 줄짜리 목록은 매번 한 번 더 누르게 하는 자리밖에 안 된다. 시설이
+  /// 하나뿐인 계정을 시설로 바로 보내는 것과 같은 이유다.
+  ///
+  /// push 가 아니라 pushReplacement 다. 목록을 남겨 두면 대화방에서 뒤로
+  /// 왔을 때 이 목록이 나오고, 나오자마자 또 들어가는 되돌이가 된다. 갈아
+  /// 끼우면 뒤로가 시설 화면으로 간다.
+  ///
+  /// 관리자는 예외다 — 단체방을 만들려면 이 목록이 있어야 한다.
+  void _maybeOpenOnlyRoom() {
+    if (_isAdmin || _jumped || _rooms.length != 1 || !mounted) return;
+    _jumped = true;
+
+    final room = _rooms.first;
+    context.pushReplacement(
+      '/chat_room/${widget.userId}/${room['room_id']}',
+      extra: room['room_name'],
+    );
   }
 
   /// 단체방 만들기.

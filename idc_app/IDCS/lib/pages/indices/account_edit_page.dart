@@ -178,11 +178,20 @@ class _PersonalPageState extends State<PersonalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.profileTitle)),
+      // 이 화면의 제목은 '설정'이다. 계정 정보는 그 안의 첫 카드고,
+      // 테마·언어·알람·제어판이 그 아래에 이어진다.
+      appBar: AppBar(title: Text(context.l10n.settingsTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              // 아래 탭 줄이 없는 화면이라 제스처 바가 마지막 줄 위에 겹친다.
+              // 겹친 자리의 글자에 줄이 그어진 것처럼 보였다.
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).padding.bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

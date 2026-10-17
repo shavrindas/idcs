@@ -243,8 +243,8 @@ class _MonitoringAllState extends State<MonitoringAll> {
               onPressed: () => context.push('/index/${widget.userId}/alarm'),
             ),
             IconButton(
-              icon: const Icon(Icons.person_outline_rounded),
-              tooltip: context.l10n.profileTitle,
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: context.l10n.settingsTitle,
               onPressed: () => context.push('/index/${widget.userId}/profile'),
             ),
           ],

@@ -344,7 +344,17 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box 2
+            // 차트를 조건 바로 아래에 둔다. 이 화면을 여는 이유는 그래프를
+            // 보는 것 하나인데, 항목 고르기와 기준선 스위치가 그 앞을 막고
+            // 있어서 들어오자마자 스크롤부터 해야 했다. 둘 다 한 번 맞춰 두면
+            // 그대로 두는 것들이라 그래프 아래로 내린다.
+            ChartCanvasBox(
+              chartData: _chartData,
+              isLoading: _isLoading,
+              showTargetLines: _showTargetLines,
+            ),
+            const SizedBox(height: 16),
+
             ChartSeriesBox(
               availableGroups: _availableGroups,
               selectedGroupId: _selectedGroupId,
@@ -357,20 +367,11 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box 4
             ChartToolBox(
               showTargetLines: _showTargetLines,
               onToggleTargetLines: (val) => setState(() => _showTargetLines = val),
               chartData: _chartData,
               onEditLimits: _editLimits,
-            ),
-            const SizedBox(height: 8),
-
-            // Box 3
-            ChartCanvasBox(
-              chartData: _chartData,
-              isLoading: _isLoading,
-              showTargetLines: _showTargetLines,
             ),
             const SizedBox(height: 16),
 

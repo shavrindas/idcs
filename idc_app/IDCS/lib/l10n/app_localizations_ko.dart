@@ -39,6 +39,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themeDark => '어둡게';
 
   @override
+  String get settingsBackground => '배경';
+
+  @override
+  String get settingsSnow => '배경에 눈 내리기';
+
+  @override
   String get settingsPanel => '제어판 화면';
 
   @override

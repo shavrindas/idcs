@@ -10,6 +10,8 @@
   "themeSystem": "System default",
   "themeLight": "Light",
   "themeDark": "Dark",
+  "settingsBackground": "Background",
+  "settingsSnow": "Snow in the background",
   "settingsPanel": "Control panel",
   "settingsPanelNote": "Applies only to the live control panel shown inside a room.",
   "panelBackground": "Background",

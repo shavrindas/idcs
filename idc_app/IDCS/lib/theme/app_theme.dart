@@ -216,6 +216,37 @@ class AppTheme {
   static ThemeData get light => _build(AppPalette.light, Brightness.light);
   static ThemeData get dark => _build(AppPalette.dark, Brightness.dark);
 
+  /// 카드 투명도를 팔레트에 녹여서 테마를 만든다.
+  ///
+  /// 투명도는 원래 제어판 카드에만 걸려 있었다. 모든 카드에 걸려면 화면마다
+  /// `colors.surface` 를 고쳐 다녀야 하는데, 쓰는 곳이 수십 군데다. 대신
+  /// 테마를 만들 때 surface 자체에 알파를 넣는다 — 그러면 지금 있는 코드를
+  /// 한 줄도 건드리지 않고 전부 따라온다.
+  ///
+  /// Scaffold 는 투명하게 둔다. 배경색과 눈은 [SnowfallBackground] 가 앱
+  /// 전체에 한 장으로 깔기 때문에, Scaffold 가 색을 칠하면 그 위를 덮는다.
+  static ThemeData withCardOpacity(AppPalette base, Brightness brightness, double opacity) {
+    final theme = _build(
+      base.copyWith(surface: base.surface.withValues(alpha: opacity)),
+      brightness,
+    );
+
+    // 투명해져야 하는 것은 '카드'뿐이다. surface 는 카드 말고도 앱바·하단
+    // 탭·대화상자·시트가 같이 쓰는 색이라, 그대로 두면 제목과 탭 글자 뒤로
+    // 눈이 지나간다. 읽어야 하는 글자 뒤는 비면 안 된다.
+    //
+    // 그래서 이 넷만 원래의 불투명한 색으로 되돌린다.
+    return theme.copyWith(
+      scaffoldBackgroundColor: Colors.transparent,
+      dialogTheme: theme.dialogTheme.copyWith(backgroundColor: base.surface),
+      navigationBarTheme:
+          theme.navigationBarTheme.copyWith(backgroundColor: base.surface),
+      bottomSheetTheme:
+          theme.bottomSheetTheme.copyWith(backgroundColor: base.surface),
+      appBarTheme: theme.appBarTheme.copyWith(backgroundColor: base.background),
+    );
+  }
+
   static ThemeData _build(AppPalette p, Brightness brightness) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: p.primary,
