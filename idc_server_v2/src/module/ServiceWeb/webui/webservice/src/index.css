@@ -183,3 +183,46 @@ button, input, select, textarea {
   background: var(--primary-bg);
   color: var(--primary);
 }
+
+/*
+ * 켜고 끄는 단추.
+ *
+ * 전에는 켜져 있을 때 .btn-primary 였다. 진한 파랑은 '이 화면에서 지금 할 일'
+ * 이라는 뜻인데, 격자나 정보 표시는 그런 일이 아니다. 그 둘이 제일 진하게
+ * 칠해져 있으면 정작 날짜를 바꾸거나 시설을 고르는 쪽이 묻힌다.
+ *
+ * 그래서 켜짐은 옅은 바탕에 파란 글씨로만 알린다 — 상태는 보이되 소리치지
+ * 않는다.
+ */
+.btn-toggle {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.4px solid var(--border);
+}
+.btn-toggle:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn-toggle.on {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: transparent;
+}
+
+/* 도구 모음 안에서 단추와 입력칸을 가르는 선. 묶음이 보이면 줄이 짧아진다. */
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* 입력칸 앞에 붙는 작은 이름표. 날짜 칸이 무슨 날짜인지 알려 준다. */
+.field-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.field-inline > .label {
+  white-space: nowrap;
+}
