@@ -66,13 +66,14 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 4 }}>
         <Monogram size={56} />
         <div style={{ marginTop: 4 }}><Wordmark size={22} /></div>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>관리자 계정으로 로그인해주세요.</p>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>IDCool 계정으로 로그인하세요.</p>
       </div>
 
       <form onSubmit={handleLogin} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 320 }}>
         <input
           type="email"
           placeholder="이메일"
+          autoComplete="username"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
@@ -81,6 +82,7 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
         <input
           type="password"
           placeholder="비밀번호"
+          autoComplete="current-password"
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
