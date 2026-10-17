@@ -68,6 +68,10 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
     }
   }
 
+  /// 가장 최근에 끝난 몇 건. '진행중'이 비었을 때만 쓴다.
+  List<GroupedAlarm> get _recentlyEnded =>
+      groupAlarms(_alarms.where((a) => !isAlarmActive(a)).toList()).take(4).toList();
+
   @override
   Widget build(BuildContext context) {
     final searchedAlarms = filterAlarmsByStatus(_alarms, _statusFilter).where((alarm) {
@@ -211,6 +215,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                     alarms: displayAlarms,
                     isSearching: _searchQuery.isNotEmpty,
                     showingActiveOnly: _statusFilter == AlarmStatusFilter.active,
+                    recentlyEnded: _recentlyEnded,
                   ),
                 ),
               ],

@@ -3,7 +3,10 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/chart/chart_components.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
+import 'package:idcs/components/facility/chart/chart_limits_dialog.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
+import 'package:idcs/services/chart/chart_limits.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import '../../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
@@ -27,6 +30,10 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   // 2. 조회 대상 호실 상태
   List<dynamic> _rooms = [];
   int? _selectedRoomId;
+
+  /// 이 기기에 직접 적어 둔 기준값 (role_name -> 상·하한).
+  /// 서버 포인트 롤의 상·하한이 비어 있는 동안 차트 기준선을 그리는 데 쓴다.
+  Map<String, RoleLimit> _manualLimits = {};
 
   // 3. 데이터 포인트 선택 상태
   int? _selectedGroupId;
@@ -255,9 +262,15 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
         roleIds: roleIdsToFetch,
       );
 
+      // 서버가 준 상·하한이 비어 있는 항목에만 직접 적어 둔 값을 끼워 넣는다.
+      // 여기서 섞어 두면 차트를 그리는 쪽은 그 값이 어디서 왔는지 몰라도 된다.
+      final limits = await ChartLimits.load(roomId.toString());
+      ChartLimits.apply(result, limits);
+
       if (mounted) {
         setState(() {
           _chartData = result;
+          _manualLimits = limits;
         });
       }
     } catch (e) {
@@ -267,6 +280,38 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// 지금 그려진 시리즈를 모아 기준값 창을 연다.
+  Future<void> _editLimits() async {
+    final roomId = _selectedRoomId;
+    if (roomId == null) return;
+
+    final datasets = _chartData?['data']?['datasets'];
+    final series = <({String roleName, String label})>[
+      if (datasets is List)
+        for (final ds in datasets)
+          if (ds is Map && ds['role_name'] != null)
+            (
+              roleName: ds['role_name'].toString(),
+              label: (ds['display_name']?.toString().isNotEmpty ?? false)
+                  ? ds['display_name'].toString()
+                  : DeviceLabels.of(context, ds['role_name'].toString()),
+            ),
+    ];
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => ChartLimitsDialog(
+        roomId: roomId.toString(),
+        series: series,
+        current: _manualLimits,
+      ),
+    );
+
+    if (saved != true || !mounted) return;
+    AppToast.info(context, context.l10n.chartLimitsSaved);
+    await _fetchChartData();
   }
 
   @override
@@ -317,6 +362,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
               showTargetLines: _showTargetLines,
               onToggleTargetLines: (val) => setState(() => _showTargetLines = val),
               chartData: _chartData,
+              onEditLimits: _editLimits,
             ),
             const SizedBox(height: 8),
 

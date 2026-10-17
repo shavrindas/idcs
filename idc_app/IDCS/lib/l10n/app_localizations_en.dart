@@ -352,6 +352,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alarmFieldFacility => 'Facility';
 
   @override
+  String get alarmRecentlyEnded => 'Recently ended';
+
+  @override
   String get alarmStatusAll => 'All';
 
   @override
@@ -701,6 +704,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get discardChangesBody =>
       'They have not been saved. Leaving will lose them.';
+
+  @override
+  String get chartLimitsEdit => 'Set limits manually';
+
+  @override
+  String get chartLimitsTitle => 'Limits';
+
+  @override
+  String get chartLimitsLow => 'Low';
+
+  @override
+  String get chartLimitsHigh => 'High';
+
+  @override
+  String get chartLimitsLocal =>
+      'Saved on this device only. Alarms do not use these — for that they must be set on the point role in the web console.';
+
+  @override
+  String get chartLimitsSaved => 'Limits saved.';
+
+  @override
+  String get chartLimitsEmpty => 'No series is currently drawn.';
 
   @override
   String get chartSafeRangeTitle => 'Safe range lines';

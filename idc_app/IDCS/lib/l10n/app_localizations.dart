@@ -746,6 +746,12 @@ abstract class AppLocalizations {
   /// **'시설 이름'**
   String get alarmFieldFacility;
 
+  /// No description provided for @alarmRecentlyEnded.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 종료된 알람'**
+  String get alarmRecentlyEnded;
+
   /// No description provided for @alarmStatusAll.
   ///
   /// In ko, this message translates to:
@@ -1351,6 +1357,48 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.'**
   String get discardChangesBody;
+
+  /// No description provided for @chartLimitsEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'기준값 직접 넣기'**
+  String get chartLimitsEdit;
+
+  /// No description provided for @chartLimitsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기준값'**
+  String get chartLimitsTitle;
+
+  /// No description provided for @chartLimitsLow.
+  ///
+  /// In ko, this message translates to:
+  /// **'하한'**
+  String get chartLimitsLow;
+
+  /// No description provided for @chartLimitsHigh.
+  ///
+  /// In ko, this message translates to:
+  /// **'상한'**
+  String get chartLimitsHigh;
+
+  /// No description provided for @chartLimitsLocal.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기에만 저장됩니다. 알람은 이 값으로 울리지 않습니다 — 그건 웹 콘솔에서 포인트 롤에 넣어야 합니다.'**
+  String get chartLimitsLocal;
+
+  /// No description provided for @chartLimitsSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'기준값을 저장했습니다.'**
+  String get chartLimitsSaved;
+
+  /// No description provided for @chartLimitsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 그려진 항목이 없습니다.'**
+  String get chartLimitsEmpty;
 
   /// No description provided for @chartSafeRangeTitle.
   ///

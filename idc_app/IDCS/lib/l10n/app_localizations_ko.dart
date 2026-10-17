@@ -342,6 +342,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get alarmFieldFacility => '시설 이름';
 
   @override
+  String get alarmRecentlyEnded => '최근 종료된 알람';
+
+  @override
   String get alarmStatusAll => '전체';
 
   @override
@@ -687,6 +690,28 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get discardChangesBody => '아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.';
+
+  @override
+  String get chartLimitsEdit => '기준값 직접 넣기';
+
+  @override
+  String get chartLimitsTitle => '기준값';
+
+  @override
+  String get chartLimitsLow => '하한';
+
+  @override
+  String get chartLimitsHigh => '상한';
+
+  @override
+  String get chartLimitsLocal =>
+      '이 기기에만 저장됩니다. 알람은 이 값으로 울리지 않습니다 — 그건 웹 콘솔에서 포인트 롤에 넣어야 합니다.';
+
+  @override
+  String get chartLimitsSaved => '기준값을 저장했습니다.';
+
+  @override
+  String get chartLimitsEmpty => '지금 그려진 항목이 없습니다.';
 
   @override
   String get chartSafeRangeTitle => '안전 범위 선';

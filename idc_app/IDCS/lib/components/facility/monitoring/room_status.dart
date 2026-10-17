@@ -4,6 +4,7 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/motion.dart';
 
 /// 호실 하나의 지금 상태.
 ///
@@ -201,6 +202,92 @@ class StateLamp extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 카드 아래의 상태 띠.
+///
+/// 화면에 들어올 때 왼쪽에서 오른쪽으로 차오른다. 가만히 깔려 있는 색 줄은
+/// 배경처럼 읽혀서 그냥 지나치기 쉬운데, 한 번 훑고 지나가면 눈이 그 줄을
+/// 한 번은 본다 — 이 줄이 호실 상태를 말하고 있다는 것을 알려 주는 셈이다.
+///
+/// 폭을 직접 늘리지 않고 [Transform.scale] 로 늘인다. 폭을 바꾸면 매 프레임
+/// 레이아웃을 다시 잡아야 하지만, 이쪽은 그리기만 다시 한다.
+class StatusRail extends StatefulWidget {
+  final Color color;
+
+  /// 격자에서 몇 번째 칸인지. 칸마다 아주 조금씩 늦게 시작해서 열 줄이
+  /// 한꺼번에 쏟아지지 않고 위에서 아래로 훑어 내려가게 한다.
+  final int index;
+
+  final double height;
+
+  const StatusRail({
+    super.key,
+    required this.color,
+    this.index = 0,
+    this.height = 4,
+  });
+
+  @override
+  State<StatusRail> createState() => _StatusRailState();
+}
+
+class _StatusRailState extends State<StatusRail> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+  late final Animation<double> _fill =
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+
+    // '애니메이션 줄이기'를 켜 두었으면 차오르는 과정 없이 바로 제자리에 둔다.
+    if (Motion.of(context, Motion.normal) == Duration.zero) {
+      _controller.value = 1;
+      return;
+    }
+    // 60ms 씩 밀되 너무 늦게 시작하는 칸이 없게 한계를 둔다. 스무 칸짜리
+    // 시설에서 마지막 칸이 1초 뒤에 차오르면 고장난 것처럼 보인다.
+    final delay = Duration(milliseconds: (widget.index * 55).clamp(0, 420));
+    Future<void>.delayed(delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: widget.height,
+      width: double.infinity,
+      child: AnimatedBuilder(
+        animation: _fill,
+        builder: (context, _) => Transform.scale(
+          scaleX: _fill.value,
+          alignment: Alignment.centerLeft,
+          child: AnimatedContainer(
+            // 다 차오른 뒤에는 색만 부드럽게 넘어간다 — 정상에서 이상으로
+            // 바뀌는 순간을 놓치지 않게.
+            duration: Motion.of(context, Motion.normal),
+            curve: Motion.enter,
+            color: widget.color,
+          ),
+        ),
       ),
     );
   }
