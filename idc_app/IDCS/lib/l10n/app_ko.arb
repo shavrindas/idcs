@@ -10,6 +10,8 @@
   "themeSystem": "시스템 설정",
   "themeLight": "밝게",
   "themeDark": "어둡게",
+  "settingsBackground": "배경",
+  "settingsSnow": "배경에 눈 내리기",
   "settingsPanel": "제어판 화면",
   "settingsPanelNote": "호실에 들어갔을 때 보이는 실시간 제어판에만 적용됩니다.",
   "panelBackground": "배경",

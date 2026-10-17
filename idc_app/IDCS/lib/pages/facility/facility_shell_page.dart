@@ -92,7 +92,9 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
         title: Text(_facilityName ?? context.l10n.facilityFallbackName(widget.facilityId)),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: context.colors.surface,
+        // 카드 투명도 설정이 surface 에 걸려 있어서, 앱바에 surface 를 쓰면
+        // 제목 뒤로 눈이 지나간다. 앱바는 테마가 정한 색을 그대로 쓴다.
+        backgroundColor: null,
         foregroundColor: context.colors.textPrimary,
         actions: [
           // 메신저와 내 정보는 아래 탭이 아니라 여기에 둔다. 아래 네 칸은
@@ -105,9 +107,11 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
               '/facility_chat/${widget.userId}/${widget.facilityId}',
             ),
           ),
+          // 사람 아이콘이 아니라 톱니다. 이 길로 들어가면 계정뿐 아니라
+          // 테마·언어·알람·제어판 설정이 다 있고, 계정은 그 안의 카드 하나다.
           IconButton(
-            icon: const Icon(Icons.person_outline_rounded),
-            tooltip: context.l10n.profileTitle,
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: context.l10n.settingsTitle,
             onPressed: () => context.push('/index/${widget.userId}/profile'),
           ),
         ],

@@ -228,7 +228,13 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
                 ),
                 // Box #2: 통합 알람 박스
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  // 이 화면도 아래 탭 줄이 없다 — 제스처 바만큼 더 둔다.
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    0,
+                    16,
+                    16 + MediaQuery.of(context).padding.bottom,
+                  ),
                   sliver: UserAlarmBox(
                     alarms: displayAlarms,
                     onFacilityPressed: onPressed,

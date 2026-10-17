@@ -4,6 +4,7 @@
 // ===============================================================
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:idcs/theme/snowfall.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:idcs/pages/facility/monitoring/monitoring_all.dart';
 import 'package:idcs/services/common/fcm_service.dart';
@@ -80,13 +81,21 @@ class MyApp extends StatelessWidget {
       builder: (context, themeMode, _) => ValueListenableBuilder<Locale?>(
         valueListenable: LocaleController.locale,
         // locale이 null이면 MaterialApp이 기기 설정을 따라간다.
-        builder: (context, locale, _) => MaterialApp.router(
+        builder: (context, locale, _) => ValueListenableBuilder<MonitoringViewSettings>(
+          valueListenable: MonitoringViewController.settings,
+          builder: (context, view, _) => MaterialApp.router(
           title: 'IDCool Systems Routing',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
+          theme: AppTheme.withCardOpacity(AppPalette.light, Brightness.light, view.panelOpacity),
+          darkTheme: AppTheme.withCardOpacity(AppPalette.dark, Brightness.dark, view.panelOpacity),
           themeMode: themeMode,
           locale: locale,
+          // 배경색과 눈을 앱 전체에 한 장으로 깐다. 화면마다 깔면 화면을
+          // 넘길 때마다 눈이 처음부터 다시 내린다.
+          builder: (context, child) => SnowfallBackground(
+            enabled: view.snow,
+            child: child ?? const SizedBox.shrink(),
+          ),
           routerConfig: appRouter, // routes.dart의 라우터가 마치 한 파일처럼 인식됨
           localizationsDelegates: const [
             // AppLocalizations.delegate is a const instance, so the list stays const.
@@ -97,6 +106,7 @@ class MyApp extends StatelessWidget {
             FlutterQuillLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
+        ),
         ),
       ),
     );

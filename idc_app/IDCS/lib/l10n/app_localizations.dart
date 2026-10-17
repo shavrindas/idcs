@@ -158,6 +158,18 @@ abstract class AppLocalizations {
   /// **'어둡게'**
   String get themeDark;
 
+  /// No description provided for @settingsBackground.
+  ///
+  /// In ko, this message translates to:
+  /// **'배경'**
+  String get settingsBackground;
+
+  /// No description provided for @settingsSnow.
+  ///
+  /// In ko, this message translates to:
+  /// **'배경에 눈 내리기'**
+  String get settingsSnow;
+
   /// No description provided for @settingsPanel.
   ///
   /// In ko, this message translates to:

@@ -39,6 +39,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeDark => 'Dark';
 
   @override
+  String get settingsBackground => 'Background';
+
+  @override
+  String get settingsSnow => 'Snow in the background';
+
+  @override
   String get settingsPanel => 'Control panel';
 
   @override

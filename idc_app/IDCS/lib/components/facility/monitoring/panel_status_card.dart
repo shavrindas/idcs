@@ -211,14 +211,11 @@ class _StateRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: on ? colors.primary : Colors.transparent,
-              border: on ? null : Border.all(color: colors.textSecondary.withValues(alpha: 0.5)),
-            ),
+          PulsingDot(
+            on: on,
+            size: 7,
+            color: colors.primary,
+            offBorder: colors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 9),
           Expanded(

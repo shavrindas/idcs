@@ -21,16 +21,24 @@ class MonitoringViewSettings {
   /// Draw numeric readings in a seven-segment face.
   final bool ledDigits;
 
+  /// 모든 화면 뒤에서 눈을 내릴지.
+  final bool snow;
+
   const MonitoringViewSettings({
     this.backgroundId = 'none',
     this.panelOpacity = 1.0,
     this.valueFontScale = 1.0,
     this.ledDigits = true,
+    this.snow = true,
   });
 
-  /// Below this the card stops hiding the backdrop and the readings lose the
-  /// contrast they need. Measured against the darkest backdrop in both themes.
-  static const double minOpacity = 0.6;
+  /// 카드를 얼마나 비칠 수 있게 할지의 한계.
+  ///
+  /// 예전에는 0.6 이었다(=투명도 40%). 그때는 제어판 배경 그림 위에서만
+  /// 쓰던 값이라 글자가 그림에 묻히지 않게 막아 둔 것이었다. 지금은 카드
+  /// 뒤에 있는 것이 그림이 아니라 앱 배경색과 옅은 눈뿐이라, 더 비쳐도
+  /// 글자가 읽히는 바탕은 그대로다.
+  static const double minOpacity = 0.1;
 
   /// Base size of a value in the panel, in logical pixels.
   static const double baseValueFontSize = 14;
@@ -54,6 +62,7 @@ class MonitoringViewSettings {
   static const _kOpacity = 'panel_opacity';
   static const _kFontScale = 'panel_value_font_scale';
   static const _kLedDigits = 'panel_led_digits';
+  static const _kSnow = 'app_snowfall';
 
   /// Value text size after the user's scale is applied.
   double get valueFontSize => baseValueFontSize * valueFontScale;
@@ -63,12 +72,14 @@ class MonitoringViewSettings {
     double? panelOpacity,
     double? valueFontScale,
     bool? ledDigits,
+    bool? snow,
   }) {
     return MonitoringViewSettings(
       backgroundId: backgroundId ?? this.backgroundId,
       panelOpacity: panelOpacity ?? this.panelOpacity,
       valueFontScale: valueFontScale ?? this.valueFontScale,
       ledDigits: ledDigits ?? this.ledDigits,
+      snow: snow ?? this.snow,
     );
   }
 
@@ -82,6 +93,7 @@ class MonitoringViewSettings {
       valueFontScale:
           (prefs.getDouble(_kFontScale) ?? 1.0).clamp(minFontScale, maxFontScale),
       ledDigits: prefs.getBool(_kLedDigits) ?? true,
+      snow: prefs.getBool(_kSnow) ?? true,
     );
   }
 
@@ -91,6 +103,7 @@ class MonitoringViewSettings {
     await prefs.setDouble(_kOpacity, panelOpacity);
     await prefs.setDouble(_kFontScale, valueFontScale);
     await prefs.setBool(_kLedDigits, ledDigits);
+    await prefs.setBool(_kSnow, snow);
   }
 }
 

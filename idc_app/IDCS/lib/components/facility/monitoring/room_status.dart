@@ -179,17 +179,11 @@ class StateLamp extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 켜지면 속이 찬 점, 꺼지면 테두리만 남은 점.
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: on ? accent : Colors.transparent,
-              border: on
-                  ? null
-                  : Border.all(color: colors.textSecondary.withValues(alpha: 0.5)),
-            ),
+          // 켜지면 속이 차고 천천히 숨을 쉰다. 꺼지면 테두리만 남는다.
+          PulsingDot(
+            on: on,
+            color: accent,
+            offBorder: colors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 4),
           Text(
@@ -289,6 +283,96 @@ class _StatusRailState extends State<StatusRail> with SingleTickerProviderStateM
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 켜져 있는 표시등. 실제 제어반의 불처럼 천천히 숨을 쉰다.
+///
+/// 값이 1초마다 올라오는데 화면은 가만히 있으니, 멈춘 화면과 살아 있는 화면이
+/// 똑같아 보였다 — 통신이 끊겨도 마지막 값이 그대로 남아 멀쩡해 보인다.
+/// 켜진 불이 천천히 깜빡이면 그 자체가 "지금 받고 있다"는 표시가 된다.
+///
+/// 꺼진 불은 깜빡이지 않는다. 화면에 움직이는 점이 쉰 개 있으면 그건 신호가
+/// 아니라 소음이다.
+class PulsingDot extends StatefulWidget {
+  final bool on;
+  final Color color;
+  final double size;
+
+  /// 꺼졌을 때 테두리만 남길지. 켜졌을 때는 속이 찬다.
+  final Color? offBorder;
+
+  const PulsingDot({
+    super.key,
+    required this.on,
+    required this.color,
+    this.size = 6,
+    this.offBorder,
+  });
+
+  @override
+  State<PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<PulsingDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    // 설비 표시등의 호흡. 더 빠르면 경고처럼 읽히고, 더 느리면 멈춘 줄 안다.
+    duration: const Duration(milliseconds: 1500),
+  );
+
+  bool _ready = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_ready) {
+      _ready = true;
+      _sync();
+    }
+  }
+
+  @override
+  void didUpdateWidget(PulsingDot old) {
+    super.didUpdateWidget(old);
+    if (old.on != widget.on) _sync();
+  }
+
+  void _sync() {
+    if (widget.on && Motion.allowsLooping(context)) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        // 1.0 에서 0.45 사이. 완전히 꺼졌다 켜지면 깜빡임이 거슬린다.
+        final alpha = widget.on ? 1.0 - 0.55 * _controller.value : 1.0;
+        return Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.on ? widget.color.withValues(alpha: alpha) : Colors.transparent,
+            border: widget.on
+                ? null
+                : Border.all(color: widget.offBorder ?? widget.color.withValues(alpha: 0.5)),
+          ),
+        );
+      },
     );
   }
 }
