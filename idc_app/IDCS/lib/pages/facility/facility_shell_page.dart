@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/services/common/facility_shortcut.dart';
+import 'package:idcs/components/shared/glass_nav_bar.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -117,23 +118,27 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
         ],
       ),
       body: widget.navigationShell,
-      bottomNavigationBar: NavigationBar(
+      // 막대가 떠 있으므로 그 아래로 내용이 이어지게 둔다. 그래야 목록이
+      // 막대에서 끊긴 것처럼 보이지 않는다. 각 화면은 자기 목록 끝에
+      // 제스처 바 + 막대 높이만큼 여백을 둔다.
+      extendBody: true,
+      bottomNavigationBar: GlassNavBar(
         selectedIndex: widget.navigationShell.currentIndex,
-        onDestinationSelected: (index) => widget.navigationShell.goBranch(
+        onSelected: (index) => widget.navigationShell.goBranch(
           index,
           initialLocation: index == widget.navigationShell.currentIndex,
         ),
-        destinations: [
+        items: [
           // 순서는 라우터의 branch 순서를 그대로 따라야 한다.
           //
           // 알람을 맨 끝에서 모니터링 바로 옆으로 옮겼다. 이 둘은 같은 질문의
           // 앞뒤다 — '지금 어떤가'와 '뭐가 잘못됐나'. 차트와 소요기록은 둘 다
           // 지나간 것을 들춰 보는 자리라 뒤로 묶인다. 맨 끝은 엄지가 제일 늦게
           // 닿는 칸이기도 해서, 이 앱에서 가장 급한 화면을 둘 자리가 아니다.
-          NavigationDestination(icon: Icon(Icons.sensors_outlined), selectedIcon: Icon(Icons.sensors_rounded), label: context.l10n.navMonitoring),
-          NavigationDestination(icon: Icon(Icons.notifications_none_rounded), selectedIcon: Icon(Icons.notifications_rounded), label: context.l10n.navAlarm),
-          NavigationDestination(icon: Icon(Icons.show_chart_rounded), label: context.l10n.navChart),
-          NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: context.l10n.navBoard),
+          GlassNavItem(icon: Icons.sensors_outlined, selectedIcon: Icons.sensors_rounded, label: context.l10n.navMonitoring),
+          GlassNavItem(icon: Icons.notifications_none_rounded, selectedIcon: Icons.notifications_rounded, label: context.l10n.navAlarm),
+          GlassNavItem(icon: Icons.show_chart_rounded, label: context.l10n.navChart),
+          GlassNavItem(icon: Icons.assignment_outlined, selectedIcon: Icons.assignment_rounded, label: context.l10n.navBoard),
         ],
       ),
     );

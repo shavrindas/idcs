@@ -164,7 +164,7 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
     // 바뀌면서 덜컥거린다. 자리를 잡아 두면 안쪽만 채워진다.
     if (_isLoading) {
       return Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
         child: Column(
           // stretch 를 쓰면 가로폭 지정이 무시돼서 짧은 라벨 자리가 화면을
           // 가로지른다. 실제와 같은 폭이어야 자리를 잡아 두는 뜻이 있다.
@@ -203,7 +203,10 @@ class _MonitoringRoomPage extends State<MonitoringRoom> {
             onRefresh: _fetchFacilityData,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16.0),
+              // 떠 있는 네비게이션 막대 아래로 내용이 이어지므로(extendBody),
+              // 목록 끝에 그만큼 여백을 둬야 마지막 줄이 막대에 가리지 않는다.
+              // Scaffold 가 막대 높이를 MediaQuery 아래쪽 여백으로 알려 준다.
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

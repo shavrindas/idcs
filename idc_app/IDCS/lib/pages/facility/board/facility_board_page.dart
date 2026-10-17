@@ -86,15 +86,21 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.boardPageTitle)),
-      // 새 글은 목록 어디에 있든 닿을 수 있어야 해서 떠 있는 버튼으로 뺐다.
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _handleCreatePost,
-        icon: const Icon(Icons.edit_outlined, size: 18),
-        label: Text(context.l10n.boardNewPost),
+      appBar: AppBar(
+        title: Text(context.l10n.boardPageTitle),
+        // 새 글은 제목 줄에 둔다. 떠 있는 버튼으로 두었더니 아래 네비게이션
+        // 막대와 같은 자리를 다투다가 그 뒤로 숨었다. 제목 옆은 스크롤과
+        // 상관없이 늘 같은 자리라 가려질 일이 없다.
+        actions: [
+          IconButton(
+            onPressed: _handleCreatePost,
+            icon: const Icon(Icons.add_rounded),
+            tooltip: context.l10n.boardNewPost,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

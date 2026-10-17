@@ -14,7 +14,6 @@ import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/motion.dart';
 import 'package:idcs/theme/locale_controller.dart';
-import 'package:idcs/theme/panel_background.dart';
 import 'package:idcs/theme/theme_controller.dart';
 
 /// 화면 테마 · 언어 · 제어판 화면 · 알림 카드를 차례로 내놓는다.
@@ -123,6 +122,19 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
                 title: Text(l10n.settingsSnow, style: const TextStyle(fontSize: 14)),
                 value: view.snow,
                 onChanged: (val) => MonitoringViewController.set(view.copyWith(snow: val)),
+              ),
+              const SizedBox(height: 4),
+
+              // 투명도는 제어판뿐 아니라 앱의 모든 카드에 걸린다. 그래서
+              // '제어판 화면' 카드가 아니라 여기, 배경과 같은 자리에 둔다.
+              _Label(text: l10n.panelOpacity, trailing: '${((1 - view.panelOpacity) * 100).round()}%'),
+              Slider(
+                // 사람은 '얼마나 비치는가'로 생각하고 카드는 '얼마나 불투명한가'로
+                // 그려지므로 거꾸로 돌려 받는다.
+                value: 1 - view.panelOpacity,
+                max: 1 - MonitoringViewSettings.minOpacity,
+                onChanged: (v) =>
+                    MonitoringViewController.set(view.copyWith(panelOpacity: 1 - v)),
               ),
             ],
           ),
@@ -268,7 +280,7 @@ class _PanelAppearanceCard extends StatelessWidget {
       // 이 카드가 제일 길다 — 배경 고르기, 투명도, 글자 크기, 미리보기까지
       // 들어 있다. 한 번 맞춰 두면 거의 안 건드리므로 접어 둔다.
       collapsible: true,
-      summary: '${(view.panelOpacity * 100).round()}%',
+      summary: '${view.valueFontSize.round()}pt',
       title: l10n.settingsPanel,
       children: [
         Text(
@@ -279,35 +291,6 @@ class _PanelAppearanceCard extends StatelessWidget {
 
         _PanelPreview(view: view),
         const SizedBox(height: 16),
-
-        _Label(text: l10n.panelBackground),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 76,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: PanelBackground.all.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, i) {
-              final option = PanelBackground.all[i];
-              return _BackgroundChoice(
-                option: option,
-                selected: option.id == view.backgroundId,
-                onTap: () => _update(view.copyWith(backgroundId: option.id)),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        _Label(text: l10n.panelOpacity, trailing: '${((1 - view.panelOpacity) * 100).round()}%'),
-        Slider(
-          // Runs backwards: the user thinks in "how see-through", the panel is
-          // drawn with "how opaque". The floor keeps the readings legible.
-          value: 1 - view.panelOpacity,
-          max: 1 - MonitoringViewSettings.minOpacity,
-          onChanged: (v) => _update(view.copyWith(panelOpacity: 1 - v)),
-        ),
 
         _Label(
           text: l10n.panelValueSize,
@@ -362,56 +345,6 @@ class _Label extends StatelessWidget {
 }
 
 /// One background option as a small tile painted with the real pattern.
-class _BackgroundChoice extends StatelessWidget {
-  final PanelBackground option;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _BackgroundChoice({
-    required this.option,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colors = context.colors;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 56,
-            height: 48,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: selected ? colors.primary : colors.outline,
-                width: selected ? 2 : 1,
-              ),
-            ),
-            child: PanelBackdrop(backgroundId: option.id),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            option.labelOf(l10n),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-              color: selected ? colors.primary : colors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The control panel in miniature, so the three settings can be judged together.
 class _PanelPreview extends StatelessWidget {
   final MonitoringViewSettings view;
 
@@ -431,7 +364,7 @@ class _PanelPreview extends StatelessWidget {
         height: 108,
         child: Stack(
           children: [
-            Positioned.fill(child: PanelBackdrop(backgroundId: view.backgroundId)),
+            Positioned.fill(child: ColoredBox(color: colors.background)),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Container(

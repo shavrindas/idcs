@@ -95,7 +95,37 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// 면 색만으로는 카드가 보이지 않는다 — 그림자가 그 역할을 한다.
   /// 어두운 테마는 반대로 그림자가 묻히므로, surface 를 밝혀 둔 것이 주역이고
   /// 여기서는 가장자리에 약간의 깊이만 더한다.
-  List<BoxShadow> get cardShadow => isDark
+  /// 카드가 비쳐서 배경과 같아질수록 가장자리가 사라진다.
+  ///
+  /// 투명도를 올리면 카드 색이 배경색에 가까워지고, 밝은 테마에서는 둘의
+  /// 차이가 원래도 1.07:1 뿐이라 카드가 통째로 녹아 없어진다. 그만큼
+  /// 또렷한 선을 한 겹 깔아 경계를 남긴다 — blur 0 에 spread 만 준 그림자는
+  /// 테두리와 같은 모양으로 그려진다. 카드마다 border 를 넣고 다니지 않아도
+  /// 된다는 뜻이다.
+  ///
+  /// 투명도는 테마를 만들 때 surface 의 알파에 녹아 있으므로, 여기서는
+  /// 그 알파만 보면 된다.
+  List<BoxShadow> get _cardEdge {
+    final a = surface.a;
+    if (a > 0.92) return const [];
+
+    // 많이 비칠수록 선이 또렷해야 한다.
+    final strength = ((0.92 - a) / 0.92).clamp(0.0, 1.0);
+    return [
+      BoxShadow(
+        color: outline.withValues(alpha: (isDark ? 0.55 : 0.75) * strength),
+        blurRadius: 0,
+        spreadRadius: 0.7,
+      ),
+    ];
+  }
+
+  List<BoxShadow> get cardShadow => [
+        ..._baseCardShadow,
+        ..._cardEdge,
+      ];
+
+  List<BoxShadow> get _baseCardShadow => isDark
       ? [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.32),

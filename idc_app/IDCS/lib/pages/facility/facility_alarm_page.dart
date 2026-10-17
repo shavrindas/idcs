@@ -210,7 +210,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                 ),
                 // 3. 필터링된 알람 데이터 전달
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.of(context).padding.bottom),
                   sliver: FacilityAlarmBox(
                     alarms: displayAlarms,
                     isSearching: _searchQuery.isNotEmpty,
