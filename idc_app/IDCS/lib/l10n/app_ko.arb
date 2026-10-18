@@ -1,0 +1,690 @@
+{
+  "@@locale": "ko",
+  "settingsTitle": "설정",
+  "settingsDeviceOnly": "이 설정은 이 기기에만 적용됩니다.",
+  "settingsLanguage": "언어",
+  "languageSystem": "시스템 설정",
+  "languageKorean": "한국어",
+  "languageEnglish": "English",
+  "settingsTheme": "화면 테마",
+  "themeSystem": "시스템 설정",
+  "themeLight": "밝게",
+  "themeDark": "어둡게",
+  "settingsBackground": "배경",
+  "settingsSnow": "배경에 눈 내리기",
+  "settingsPanel": "제어판 화면",
+  "settingsPanelNote": "호실에 들어갔을 때 보이는 실시간 제어판에만 적용됩니다.",
+  "panelBackground": "배경",
+  "panelOpacity": "투명도",
+  "panelValueSize": "숫자 크기",
+  "panelLedDigits": "LED 숫자",
+  "panelLedDigitsNote": "숫자를 7세그먼트 표시기 모양으로 보여줍니다.",
+  "panelSampleLabel": "고내온도",
+  "backgroundNone": "없음",
+  "backgroundBlueprint": "도면",
+  "backgroundCoil": "냉각 코일",
+  "backgroundMetal": "금속",
+  "backgroundGrid": "격자",
+  "settingsAlarmStyle": "알림 방식",
+  "alarmSound": "소리",
+  "alarmSoundNote": "알람이 올 때 소리로 알립니다.",
+  "alarmVibration": "진동",
+  "alarmVibrationNote": "알람이 올 때 진동으로 알립니다.",
+  "alarmLockScreen": "잠금화면에 내용 표시",
+  "alarmLockScreenNote": "꺼두면 잠금화면에서는 알람이 왔다는 사실만 보입니다.",
+  "alarmRepeat": "다시 알림",
+  "alarmRepeatNote": "알람을 확인하지 못했을 때 설정한 간격으로 최대 {count}번까지 다시 알려줍니다.",
+  "@alarmRepeatNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "alarmRepeatNone": "없음",
+  "alarmRepeatMinutes": "{minutes}분",
+  "@alarmRepeatMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fieldEmail": "이메일",
+  "fieldPassword": "비밀번호",
+  "fieldNewPassword": "새 비밀번호",
+  "fieldConfirmPassword": "비밀번호 재입력",
+  "fieldName": "이름",
+  "fieldPhoneOptional": "전화번호 (선택)",
+  "fieldVerificationCode": "인증 코드",
+  "showPassword": "비밀번호 표시",
+  "actionCancel": "취소",
+  "actionSubmit": "입력 완료",
+  "orDivider": "또는",
+  "continueWithGoogle": "Google로 계속하기",
+  "continueWithApple": "Apple로 계속하기",
+  "login": "로그인",
+  "loginWelcomeTitle": "다시 만나서 반가워요",
+  "loginWelcomeSubtitle": "계정 정보를 입력하고 로그인해주세요.",
+  "loginMissingFields": "이메일과 비밀번호를 모두 입력해주세요.",
+  "keepSignedIn": "로그인 상태 유지하기",
+  "noAccountQuestion": "계정이 없으신가요? ",
+  "signUp": "회원가입",
+  "signupTitle": "계정 만들기",
+  "signupSubtitle": "아래 정보를 입력하고 계정을 생성해주세요.",
+  "signupCreateAccount": "계정 생성",
+  "signupMissingFields": "필수 항목을 모두 입력해주세요.",
+  "signupEmailRequired": "이메일을 입력해주세요.",
+  "signupEmailUnavailable": "이메일 정보를 가져올 수 없습니다. 설정에서 이메일을 허용해주세요.",
+  "signupAppleEmailMissing": "애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.",
+  "findId": "아이디 찾기",
+  "findIdSubtitle": "가입하신 이메일을 입력하면 계정 정보를 확인해드려요.",
+  "findIdEmailRequired": "확인할 이메일을 입력해주세요.",
+  "errorOccurred": "오류 발생: {message}",
+  "@errorOccurred": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "findPassword": "비밀번호 찾기",
+  "resetPasswordTitle": "비밀번호 재설정",
+  "resetPasswordSubtitle": "이메일 인증 후 새 비밀번호를 설정해주세요.",
+  "resetStepEmail": "이메일 인증",
+  "resetSendCode": "인증 코드 받기",
+  "resetStepCode": "인증 코드 입력",
+  "resetVerifyCode": "코드 확인",
+  "resetStepNewPassword": "새 비밀번호 설정",
+  "resetTimeLeft": "남은 시간 {time}",
+  "@resetTimeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetTimedOut": "입력 시간이 초과되었습니다.",
+  "resetCodeVerified": "코드 인증 성공!",
+  "resetPasswordMismatch": "비밀번호가 일치하지 않습니다.",
+  "actionSave": "저장",
+  "actionEdit": "수정",
+  "actionEditing": "수정 중",
+  "actionLink": "연동하기",
+  "actionLogout": "로그아웃",
+  "actionSearchClear": "검색어 지우기",
+  "fieldPhone": "전화번호",
+  "fieldCurrentPassword": "기존 비밀번호",
+  "loginMethod": "로그인 방식",
+  "noName": "이름 없음",
+  "profileTitle": "내 정보",
+  "profileNoChanges": "변경된 내용이 없습니다.",
+  "profileSaved": "성공적으로 변경되었습니다.",
+  "profileSettingsSubtitle": "화면 테마, 제어판 화면, 알람 소리·진동",
+  "profileTotalBoard": "통합 소요 기록",
+  "passwordSection": "비밀번호",
+  "passwordChange": "비밀번호 변경",
+  "passwordAllRequired": "비밀번호를 모두 입력해주세요.",
+  "passwordSameAsOld": "새 비밀번호가 기존 비밀번호와 동일합니다.",
+  "withdrawTitle": "계정 탈퇴",
+  "withdrawNote": "탈퇴하면 계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.",
+  "withdrawConfirmTitle": "정말 탈퇴하시겠습니까?",
+  "withdrawConfirmBody": "계정 정보와 시설 소속 정보가 모두 삭제되며 되돌릴 수 없습니다.",
+  "withdrawConfirmAction": "탈퇴하기",
+  "alarmsAllTitle": "전체 알람",
+  "alarmSearchByFacility": "시설 이름으로 검색...",
+  "alarmSearchByRoom": "룸 이름으로 검색...",
+  "alarmSearchByName": "알람 이름으로 검색...",
+  "alarmFieldName": "알람 명",
+  "alarmFieldRoom": "룸 이름",
+  "alarmFieldFacility": "시설 이름",
+  "alarmRecentlyEnded": "최근 종료된 알람",
+  "alarmStatusAll": "전체",
+  "alarmStatusActive": "진행중",
+  "alarmStatusEnded": "종료",
+  "alarmGroupToggle": "묶어서 보기",
+  "alarmShort": "알람",
+  "statusNormal": "정상",
+  "statusActiveAlarms": "진행 중 알람",
+  "countCases": "{label} {count}건",
+  "@countCases": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "facilitiesTitle": "내 시설",
+  "facilitiesEmpty": "등록된 시설이 없습니다.",
+  "facilitiesNoneVisible": "조회할 수 있는 시설이 없습니다.",
+  "roomsEmpty": "등록된 호실이 없습니다.",
+  "roomCount": "호실 {count}개",
+  "@roomCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "permissionLoadFailed": "권한 조회 실패: {message}",
+  "@permissionLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPrefix": "오류: {message}",
+  "@errorPrefix": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "chartFilterTitle": "조회 조건",
+  "chartRoom": "호실",
+  "chartRoomUnnamed": "이름 없는 호실",
+  "chartResolution": "해상도",
+  "chartRes10s": "10초 단위",
+  "chartRes1m": "1분 단위",
+  "chartRes5m": "5분 단위",
+  "chartRes1h": "1시간 단위",
+  "chartRange": "조회 기간",
+  "chartRange1h": "최근 1시간",
+  "chartRange12h": "최근 12시간",
+  "chartRange1d": "최근 1일",
+  "chartRange7d": "최근 7일",
+  "chartRange15d": "최근 15일",
+  "chartApply": "적용",
+  "chartGroups": "데이터 그룹",
+  "chartNoGroups": "등록된 그룹이 없습니다.",
+  "chartPickManually": "직접 선택",
+  "chartPickItems": "표시할 항목을 고르세요",
+  "chartGroupItems": "이 그룹에 묶인 항목",
+  "chartTooManySeries": "{shown}개를 한 번에 그리면 알아보기 어렵습니다. {limit}개 이하를 권합니다.",
+  "@chartTooManySeries": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSeriesN": "시리즈 {index}",
+  "@chartSeriesN": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSummary": "구간 요약",
+  "chartMin": "최소",
+  "chartAvg": "평균",
+  "chartMax": "최대",
+  "chartNoData": "조회된 데이터가 없습니다.",
+  "chartNoValidData": "유효한 그래프 데이터가 없습니다.",
+  "chartLowerLimit": "하한 {value}",
+  "@chartLowerLimit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chartUpperLimit": "상한 {value}",
+  "@chartUpperLimit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chartHideBaseline": "기준선 숨기기",
+  "chartShowBaseline": "기준선 표시",
+  "backToFacilities": "내 시설 목록으로",
+  "facilityFallbackName": "시설 {id}",
+  "@facilityFallbackName": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navMonitoring": "모니터링",
+  "navChart": "차트",
+  "navBoard": "소요기록",
+  "navMessenger": "메신저",
+  "navAlarm": "알람",
+  "alarmSearchByAlarmOrRoom": "알람 명으로 검색...",
+  "alarmFieldRoomId": "룸 ID",
+  "chartPageTitle": "데이터 차트",
+  "roomLoadFailed": "호실 조회 실패: {message}",
+  "@roomLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "roomQueryFailed": "호실 조회 오류: {message}",
+  "@roomQueryFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "groupLoadFailed": "그룹 로드 오류: {message}",
+  "@groupLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "chartFailed": "차트 오류: {message}",
+  "@chartFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "roomPickerTitle": "호실 선택",
+  "panelControlBadge": "제어",
+  "panelInputHint": "입력",
+  "panelConfirm": "확인",
+  "panelValueRequired": "보낼 값을 먼저 입력하세요.",
+  "panelNotConnected": "설비와 연결이 끊겨 있어 보낼 수 없습니다.",
+  "panelCommandSent": "{item} 값을 보냈습니다. 설비가 반영하면 값이 바뀝니다.",
+  "@panelCommandSent": {"placeholders": {"item": {"type": "String"}}},
+  "panelCommandOk": "{item} 설정이 반영되었습니다.",
+  "@panelCommandOk": {"placeholders": {"item": {"type": "String"}}},
+  "panelCommandFailed": "{item} 설정이 거부되었습니다.",
+  "@panelCommandFailed": {"placeholders": {"item": {"type": "String"}}},
+  "chatGroupPickMembers": "함께할 사람",
+  "chatGroupNoMembers": "이 시설에 등록된 다른 사람이 없습니다.",
+  "chatGroupNameRequired": "방 이름을 입력하세요.",
+  "chatGroupMemberRequired": "한 명 이상 선택하세요.",
+  "chatGroupSelected": "{count}명 선택",
+  "@chatGroupSelected": {"placeholders": {"count": {"type": "int"}}},
+  "chatGroupCreated": "'{name}' 방을 만들었습니다.",
+  "@chatGroupCreated": {"placeholders": {"name": {"type": "String"}}},
+  "chatMembersLoadFailed": "구성원 목록을 불러오지 못했습니다. {reason}",
+  "@chatMembersLoadFailed": {"placeholders": {"reason": {"type": "String"}}},
+  "signupPasswordConfirm": "비밀번호 확인",
+  "signupPasswordMismatch": "두 비밀번호가 다릅니다.",
+  "signupPasswordTooShort": "비밀번호는 {min}자 이상이어야 합니다.",
+  "@signupPasswordTooShort": {"placeholders": {"min": {"type": "int"}}},
+  "signupEmailInvalid": "이메일 주소 형식이 맞는지 확인하세요.",
+  "loginSuccess": "로그인되었습니다.",
+  "signupSuccess": "계정이 만들어졌습니다. 로그인해 주세요.",
+  "resetPasswordDone": "비밀번호가 변경되었습니다.",
+  "facilityRegisterDone": "시설이 등록되었습니다.",
+  "facilityUnlinkDone": "시설 연결을 해제했습니다.",
+  "withdrawDone": "계정이 삭제되었습니다.",
+  "chartSeriesSummary": "{group} · {count}개 표시",
+  "@chartSeriesSummary": {"placeholders": {"group": {"type": "String"}, "count": {"type": "int"}}},
+  "roomSetpointShort": "목표",
+  "roomStatusDefrost": "제상",
+  "roomStatusCompressor": "콤프",
+  "roomStatusOn": "ON",
+  "roomStatusOff": "OFF",
+  "chartNoRecordsFor": "기록이 없는 항목: {names}",
+  "@chartNoRecordsFor": {"placeholders": {"names": {"type": "String"}}},
+  "editorBodyHint": "작업 내용을 적어 주세요.",
+  "discardDraftTitle": "쓰던 글을 버릴까요?",
+  "discardDraftBody": "아직 올리지 않았습니다. 나가면 쓴 내용이 사라집니다.",
+  "discardDraftKeep": "계속 쓰기",
+  "discardDraftLeave": "버리고 나가기",
+  "discardChangesTitle": "바꾼 내용을 버릴까요?",
+  "discardChangesBody": "아직 저장하지 않았습니다. 나가면 바꾼 내용이 사라집니다.",
+  "chartLimitsEdit": "기준값 직접 넣기",
+  "chartLimitsTitle": "기준값",
+  "chartLimitsLow": "하한",
+  "chartLimitsHigh": "상한",
+  "chartLimitsLocal": "이 기기에만 저장됩니다. 알람은 이 값으로 울리지 않습니다 — 그건 웹 콘솔에서 포인트 롤에 넣어야 합니다.",
+  "chartLimitsSaved": "기준값을 저장했습니다.",
+  "chartLimitsEmpty": "지금 그려진 항목이 없습니다.",
+  "chartSafeRangeTitle": "안전 범위 선",
+  "chartSafeRangeHint": "항목마다 정해 둔 상·하한을 가로 점선으로 겹쳐 그립니다.",
+  "chartSafeRangeNone": "선택한 항목에 정해진 상·하한이 없습니다.",
+  "navOverview": "개괄",
+  "overviewTitle": "전체 현황",
+  "overviewSearchHint": "시설 이름으로 찾기",
+  "overviewRoomCount": "호실 {count}곳",
+  "@overviewRoomCount": {"placeholders": {"count": {"type": "int"}}},
+  "overviewNoFacilities": "등록된 시설이 없습니다.",
+  "overviewAllNormal": "모든 호실 정상",
+  "overviewWatching": "호실 {count}곳 감시 중",
+  "@overviewWatching": {"placeholders": {"count": {"type": "int"}}},
+  "overviewAttention": "확인할 호실 {count}곳",
+  "@overviewAttention": {"placeholders": {"count": {"type": "int"}}},
+  "roomStateDrift": "이탈",
+  "roomStateNoData": "값 없음",
+  "roomStatusFault": "이상",
+  "roomStatusCint": "CINT",
+  "roomStatusHigh": "HIGH",
+  "searchNoResults": "검색 결과가 없습니다.",
+  "alarmsNone": "조회할 수 있는 알람이 없습니다.",
+  "alarmNameMissing": "알람 이름 없음",
+  "roomNameMissing": "호실 이름 없음",
+  "facilityNameMissing": "시설 이름 없음",
+  "facilityRegister": "시설 등록",
+  "facilityAccessCode": "시설 접근 코드",
+  "facilityRegistered": "등록된 시설",
+  "facilityUnlink": "해제",
+  "facilityRegisterFailed": "등록 실패: {message}",
+  "@facilityRegisterFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "facilityRegisterTitle": "시설 등록 페이지",
+  "facilityRegisterAdminNote": "관리자 및 개발자는 시설 등록이 필요하지 않습니다.",
+  "facilityUnnamed": "이름 없는 시설",
+  "boardNewPost": "새 글 작성",
+  "boardSearchAll": "전체",
+  "boardTitle": "제목",
+  "boardAuthor": "작성자",
+  "boardBody": "내용",
+  "boardSearchHint": "검색어를 입력하세요",
+  "actionSearch": "검색",
+  "boardEmpty": "등록된 포스트가 없습니다.",
+  "boardPostMeta": "[{facility}] 작성자: {author}",
+  "@boardPostMeta": {
+    "placeholders": {
+      "facility": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pageFirst": "첫 페이지",
+  "pagePrev": "이전 페이지",
+  "pageNext": "다음 페이지",
+  "pageLast": "마지막 페이지",
+  "postNoTitle": "제목 없음",
+  "postMeta": "작성자: {author} · 작성일: {date}",
+  "@postMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "actionDelete": "삭제",
+  "commentsCount": "댓글 {count}",
+  "@commentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentDelete": "댓글 삭제",
+  "commentsEmpty": "등록된 댓글이 없습니다.",
+  "commentHint": "댓글을 입력하세요...",
+  "commentSubmit": "등록",
+  "postLoadFailed": "게시글 로드 실패: {message}",
+  "@postLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "삭제되었습니다.",
+  "postDeleteFailed": "삭제 실패: {message}",
+  "@postDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentFailed": "댓글 작성 실패: {message}",
+  "@commentFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentDeleteFailed": "댓글 삭제 실패: {message}",
+  "@commentDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "dataUnavailable": "데이터를 불러올 수 없습니다.",
+  "postDetailTitle": "게시글 상세 조회",
+  "imageAttachFailed": "이미지 첨부 실패: {message}",
+  "@imageAttachFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postTitleRequired": "제목을 입력해주세요.",
+  "postCreated": "게시글이 작성되었습니다.",
+  "postCreateFailed": "게시글 작성 실패: {message}",
+  "@postCreateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postCreateTitle": "새 게시글",
+  "postCreateSubmit": "게시글 등록하기",
+  "postSourceLoadFailed": "원문 로드 실패: {message}",
+  "@postSourceLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postUpdated": "수정 완료되었습니다.",
+  "postUpdateFailed": "수정 실패: {message}",
+  "@postUpdateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postEditTitle": "게시글 수정",
+  "postEditSubmit": "수정 완료하기",
+  "totalBoardTitle": "통합 소요 기록 (관리자)",
+  "totalBoardSearch": "통합 검색 및 필터",
+  "boardPageTitle": "소요 기록",
+  "boardSearchTitle": "게시글 검색",
+  "chatMenu": "메뉴",
+  "chatNoMessages": "메시지가 없습니다.",
+  "chatReply": "답장",
+  "chatPinToggle": "고정 토글",
+  "chatReplyingTo": "답장: {text}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "actionClose": "닫기",
+  "chatAttach": "첨부",
+  "chatInputHint": "메시지를 입력하세요...",
+  "chatSend": "보내기",
+  "chatRoomsManage": "채팅방 관리",
+  "chatGroupCreate": "단체 채팅방 생성",
+  "chatRoomsEmpty": "참여 중인 채팅방이 없습니다.",
+  "chatRoomName": "방 이름",
+  "chatInviteUsers": "초대할 유저 ID (콤마로 구분)",
+  "actionCreate": "생성",
+  "chatLeaveRoom": "채팅방 나가기 (관리자는 단체방 삭제 가능)",
+  "chatSearchHint": "메시지 검색...",
+  "chatRoom": "채팅방",
+  "chatMembers": "참여중인 유저 목록",
+  "chatRoomFallback": "채팅방 {id}",
+  "@chatRoomFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navHome": "홈",
+  "appTagline": "냉동창고 실시간 관제 · 모니터링 시스템",
+  "findIdCheck": "가입 여부 확인하기",
+  "editorImageAttach": "이미지 첨부",
+  "loginMethodEmail": "이메일",
+  "notFound": "페이지를 찾을 수 없습니다.",
+  "errorServerUnreachable": "서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.",
+  "errorServerTimeout": "서버 응답이 없습니다. 네트워크 상태를 확인해주세요.",
+  "errorRequestFailed": "요청을 처리하지 못했습니다.",
+  "googleOnlyOnApp": "구글 로그인은 앱에서만 사용할 수 있습니다.",
+  "appleOnlyOnApp": "애플 로그인은 앱에서만 사용할 수 있습니다.",
+  "googleNotConfigured": "구글 로그인이 아직 설정되지 않았습니다. Firebase 프로젝트에 이 앱의 OAuth 클라이언트(SHA-1 지문)를 등록해야 합니다.",
+  "googleSignInFailed": "구글 로그인을 진행할 수 없습니다. ({reason})",
+  "@googleSignInFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "appleSignInFailed": "애플 로그인을 진행할 수 없습니다. ({reason})",
+  "@appleSignInFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "googleDefaultName": "구글유저",
+  "appleDefaultName": "애플유저",
+  "notificationFallbackTitle": "알림",
+  "alarmRepeatSuffix": "{body} (다시 알림 {index}/{total})",
+  "@alarmRepeatSuffix": {
+    "placeholders": {
+      "body": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "channelSoundVibe": "알람 (소리+진동)",
+  "channelSoundVibeDesc": "소리와 진동을 모두 사용하는 알람",
+  "channelSoundOnly": "알람 (소리만)",
+  "channelSoundOnlyDesc": "소리만 사용하는 알람",
+  "channelVibeOnly": "알람 (진동만)",
+  "channelVibeOnlyDesc": "진동만 사용하는 알람",
+  "channelSilent": "알람 (무음)",
+  "channelSilentDesc": "소리와 진동 없이 표시만 하는 알람",
+  "panelPageTitle": "시설 ID: {id} 실시간 제어판",
+  "@panelPageTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "panelControlConfirm": "이 값을 보낼까요?",
+  "panelControlSend": "보내기",
+  "panelControlWire": "설비로 보낼 값",
+  "panelControlReadOnly": "값만 보는 칸입니다. 바꾸려면 맨 위 '조작' 카드를 쓰세요.",
+  "panelControlTitle": "조작",
+  "panelNowTitle": "지금",
+  "panelNoFaults": "이상 없음",
+  "panelFaultCount": "이상 {count}건",
+  "@panelFaultCount": {"placeholders": {"count": {"type": "int"}}},
+  "panelDetails": "자세히",
+  "panelNoLimit": "기준값이 등록되지 않아 정상 여부를 판단하지 않습니다.",
+  "panelCardInfo": "시설 기본 정보",
+  "panelCardTemp": "실제 온도",
+  "panelCardDefrost": "제상 정보",
+  "panelCardFaults": "이상 정보",
+  "panelCardInverter": "인버터 정보",
+  "panelCardEquipment": "장비 정보",
+  "panelCardControl": "제어 정보",
+  "panelInfoFacilityId": "시설 ID",
+  "panelInfoRoomId": "호실 ID",
+  "panelInfoManagerId": "담당 관리자 ID",
+  "panelInfoStatus": "운영 상태",
+  "panelStatusActive": "정상 작동 중 (ACTIVE)",
+  "chartShowAllPoints": "전체 보기 ({count})",
+  "@chartShowAllPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chartShowLess": "접기",
+  "pageOf": "{current} / {total}",
+  "@pageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "boardSearchClear": "검색어 지우기",
+  "panelCurrentTemp": "고내온도",
+  "panelSetpoint": "설정값",
+  "unitCelsius": "°C",
+  "panelWaitingData": "데이터를 기다리는 중",
+  "panelUpdatedJustNow": "방금 업데이트",
+  "panelUpdatedSecondsAgo": "{seconds}초 전 업데이트",
+  "@panelUpdatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "panelUpdatedMinutesAgo": "{minutes}분 전 업데이트",
+  "@panelUpdatedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "panelNoSignal": "{minutes}분째 신호가 없습니다",
+  "@panelNoSignal": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "alarmsNoneActive": "지금 진행 중인 알람이 없습니다"
+}

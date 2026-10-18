@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:idcs/components/indices/facility_register/facility_register.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityRegisterPage extends StatefulWidget {
   final String userId;
@@ -35,7 +38,7 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
         _facilities = await FacilityApiService.getFacilities(widget.userId);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -45,25 +48,33 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
     final code = _codeController.text.trim();
     if (code.isEmpty) return;
 
+    // Read before awaiting: context may no longer be valid in the catch.
+    final l10n = context.l10n;
     try {
-      final msg = await FacilityApiService.registerFacility(widget.userId, code);
+      await FacilityApiService.registerFacility(widget.userId, code);
       setState(() {
-        _collapseMessage = msg;
+        _collapseMessage = l10n.facilityRegisterDone;
         _codeController.clear();
       });
       await _loadData(); // 목록 새로고침
     } catch (e) {
-      setState(() => _collapseMessage = '등록 실패: $e');
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      setState(() => _collapseMessage = l10n.facilityRegisterFailed(describeApiError(context, e)));
     }
   }
 
   Future<void> _handleUnlink(int facilityId) async {
     try {
-      final msg = await FacilityApiService.unlinkFacility(widget.userId, facilityId);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      await FacilityApiService.unlinkFacility(widget.userId, facilityId);
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.success(context, context.l10n.facilityUnlinkDone);
       await _loadData();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -71,13 +82,13 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
   Widget build(BuildContext context) {
     if (_isAdmin) {
       return Scaffold(
-        appBar: AppBar(title: const Text('시설 등록 페이지')),
-        body: const Center(child: Text('관리자 및 개발자는 시설 등록이 필요하지 않습니다.')),
+        appBar: AppBar(title: Text(context.l10n.facilityRegisterTitle)),
+        body: Center(child: Text(context.l10n.facilityRegisterAdminNote)),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('시설 등록 페이지')),
+      appBar: AppBar(title: Text(context.l10n.facilityRegisterTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

@@ -1,19 +1,24 @@
 // 경로: lib/components/signup/signup_components.dart
 import 'package:flutter/material.dart';
+import 'package:idcs/services/common/social_auth_service.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 일반 계정 생성 박스
 class StandardSignupBox extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
+  final TextEditingController passwordConfirmController;
   final TextEditingController nameController;
   final TextEditingController phoneController;
-  final VoidCallback onSignupPressed;
+  final Future<void> Function() onSignupPressed;
 
   const StandardSignupBox({
     super.key,
     required this.emailController,
     required this.passwordController,
+    required this.passwordConfirmController,
     required this.nameController,
     required this.phoneController,
     required this.onSignupPressed,
@@ -34,8 +39,8 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
         TextField(
           controller: widget.emailController,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: '이메일',
+          decoration: InputDecoration(
+            labelText: context.l10n.fieldEmail,
             prefixIcon: Icon(Icons.mail_outline_rounded),
           ),
         ),
@@ -44,10 +49,10 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
           controller: widget.passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            labelText: '비밀번호',
+            labelText: context.l10n.fieldPassword,
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
-              tooltip: '비밀번호 표시',
+              tooltip: context.l10n.showPassword,
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 color: context.colors.textSecondary,
@@ -57,10 +62,21 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
           ),
         ),
         const SizedBox(height: 14),
+        // 가린 글자를 다시 한 번 받는다. 두 칸 모두 같은 가리기 상태를 쓰므로,
+        // 눈 아이콘을 켜면 양쪽을 나란히 확인할 수 있다.
+        TextField(
+          controller: widget.passwordConfirmController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: context.l10n.signupPasswordConfirm,
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+          ),
+        ),
+        const SizedBox(height: 14),
         TextField(
           controller: widget.nameController,
-          decoration: const InputDecoration(
-            labelText: '이름',
+          decoration: InputDecoration(
+            labelText: context.l10n.fieldName,
             prefixIcon: Icon(Icons.badge_outlined),
           ),
         ),
@@ -68,15 +84,15 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
         TextField(
           controller: widget.phoneController,
           keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: '전화번호 (선택)',
+          decoration: InputDecoration(
+            labelText: context.l10n.fieldPhoneOptional,
             prefixIcon: Icon(Icons.phone_outlined),
           ),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
+        AsyncActionButton(
+          label: context.l10n.signupCreateAccount,
           onPressed: widget.onSignupPressed,
-          child: const Text('계정 생성'),
         ),
       ],
     );
@@ -85,12 +101,16 @@ class _StandardSignupBoxState extends State<StandardSignupBox> {
 
 /// Box #2: 외부 프로바이더 사용 계정 생성 박스
 class SocialSignupBox extends StatelessWidget {
-  final Function(String) onSocialSignupPressed;
+  final Future<void> Function(String) onSocialSignupPressed;
 
   const SocialSignupBox({super.key, required this.onSocialSignupPressed});
 
   @override
   Widget build(BuildContext context) {
+    // On web the plugin cannot run this sign-in flow at all, so showing the
+    // buttons would only offer a dead end.
+    if (!SocialAuthService.isSupported) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -99,19 +119,16 @@ class SocialSignupBox extends StatelessWidget {
             const Expanded(child: Divider()),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text('또는', style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(context.l10n.orDivider, style: Theme.of(context).textTheme.bodyMedium),
             ),
             const Expanded(child: Divider()),
           ],
         ),
         const SizedBox(height: 16),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialSignupPressed('google'),
-          icon: const _ProviderBadge(
-            label: 'G',
-            background: Color(0xFF4285F4),
-          ),
-          label: const Text('Google로 계속하기'),
+          icon: const _ProviderBadge(label: 'G', background: Color(0xFF4285F4)),
+          label: context.l10n.continueWithGoogle,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
@@ -119,14 +136,10 @@ class SocialSignupBox extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialSignupPressed('apple'),
-          icon: const _ProviderBadge(
-            label: '',
-            background: Colors.black,
-            icon: Icons.apple,
-          ),
-          label: const Text('Apple로 계속하기'),
+          icon: const _ProviderBadge(label: '', background: Colors.black, icon: Icons.apple),
+          label: context.l10n.continueWithApple,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
@@ -194,7 +207,7 @@ class AppleEmailFallbackBox extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '애플 계정의 이메일 정보가 누락되었습니다.\n원활한 서비스 이용을 위해 이메일을 직접 입력해주세요.',
+                  context.l10n.signupAppleEmailMissing,
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary, height: 1.4),
                 ),
               ),
@@ -203,8 +216,8 @@ class AppleEmailFallbackBox extends StatelessWidget {
           const SizedBox(height: 14),
           TextField(
             controller: fallbackEmailController,
-            decoration: const InputDecoration(
-              labelText: '이메일',
+            decoration: InputDecoration(
+              labelText: context.l10n.fieldEmail,
               hintText: 'name@example.com',
               prefixIcon: Icon(Icons.mail_outline_rounded),
             ),
@@ -213,11 +226,11 @@ class AppleEmailFallbackBox extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(onPressed: onCancel, child: const Text('취소')),
+              TextButton(onPressed: onCancel, child: Text(context.l10n.actionCancel)),
               const SizedBox(width: 8),
               ElevatedButton(
                 onPressed: onSubmit,
-                child: const Text('입력 완료'),
+                child: Text(context.l10n.actionSubmit),
               ),
             ],
           ),

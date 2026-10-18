@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:idcs/services/common/find_pw/auth_api_service.dart';
+import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
+import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FindPwPage extends StatefulWidget {
   const FindPwPage({super.key});
@@ -56,7 +60,7 @@ class _FindPwPageState extends State<FindPwPage> {
           _remainingSeconds--;
         } else {
           _timer?.cancel();
-          _box2Message = '입력 시간이 초과되었습니다.';
+          _box2Message = context.l10n.resetTimedOut;
         }
       });
     });
@@ -83,7 +87,7 @@ class _FindPwPageState extends State<FindPwPage> {
       });
       _startTimer();
     } catch (e) {
-      setState(() => _box1Message = e.toString());
+      setState(() => _box1Message = describeApiError(context, e));
     }
   }
 
@@ -96,12 +100,12 @@ class _FindPwPageState extends State<FindPwPage> {
       final res = await AuthApiService.verifyPasswordCode(_jwtToken, code);
       setState(() {
         _resetToken = res['reset_token'];
-        _box2Message = '코드 인증 성공!';
+        _box2Message = context.l10n.resetCodeVerified;
         _timer?.cancel();
         _currentStep = 3; // Box 3 열기
       });
     } catch (e) {
-      setState(() => _box2Message = e.toString());
+      setState(() => _box2Message = describeApiError(context, e));
     }
   }
 
@@ -112,16 +116,18 @@ class _FindPwPageState extends State<FindPwPage> {
 
     if (pw1.isEmpty || pw2.isEmpty) return;
     if (pw1 != pw2) {
-      setState(() => _box3Message = '비밀번호가 일치하지 않습니다.');
+      setState(() => _box3Message = context.l10n.resetPasswordMismatch);
       return;
     }
 
     try {
-      final res = await AuthApiService.resetPassword(_resetToken, pw1);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'])));
+      await AuthApiService.resetPassword(_resetToken, pw1);
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.success(context, context.l10n.resetPasswordDone);
       context.go('/login'); // 완료 시 로그인 페이지 이동
     } catch (e) {
-      setState(() => _box3Message = e.toString());
+      setState(() => _box3Message = describeApiError(context, e));
     }
   }
 
@@ -136,10 +142,10 @@ class _FindPwPageState extends State<FindPwPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              Text('비밀번호 재설정', style: Theme.of(context).textTheme.headlineMedium),
+              Text(context.l10n.resetPasswordTitle, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 6),
               Text(
-                '이메일 인증 후 새 비밀번호를 설정해주세요.',
+                context.l10n.resetPasswordSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 28),
@@ -147,20 +153,21 @@ class _FindPwPageState extends State<FindPwPage> {
               // Step #1: 이메일 입력
               _buildStepCard(
                 step: 1,
-                title: '이메일 인증',
+                title: context.l10n.resetStepEmail,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildInputRow(
                       icon: Icons.mail_outline_rounded,
-                      hint: '이메일',
+                      hint: context.l10n.fieldEmail,
                       controller: _emailController,
                       isEnabled: _currentStep == 1,
                     ),
                     const SizedBox(height: 14),
-                    ElevatedButton(
-                      onPressed: _currentStep == 1 ? _handleEmailSubmit : null,
-                      child: const Text('인증 코드 받기'),
+                    AsyncActionButton(
+                      label: context.l10n.resetSendCode,
+                      enabled: _currentStep == 1,
+                      onPressed: _handleEmailSubmit,
                     ),
                     if (_box1Message.isNotEmpty) ...[
                       const SizedBox(height: 10),
@@ -178,13 +185,13 @@ class _FindPwPageState extends State<FindPwPage> {
                 child: _currentStep >= 2
                     ? _buildStepCard(
                         step: 2,
-                        title: '인증 코드 입력',
+                        title: context.l10n.resetStepCode,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _buildInputRow(
                               icon: Icons.pin_outlined,
-                              hint: '인증 코드',
+                              hint: context.l10n.fieldVerificationCode,
                               controller: _codeController,
                               isEnabled: _currentStep == 2,
                             ),
@@ -194,15 +201,16 @@ class _FindPwPageState extends State<FindPwPage> {
                                 Icon(Icons.timer_outlined, size: 16, color: context.colors.textSecondary),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '남은 시간 ${_formatTime(_remainingSeconds)}',
+                                  context.l10n.resetTimeLeft(_formatTime(_remainingSeconds)),
                                   style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 14),
-                            ElevatedButton(
-                              onPressed: _currentStep == 2 ? _handleCodeSubmit : null,
-                              child: const Text('코드 확인'),
+                            AsyncActionButton(
+                              label: context.l10n.resetVerifyCode,
+                              enabled: _currentStep == 2,
+                              onPressed: _handleCodeSubmit,
                             ),
                             if (_box2Message.isNotEmpty) ...[
                               const SizedBox(height: 10),
@@ -222,13 +230,13 @@ class _FindPwPageState extends State<FindPwPage> {
                 child: _currentStep >= 3
                     ? _buildStepCard(
                         step: 3,
-                        title: '새 비밀번호 설정',
+                        title: context.l10n.resetStepNewPassword,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             _buildInputRow(
                               icon: Icons.lock_outline_rounded,
-                              hint: '새 비밀번호',
+                              hint: context.l10n.fieldNewPassword,
                               controller: _pwController,
                               isObscure: _obscurePw,
                               onToggleObscure: () => setState(() => _obscurePw = !_obscurePw),
@@ -236,7 +244,7 @@ class _FindPwPageState extends State<FindPwPage> {
                             const SizedBox(height: 10),
                             _buildInputRow(
                               icon: Icons.lock_outline_rounded,
-                              hint: '비밀번호 재입력',
+                              hint: context.l10n.fieldConfirmPassword,
                               controller: _pwConfirmController,
                               isObscure: _obscurePwConfirm,
                               onToggleObscure: () => setState(() => _obscurePwConfirm = !_obscurePwConfirm),
@@ -246,9 +254,9 @@ class _FindPwPageState extends State<FindPwPage> {
                               _buildMessage(_box3Message),
                             ],
                             const SizedBox(height: 14),
-                            ElevatedButton(
+                            AsyncActionButton(
+                              label: context.l10n.resetPasswordTitle,
                               onPressed: _handlePasswordReset,
-                              child: const Text('비밀번호 재설정'),
                             ),
                           ],
                         ),
@@ -323,7 +331,7 @@ class _FindPwPageState extends State<FindPwPage> {
         suffixIcon: onToggleObscure == null
             ? null
             : IconButton(
-              tooltip: '비밀번호 표시',
+              tooltip: context.l10n.showPassword,
                 icon: Icon(
                   isObscure! ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                   color: context.colors.textSecondary,

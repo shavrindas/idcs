@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 import { LeftPanel } from '../components/chart/mapper/LeftPanel';
 import { RightPanel } from '../components/chart/mapper/RightPanel';
-import type { Role, ChartGroup } from '../types';
+import type { Role, ChartGroup, SessionUser } from '../types';
 
-export const ChartMappingPage: React.FC = () => {
+interface Props {
+  user: SessionUser;
+}
+
+export const ChartMappingPage: React.FC<Props> = ({ user }) => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<number | null>(null);
@@ -19,8 +23,8 @@ export const ChartMappingPage: React.FC = () => {
   const [droppedRoles, setDroppedRoles] = useState<Role[]>([]);
 
   useEffect(() => {
-    apiService.getFacilities().then((data) => setFacilities(data.facilities || []));
-  }, []);
+    apiService.getUserFacilities(user.id).then((data) => setFacilities(data.facilities || []));
+  }, [user.id]);
 
   const handleFacilityChange = async (facId: number) => {
     setSelectedFacility(facId);
@@ -113,7 +117,7 @@ export const ChartMappingPage: React.FC = () => {
       });
       alert('생성 완료!');
       handleRoomChange(selectedRoom);
-    } catch (e) {
+    } catch {
       alert('저장 실패');
     }
   };

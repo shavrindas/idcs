@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
+import 'package:idcs/components/shared/skeleton.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityAlarmPage extends StatefulWidget {
   final String userId;
@@ -24,7 +28,9 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
   // 💡 검색 필터 기준 상태 변수 추가 ('name' 또는 'room')
   String _searchTarget = 'name';
 
-  AlarmStatusFilter _statusFilter = AlarmStatusFilter.all;
+  // 목록을 열었을 때 궁금한 것은 '지금 뭔가 울리고 있나'다. 끝난 알람 100여 건
+  // 사이에서 그 답을 찾게 두지 않는다.
+  AlarmStatusFilter _statusFilter = AlarmStatusFilter.active;
   bool _grouped = true;
 
   @override
@@ -51,7 +57,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('권한 조회 실패: $e')));
+        AppToast.error(context, context.l10n.permissionLoadFailed(describeApiError(context, e)));
       }
     } finally {
       if (mounted) {
@@ -61,6 +67,10 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       }
     }
   }
+
+  /// 가장 최근에 끝난 몇 건. '진행중'이 비었을 때만 쓴다.
+  List<GroupedAlarm> get _recentlyEnded =>
+      groupAlarms(_alarms.where((a) => !isAlarmActive(a)).toList()).take(4).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +82,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
         final room = (alarm['room_name'] ?? '').toString().toLowerCase();
         return room.contains(query);
       } else {
-        final name = (alarm['alarm_name'] ?? '').toString().toLowerCase();
-        return name.contains(query);
+        return alarmNameMatches(context, alarm, query);
       }
     }).toList();
 
@@ -83,10 +92,28 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
         : searchedAlarms.map((a) => GroupedAlarm([a])).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('알람')),
+      appBar: AppBar(title: Text(context.l10n.navAlarm)),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
+          ? const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 검색창은 실제로 가로를 다 쓰고, 칩 줄은 아니다.
+                  SizedBox(width: double.infinity, child: SkeletonBox(height: 48, radius: 14)),
+                  SizedBox(height: 14),
+                  SkeletonBox(width: 250, height: 34, radius: 9),
+                  SizedBox(height: 18),
+                  SizedBox(width: double.infinity, child: AlarmListSkeleton()),
+                ],
+              ),
+            )
+          // 알람 목록에는 당겨서 새로고침이 없었다. 이 화면을 여는 이유가
+          // "방금 뭐 울렸나"인데, 다시 보려면 탭을 나갔다 들어와야 했다.
+          : RefreshIndicator(
+              onRefresh: _fetchUserData,
+              child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -103,11 +130,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                                 controller: _searchController,
                                 decoration: InputDecoration(
                                   // 선택된 필터 기준에 따라 힌트 문구 변경
-                                  hintText: _searchTarget == 'name' ? '알람 명으로 검색...' : '룸 이름으로 검색...',
+                                  hintText: _searchTarget == 'name' ? context.l10n.alarmSearchByAlarmOrRoom : context.l10n.alarmSearchByRoom,
                                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                                   suffixIcon: _searchQuery.isNotEmpty
                                       ? IconButton(
-                                        tooltip: '검색어 지우기',
+                                        tooltip: context.l10n.actionSearchClear,
                                           icon: const Icon(Icons.clear_rounded, size: 20),
                                           onPressed: () {
                                             setState(() {
@@ -134,7 +161,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 12),
                               decoration: BoxDecoration(
                                 color: context.colors.surface,
-                                border: Border.all(color: context.colors.outline),
+                                boxShadow: context.colors.cardShadow,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: DropdownButtonHideUnderline(
@@ -142,14 +169,14 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                                   value: _searchTarget,
                                   icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
                                   isDense: true,
-                                  items: const [
+                                  items: [
                                     DropdownMenuItem(
                                       value: 'name',
-                                      child: Text('알람 명', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldName, style: TextStyle(fontSize: 14)),
                                     ),
                                     DropdownMenuItem(
                                       value: 'room',
-                                      child: Text('룸 ID', style: TextStyle(fontSize: 14)),
+                                      child: Text(context.l10n.alarmFieldRoomId, style: TextStyle(fontSize: 14)),
                                     ),
                                   ],
                                   onChanged: (value) {
@@ -167,6 +194,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                         const SizedBox(height: 8),
 
                         AlarmFilterBar(
+                          counts: {
+                            AlarmStatusFilter.all: _alarms.length,
+                            AlarmStatusFilter.active: _alarms.where(isAlarmActive).length,
+                            AlarmStatusFilter.ended: _alarms.where((a) => !isAlarmActive(a)).length,
+                          },
                           statusFilter: _statusFilter,
                           onStatusChanged: (val) => setState(() => _statusFilter = val),
                           grouped: _grouped,
@@ -178,10 +210,16 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
                 ),
                 // 3. 필터링된 알람 데이터 전달
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: FacilityAlarmBox(alarms: displayAlarms, isSearching: _searchQuery.isNotEmpty),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.of(context).padding.bottom),
+                  sliver: FacilityAlarmBox(
+                    alarms: displayAlarms,
+                    isSearching: _searchQuery.isNotEmpty,
+                    showingActiveOnly: _statusFilter == AlarmStatusFilter.active,
+                    recentlyEnded: _recentlyEnded,
+                  ),
                 ),
               ],
+            ),
             ),
     );
   }

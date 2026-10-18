@@ -9,6 +9,10 @@ import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:image_picker/image_picker.dart';
 import 'package:idcs/components/cross_compontents/board/post_editor_components.dart.dart';
 import 'package:idcs/services/board/board_api_service.dart';
+import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class PostEditPage extends StatefulWidget {
   final int postId;
@@ -25,6 +29,10 @@ class _PostEditPageState extends State<PostEditPage> {
   quill.QuillController? _quillController;
   final List<int> _newImageIds = [];
   bool _isLoading = true;
+
+  /// 불러온 그대로의 내용. 사용자가 실제로 손댔는지 가리는 기준이다.
+  String _originalTitle = '';
+  String _originalBody = '';
 
   @override
   void initState() {
@@ -49,9 +57,15 @@ class _PostEditPageState extends State<PostEditPage> {
 
       _titleController.text = postData['title'];
       _initQuillController(postData['content']);
+
+      _originalTitle = _titleController.text;
+      _originalBody = _quillController?.document.toPlainText() ?? '';
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('원문 로드 실패: $e')));
+        AppToast.error(
+          context,
+          context.l10n.postSourceLoadFailed(describeApiError(context, e)),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -76,6 +90,38 @@ class _PostEditPageState extends State<PostEditPage> {
     }
   }
 
+  /// 불러온 뒤로 바뀐 것이 있는지. 사진을 새로 붙인 것도 바뀐 것으로 본다.
+  bool get _hasChanges =>
+      _titleController.text != _originalTitle ||
+      (_quillController?.document.toPlainText() ?? '') != _originalBody ||
+      _newImageIds.isNotEmpty;
+
+  /// 저장하지 않은 수정을 들고 뒤로 나가려 할 때 한 번 묻는다.
+  Future<bool> _confirmDiscard() async {
+    if (!_hasChanges) return true;
+
+    final l10n = context.l10n;
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.discardChangesTitle),
+        content: Text(l10n.discardChangesBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.discardDraftKeep),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
+            child: Text(l10n.discardDraftLeave),
+          ),
+        ],
+      ),
+    );
+    return leave ?? false;
+  }
+
   Future<void> _handleImageAttach() async {
     final controller = _quillController;
     if (controller == null) return;
@@ -91,18 +137,31 @@ class _PostEditPageState extends State<PostEditPage> {
 
       final index = controller.selection.baseOffset;
       final length = controller.selection.extentOffset - index;
-      controller.replaceText(index, length, quill.BlockEmbed.image(uploaded.imageUrl), null);
+      controller.replaceText(
+        index,
+        length,
+        quill.BlockEmbed.image(uploaded.imageUrl),
+        null,
+      );
       _newImageIds.add(uploaded.imageId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('이미지 첨부 실패: $e')));
+      AppToast.error(
+        context,
+        context.l10n.imageAttachFailed(describeApiError(context, e)),
+      );
     }
   }
 
   Future<void> _handleSubmit() async {
-    if (_titleController.text.trim().isEmpty) return;
+    if (_titleController.text.trim().isEmpty) {
+      AppToast.warning(context, context.l10n.postTitleRequired);
+      return;
+    }
 
-    final String contentJson = jsonEncode(_quillController!.document.toDelta().toJson());
+    final String contentJson = jsonEncode(
+      _quillController!.document.toDelta().toJson(),
+    );
 
     try {
       await BoardApiService.updatePost(
@@ -114,12 +173,15 @@ class _PostEditPageState extends State<PostEditPage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('수정 완료되었습니다.')));
+        AppToast.success(context, context.l10n.postUpdated);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('수정 실패: $e')));
+        AppToast.error(
+          context,
+          context.l10n.postUpdateFailed(describeApiError(context, e)),
+        );
       }
     }
   }
@@ -130,25 +192,32 @@ class _PostEditPageState extends State<PostEditPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('게시글 수정')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PostInputBox(
-              titleController: _titleController,
-              onImageAttach: _handleImageAttach,
-            ),
-            const SizedBox(height: 16),
-            QuillEditorBox(quillController: _quillController!),
-            const SizedBox(height: 16),
-            SubmitBox(
-              buttonLabel: '수정 완료하기',
-              onSubmit: _handleSubmit,
-            ),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (await _confirmDiscard() && context.mounted) context.pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(context.l10n.postEditTitle)),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PostInputBox(
+                titleController: _titleController,
+                onImageAttach: _handleImageAttach,
+              ),
+              const SizedBox(height: 16),
+              QuillEditorBox(quillController: _quillController!),
+              const SizedBox(height: 16),
+              SubmitBox(
+                buttonLabel: context.l10n.postEditSubmit,
+                onSubmit: _handleSubmit,
+              ),
+            ],
+          ),
         ),
       ),
     );

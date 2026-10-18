@@ -1,8 +1,10 @@
 // 경로: lib/components/shared/alarm_row.dart
 // 명세: 알람 목록 행과 목록 가공(상태 필터·반복 묶음) — user_alarm/facility_alarm 두 화면에서 공유
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/components/shared/time_format.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// 알람 목록 상태 필터.
 enum AlarmStatusFilter { all, active, ended }
@@ -59,12 +61,38 @@ bool isAlarmActive(dynamic alarm) {
   return endTime.isAfter(DateTime.now());
 }
 
-/// 서버가 내려주는 ISO 시간 문자열을 목록에서 읽기 쉬운 형태로 바꾼다.
-String formatAlarmTime(String raw) {
-  final parsed = DateTime.tryParse(raw);
-  if (parsed == null) return raw;
-  return DateFormat('MM/dd HH:mm').format(parsed.toLocal());
+/// 알람 이름을 사람이 읽을 수 있는 형태로 바꾼다.
+///
+/// 서버는 "25.emergency_locked" 처럼 호실 ID 와 장비 필드명을 붙여서 내려준다.
+/// 앞의 숫자는 바로 아래 줄에 호실 이름으로 이미 적혀 있어 중복이고, 뒤쪽은
+/// 제어판에서 쓰는 것과 같은 키라서 DeviceLabels 가 그대로 번역할 수 있다.
+String alarmDisplayName(BuildContext context, dynamic rawName) {
+  final raw = rawName?.toString() ?? '';
+  if (raw.isEmpty) return context.l10n.alarmNameMissing;
+
+  final dot = raw.indexOf('.');
+  final key = dot == -1 ? raw : raw.substring(dot + 1);
+  return DeviceLabels.of(context, key);
 }
+
+/// 알람 이름으로 거른다.
+///
+/// 목록에 보이는 것은 번역된 이름("감금알람")인데, 서버가 내려주는
+/// alarm_name 은 "25.emergency_locked" 다. 그동안 검색은 뒤쪽만 보고 있어서,
+/// 화면에 보이는 대로 쳐 넣으면 한 건도 안 걸렸다. 둘 다 본다 — 설비 키로
+/// 찾는 사람도 있다.
+bool alarmNameMatches(BuildContext context, dynamic alarm, String query) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return true;
+
+  final raw = (alarm['alarm_name'] ?? '').toString().toLowerCase();
+  if (raw.contains(q)) return true;
+
+  return alarmDisplayName(context, alarm['alarm_name']).toLowerCase().contains(q);
+}
+
+/// 서버가 내려주는 ISO 시간 문자열을 목록에서 읽기 쉬운 형태로 바꾼다.
+String formatAlarmTime(String raw) => formatListTime(raw);
 
 /// 알람 상태를 아이콘 대신 좌측 색상 바로 표현하는 리스트 행.
 class AlarmRow extends StatelessWidget {
@@ -97,94 +125,94 @@ class AlarmRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color accent = isActive ? context.colors.error : context.colors.textSecondary.withValues(alpha: 0.4);
 
-    return Material(
-      color: context.colors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: context.colors.cardShadow),
+      child: Material(
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.colors.outline),
-          ),
-          // 좌측 색상 바는 Stack으로 높이를 맞춘다. IntrinsicHeight를 쓰면 텍스트 높이
-          // 반올림 때문에 1px 오버플로가 생긴다.
-          child: Stack(
-            children: [
-              Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
-              Padding(
-                padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  title,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: context.colors.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (count > 1) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: accent.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(14)),
+            // 좌측 색상 바는 Stack으로 높이를 맞춘다. IntrinsicHeight를 쓰면 텍스트 높이
+            // 반올림 때문에 1px 오버플로가 생긴다.
+            child: Stack(
+              children: [
+                Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
                                   child: Text(
-                                    '×$count',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: context.colors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                if (count > 1) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: accent.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '×$count',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            subtitle,
-                            style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          isActive ? '진행중' : '종료',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle,
+                              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        if (timestamp.isNotEmpty) ...[
-                          const SizedBox(height: 3),
-                          Text(timestamp, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-                        ],
-                      ],
-                    ),
-                    if (isExpandable)
-                      Icon(
-                        isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                        size: 20,
-                        color: context.colors.textSecondary,
                       ),
-                  ],
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            isActive ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                          ),
+                          if (timestamp.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(timestamp, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                          ],
+                        ],
+                      ),
+                      if (isExpandable)
+                        Icon(
+                          isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                          size: 20,
+                          color: context.colors.textSecondary,
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -288,7 +316,7 @@ class _OccurrenceRow extends StatelessWidget {
               ),
             ),
             Text(
-              active ? '진행중' : '종료',
+              active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
             ),
           ],
@@ -311,33 +339,58 @@ class AlarmFilterBar extends StatelessWidget {
     required this.onStatusChanged,
     required this.grouped,
     required this.onGroupedChanged,
+    this.counts,
   });
+
+  /// 상태별 건수. null 이면 숫자를 적지 않는다.
+  final Map<AlarmStatusFilter, int>? counts;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    // 칩과 묶어보기 스위치를 한 줄에 같이 두면, 칩에 건수가 붙는 순간
+    // 폭이 모자라 '종료' 칩이 아랫줄로 떨어지고 스위치만 허공에 남는다.
+    // 줄을 나눈다 — 거르는 일과 묶어 보는 일은 어차피 다른 일이다.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: Wrap(
-            spacing: 6,
-            children: [
-              _chip(context, '전체', AlarmStatusFilter.all),
-              _chip(context, '진행중', AlarmStatusFilter.active),
-              _chip(context, '종료', AlarmStatusFilter.ended),
-            ],
-          ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            _chip(context, context.l10n.alarmStatusAll, AlarmStatusFilter.all),
+            _chip(context, context.l10n.alarmStatusActive, AlarmStatusFilter.active),
+            _chip(context, context.l10n.alarmStatusEnded, AlarmStatusFilter.ended),
+          ],
         ),
-        Text('묶어서 보기', style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
-        Switch(value: grouped, onChanged: onGroupedChanged),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              context.l10n.alarmGroupToggle,
+              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+            ),
+            const SizedBox(width: 4),
+            Transform.scale(
+              scale: 0.85,
+              child: Switch(value: grouped, onChanged: onGroupedChanged),
+            ),
+          ],
+        ),
       ],
     );
   }
 
   Widget _chip(BuildContext context, String label, AlarmStatusFilter value) {
     final selected = statusFilter == value;
+    // 건수를 같이 적는다. '진행중'이 비어 있을 때 그게 정말 없는 것인지,
+    // 아니면 아직 안 불러온 것인지 칩만 보고는 알 수 없었다.
+    final count = counts?[value];
     return ChoiceChip(
-      label: Text(label),
+      label: Text(count == null ? label : '$label $count'),
       selected: selected,
+      // 앱의 다른 칩은 모두 체크 표시를 끈다. 여기만 남아 있었다 — 파란 배경
+      // 위에 어두운 체크가 얹혀 글자보다 체크가 먼저 보였다.
+      showCheckmark: false,
       onSelected: (_) => onStatusChanged(value),
       labelStyle: TextStyle(
         fontSize: 12,
@@ -357,7 +410,19 @@ class EmptyListState extends StatelessWidget {
   final String message;
   final IconData icon;
 
-  const EmptyListState({super.key, required this.message, this.icon = Icons.inbox_outlined});
+  /// 비어 있는 것이 좋은 소식인지.
+  ///
+  /// 알람 목록에서 '진행중'이 비어 있다는 건 아무것도 없다는 뜻이 아니라
+  /// 지금 다 괜찮다는 뜻이다. 회색 종에 빗금 친 그림은 그 반대로 읽힌다 —
+  /// 뭔가 잘못돼서 못 불러온 것처럼 보인다.
+  final bool good;
+
+  const EmptyListState({
+    super.key,
+    required this.message,
+    this.icon = Icons.inbox_outlined,
+    this.good = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -367,13 +432,25 @@ class EmptyListState extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.outline),
+        boxShadow: context.colors.cardShadow,
       ),
       child: Column(
         children: [
-          Icon(icon, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
+          Icon(
+            good ? Icons.verified_rounded : icon,
+            color: good ? context.colors.success : context.colors.textSecondary.withValues(alpha: 0.6),
+            size: good ? 32 : 28,
+          ),
           const SizedBox(height: 8),
-          Text(message, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: good ? context.colors.textPrimary : context.colors.textSecondary,
+              fontSize: good ? 14 : 13,
+              fontWeight: good ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
         ],
       ),
     );

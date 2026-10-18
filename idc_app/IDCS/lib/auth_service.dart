@@ -20,6 +20,9 @@ class AuthService {
   /// (로그인 화면의 '로그인 상태 유지' 체크박스와 연결된다)
   static Future<void> setUserId(int? id, {bool persist = true}) async {
     _currentUserId = id;
+    // Signing in or out starts a new session; the next account decides its own
+    // layout rather than inheriting the previous one's.
+    FacilityShortcut.reset();
     final prefs = await SharedPreferences.getInstance();
     if (id != null && persist) {
       await prefs.setInt('userId', id);

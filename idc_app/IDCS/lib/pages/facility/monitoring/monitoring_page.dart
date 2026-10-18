@@ -4,6 +4,15 @@ import 'package:idcs/main.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:idcs/services/common/web_socket_service.dart';
+import 'package:idcs/services/common/monitoring_view_settings.dart';
+import 'package:idcs/components/facility/monitoring/controllable_fields.dart';
+import 'package:idcs/components/facility/monitoring/control_card.dart';
+import 'package:idcs/components/facility/monitoring/panel_status_card.dart';
+import 'package:idcs/components/facility/monitoring/panel_summary_card.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;
@@ -21,86 +30,45 @@ class _MonitoringPageState extends State<MonitoringPage> {
   final WebSocketService _webSocketService = WebSocketService();
   StreamSubscription<String>? _wsSubscription; // 스트림 구독 해제를 위한 객체
 
+  /// 마지막으로 값이 들어온 시각. 요약 카드가 이 값으로 신선도를 보여준다.
+  DateTime? _lastUpdate;
+
+  /// '몇 초 전'이 멈춰 있지 않도록 주기적으로 다시 그린다.
+  Timer? _freshnessTicker;
+
+  /// 앱바에 띄울 호실 이름. 시설 ID 보다 현장에서 쓰는 이름이 쓸모 있다.
+  String? _roomName;
+
+  /// 보내 놓고 설비 응답을 기다리는 제어 명령. req_id -> 화면에 쓸 항목 이름.
+  ///
+  /// 설비가 값을 실제로 바꾸기까지는 시간이 걸리고, 거부할 수도 있다. 보낸
+  /// 사실과 반영된 사실을 구분해서 알려 주려면 어느 요청이 떠 있는지 알아야 한다.
+  final Map<String, String> _pendingCommands = {};
+
   // 평평한 1층 딕셔너리 데이터 구조
-  late Map<String, String> infoData;
-  Map<String, String> realtempData = {'H_COMP': 'NA', '고내온도_#1': 'NA', '설정값_#1': 'NA', '편차값_#1': 'NA', 'ZERO_#1': 'NA'};
-  Map<String, String> deforestData = {'제상용 전자변': 'NA', '제상타임_#1': 'NA', '싸이클_#1': 'NA', '시스템분_#1': 'NA', '시스템시간_#1': 'NA'};
-  Map<String, String> emergencyData = {'CINT': 'NA', 'HIGH': 'NA', 'UF/OCR': 'NA', '감금알람': 'NA', '토출온도이상': 'NA', '가스부족': 'NA', '온도센서이상': 'NA', '역상방지이상': 'NA', 'LOW 스위치': 'NA', '과열TIC': 'NA', 'ARLAM': 'NA', 'RESET': 'NA'};
-  Map<String, String> inverterData = {'인버터 에러': 'NA', 'Hz_#1': 'NA', 'KW_#1': 'NA', '출력전압_#1': 'NA', '출력전류_#1': 'NA', '출력주파수_#1': 'NA'};
-  Map<String, String> equipmentData = {'토출온도_#1': 'NA', '고압_#1': 'NA', '저압_#1': 'NA'};
-  Map<String, String> controlData = {'운전SW': 'NA', '룸온도스위치': 'NA', '방열기 팬 #1': 'NA', '방열기 팬 #2': 'NA', '액 전자변': 'NA', '전자변': 'NA', '쿨러 팬': 'NA', '아날로그TC': 'NA', '쿨러 팬 자동여부': 'NA', '히터정지': 'NA', '초기지연': 'NA', '콤프지연': 'NA', '쿨러지연': 'NA', '수동제상': 'NA', '컴퓨터 S/W': 'NA', '운전시간_#1': 'NA', '운전시간만_#1': 'NA', '초기지연_#1': 'NA', 'H_콤프지연_#1': 'NA', '쿨러지연타임_#1': 'NA', 'DF 지연_#1': 'NA'};
-  static const Map<String, String> deviceKeyMap = {
-    'control_runsw': '운전SW',
-    'emergency_cint': 'CINT',
-    'emergency_high': 'HIGH',
-    'emergency_uf_ocr': 'UF/OCR',
-    'emergency_locked': '감금알람',
-    'emergency_outtemp': '토출온도이상',
-    'emergency_gas': '가스부족',
-    'emergency_tempsensor': '온도센서이상',
-    'emergency_defemg': '역상방지이상',
-    'emergency_lowsw': 'LOW 스위치',
-    'emergency_hottic': '과열TIC',
-    'control_roomtemp': '룸온도스위치',
-    'temp_comp': 'H_COMP',
-    'control_cffan1': '방열기 팬 #1',
-    'control_cffan2': '방열기 팬 #2',
-    'control_lsv': '액 전자변',
-    'control_ingsv': '전자변',
-    'control_uffan': '쿨러 팬',
-    'deforest_def': '제상용 전자변',
-    'emergency_emg': 'ARLAM',
-    'control_tica': '아날로그TC',
-    'control_efa': '쿨러 팬 자동여부',
-    'control_heatdelflag': '히터정지',
-    'control_initdelflag': '초기지연',
-    'control_compdelflag': '콤프지연',
-    'control_coolerdelflag': '쿨러지연',
-    'control_mdf': '수동제상',
-    'control_sw': '컴퓨터 S/W',
-    'emergency_emgreset': 'RESET',
-    'inverter_error': '인버터 에러',
-    'equipment_temp1': '토출온도_#1',
-    'temp_pv': '고내온도_#1',
-    'temp_sv': '설정값_#1',
-    'temp_hey': '편차값_#1',
-    'temp_zero': 'ZERO_#1',
-    'equipment_press1': '고압_#1',
-    'equipment_press2': '저압_#1',
-    'control_runtimelow': '운전시간_#1',
-    'control_runtimehigh': '운전시간만_#1',
-    'deforest_dfcm': '제상타임_#1',
-    'deforest_dfct': '싸이클_#1',
-    'deforest_sysm': '시스템분_#1',
-    'deforest_syst': '시스템시간_#1',
-    'control_initdelst': '초기지연_#1',
-    'control_compdelst': 'H_콤프지연_#1',
-    'control_cooldelst': '쿨러지연타임_#1',
-    'control_defdelst': 'DF 지연_#1',
-    'control_initdeltm': '초기지연_#1',
-    'control_compdeltm': '콤프지연_#1',
-    'control_cooldeltm': '쿨러지연타임_#1',
-    'control_defdeltm': 'DF 지연_#1',
-    'inverter_hz': 'Hz_#1',
-    'inverter_kw': 'KW_#1',
-    'inverter_outv': '출력전압_#1',
-    'inverter_outa': '출력전류_#1',
-    'inverter_outhz': '출력주파수_#1',
-  };
-  static final Map<String, String> reverseDeviceKeyMap = Map.fromEntries(
-    deviceKeyMap.entries.map((entry) => MapEntry(entry.value, entry.key)),
-  );
+  Map<String, String> realtempData = {'temp_comp': 'NA', 'temp_pv': 'NA', 'temp_sv': 'NA', 'temp_hey': 'NA', 'temp_zero': 'NA'};
+  Map<String, String> deforestData = {'deforest_def': 'NA', 'deforest_dfcm': 'NA', 'deforest_dfct': 'NA', 'deforest_sysm': 'NA', 'deforest_syst': 'NA'};
+  Map<String, String> emergencyData = {'emergency_cint': 'NA', 'emergency_high': 'NA', 'emergency_uf_ocr': 'NA', 'emergency_locked': 'NA', 'emergency_outtemp': 'NA', 'emergency_gas': 'NA', 'emergency_tempsensor': 'NA', 'emergency_defemg': 'NA', 'emergency_lowsw': 'NA', 'emergency_hottic': 'NA', 'emergency_emg': 'NA', 'emergency_emgreset': 'NA'};
+  Map<String, String> inverterData = {'inverter_error': 'NA', 'inverter_hz': 'NA', 'inverter_kw': 'NA', 'inverter_outv': 'NA', 'inverter_outa': 'NA', 'inverter_outhz': 'NA'};
+  Map<String, String> equipmentData = {'equipment_temp1': 'NA', 'equipment_press1': 'NA', 'equipment_press2': 'NA'};
+  Map<String, String> controlData = {'control_runsw': 'NA', 'control_roomtemp': 'NA', 'control_cffan1': 'NA', 'control_cffan2': 'NA', 'control_lsv': 'NA', 'control_ingsv': 'NA', 'control_uffan': 'NA', 'control_tica': 'NA', 'control_efa': 'NA', 'control_heatdelflag': 'NA', 'control_initdelflag': 'NA', 'control_compdelflag': 'NA', 'control_coolerdelflag': 'NA', 'control_mdf': 'NA', 'control_sw': 'NA', 'control_runtimelow': 'NA', 'control_runtimehigh': 'NA', 'control_initdeltm': 'NA', 'control_compdelst': 'NA', 'control_cooldeltm': 'NA', 'control_defdeltm': 'NA'};
+  /// 그룹 맵은 모두 서버가 보내는 필드 이름을 키로 쓴다. 화면에 보여줄 이름은
+  /// DeviceLabels 가 그릴 때 붙이므로, 라벨을 바꿔도 데이터 경로는 그대로다.
+  ///
+  /// 예전에는 한국어 라벨이 키였는데, 서로 다른 필드가 같은 라벨을 쓰는 경우가
+  /// 있어(초기지연_#1 등) 역방향 조회에서 한쪽이 덮여 사라졌다.
+  Map<String, String> _groupFor(String key) {
+    if (realtempData.containsKey(key)) return realtempData;
+    if (deforestData.containsKey(key)) return deforestData;
+    if (emergencyData.containsKey(key)) return emergencyData;
+    if (inverterData.containsKey(key)) return inverterData;
+    if (equipmentData.containsKey(key)) return equipmentData;
+    return controlData;
+  }
 
   @override
   void initState() {
     super.initState();
-    infoData = {
-      '시설 ID': widget.facilityId,
-      '호실 ID': widget.roomId,
-      '담당 관리자 ID': widget.userId,
-      '운영 상태': '정상 작동 중 (ACTIVE)',
-    };
-
     // 💡 [핵심] 페이지 진입 시 웹소켓 서비스 연결 및 스트림 구독 시작
     _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/get/${widget.facilityId}');
 
@@ -108,96 +76,206 @@ class _MonitoringPageState extends State<MonitoringPage> {
     _wsSubscription = _webSocketService.messageStream.listen((rawJson) {
       _parseAndMapDeviceMessage(rawJson);
     });
+
+    _freshnessTicker = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted) setState(() {});
+    });
+
+    _loadRoomName();
+  }
+
+  Future<void> _loadRoomName() async {
+    try {
+      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+      final match = rooms.firstWhere(
+        (r) => r['id'].toString() == widget.roomId,
+        orElse: () => null,
+      );
+      if (mounted && match != null) setState(() => _roomName = match['name']);
+    } catch (_) {
+      // 이름을 못 불러와도 제어판 자체는 그대로 쓸 수 있으므로 조용히 넘어간다.
+    }
   }
 
   // 통신 클래스로부터 넘겨받은 날것의 데이터를 매핑하는 비즈니스 로직
   void _parseAndMapDeviceMessage(String rawJsonString) {
     try {
       final Map<String, dynamic> parsedJson = jsonDecode(rawJsonString);
-      final Map<String, dynamic> parsedSJson = parsedJson['datas'];
+
+      // 제어 응답은 계측값과 같은 소켓으로 돌아온다. 서버 버전에 따라 그대로
+      // 오기도 하고 datas 안에 싸여 오기도 해서 양쪽을 다 본다.
+      if (parsedJson['status'] != null) {
+        _handleCommandResponse(parsedJson);
+        return;
+      }
+
+      // 서버가 감싸서 보내던 때도 있고 그대로 보내는 때도 있다. 둘 다 받는다.
+      final dynamic rawDatas = parsedJson['datas'] ?? parsedJson;
+      if (rawDatas is! Map<String, dynamic>) return;
+      if (rawDatas['status'] != null) {
+        _handleCommandResponse(rawDatas);
+        return;
+      }
+      final Map<String, dynamic> parsedSJson = rawDatas;
 
       setState(() {
+        _lastUpdate = DateTime.now();
         for (var entry in parsedSJson.entries) {
-          // 방법 1 적용 예시 (키 조립)
+          // 키는 "호실.필드" 형태로 온다 (예: "23.temp_pv")
           final List<String> parts = entry.key.split('.');
 
-          if(int.parse(widget.roomId) != int.parse(parts[0]))
-            continue;
+          if (int.parse(widget.roomId) != int.parse(parts[0])) continue;
 
-          final String? appKey = deviceKeyMap[parts[1]];
-
-          if (appKey != null) {
-            final String newValue = entry.value.toString();
-            if (realtempData.containsKey(appKey)) {
-              realtempData[appKey] = newValue;
-            } else if(deforestData.containsKey(appKey)) {
-              deforestData[appKey] = newValue;
-            } else if(emergencyData.containsKey(appKey)) {
-              emergencyData[appKey] = newValue;
-            } else if(inverterData.containsKey(appKey)) {
-              inverterData[appKey] = newValue;
-            } else if(equipmentData.containsKey(appKey)) {
-              equipmentData[appKey] = newValue;
-            } else if(controlData.containsKey(appKey)) {
-              controlData[appKey] = newValue;
-            }
+          final String key = parts[1];
+          final group = _groupFor(key);
+          if (group.containsKey(key)) {
+            group[key] = entry.value.toString();
           }
         }
       });
     } catch (e) {
-      print('에러: $e');
+      debugPrint('에러: $e');
     }
   }
 
   @override
   void dispose() {
     // 💡 매우 중요: 메모리 누수 방지를 위해 페이지를 나갈 때 스트림 구독을 해제하고 통신을 닫습니다.
+    _freshnessTicker?.cancel();
     _wsSubscription?.cancel();
     _webSocketService.disconnect();
     super.dispose();
   }
 
-  void remoteClickEvent(String label, String input) {// 1. 한글 라벨을 원본 장비 키(예: 'control_runsw')로 변환
-    final String? rawKey = reverseDeviceKeyMap[label];
+  /// 제어판에서 값을 보낼 때. 행이 들고 있는 키가 이미 서버 필드 이름이라
+  /// 따로 변환할 것이 없다.
+  /// 제어판에서 '확인'을 눌렀을 때. 보냈으면 true 를 돌려주고, 그때만 입력칸을
+  /// 비운다.
+  ///
+  /// 예전에는 연결이 끊겨 있으면 아무 일도 없이 조용히 넘어갔다. 누른 사람은
+  /// 값이 들어간 줄 알고 자리를 뜨는데, 실제로는 아무것도 보내지지 않았다.
+  bool remoteClickEvent(String key, String input) {
+    final l10n = context.l10n;
+    final label = DeviceLabels.of(context, key);
+    final value = input.trim();
 
-    if (rawKey == null) {
-      print('매핑할 수 없는 키입니다: $label');
-      return;
+    if (value.isEmpty) {
+      AppToast.warning(context, l10n.panelValueRequired);
+      return false;
     }
 
-    // 2. 서버 형식에 맞게 req_id 생성 (예: "1.control_runsw")
-    final String reqId = '${widget.roomId}.$rawKey';
+    if (!_webSocketService.isConnected) {
+      AppToast.error(context, l10n.panelNotConnected);
+      return false;
+    }
 
-    Map<String, String> temp = {
-      'type': "WR",
+    // 서버 형식에 맞게 req_id 생성 (예: "23.control_runsw")
+    final String reqId = '${widget.roomId}.$key';
+    _pendingCommands[reqId] = label;
+
+    _webSocketService.send(jsonEncode({
+      'type': 'WR',
       'req_id': reqId,
-      'req_val': input
-    };
-    if(_webSocketService.isConnected) {
-      print(jsonEncode(temp));
-      _webSocketService.send(jsonEncode(temp));
+      'req_val': value,
+    }));
+
+    AppToast.info(context, l10n.panelCommandSent(label));
+    return true;
+  }
+
+  /// 설비가 제어 명령에 답했을 때. 응답이 영영 안 올 수도 있으므로, 이건
+  /// 보낸 사실을 알리는 토스트를 대신하는 게 아니라 그 뒤에 덧붙는다.
+  void _handleCommandResponse(Map<String, dynamic> packet) {
+    final reqId = packet['request_id']?.toString() ?? packet['req_id']?.toString();
+    if (reqId == null) return;
+
+    final label = _pendingCommands.remove(reqId);
+    if (label == null || !mounted) return;
+
+    final ok = (packet['status']?.toString() ?? '').toUpperCase().contains('SUCCESS');
+    final l10n = context.l10n;
+    if (ok) {
+      AppToast.success(context, l10n.panelCommandOk(label));
+    } else {
+      AppToast.error(context, l10n.panelCommandFailed(label));
     }
+  }
+
+  /// 설비에 실제로 쓸 수 있는 다섯 줄만 모은다. 어느 카드에 흩어져 있든
+  /// 사람이 할 수 있는 일은 이것뿐이라 한자리에 둔다.
+  Map<String, String> get _writableFields {
+    final all = {
+      ...realtempData,
+      ...deforestData,
+      ...emergencyData,
+      ...inverterData,
+      ...equipmentData,
+      ...controlData,
+    };
+    return {
+      for (final e in all.entries)
+        if (ControllableFields.has(e.key)) e.key: e.value,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('시설 ID: ${widget.facilityId} 실시간 제어판'),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ValueListenableBuilder<MonitoringViewSettings>(
+      valueListenable: MonitoringViewController.settings,
+      builder: (context, view, _) => Scaffold(
+        appBar: AppBar(
+          title: Text(_roomName ?? context.l10n.panelPageTitle(widget.facilityId)),
+          centerTitle: true,
+        ),
+        // 배경은 앱 전체가 한 장으로 깐다(SnowfallBackground). 예전에는 이
+        // 화면만 따로 무늬를 깔았는데, 카드가 비치게 된 뒤로는 그 무늬가
+        // 눈과 겹쳐 지저분해졌다.
+        backgroundColor: Colors.transparent,
+        body: Stack(
           children: [
-            MonitoringCard(title: '시설 기본 정보', fields: infoData),
-            MonitoringCard(title: '실제 온도', fields: realtempData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '제상 정보', fields: deforestData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '이상 정보', fields: emergencyData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '인버터 정보', fields: inverterData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '장비 정보', fields: equipmentData, OnConfirm: remoteClickEvent),
-            MonitoringCard(title: '제어 정보', fields: controlData, OnConfirm: remoteClickEvent),
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 시설 ID·호실 ID·관리자 ID 를 띄우던 카드를 걷어내고, 이 화면을
+                  // 여는 이유인 '지금 몇 도인가'를 맨 위에 둔다.
+                  PanelSummaryCard(
+                    currentTemp: realtempData['temp_pv'] ?? 'NA',
+                    setpoint: realtempData['temp_sv'] ?? 'NA',
+                    lastUpdate: _lastUpdate,
+                    view: view,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 온도 다음으로 알고 싶은 것: 지금 이상이 있나, 뭐가 돌고 있나.
+                  // 열두 줄짜리 '이상 정보' 카드를 한 줄로 줄인 자리다.
+                  PanelStatusCard(
+                    values: {
+                      ...realtempData,
+                      ...deforestData,
+                      ...emergencyData,
+                      ...inverterData,
+                      ...controlData,
+                    },
+                    view: view,
+                  ),
+
+                  // 실제로 설비에 닿는 다섯 줄. 이것만 늘 펼쳐 둔다 —
+                  // 할 수 있는 일이 어디 있는지는 찾아다니게 두면 안 된다.
+                  ControlCard(fields: _writableFields, view: view, onSend: remoteClickEvent),
+
+                  // 나머지는 접어 둔다. 없애지는 않는다 — 설비를 보는 사람에게는
+                  // 언젠가 전부 필요하고, '상세' 안에 다 있어야 찾을 수 있다.
+                  MonitoringCard(title: context.l10n.panelCardTemp, fields: realtempData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardDefrost, fields: deforestData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardFaults, fields: emergencyData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardInverter, fields: inverterData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardEquipment, fields: equipmentData, view: view, deviceKeys: true, collapsible: true),
+                  MonitoringCard(title: context.l10n.panelCardControl, fields: controlData, view: view, deviceKeys: true, collapsible: true),
+                ],
+              ),
+            ),
           ],
         ),
       ),

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { loadSession, saveSession } from './services/session';
+import type { SessionUser } from './types';
 //import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { HashRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { ChartMappingPage } from './pages/ChartMappingPage';
@@ -9,11 +11,20 @@ import { RoomComparePage } from './pages/RoomComparePage';
 import { LoginPage } from './pages/LoginPage';
 import { MainPage } from './pages/MainPage';
 import { Monogram, Wordmark } from './components/Brand';
+import { ThemeProvider, ThemeToggle } from './services/theme';
 
 function App() {
-  const [user, setUser] = useState<any>(null); // 로그인한 유저 정보 상태
+  // 로그인한 유저. 각 화면이 '내 시설'만 불러오려면 이 값이 필요하다.
+  // 새로고침이나 주소 직접 입력에도 남아 있도록 브라우저에 맡겨 둔다.
+  const [user, setUser] = useState<SessionUser | null>(loadSession);
+
+  const handleLogin = (next: SessionUser) => {
+    saveSession(next);
+    setUser(next);
+  };
 
   const handleLogout = () => {
+    saveSession(null);
     setUser(null);
   };
 
@@ -24,6 +35,7 @@ function App() {
     `nav-link${isActive ? ' active' : ''}`;
 
   return (
+    <ThemeProvider>
     <Router>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', boxSizing: 'border-box' }}>
 
@@ -42,14 +54,15 @@ function App() {
             <Monogram size={32} />
             <Wordmark size={17} />
           </div>
-          {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {user && (
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                 {user.name} <span className="chip" style={{ marginLeft: 6 }}>{user.role}</span>
               </span>
-              <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>
-            </div>
-          )}
+            )}
+            <ThemeToggle />
+            {user && <button onClick={handleLogout} className="btn btn-ghost btn-sm">로그아웃</button>}
+          </div>
         </header>
 
         {/* 글로벌 네비게이션 바 (로그인한 유저에게만 노출) */}
@@ -86,7 +99,7 @@ function App() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', background: 'var(--bg)' }}>
           <Routes>
             {/* 비로그인 상태일 때 접근 가능한 Route */}
-            <Route path="/login" element={<LoginPage onLogin={setUser} />} />
+            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
 
             {/* 로그인 상태 체크 */}
             {!user ? (
@@ -97,15 +110,15 @@ function App() {
                 {isAdmin && (
                   <>
                     <Route path="/main" element={<MainPage />} />
-                    <Route path="/mapping" element={<ChartMappingPage />} />
-                    <Route path="/indexing" element={<PRIndexingPage />} />
+                    <Route path="/mapping" element={<ChartMappingPage user={user} />} />
+                    <Route path="/indexing" element={<PRIndexingPage user={user} />} />
                     <Route path="/facility-manager" element={<FacilityManagerPage />} />
-                    <Route path="/compare" element={<RoomComparePage />} />
+                    <Route path="/compare" element={<RoomComparePage user={user} />} />
                   </>
                 )}
 
                 {/* User/Admin 공통 라우트 */}
-                <Route path="/viewer" element={<ChartViewerPage />} />
+                <Route path="/viewer" element={<ChartViewerPage user={user} />} />
 
                 {/* 기본 리다이렉트 (관리자는 메인, 유저는 뷰어로) */}
                 <Route path="*" element={
@@ -117,6 +130,7 @@ function App() {
         </div>
       </div>
     </Router>
+    </ThemeProvider>
   );
 }
 

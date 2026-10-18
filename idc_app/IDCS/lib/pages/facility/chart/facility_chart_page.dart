@@ -3,8 +3,14 @@
 // ===============================================================
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/chart/chart_components.dart';
+import 'package:idcs/components/facility/monitoring/device_labels.dart';
+import 'package:idcs/components/facility/chart/chart_limits_dialog.dart';
 import 'package:idcs/services/chart/chart_api_service.dart';
+import 'package:idcs/services/chart/chart_limits.dart';
 import 'package:idcs/services/common/facility_api_service.dart';
+import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityChartPage extends StatefulWidget {
   final String userId;
@@ -24,6 +30,10 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   // 2. 조회 대상 호실 상태
   List<dynamic> _rooms = [];
   int? _selectedRoomId;
+
+  /// 이 기기에 직접 적어 둔 기준값 (role_name -> 상·하한).
+  /// 서버 포인트 롤의 상·하한이 비어 있는 동안 차트 기준선을 그리는 데 쓴다.
+  Map<String, RoleLimit> _manualLimits = {};
 
   // 3. 데이터 포인트 선택 상태
   int? _selectedGroupId;
@@ -74,7 +84,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('호실 조회 오류: $e')));
+        AppToast.error(context, context.l10n.roomQueryFailed(describeApiError(context, e)));
         setState(() => _isLoading = false);
       }
     }
@@ -112,7 +122,12 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             _selectedGroupId = null;
           }
 
-          _visibleRoleIds = _directMode ? _allRoleIds() : _roleIdsOfGroup(_selectedGroupId);
+          // 직접 선택 모드였다면 보고 있던 항목을 그대로 둔다 — 호실이 바뀌어
+          // 없어진 롤만 떨어진다. 그룹 모드면 그룹의 항목을 읽을 수 있는
+          // 개수까지만 켠다.
+          _visibleRoleIds = _directMode
+              ? _visibleRoleIds.intersection(_allRoleIds())
+              : _cappedAuto(_roleIdsOfGroup(_selectedGroupId));
         });
 
         if (_visibleRoleIds.isNotEmpty) {
@@ -126,7 +141,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('그룹 로드 오류: $e')));
+        AppToast.error(context, context.l10n.groupLoadFailed(describeApiError(context, e)));
         setState(() => _isLoading = false);
       }
     }
@@ -137,6 +152,60 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       .whereType<int>()
       .toSet();
 
+  /// 자동 선택에서 먼저 집을 항목.
+  ///
+  /// 차트를 여는 이유는 대부분 "온도가 어땠나" 하나다. 등록 순서대로 앞에서
+  /// 자르면 이름순으로 앞에 오는 제어 플래그(control_cffan1 …)만 켜져, 정작
+  /// 보려던 고내온도가 빠진 차트가 열린다.
+  static const List<String> _autoPriority = [
+    'temp_pv',
+    'temp_sv',
+    'temp_hey',
+    'equipment_temp1',
+    'equipment_press1',
+    'equipment_press2',
+    'inverter_hz',
+    'inverter_kw',
+  ];
+
+  /// 자동으로 켤 항목을 읽을 수 있는 개수까지만 줄인다.
+  ///
+  /// 웹 어드민에서 만든 그룹에는 호실의 롤이 50개 넘게 묶여 있는 경우가 있다.
+  /// 그대로 그리면 차트가 실오라기 뭉치가 되어 아무것도 읽히지 않는다.
+  /// 위 우선순위를 먼저 채우고, 모자라면 호실의 롤 순서(= 등록 순서)로 메운다
+  /// — Set 의 순서에 기대면 같은 그룹을 다시 열 때마다 다른 선이 뜰 수 있다.
+  Set<int> _cappedAuto(Set<int> ids) {
+    if (ids.length <= readableSeriesLimit) return ids;
+
+    final candidates = _roles.where((r) {
+      final id = r['role_id'] is int ? r['role_id'] as int : int.tryParse(r['role_id'].toString());
+      return id != null && ids.contains(id);
+    }).toList();
+
+    // 롤 목록을 못 받은 경우에도 개수는 지킨다.
+    if (candidates.isEmpty) return ids.take(readableSeriesLimit).toSet();
+
+    int rank(dynamic role) {
+      final index = _autoPriority.indexOf(role['role_name']?.toString() ?? '');
+      return index == -1 ? _autoPriority.length : index;
+    }
+
+    // 같은 순위끼리는 원래 순서를 지켜야 하므로 안정 정렬이 필요하다. Dart 의
+    // List.sort 는 안정성을 보장하지 않아, 원래 위치를 2차 기준으로 넣는다.
+    final indexed = [for (var i = 0; i < candidates.length; i++) (i, candidates[i])];
+    indexed.sort((a, b) {
+      final byRank = rank(a.$2).compareTo(rank(b.$2));
+      return byRank != 0 ? byRank : a.$1.compareTo(b.$1);
+    });
+
+    return indexed
+        .take(readableSeriesLimit)
+        .map((e) => e.$2['role_id'] is int
+            ? e.$2['role_id'] as int
+            : int.parse(e.$2['role_id'].toString()))
+        .toSet();
+  }
+
   Set<int> _roleIdsOfGroup(int? groupId) {
     final group = _availableGroups.where((g) => g['group_id'] == groupId).firstOrNull;
     return (group?['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
@@ -146,7 +215,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
     setState(() {
       _directMode = false;
       _selectedGroupId = groupId;
-      _visibleRoleIds = _roleIdsOfGroup(groupId);
+      _visibleRoleIds = _cappedAuto(_roleIdsOfGroup(groupId));
     });
     _fetchChartData();
   }
@@ -193,26 +262,64 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
         roleIds: roleIdsToFetch,
       );
 
+      // 서버가 준 상·하한이 비어 있는 항목에만 직접 적어 둔 값을 끼워 넣는다.
+      // 여기서 섞어 두면 차트를 그리는 쪽은 그 값이 어디서 왔는지 몰라도 된다.
+      final limits = await ChartLimits.load(roomId.toString());
+      ChartLimits.apply(result, limits);
+
       if (mounted) {
         setState(() {
           _chartData = result;
+          _manualLimits = limits;
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('차트 오류: $e')));
+        AppToast.error(context, context.l10n.chartFailed(describeApiError(context, e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  /// 지금 그려진 시리즈를 모아 기준값 창을 연다.
+  Future<void> _editLimits() async {
+    final roomId = _selectedRoomId;
+    if (roomId == null) return;
+
+    final datasets = _chartData?['data']?['datasets'];
+    final series = <({String roleName, String label})>[
+      if (datasets is List)
+        for (final ds in datasets)
+          if (ds is Map && ds['role_name'] != null)
+            (
+              roleName: ds['role_name'].toString(),
+              label: (ds['display_name']?.toString().isNotEmpty ?? false)
+                  ? ds['display_name'].toString()
+                  : DeviceLabels.of(context, ds['role_name'].toString()),
+            ),
+    ];
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => ChartLimitsDialog(
+        roomId: roomId.toString(),
+        series: series,
+        current: _manualLimits,
+      ),
+    );
+
+    if (saved != true || !mounted) return;
+    AppToast.info(context, context.l10n.chartLimitsSaved);
+    await _fetchChartData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('데이터 차트')),
+      appBar: AppBar(title: Text(context.l10n.chartPageTitle)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -237,7 +344,17 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box 2
+            // 차트를 조건 바로 아래에 둔다. 이 화면을 여는 이유는 그래프를
+            // 보는 것 하나인데, 항목 고르기와 기준선 스위치가 그 앞을 막고
+            // 있어서 들어오자마자 스크롤부터 해야 했다. 둘 다 한 번 맞춰 두면
+            // 그대로 두는 것들이라 그래프 아래로 내린다.
+            ChartCanvasBox(
+              chartData: _chartData,
+              isLoading: _isLoading,
+              showTargetLines: _showTargetLines,
+            ),
+            const SizedBox(height: 16),
+
             ChartSeriesBox(
               availableGroups: _availableGroups,
               selectedGroupId: _selectedGroupId,
@@ -250,18 +367,11 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box 4
             ChartToolBox(
               showTargetLines: _showTargetLines,
               onToggleTargetLines: (val) => setState(() => _showTargetLines = val),
-            ),
-            const SizedBox(height: 8),
-
-            // Box 3
-            ChartCanvasBox(
               chartData: _chartData,
-              isLoading: _isLoading,
-              showTargetLines: _showTargetLines,
+              onEditLimits: _editLimits,
             ),
             const SizedBox(height: 16),
 

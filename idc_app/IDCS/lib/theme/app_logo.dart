@@ -3,8 +3,11 @@
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
 
-/// 정사각형 그라디언트 위에 소문자 이니셜을 얹은 모노그램.
-/// 스플래시/앱바 등에서 로고로 사용.
+/// 앱 로고.
+///
+/// 전에는 'ic' 두 글자를 그라디언트 사각형에 얹어 자리만 잡아 두었다.
+/// 이제 실제 로고 이미지를 쓴다 — 런처 아이콘, 안드로이드 스플래시와 같은
+/// 그림이라 앱을 누른 순간부터 첫 화면까지 같은 것이 이어진다.
 class AppMonogram extends StatelessWidget {
   final double size;
 
@@ -16,12 +19,7 @@ class AppMonogram extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.28),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [context.colors.primaryLight, context.colors.primaryDark],
-        ),
+        borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
             color: context.colors.primary.withValues(alpha: 0.28),
@@ -30,15 +28,16 @@ class AppMonogram extends StatelessWidget {
           ),
         ],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        'ic',
-        style: TextStyle(
-          fontSize: size * 0.42,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          height: 1,
-          letterSpacing: -1,
+      child: ClipRRect(
+        // 원본 이미지가 이미 둥근 사각형이지만, 그림자와 모서리를 같은
+        // 반지름으로 맞추려면 한 번 더 깎아야 가장자리가 어긋나지 않는다.
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: Image.asset(
+          'assets/brand/idcool_logo.png',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.medium,
         ),
       ),
     );

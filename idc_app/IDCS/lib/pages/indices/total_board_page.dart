@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
 import 'package:idcs/services/board/board_api_service.dart';
+import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class TotalBoardPage extends StatefulWidget {
   final String userId;
@@ -60,7 +63,7 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        AppToast.error(context, describeApiError(context, e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -84,19 +87,19 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('통합 소요 기록 (관리자)')),
+      appBar: AppBar(title: Text(context.l10n.totalBoardTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 📌 3. 필수 전달 인자 누락 에러 수정 부분
-            BoardHeaderBox(
-              title: '통합 검색 및 필터',
+            BoardSearchBox(
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
               onSearchTypeChanged: (val) {
-                if (val != null) setState(() => _selectedSearchType = val);
+                setState(() => _selectedSearchType = val);
+                _handleSearch();
               },
               onSearch: _handleSearch,
             ),

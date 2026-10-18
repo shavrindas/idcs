@@ -147,7 +147,10 @@ async def app_facility_monitoring_ws(websocket: WebSocket, user_id: int):
                     
                     if isinstance(stream_bridge.latest_data[f_id].get("datas"), dict):
                         for key, val in stream_bridge.latest_data[f_id]["datas"].items():
-                            if any(keyword in key for keyword in ["temp_pv", "temp_sv", "temp_comp", "deforest_def", "emergency_emg", "emergency_cint", "emergency_high"]):
+                            # control_runsw 를 더했다. 호실 목록('내 시설' 안)이
+                            # 운전 상태를 이 값으로 그리는데, 개괄 화면은 같은
+                            # 카드를 쓰면서 이 값만 못 받아 '콤프' 칸이 비어 있었다.
+                            if any(keyword in key for keyword in ["temp_pv", "temp_sv", "temp_comp", "deforest_def", "control_runsw", "emergency_emg", "emergency_cint", "emergency_high"]):
                                 filtered_datas[key] = val
                                 
                     if filtered_datas:
