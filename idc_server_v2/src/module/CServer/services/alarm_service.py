@@ -25,6 +25,29 @@ def invalidate_role_cache(facility_id: int):
 
 
 # 2단계: 기존 리스트 형태의 함수 (캐시 키에 _list 추가)
+def _as_number(value) -> float | None:
+    """숫자로 읽을 수 있으면 float, 아니면 None.
+
+    설비 값에는 'ON'/'OFF'/'NA' 같은 상태 문자열이 섞여 있고, 포인트 롤의
+    상·하한도 비어 있거나 'null' 문자열로 들어온다. 어느 쪽이든 float() 에
+    그대로 넘기면 터진다.
+    """
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    text = str(value).strip()
+    if text == "" or text.lower() in ("null", "none", "na"):
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
 async def scan_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
     now = time.time()
     cache_entry = role_cache.get(facility_id)
@@ -97,9 +120,19 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
         for role in roles:
             for k, v in data_dict.items():
                 if role.role_name in k and str(role.room_id) in k:
-                    val = float(v)
-                    low_limit = float(role.target_low_limit) if role.target_low_limit not in (None, "", "null") else float('-inf')
-                    high_limit = float(role.target_high_limit) if role.target_high_limit not in (None, "", "null") else float('inf')
+                    # 설비는 ON/OFF/NA 같은 문자열도 함께 올려보낸다. 숫자로
+                    # 바꿀 수 없는 값에 float() 를 그대로 걸면 ValueError 가 나고,
+                    # 그 예외가 데이터 스트림 핸들러를 통째로 죽인다 — 노드가
+                    # OFFLINE 으로 떨어지고, 재접속해도 다음 묶음에서 또 죽는다.
+                    # 상·하한 비교는 수치 항목에만 뜻이 있으므로 조용히 건너뛴다.
+                    val = _as_number(v)
+                    if val is None:
+                        continue
+
+                    low_limit = _as_number(role.target_low_limit)
+                    high_limit = _as_number(role.target_high_limit)
+                    low_limit = float('-inf') if low_limit is None else low_limit
+                    high_limit = float('inf') if high_limit is None else high_limit
 
                     is_out_of_bounds = val <= low_limit or val >= high_limit
                     

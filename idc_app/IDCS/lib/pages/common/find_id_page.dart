@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/common/find_id/find_id_components.dart';
 import 'package:idcs/services/common/find_id/auth_api_service.dart';
+import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FindIdPage extends StatefulWidget {
   const FindIdPage({super.key});
@@ -26,9 +29,7 @@ class _FindIdPageState extends State<FindIdPage> {
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('확인할 이메일을 입력해주세요.')),
-      );
+      AppToast.warning(context, context.l10n.findIdEmailRequired);
       return;
     }
 
@@ -43,7 +44,7 @@ class _FindIdPageState extends State<FindIdPage> {
     } catch (e) {
       setState(() {
         _isExpanded = true;
-        _resultMessage = '오류 발생: ${e.toString()}';
+        _resultMessage = context.l10n.errorOccurred(describeApiError(context, e));
       });
     }
   }
@@ -59,10 +60,10 @@ class _FindIdPageState extends State<FindIdPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              Text('아이디 찾기', style: Theme.of(context).textTheme.headlineMedium),
+              Text(context.l10n.findId, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 6),
               Text(
-                '가입하신 이메일을 입력하면 계정 정보를 확인해드려요.',
+                context.l10n.findIdSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),

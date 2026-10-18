@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #2: 통합 알람 박스 (순수 목록 표시 및 이벤트 전달)
 class UserAlarmBox extends StatelessWidget {
@@ -7,11 +8,16 @@ class UserAlarmBox extends StatelessWidget {
   final Function(int) onFacilityPressed;
   final bool isSearching;
 
+  /// '진행중'만 보고 있는지. 비어 있을 때 '볼 알람이 없다'가 아니라
+  /// '지금 울리는 게 없다'고 안심시켜 주기 위해 필요하다.
+  final bool showingActiveOnly;
+
   const UserAlarmBox({
     super.key,
     required this.alarms,
     required this.onFacilityPressed,
     this.isSearching = false,
+    this.showingActiveOnly = false,
   });
 
   @override
@@ -20,7 +26,13 @@ class UserAlarmBox extends StatelessWidget {
       return SliverToBoxAdapter(
         child: EmptyListState(
           icon: Icons.notifications_off_outlined,
-          message: isSearching ? '검색 결과가 없습니다.' : '조회할 수 있는 알람이 없습니다.',
+          // 검색이 빈손인 것과 '지금 울리는 게 없다'는 다른 소식이다.
+          good: !isSearching && showingActiveOnly,
+          message: isSearching
+              ? context.l10n.searchNoResults
+              : showingActiveOnly
+                  ? context.l10n.alarmsNoneActive
+                  : context.l10n.alarmsNone,
         ),
       );
     }
@@ -36,9 +48,9 @@ class UserAlarmBox extends StatelessWidget {
 
         return GroupedAlarmTile(
           group: group,
-          title: representative['alarm_name'] ?? '알람 이름 없음',
+          title: alarmDisplayName(context, representative['alarm_name']),
           subtitle:
-              '${representative['facility_name'] ?? '시설 이름 없음'} · ${representative['room_name'] ?? '룸 이름 없음'}',
+              '${representative['facility_name'] ?? context.l10n.facilityNameMissing} · ${representative['room_name'] ?? context.l10n.roomNameMissing}',
           onAlarmTap: (alarm) {
             final facilityId = alarm['facility_id'] is int
                 ? alarm['facility_id']

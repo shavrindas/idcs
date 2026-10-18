@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- 앱을 누른 순간부터 플러터가 첫 프레임을 그릴 때까지 보이는 화면.
+     전에는 흰 바탕만 있어서 그 사이가 "아직 아무 일도 안 일어난" 것처럼
+     보였다. 로고를 올려 두면 그 순간부터 앱이 시작된 것으로 읽힌다.
+     바탕색은 values/colors.xml 에서 테마별로 갈린다. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="?android:colorBackground" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
+    <item android:drawable="@color/splash_bg" />
+    <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+            android:src="@drawable/launch_image" />
+    </item>
 </layer-list>

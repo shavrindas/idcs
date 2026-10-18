@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:idcs/services/common/social_auth_service.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: 일반 로그인 박스 (이메일/비밀번호 입력 + 제출)
 class StandardLoginBox extends StatefulWidget {
@@ -30,8 +32,8 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
         TextField(
           controller: widget.emailController,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: '이메일',
+          decoration: InputDecoration(
+            labelText: context.l10n.fieldEmail,
             hintText: 'name@example.com',
             prefixIcon: Icon(Icons.mail_outline_rounded),
           ),
@@ -42,10 +44,10 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
           obscureText: _obscurePassword,
           onSubmitted: (_) => widget.onLoginPressed(),
           decoration: InputDecoration(
-            labelText: '비밀번호',
+            labelText: context.l10n.fieldPassword,
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             suffixIcon: IconButton(
-              tooltip: '비밀번호 표시',
+              tooltip: context.l10n.showPassword,
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                 color: context.colors.textSecondary,
@@ -55,7 +57,7 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
           ),
         ),
         const SizedBox(height: 20),
-        AsyncActionButton(label: '로그인', onPressed: widget.onLoginPressed),
+        AsyncActionButton(label: context.l10n.login, onPressed: widget.onLoginPressed),
       ],
     );
   }
@@ -63,12 +65,16 @@ class _StandardLoginBoxState extends State<StandardLoginBox> {
 
 /// Box #2: 소셜 로그인 박스
 class SocialLoginBox extends StatelessWidget {
-  final Function(String) onSocialLoginPressed;
+  final Future<void> Function(String) onSocialLoginPressed;
 
   const SocialLoginBox({super.key, required this.onSocialLoginPressed});
 
   @override
   Widget build(BuildContext context) {
+    // On web the plugin cannot run this sign-in flow at all, so showing the
+    // buttons would only offer a dead end.
+    if (!SocialAuthService.isSupported) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -77,19 +83,16 @@ class SocialLoginBox extends StatelessWidget {
             const Expanded(child: Divider()),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text('또는', style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(context.l10n.orDivider, style: Theme.of(context).textTheme.bodyMedium),
             ),
             const Expanded(child: Divider()),
           ],
         ),
         const SizedBox(height: 16),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialLoginPressed('google'),
-          icon: const _ProviderBadge(
-            label: 'G',
-            background: Color(0xFF4285F4),
-          ),
-          label: const Text('Google로 계속하기'),
+          icon: const _ProviderBadge(label: 'G', background: Color(0xFF4285F4)),
+          label: context.l10n.continueWithGoogle,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
@@ -97,14 +100,10 @@ class SocialLoginBox extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        OutlinedButton.icon(
+        AsyncActionButton.outlined(
           onPressed: () => onSocialLoginPressed('apple'),
-          icon: const _ProviderBadge(
-            label: '',
-            background: Colors.black,
-            icon: Icons.apple,
-          ),
-          label: const Text('Apple로 계속하기'),
+          icon: const _ProviderBadge(label: '', background: Colors.black, icon: Icons.apple),
+          label: context.l10n.continueWithApple,
           style: OutlinedButton.styleFrom(
             foregroundColor: context.colors.textPrimary,
             side: BorderSide(color: context.colors.outline),
@@ -161,7 +160,7 @@ class KeepLoginStateBox extends StatelessWidget {
         children: [
           Checkbox(value: isChecked, onChanged: onChanged),
           const SizedBox(width: 4),
-          Text('로그인 상태 유지하기', style: Theme.of(context).textTheme.bodyMedium),
+          Text(context.l10n.keepSignedIn, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );

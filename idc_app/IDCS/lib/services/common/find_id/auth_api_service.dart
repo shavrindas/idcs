@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../api_client.dart';
 // AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
 import '../../../main.dart';
 
@@ -9,7 +9,7 @@ class AuthApiService {
   /// 아이디 찾기 페이지: 이메일 계정 존재 및 연동 여부 확인
   static Future<Map<String, dynamic>> checkAccountExistence(String email) async {
     final url = Uri.parse('$_authUrl/check-account');
-    final response = await http.post(
+    final response = await ApiClient.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email}),
@@ -19,7 +19,7 @@ class AuthApiService {
       return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(error['detail'] ?? '계정 정보를 확인하는데 실패했습니다.');
+      throw ApiException.rejected(error);
     }
   }
 }

@@ -1,0 +1,690 @@
+{
+  "@@locale": "en",
+  "settingsTitle": "Settings",
+  "settingsDeviceOnly": "These settings apply to this device only.",
+  "settingsLanguage": "Language",
+  "languageSystem": "System default",
+  "languageKorean": "한국어",
+  "languageEnglish": "English",
+  "settingsTheme": "Appearance",
+  "themeSystem": "System default",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "settingsBackground": "Background",
+  "settingsSnow": "Snow in the background",
+  "settingsPanel": "Control panel",
+  "settingsPanelNote": "Applies only to the live control panel shown inside a room.",
+  "panelBackground": "Background",
+  "panelOpacity": "Transparency",
+  "panelValueSize": "Reading size",
+  "panelLedDigits": "LED digits",
+  "panelLedDigitsNote": "Show numbers as a seven-segment display.",
+  "panelSampleLabel": "Room temp",
+  "backgroundNone": "None",
+  "backgroundBlueprint": "Blueprint",
+  "backgroundCoil": "Cooling coil",
+  "backgroundMetal": "Metal",
+  "backgroundGrid": "Grid",
+  "settingsAlarmStyle": "Alarm alerts",
+  "alarmSound": "Sound",
+  "alarmSoundNote": "Play a sound when an alarm arrives.",
+  "alarmVibration": "Vibration",
+  "alarmVibrationNote": "Vibrate when an alarm arrives.",
+  "alarmLockScreen": "Show details on lock screen",
+  "alarmLockScreenNote": "When off, the lock screen only shows that an alarm arrived.",
+  "alarmRepeat": "Remind again",
+  "alarmRepeatNote": "If an alarm goes unread, remind you at the chosen interval up to {count} more times.",
+  "@alarmRepeatNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "alarmRepeatNone": "Off",
+  "alarmRepeatMinutes": "{minutes} min",
+  "@alarmRepeatMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fieldEmail": "Email",
+  "fieldPassword": "Password",
+  "fieldNewPassword": "New password",
+  "fieldConfirmPassword": "Re-enter password",
+  "fieldName": "Name",
+  "fieldPhoneOptional": "Phone (optional)",
+  "fieldVerificationCode": "Verification code",
+  "showPassword": "Show password",
+  "actionCancel": "Cancel",
+  "actionSubmit": "Done",
+  "orDivider": "or",
+  "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
+  "login": "Sign in",
+  "loginWelcomeTitle": "Welcome back",
+  "loginWelcomeSubtitle": "Enter your account details to sign in.",
+  "loginMissingFields": "Please enter both your email and password.",
+  "keepSignedIn": "Keep me signed in",
+  "noAccountQuestion": "Don't have an account? ",
+  "signUp": "Sign up",
+  "signupTitle": "Create an account",
+  "signupSubtitle": "Fill in the details below to create your account.",
+  "signupCreateAccount": "Create account",
+  "signupMissingFields": "Please fill in all required fields.",
+  "signupEmailRequired": "Please enter an email address.",
+  "signupEmailUnavailable": "Your email could not be read. Please allow email access in settings.",
+  "signupAppleEmailMissing": "Your Apple account did not share an email address.\nPlease enter one so the service works properly.",
+  "findId": "Find my ID",
+  "findIdSubtitle": "Enter the email you signed up with and we'll look up your account.",
+  "findIdEmailRequired": "Please enter the email to look up.",
+  "errorOccurred": "Something went wrong: {message}",
+  "@errorOccurred": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "findPassword": "Forgot password",
+  "resetPasswordTitle": "Reset password",
+  "resetPasswordSubtitle": "Verify your email, then set a new password.",
+  "resetStepEmail": "Verify email",
+  "resetSendCode": "Send code",
+  "resetStepCode": "Enter the code",
+  "resetVerifyCode": "Verify code",
+  "resetStepNewPassword": "Set a new password",
+  "resetTimeLeft": "Time left {time}",
+  "@resetTimeLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "resetTimedOut": "Time ran out. Please start again.",
+  "resetCodeVerified": "Code verified.",
+  "resetPasswordMismatch": "The passwords do not match.",
+  "actionSave": "Save",
+  "actionEdit": "Edit",
+  "actionEditing": "Editing",
+  "actionLink": "Link",
+  "actionLogout": "Sign out",
+  "actionSearchClear": "Clear search",
+  "fieldPhone": "Phone",
+  "fieldCurrentPassword": "Current password",
+  "loginMethod": "Sign-in method",
+  "noName": "No name",
+  "profileTitle": "My profile",
+  "profileNoChanges": "Nothing has changed.",
+  "profileSaved": "Saved.",
+  "profileSettingsSubtitle": "Appearance, control panel, alarm sound and vibration",
+  "profileTotalBoard": "All work logs",
+  "passwordSection": "Password",
+  "passwordChange": "Change password",
+  "passwordAllRequired": "Please fill in every password field.",
+  "passwordSameAsOld": "The new password is the same as the current one.",
+  "withdrawTitle": "Delete account",
+  "withdrawNote": "Deleting your account removes your details and facility membership for good.",
+  "withdrawConfirmTitle": "Delete your account?",
+  "withdrawConfirmBody": "Your details and facility membership will be removed and cannot be restored.",
+  "withdrawConfirmAction": "Delete",
+  "alarmsAllTitle": "All alarms",
+  "alarmSearchByFacility": "Search by facility…",
+  "alarmSearchByRoom": "Search by room…",
+  "alarmSearchByName": "Search by alarm name…",
+  "alarmFieldName": "Alarm",
+  "alarmFieldRoom": "Room",
+  "alarmFieldFacility": "Facility",
+  "alarmRecentlyEnded": "Recently ended",
+  "alarmStatusAll": "All",
+  "alarmStatusActive": "Active",
+  "alarmStatusEnded": "Ended",
+  "alarmGroupToggle": "Group repeats",
+  "alarmShort": "Alarms",
+  "statusNormal": "Normal",
+  "statusActiveAlarms": "Active alarms",
+  "countCases": "{label} {count}",
+  "@countCases": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "facilitiesTitle": "My facilities",
+  "facilitiesEmpty": "No facilities registered.",
+  "facilitiesNoneVisible": "No facilities available to view.",
+  "roomsEmpty": "No rooms registered.",
+  "roomCount": "{count} rooms",
+  "@roomCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "permissionLoadFailed": "Could not load permissions: {message}",
+  "@permissionLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorPrefix": "Error: {message}",
+  "@errorPrefix": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "chartFilterTitle": "Query",
+  "chartRoom": "Room",
+  "chartRoomUnnamed": "Unnamed room",
+  "chartResolution": "Resolution",
+  "chartRes10s": "10 seconds",
+  "chartRes1m": "1 minute",
+  "chartRes5m": "5 minutes",
+  "chartRes1h": "1 hour",
+  "chartRange": "Period",
+  "chartRange1h": "Last hour",
+  "chartRange12h": "Last 12 hours",
+  "chartRange1d": "Last day",
+  "chartRange7d": "Last 7 days",
+  "chartRange15d": "Last 15 days",
+  "chartApply": "Apply",
+  "chartGroups": "Data groups",
+  "chartNoGroups": "No groups defined.",
+  "chartPickManually": "Pick manually",
+  "chartPickItems": "Choose what to plot",
+  "chartGroupItems": "Points in this group",
+  "chartTooManySeries": "Plotting {shown} at once is hard to read. {limit} or fewer is easier.",
+  "@chartTooManySeries": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSeriesN": "Series {index}",
+  "@chartSeriesN": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSummary": "Range summary",
+  "chartMin": "Min",
+  "chartAvg": "Avg",
+  "chartMax": "Max",
+  "chartNoData": "No data for this query.",
+  "chartNoValidData": "No plottable data.",
+  "chartLowerLimit": "Low {value}",
+  "@chartLowerLimit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chartUpperLimit": "High {value}",
+  "@chartUpperLimit": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chartHideBaseline": "Hide safe range",
+  "chartShowBaseline": "Show safe range",
+  "backToFacilities": "Back to my facilities",
+  "facilityFallbackName": "Facility {id}",
+  "@facilityFallbackName": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navMonitoring": "Monitor",
+  "navChart": "Charts",
+  "navBoard": "Work log",
+  "navMessenger": "Messages",
+  "navAlarm": "Alarms",
+  "alarmSearchByAlarmOrRoom": "Search by alarm name…",
+  "alarmFieldRoomId": "Room ID",
+  "chartPageTitle": "Data charts",
+  "roomLoadFailed": "Could not load rooms: {message}",
+  "@roomLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "roomQueryFailed": "Room lookup failed: {message}",
+  "@roomQueryFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "groupLoadFailed": "Could not load groups: {message}",
+  "@groupLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "chartFailed": "Chart error: {message}",
+  "@chartFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "roomPickerTitle": "Choose a room",
+  "panelControlBadge": "Control",
+  "panelInputHint": "Value",
+  "panelConfirm": "Set",
+  "panelValueRequired": "Enter a value first.",
+  "panelNotConnected": "Not connected to the equipment — nothing was sent.",
+  "panelCommandSent": "Sent to {item}. The reading will change once the equipment applies it.",
+  "@panelCommandSent": {"placeholders": {"item": {"type": "String"}}},
+  "panelCommandOk": "{item} was applied.",
+  "@panelCommandOk": {"placeholders": {"item": {"type": "String"}}},
+  "panelCommandFailed": "{item} was rejected.",
+  "@panelCommandFailed": {"placeholders": {"item": {"type": "String"}}},
+  "chatGroupPickMembers": "Who to include",
+  "chatGroupNoMembers": "Nobody else is registered at this facility.",
+  "chatGroupNameRequired": "Enter a room name.",
+  "chatGroupMemberRequired": "Pick at least one person.",
+  "chatGroupSelected": "{count} selected",
+  "@chatGroupSelected": {"placeholders": {"count": {"type": "int"}}},
+  "chatGroupCreated": "Created '{name}'.",
+  "@chatGroupCreated": {"placeholders": {"name": {"type": "String"}}},
+  "chatMembersLoadFailed": "Could not load the member list. {reason}",
+  "@chatMembersLoadFailed": {"placeholders": {"reason": {"type": "String"}}},
+  "signupPasswordConfirm": "Confirm password",
+  "signupPasswordMismatch": "The two passwords do not match.",
+  "signupPasswordTooShort": "Use at least {min} characters.",
+  "@signupPasswordTooShort": {"placeholders": {"min": {"type": "int"}}},
+  "signupEmailInvalid": "Check the email address format.",
+  "loginSuccess": "Signed in.",
+  "signupSuccess": "Account created. Please sign in.",
+  "resetPasswordDone": "Your password has been changed.",
+  "facilityRegisterDone": "Facility added.",
+  "facilityUnlinkDone": "Facility unlinked.",
+  "withdrawDone": "Your account has been deleted.",
+  "chartSeriesSummary": "{group} · {count} shown",
+  "@chartSeriesSummary": {"placeholders": {"group": {"type": "String"}, "count": {"type": "int"}}},
+  "roomSetpointShort": "Set",
+  "roomStatusDefrost": "Defrost",
+  "roomStatusCompressor": "Comp",
+  "roomStatusOn": "ON",
+  "roomStatusOff": "OFF",
+  "chartNoRecordsFor": "No records for: {names}",
+  "@chartNoRecordsFor": {"placeholders": {"names": {"type": "String"}}},
+  "editorBodyHint": "Write what happened.",
+  "discardDraftTitle": "Discard this post?",
+  "discardDraftBody": "It has not been published. Leaving will lose what you wrote.",
+  "discardDraftKeep": "Keep writing",
+  "discardDraftLeave": "Discard",
+  "discardChangesTitle": "Discard your changes?",
+  "discardChangesBody": "They have not been saved. Leaving will lose them.",
+  "chartLimitsEdit": "Set limits manually",
+  "chartLimitsTitle": "Limits",
+  "chartLimitsLow": "Low",
+  "chartLimitsHigh": "High",
+  "chartLimitsLocal": "Saved on this device only. Alarms do not use these — for that they must be set on the point role in the web console.",
+  "chartLimitsSaved": "Limits saved.",
+  "chartLimitsEmpty": "No series is currently drawn.",
+  "chartSafeRangeTitle": "Safe range lines",
+  "chartSafeRangeHint": "Draws each point's high and low limit as a dashed line across the chart.",
+  "chartSafeRangeNone": "The selected points have no limits set.",
+  "navOverview": "Overview",
+  "overviewTitle": "All facilities",
+  "overviewSearchHint": "Find a facility",
+  "overviewRoomCount": "{count} rooms",
+  "@overviewRoomCount": {"placeholders": {"count": {"type": "int"}}},
+  "overviewNoFacilities": "No facilities registered.",
+  "overviewAllNormal": "All rooms normal",
+  "overviewWatching": "Watching {count} rooms",
+  "@overviewWatching": {"placeholders": {"count": {"type": "int"}}},
+  "overviewAttention": "{count} rooms to check",
+  "@overviewAttention": {"placeholders": {"count": {"type": "int"}}},
+  "roomStateDrift": "Off target",
+  "roomStateNoData": "No data",
+  "roomStatusFault": "Fault",
+  "roomStatusCint": "CINT",
+  "roomStatusHigh": "HIGH",
+  "searchNoResults": "No matches.",
+  "alarmsNone": "No alarms to show.",
+  "alarmNameMissing": "Unnamed alarm",
+  "roomNameMissing": "Unnamed room",
+  "facilityNameMissing": "Unnamed facility",
+  "facilityRegister": "Add facility",
+  "facilityAccessCode": "Facility access code",
+  "facilityRegistered": "Registered facilities",
+  "facilityUnlink": "Remove",
+  "facilityRegisterFailed": "Could not register: {message}",
+  "@facilityRegisterFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "facilityRegisterTitle": "Add a facility",
+  "facilityRegisterAdminNote": "Admins and developers do not need to register facilities.",
+  "facilityUnnamed": "Unnamed facility",
+  "boardNewPost": "New post",
+  "boardSearchAll": "All",
+  "boardTitle": "Title",
+  "boardAuthor": "Author",
+  "boardBody": "Body",
+  "boardSearchHint": "Type to search",
+  "actionSearch": "Search",
+  "boardEmpty": "No posts yet.",
+  "boardPostMeta": "[{facility}] by {author}",
+  "@boardPostMeta": {
+    "placeholders": {
+      "facility": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "pageFirst": "First page",
+  "pagePrev": "Previous page",
+  "pageNext": "Next page",
+  "pageLast": "Last page",
+  "postNoTitle": "Untitled",
+  "postMeta": "By {author} · {date}",
+  "@postMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "actionDelete": "Delete",
+  "commentsCount": "Comments {count}",
+  "@commentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commentDelete": "Delete comment",
+  "commentsEmpty": "No comments yet.",
+  "commentHint": "Write a comment…",
+  "commentSubmit": "Post",
+  "postLoadFailed": "Could not load the post: {message}",
+  "@postLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "Deleted.",
+  "postDeleteFailed": "Could not delete: {message}",
+  "@postDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentFailed": "Could not post the comment: {message}",
+  "@commentFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commentDeleteFailed": "Could not delete the comment: {message}",
+  "@commentDeleteFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "dataUnavailable": "Could not load the data.",
+  "postDetailTitle": "Post",
+  "imageAttachFailed": "Could not attach the image: {message}",
+  "@imageAttachFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postTitleRequired": "Please enter a title.",
+  "postCreated": "Post published.",
+  "postCreateFailed": "Could not publish: {message}",
+  "@postCreateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postCreateTitle": "New post",
+  "postCreateSubmit": "Publish",
+  "postSourceLoadFailed": "Could not load the original: {message}",
+  "@postSourceLoadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postUpdated": "Changes saved.",
+  "postUpdateFailed": "Could not save: {message}",
+  "@postUpdateFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "postEditTitle": "Edit post",
+  "postEditSubmit": "Save changes",
+  "totalBoardTitle": "All work logs (admin)",
+  "totalBoardSearch": "Search and filter",
+  "boardPageTitle": "Work log",
+  "boardSearchTitle": "Search posts",
+  "chatMenu": "Menu",
+  "chatNoMessages": "No messages yet.",
+  "chatReply": "Reply",
+  "chatPinToggle": "Pin",
+  "chatReplyingTo": "Replying to: {text}",
+  "@chatReplyingTo": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "actionClose": "Close",
+  "chatAttach": "Attach",
+  "chatInputHint": "Write a message…",
+  "chatSend": "Send",
+  "chatRoomsManage": "Manage rooms",
+  "chatGroupCreate": "New group chat",
+  "chatRoomsEmpty": "You are not in any chat rooms.",
+  "chatRoomName": "Room name",
+  "chatInviteUsers": "User IDs to invite (comma separated)",
+  "actionCreate": "Create",
+  "chatLeaveRoom": "Leave room (admins can delete group rooms)",
+  "chatSearchHint": "Search messages…",
+  "chatRoom": "Chat",
+  "chatMembers": "Members",
+  "chatRoomFallback": "Chat {id}",
+  "@chatRoomFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "navHome": "Home",
+  "appTagline": "Live monitoring for cold storage",
+  "findIdCheck": "Check my account",
+  "editorImageAttach": "Attach image",
+  "loginMethodEmail": "Email",
+  "notFound": "Page not found.",
+  "errorServerUnreachable": "Cannot reach the server. Check your network connection.",
+  "errorServerTimeout": "The server did not respond. Check your network connection.",
+  "errorRequestFailed": "The request could not be completed.",
+  "googleOnlyOnApp": "Google sign-in is only available in the app.",
+  "appleOnlyOnApp": "Apple sign-in is only available in the app.",
+  "googleNotConfigured": "Google sign-in is not set up yet. This app's OAuth client (SHA-1 fingerprint) has to be registered in the Firebase project.",
+  "googleSignInFailed": "Google sign-in could not continue. ({reason})",
+  "@googleSignInFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "appleSignInFailed": "Apple sign-in could not continue. ({reason})",
+  "@appleSignInFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "googleDefaultName": "Google user",
+  "appleDefaultName": "Apple user",
+  "notificationFallbackTitle": "Notification",
+  "alarmRepeatSuffix": "{body} (reminder {index}/{total})",
+  "@alarmRepeatSuffix": {
+    "placeholders": {
+      "body": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "channelSoundVibe": "Alarms (sound + vibration)",
+  "channelSoundVibeDesc": "Alarms that both ring and vibrate",
+  "channelSoundOnly": "Alarms (sound only)",
+  "channelSoundOnlyDesc": "Alarms that ring without vibrating",
+  "channelVibeOnly": "Alarms (vibration only)",
+  "channelVibeOnlyDesc": "Alarms that vibrate without ringing",
+  "channelSilent": "Alarms (silent)",
+  "channelSilentDesc": "Alarms shown without sound or vibration",
+  "panelPageTitle": "Live control panel — facility {id}",
+  "@panelPageTitle": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "panelControlConfirm": "Send this value?",
+  "panelControlSend": "Send",
+  "panelControlWire": "Value sent to the equipment",
+  "panelControlReadOnly": "Read-only here. Use the Controls card at the top to change it.",
+  "panelControlTitle": "Controls",
+  "panelNowTitle": "Right now",
+  "panelNoFaults": "No faults",
+  "panelFaultCount": "{count} faults",
+  "@panelFaultCount": {"placeholders": {"count": {"type": "int"}}},
+  "panelDetails": "Details",
+  "panelNoLimit": "No limits registered, so this value is not judged.",
+  "panelCardInfo": "Facility info",
+  "panelCardTemp": "Temperature",
+  "panelCardDefrost": "Defrost",
+  "panelCardFaults": "Faults",
+  "panelCardInverter": "Inverter",
+  "panelCardEquipment": "Equipment",
+  "panelCardControl": "Control",
+  "panelInfoFacilityId": "Facility ID",
+  "panelInfoRoomId": "Room ID",
+  "panelInfoManagerId": "Manager ID",
+  "panelInfoStatus": "Status",
+  "panelStatusActive": "Running (ACTIVE)",
+  "chartShowAllPoints": "Show all ({count})",
+  "@chartShowAllPoints": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chartShowLess": "Show less",
+  "pageOf": "{current} / {total}",
+  "@pageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "boardSearchClear": "Clear search",
+  "panelCurrentTemp": "Room temperature",
+  "panelSetpoint": "Setpoint",
+  "unitCelsius": "°C",
+  "panelWaitingData": "Waiting for data",
+  "panelUpdatedJustNow": "Updated just now",
+  "panelUpdatedSecondsAgo": "Updated {seconds}s ago",
+  "@panelUpdatedSecondsAgo": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "panelUpdatedMinutesAgo": "Updated {minutes} min ago",
+  "@panelUpdatedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "panelNoSignal": "No signal for {minutes} min",
+  "@panelNoSignal": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "alarmsNoneActive": "No alarms running right now"
+}

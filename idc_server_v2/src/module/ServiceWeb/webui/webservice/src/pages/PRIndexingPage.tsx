@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
 import { IndexingTable } from '../components/indexing/IndexingTable';
-import type { Role } from '../types';
+import type { Role, SessionUser } from '../types';
 
-export const PRIndexingPage: React.FC = () => {
+interface Props {
+  user: SessionUser;
+}
+
+export const PRIndexingPage: React.FC<Props> = ({ user }) => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -20,8 +24,8 @@ export const PRIndexingPage: React.FC = () => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
-    apiService.getFacilities().then(res => setFacilities(res.facilities || []));
-  }, []);
+    apiService.getUserFacilities(user.id).then(res => setFacilities(res.facilities || []));
+  }, [user.id]);
 
   const handleFacilitySelect = async (facId: number) => {
     setSelectedFacility(facId);

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/components/common/signup/signup_components.dart';
 import 'package:idcs/services/common/signup/auth_api_service.dart';
 import 'package:idcs/services/common/social_auth_service.dart';
+import '../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -15,6 +18,11 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  /// 비밀번호를 한 번 더 받는다. 오타가 나면 계정이 그대로 잠기는데, 지금은
+  /// 비밀번호 재설정도 서버에서 열려 있지 않아 되돌릴 방법이 없다.
+  final TextEditingController _passwordConfirmController = TextEditingController();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
@@ -28,10 +36,21 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordConfirmController.dispose();
     _nameController.dispose();
     _phoneController.dispose();
+    _fallbackEmailController.dispose();
     super.dispose();
   }
+
+  /// 너무 짧은 비밀번호를 막는 최소 길이. 서버가 따로 규칙을 두고 있지 않아
+  /// 여기서만 거른다.
+  static const int _minPasswordLength = 8;
+
+  /// 완전한 이메일 검증은 보내 봐야 알 수 있다. 여기서는 오타로 흔한
+  /// '@ 가 없다' / '점이 없다' 정도만 걸러 헛걸음을 줄인다.
+  static bool _looksLikeEmail(String value) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
 
   // API 연동: 일반 계정 생성 처리
   Future<void> _handleGeneralSignup() async {
@@ -40,35 +59,54 @@ class _SignupPageState extends State<SignupPage> {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
 
+    final l10n = context.l10n;
+
     if (email.isEmpty || password.isEmpty || name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('필수 항목을 모두 입력해주세요.')),
-      );
+      AppToast.warning(context, l10n.signupMissingFields);
+      return;
+    }
+
+    // 서버에 다녀와서야 알게 되는 것들을 먼저 거른다. 특히 비밀번호 오타는
+    // 서버가 잡아 줄 수 없다.
+    if (!_looksLikeEmail(email)) {
+      AppToast.warning(context, l10n.signupEmailInvalid);
+      return;
+    }
+    if (password.length < _minPasswordLength) {
+      AppToast.warning(context, l10n.signupPasswordTooShort(_minPasswordLength));
+      return;
+    }
+    if (password != _passwordConfirmController.text.trim()) {
+      AppToast.warning(context, l10n.signupPasswordMismatch);
       return;
     }
 
     try {
-      final result = await AuthApiService.signupGeneral(
+      await AuthApiService.signupGeneral(
         email: email,
         password: password,
         name: name,
         phoneNumber: phone,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      // 서버가 내려주는 문구는 한국어로 고정돼 있어, 앱을 영어로 쓰는 사람에게도
+      // 한국어가 그대로 떴다. 결과가 정해져 있는 자리는 앱이 제 말로 알린다.
+      AppToast.success(context, l10n.signupSuccess);
       // 가입 성공 시 로그인 페이지로 이동
       context.go('/login');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
   // API 연동: 소셜 계정 생성 처리
   Future<void> _handleSocialSignup(String provider) async {
+    // Read before awaiting: context may no longer be valid further down.
+    final l10n = context.l10n;
     try {
       Map<String, String>? socialData;
 
@@ -86,11 +124,11 @@ class _SignupPageState extends State<SignupPage> {
           setState(() {
             _showAppleFallback = true; // Box 3 열기
             _pendingAppleProviderId = socialData!['provider_id']!;
-            _pendingAppleName = socialData['name']!;
+            _pendingAppleName = socialData['name']!.isEmpty ? l10n.appleDefaultName : socialData['name']!;
           });
           return; // 여기서 흐름을 멈추고 유저의 수동 입력을 기다립니다.
         } else {
-          throw Exception('이메일 정보를 가져올 수 없습니다. 설정에서 이메일을 허용해주세요.');
+          throw Exception(l10n.signupEmailUnavailable);
         }
       }
 
@@ -99,11 +137,15 @@ class _SignupPageState extends State<SignupPage> {
         provider: socialData['provider']!,
         providerId: socialData['provider_id']!,
         email: socialData['email']!,
-        name: socialData['name']!,
+        name: socialData['name']!.isEmpty
+            ? (socialData['provider'] == 'apple' ? l10n.appleDefaultName : l10n.googleDefaultName)
+            : socialData['name']!,
       );
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -111,9 +153,7 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _handleAppleFallbackSubmit() async {
     final email = _fallbackEmailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이메일을 입력해주세요.')),
-      );
+      AppToast.warning(context, context.l10n.signupEmailRequired);
       return;
     }
 
@@ -133,17 +173,21 @@ class _SignupPageState extends State<SignupPage> {
     required String name
   }) async {
     try {
-      final result = await AuthApiService.signupSocial(
+      await AuthApiService.signupSocial(
         provider: provider,
         providerId: providerId,
         email: email,
         name: name,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.success(context, context.l10n.signupSuccess);
       context.go('/login');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      // The await above may have outlived this screen.
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -158,10 +202,10 @@ class _SignupPageState extends State<SignupPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              Text('계정 만들기', style: Theme.of(context).textTheme.headlineMedium),
+              Text(context.l10n.signupTitle, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 6),
               Text(
-                '아래 정보를 입력하고 계정을 생성해주세요.',
+                context.l10n.signupSubtitle,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),
@@ -169,6 +213,7 @@ class _SignupPageState extends State<SignupPage> {
               StandardSignupBox(
                 emailController: _emailController,
                 passwordController: _passwordController,
+                passwordConfirmController: _passwordConfirmController,
                 nameController: _nameController,
                 phoneController: _phoneController,
                 onSignupPressed: _handleGeneralSignup, // 기존 로직

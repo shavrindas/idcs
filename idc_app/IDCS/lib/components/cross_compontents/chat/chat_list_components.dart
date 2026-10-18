@@ -1,6 +1,7 @@
 // 경로: lib/components/cross_compontents/chat/chat_list_components.dart
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/l10n/l10n_context.dart';
 
 /// Box #1: [관리자 전용] 채팅방 제어 박스 (1:1 생성 버튼 제거)
 class ChatRoomControlBox extends StatelessWidget {
@@ -15,17 +16,17 @@ class ChatRoomControlBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.outline),
+        boxShadow: context.colors.cardShadow,
       ),
       child: Row(
         children: [
           Expanded(
-            child: Text('채팅방 관리', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
+            child: Text(context.l10n.chatRoomsManage, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary)),
           ),
           ElevatedButton.icon(
             onPressed: onCreateGroup,
             icon: const Icon(Icons.group_add_outlined, size: 16),
-            label: const Text('단체 채팅방 생성'),
+            label: Text(context.l10n.chatGroupCreate),
             style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
           ),
         ],
@@ -51,13 +52,13 @@ class ChatRoomListBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.colors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colors.outline),
+          boxShadow: context.colors.cardShadow,
         ),
         child: Column(
           children: [
             Icon(Icons.chat_bubble_outline_rounded, color: context.colors.textSecondary.withValues(alpha: 0.6), size: 28),
             const SizedBox(height: 8),
-            Text('참여 중인 채팅방이 없습니다.', style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
+            Text(context.l10n.chatRoomsEmpty, style: TextStyle(color: context.colors.textSecondary, fontSize: 13)),
           ],
         ),
       );
@@ -67,14 +68,14 @@ class ChatRoomListBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.outline),
+        boxShadow: context.colors.cardShadow,
       ),
       clipBehavior: Clip.antiAlias,
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: rooms.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.outline),
+        separatorBuilder: (_, _) => Divider(height: 1, color: context.colors.outline),
         itemBuilder: (context, index) {
           final room = rooms[index];
           final isPinned = room['sort_priority'] < 4;

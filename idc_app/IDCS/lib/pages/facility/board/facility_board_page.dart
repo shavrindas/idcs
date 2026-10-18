@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/components/cross_compontents/board/shared_board_compontents.dart';
 import 'package:idcs/services/board/board_api_service.dart';
+import '../../../services/common/api_client.dart';
+import 'package:idcs/l10n/l10n_context.dart';
+import 'package:idcs/components/shared/app_toast.dart';
 
 class FacilityBoardPage extends StatefulWidget {
   final String userId;
@@ -60,7 +63,7 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        AppToast.error(context, describeApiError(context, e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -83,21 +86,32 @@ class _FacilityBoardPageState extends State<FacilityBoardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('소요 기록')),
+      appBar: AppBar(
+        title: Text(context.l10n.boardPageTitle),
+        // 새 글은 제목 줄에 둔다. 떠 있는 버튼으로 두었더니 아래 네비게이션
+        // 막대와 같은 자리를 다투다가 그 뒤로 숨었다. 제목 옆은 스크롤과
+        // 상관없이 늘 같은 자리라 가려질 일이 없다.
+        actions: [
+          IconButton(
+            onPressed: _handleCreatePost,
+            icon: const Icon(Icons.add_rounded),
+            tooltip: context.l10n.boardNewPost,
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            BoardHeaderBox(
-              title: '게시글 검색',
+            BoardSearchBox(
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
               onSearchTypeChanged: (val) {
-                if (val != null) setState(() => _selectedSearchType = val);
+                setState(() => _selectedSearchType = val);
+                _handleSearch();
               },
               onSearch: _handleSearch,
-              onCreatePost: _handleCreatePost,
             ),
             const SizedBox(height: 16),
             BoardListAndPagingBox(

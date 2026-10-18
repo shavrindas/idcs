@@ -183,3 +183,126 @@ button, input, select, textarea {
   background: var(--primary-bg);
   color: var(--primary);
 }
+
+/*
+ * 켜고 끄는 단추.
+ *
+ * 전에는 켜져 있을 때 .btn-primary 였다. 진한 파랑은 '이 화면에서 지금 할 일'
+ * 이라는 뜻인데, 격자나 정보 표시는 그런 일이 아니다. 그 둘이 제일 진하게
+ * 칠해져 있으면 정작 날짜를 바꾸거나 시설을 고르는 쪽이 묻힌다.
+ *
+ * 그래서 켜짐은 옅은 바탕에 파란 글씨로만 알린다 — 상태는 보이되 소리치지
+ * 않는다.
+ */
+.btn-toggle {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.4px solid var(--border);
+}
+.btn-toggle:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn-toggle.on {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: transparent;
+}
+
+/* 도구 모음 안에서 단추와 입력칸을 가르는 선. 묶음이 보이면 줄이 짧아진다. */
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* 입력칸 앞에 붙는 작은 이름표. 날짜 칸이 무슨 날짜인지 알려 준다. */
+.field-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.field-inline > .label {
+  white-space: nowrap;
+}
+
+/* ===================== 어두운 테마 ===================== */
+
+/*
+ * 색은 앱(idc_app)의 AppPalette.dark 를 그대로 가져온다. 같은 시스템을 폰에서
+ * 보다가 모니터로 옮겨 앉았을 때 다른 제품처럼 보이면 안 된다.
+ *
+ * 토큰만 바꾸고 규칙은 손대지 않는다 — 화면마다 어두운 색을 따로 적기 시작하면
+ * 어느 한 곳은 반드시 빠진다.
+ *
+ * color-scheme 을 같이 바꾸는 것이 중요하다. 이 화면에는 select 와
+ * datetime-local 이 있는데, 이것들은 브라우저가 직접 그리므로 color-scheme 이
+ * light 인 채로 두면 어두운 화면 한가운데에 흰 상자만 남는다.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --primary: #6fa0ff;
+  --primary-light: #9bbeff;
+  --primary-dark: #3f79e0;
+  --primary-bg: rgba(111, 160, 255, 0.16);
+
+  --bg: #0f151c;
+  --surface: #223040;
+  --border: #36454f;
+
+  --text: #e9eef3;
+  --text-secondary: #9fb0bc;
+
+  --error: #ff6b6b;
+  --error-bg: rgba(255, 107, 107, 0.14);
+
+  --shadow: rgba(0, 0, 0, 0.45) 0 4px 14px -2px, rgba(0, 0, 0, 0.3) 0 2px 4px -2px;
+}
+
+/* 아직 직접 고르지 않았다면 운영체제 설정을 따른다. 'light' 로 고정해 둔
+   사람에게는 적용되지 않도록 그 경우를 빼 둔다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --primary: #6fa0ff;
+    --primary-light: #9bbeff;
+    --primary-dark: #3f79e0;
+    --primary-bg: rgba(111, 160, 255, 0.16);
+
+    --bg: #0f151c;
+    --surface: #223040;
+    --border: #36454f;
+
+    --text: #e9eef3;
+    --text-secondary: #9fb0bc;
+
+    --error: #ff6b6b;
+    --error-bg: rgba(255, 107, 107, 0.14);
+
+    --shadow: rgba(0, 0, 0, 0.45) 0 4px 14px -2px, rgba(0, 0, 0, 0.3) 0 2px 4px -2px;
+  }
+}
+
+/* 어두운 테마에서 진한 파랑 위의 흰 글씨는 눈이 아프다. 앱과 같이 바탕보다
+   어두운 글씨를 쓴다. */
+:root[data-theme="dark"] .btn-primary,
+:root[data-theme="dark"] .chip {
+  color: #0f151c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-primary,
+  :root:not([data-theme="light"]) .chip {
+    color: #0f151c;
+  }
+}
+:root[data-theme="dark"] .chip {
+  background: var(--primary);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip {
+    background: var(--primary);
+  }
+}

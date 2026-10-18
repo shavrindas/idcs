@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 앱이 뜨기 전 잠깐 보이는 바탕. 플러터가 첫 프레임을 그리면 사라진다.
+         여기 색이 앱의 배경색과 다르면 그 순간 화면이 한 번 깜빡인다.
+         lib/theme/app_theme.dart 의 background 와 같은 값이다. -->
+    <color name="splash_bg">#F5F8FA</color>
+</resources>

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../api_client.dart';
 import 'package:idcs/services/common/fcm_service.dart';
 // AppConfig가 정의된 main.dart를 임포트 (경로에 맞게 수정하세요)
 import '../../../main.dart';
@@ -15,7 +15,7 @@ class AuthApiService {
     required bool keepLogin,
   }) async {
     final url = Uri.parse('$_authUrl/login/general');
-    final response = await http.post(
+    final response = await ApiClient.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -33,7 +33,7 @@ class AuthApiService {
       return decoded;
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(error['detail'] ?? '로그인에 실패했습니다.');
+      throw ApiException.rejected(error);
     }
   }
 
@@ -44,7 +44,7 @@ class AuthApiService {
     required bool keepLogin,
   }) async {
     final url = Uri.parse('$_authUrl/login/social');
-    final response = await http.post(
+    final response = await ApiClient.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
@@ -62,7 +62,7 @@ class AuthApiService {
       return decoded;
     } else {
       final error = jsonDecode(utf8.decode(response.bodyBytes));
-      throw Exception(error['detail'] ?? '소셜 로그인에 실패했습니다.');
+      throw ApiException.rejected(error);
     }
   }
 }

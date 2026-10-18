@@ -75,7 +75,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
     // 밝은 파랑 위에는 어두운 글자라야 읽힌다 (7.12:1)
     onPrimary: Color(0xFF0F151C),
     background: Color(0xFF0F151C),
-    surface: Color(0xFF1B2531),
+    // 어두운 배경에서는 그림자가 거의 보이지 않으므로, 카드는 면을 한 단계
+    // 밝혀서 띄운다. 배경 대비 1.37:1 — 선을 두르지 않아도 가장자리가 보인다.
+    surface: Color(0xFF223040),
     outline: Color(0xFF36454F),
     outlineStrong: Color(0xFF6B7D8A),
     textPrimary: Color(0xFFE9EEF3),
@@ -87,7 +89,64 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   bool get isDark => background.computeLuminance() < 0.5;
 
-  /// 강조가 필요한 표면에만 제한적으로 사용 (리스트 행에는 사용하지 않음).
+  /// 일반 카드용 높이감. 선을 두르는 대신 이것으로 바닥에서 띄운다.
+  ///
+  /// 밝은 테마에서 카드(#FFFFFF)와 배경(#F5F8FA)의 차이는 1.07:1 뿐이라
+  /// 면 색만으로는 카드가 보이지 않는다 — 그림자가 그 역할을 한다.
+  /// 어두운 테마는 반대로 그림자가 묻히므로, surface 를 밝혀 둔 것이 주역이고
+  /// 여기서는 가장자리에 약간의 깊이만 더한다.
+  /// 카드가 비쳐서 배경과 같아질수록 가장자리가 사라진다.
+  ///
+  /// 투명도를 올리면 카드 색이 배경색에 가까워지고, 밝은 테마에서는 둘의
+  /// 차이가 원래도 1.07:1 뿐이라 카드가 통째로 녹아 없어진다. 그만큼
+  /// 또렷한 선을 한 겹 깔아 경계를 남긴다 — blur 0 에 spread 만 준 그림자는
+  /// 테두리와 같은 모양으로 그려진다. 카드마다 border 를 넣고 다니지 않아도
+  /// 된다는 뜻이다.
+  ///
+  /// 투명도는 테마를 만들 때 surface 의 알파에 녹아 있으므로, 여기서는
+  /// 그 알파만 보면 된다.
+  List<BoxShadow> get _cardEdge {
+    final a = surface.a;
+    if (a > 0.92) return const [];
+
+    // 많이 비칠수록 선이 또렷해야 한다.
+    final strength = ((0.92 - a) / 0.92).clamp(0.0, 1.0);
+    return [
+      BoxShadow(
+        color: outline.withValues(alpha: (isDark ? 0.55 : 0.75) * strength),
+        blurRadius: 0,
+        spreadRadius: 0.7,
+      ),
+    ];
+  }
+
+  List<BoxShadow> get cardShadow => [
+        ..._baseCardShadow,
+        ..._cardEdge,
+      ];
+
+  List<BoxShadow> get _baseCardShadow => isDark
+      ? [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.32),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ]
+      : [
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ];
+
+  /// 특별히 더 띄워야 하는 표면에만 (모달, 떠 있는 패널 등).
   /// 어두운 배경에서는 그림자가 거의 보이지 않으므로 더 진하게 깐다.
   List<BoxShadow> get softShadow => [
         BoxShadow(
@@ -187,6 +246,37 @@ class AppTheme {
   static ThemeData get light => _build(AppPalette.light, Brightness.light);
   static ThemeData get dark => _build(AppPalette.dark, Brightness.dark);
 
+  /// 카드 투명도를 팔레트에 녹여서 테마를 만든다.
+  ///
+  /// 투명도는 원래 제어판 카드에만 걸려 있었다. 모든 카드에 걸려면 화면마다
+  /// `colors.surface` 를 고쳐 다녀야 하는데, 쓰는 곳이 수십 군데다. 대신
+  /// 테마를 만들 때 surface 자체에 알파를 넣는다 — 그러면 지금 있는 코드를
+  /// 한 줄도 건드리지 않고 전부 따라온다.
+  ///
+  /// Scaffold 는 투명하게 둔다. 배경색과 눈은 [SnowfallBackground] 가 앱
+  /// 전체에 한 장으로 깔기 때문에, Scaffold 가 색을 칠하면 그 위를 덮는다.
+  static ThemeData withCardOpacity(AppPalette base, Brightness brightness, double opacity) {
+    final theme = _build(
+      base.copyWith(surface: base.surface.withValues(alpha: opacity)),
+      brightness,
+    );
+
+    // 투명해져야 하는 것은 '카드'뿐이다. surface 는 카드 말고도 앱바·하단
+    // 탭·대화상자·시트가 같이 쓰는 색이라, 그대로 두면 제목과 탭 글자 뒤로
+    // 눈이 지나간다. 읽어야 하는 글자 뒤는 비면 안 된다.
+    //
+    // 그래서 이 넷만 원래의 불투명한 색으로 되돌린다.
+    return theme.copyWith(
+      scaffoldBackgroundColor: Colors.transparent,
+      dialogTheme: theme.dialogTheme.copyWith(backgroundColor: base.surface),
+      navigationBarTheme:
+          theme.navigationBarTheme.copyWith(backgroundColor: base.surface),
+      bottomSheetTheme:
+          theme.bottomSheetTheme.copyWith(backgroundColor: base.surface),
+      appBarTheme: theme.appBarTheme.copyWith(backgroundColor: base.background),
+    );
+  }
+
   static ThemeData _build(AppPalette p, Brightness brightness) {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: p.primary,
@@ -236,6 +326,14 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
+      ),
+      // 머티리얼 기본값은 secondaryContainer 라서 앱의 파랑과 따로 놀았다.
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: p.primary,
+        foregroundColor: p.onPrimary,
+        elevation: 3,
+        extendedTextStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

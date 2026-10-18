@@ -1,7 +1,3 @@
-import '../../../main.dart';
-import 'package:flutter/material.dart';
-
-/// Box #5: 텍스트 박스 입력형 권한 주입 박스
 // 경로 : lib/components/common/opening/open_inj_text.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // GoRouter 추가
