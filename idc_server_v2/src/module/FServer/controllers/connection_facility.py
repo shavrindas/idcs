@@ -3,19 +3,43 @@
 # 명세 : FServer에서 시설 서버의 데이터를 인계받는 모듈
 # ===============================================================
 
-import src.module.FServer.config as config
+#import src.module.FServer.config as config
 import asyncio
 import re
-import src.module.Mapper.Ethernet_Mapper as EM
-import src.module.Mapper.Label_Mapper as LM
-from src.module.Mapper.Label_Mapper import DataFormat as Formats
 from src.module.Mapper.categories import et_category as CT
+from src.module.Mapper.categories import DataFormat as Formats
 import threading
 from datetime import datetime, time, timedelta
 import math
 import json
 from typing import Dict
 import queue
+import importlib
+import os
+
+NODE_CODE = os.getenv("NODE_CODE", "NODE_001")
+IS_FACILITY_SERVER = os.getenv("ENABLE_FACILITY_SERVER", "false")
+
+if IS_FACILITY_SERVER == "true":
+    Ethernetmapmodule = f"src.module.Mapper.{NODE_CODE}.Ethernet_Mapper"
+    Labelmodule = f"src.module.Mapper.{NODE_CODE}.Label_Mapper"
+    configmodule = f"src.module.Mapper.{NODE_CODE}.config"
+
+    try:
+        EM = importlib.import_module(Ethernetmapmodule)
+    except (ImportError, ModuleNotFoundError) as e:
+        EM = None
+
+    try:
+        LM = importlib.import_module(Labelmodule)
+    except (ImportError, ModuleNotFoundError) as e:
+        LM = None
+
+    try:
+        config = importlib.import_module(configmodule)
+    except (ImportError, ModuleNotFoundError) as e:
+        config = None
+
 
 class Ethernet:
     def __init__(self):
@@ -116,47 +140,48 @@ class Ethernet:
                 
                 with self.data_lock:
                     instant_payload = {}
-                    for adr, deg, lab, cate in LM.DataLists:
-                        #이더넷에서 온 인덱스 찾기
-                        if not adr in EM.DataMaps:
-                            continue
-                        idx = EM.DataMaps[adr]
-                        
-                        if not idx < len(recvdata):
-                            print(f"인덱스 초과 에러 - 주소: {adr}, 지시 인덱스: {idx}, 수신 개수: {len(recvdata)}")
-                            continue
-
-                        try:
-                            raw_val = int(recvdata[idx])
-                            deg_str = str(deg)
-                            decimals = len(deg_str.split('.')[1]) if '.' in deg_str else 0
-                            tmp = round(raw_val * deg, decimals)
-
-                            # 💡 카테고리 / 라벨 키 존재 여부 안전 검사 및 초기화
-                            if cate not in self.categorizedpayload:
-                                self.categorizedpayload[cate] = {}
+                    if LM and EM:
+                        for adr, deg, lab, cate in LM.DataLists:
+                            #이더넷에서 온 인덱스 찾기
+                            if not adr in EM.DataMaps:
+                                continue
+                            idx = EM.DataMaps[adr]
                             
-                            if lab not in self.categorizedpayload[cate]:
-                                # 최초 수신 시 Formats 인스턴스 생성
-                                self.categorizedpayload[cate][lab] = Formats()
+                            if not idx < len(recvdata):
+                                print(f"인덱스 초과 에러 - 주소: {adr}, 지시 인덱스: {idx}, 수신 개수: {len(recvdata)}")
+                                continue
 
-                            # 통계 데이터 누적
-                            target = self.categorizedpayload[cate][lab]
-                            target.vals.append(tmp)
-                            target.val_sum += tmp
-                            target.count += 1
+                            try:
+                                raw_val = int(recvdata[idx])
+                                deg_str = str(deg)
+                                decimals = len(deg_str.split('.')[1]) if '.' in deg_str else 0
+                                tmp = round(raw_val * deg, decimals)
 
-                            if target.val_max < tmp:
-                                target.val_max = tmp
-                            if target.val_min > tmp:
-                                target.val_min = tmp
+                                # 💡 카테고리 / 라벨 키 존재 여부 안전 검사 및 초기화
+                                if cate not in self.categorizedpayload:
+                                    self.categorizedpayload[cate] = {}
+                                
+                                if lab not in self.categorizedpayload[cate]:
+                                    # 최초 수신 시 Formats 인스턴스 생성
+                                    self.categorizedpayload[cate][lab] = Formats()
 
-                            instant_payload[lab] = tmp
-                        except ValueError:
-                            pass
-                    
-                    if instant_payload:
-                        self.payload_queue.put({"datas": instant_payload})
+                                # 통계 데이터 누적
+                                target = self.categorizedpayload[cate][lab]
+                                target.vals.append(tmp)
+                                target.val_sum += tmp
+                                target.count += 1
+
+                                if target.val_max < tmp:
+                                    target.val_max = tmp
+                                if target.val_min > tmp:
+                                    target.val_min = tmp
+
+                                instant_payload[lab] = tmp
+                            except ValueError:
+                                pass
+                        
+                        if instant_payload:
+                            self.payload_queue.put({"datas": instant_payload})
                 
                 #print(self.payload)
 

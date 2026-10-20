@@ -11,6 +11,7 @@ import asyncio
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.module.Core.models.User import User, UserRole
+from src.module.Core.models.Monitoring import PointRole
 
 router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
 
@@ -45,6 +46,22 @@ async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
         "facilities": [
             {"id": f.id, "name": f.name, "start_date": f.start_date, "end_date": f.end_date}
             for f in facilities
+        ]
+    }
+
+@router.get("/{room_id}/room_roles")
+async def get_facility_roles(room_id: int, db: AsyncSession = Depends(get_db)):
+    '''해당 호실의 포인트 롤 목록 확인'''
+    result = await db.execute(select(PointRole).where(PointRole.room_id == room_id))
+    if not result:
+        raise HTTPException(status_code=404, detail="호실에 배정된 역할을 찾을 수 없습니다.")
+
+    roles = result.scalars().all()
+
+    return {
+        "roles": [
+            {"id": r.id, "facility_id": r.facility_id, "role_name": r.role_name}
+            for r in roles
         ]
     }
 

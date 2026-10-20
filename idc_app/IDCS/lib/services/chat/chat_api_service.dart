@@ -18,7 +18,7 @@ class ChatApiService {
   /// 예전에는 화면에서 사용자 ID 를 쉼표로 직접 받아 적게 했는데, 현장에서
   /// 남의 ID 번호를 아는 사람은 없다.
   static Future<List<Map<String, dynamic>>> getFacilityMembers(int facilityId) async {
-    final url = Uri.parse('${AppConfig.webUrl}/facility-manager/facility/$facilityId/users');
+    final url = Uri.parse('${AppConfig.baseUrl}/facility-manager/facility/$facilityId/users');
     final response = await ApiClient.get(url);
     if (response.statusCode != 200) throw ApiException.rejected();
 

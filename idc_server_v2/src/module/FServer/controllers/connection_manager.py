@@ -9,13 +9,22 @@ import websockets
 import json
 import os
 from src.module.FServer.controllers.connection_facility import facility_ethernet as facilityconn
-from src.module.Mapper.WriteList import DataLists as RD
 import queue
+import importlib
 
 CENTER_API_URL = os.getenv("CENTER_API_URL", "http://127.0.0.1:8900/api/v1/cserver/sys-auth/login")
 CENTER_WS_URL = os.getenv("CENTER_WS_URL", "ws://127.0.0.1:8900/api/v1/cserver/data-stream")
 NODE_CODE = os.getenv("NODE_CODE", "NODE_001")
 API_KEY = os.getenv("API_KEY", "dummy_api_key_123")
+IS_FACILITY_SERVER = os.getenv("ENABLE_FACILITY_SERVER", "false")
+
+if IS_FACILITY_SERVER == "true":
+    Writemapmodule = f"src.module.Mapper.{NODE_CODE}.WriteList"
+
+    try:
+        RD = importlib.import_module(Writemapmodule)
+    except (ImportError, ModuleNotFoundError) as e:
+        RD = None
 
 class FacilityConnectionManager:
     def __init__(self):
@@ -111,7 +120,7 @@ class FacilityConnectionManager:
 
                 packet = json.loads(message)
 
-                if packet.get("type") == "WR":
+                if RD and packet.get("type") == "WR":
                     req_id = packet.get("req_id")
                     req_val = packet.get("req_val")
                     print(f"📩 사용자 요청 들어옴! [ID: {req_id}, Val: {req_val}]")
