@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from src.module.Core.models.User import User, UserRole
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
+from src.module.ServiceWeb.controllers.facility.scope import visible_facility_ids
 
 router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
 
@@ -17,25 +18,14 @@ class RegisterFacilityReq(BaseModel):
 
 @router.get("/{user_id}")
 async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
-    """유저가 소속된 시설 목록 조회 (관리자는 전체 조회)"""
-    
-    # 1. 유저 권한 확인
-    user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
-    if not user:
-        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    """유저가 소속된 시설 목록 조회 (개발자만 전체 조회)"""
 
-    # 2. 권한에 따른 조회 쿼리 분기
-    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
-        # 관리자는 매핑 관계없이 활성화된 모든 시설 조회
-        stmt = select(Facility).where(Facility.is_active == True)
-    else:
-        # 일반 유저는 자신에게 매핑된 시설만 조회
-        stmt = (
-            select(Facility)
-            .join(FacilityUser, Facility.id == FacilityUser.facility_id)
-            .where(FacilityUser.user_id == user_id, Facility.is_active == True)
-        )
-        
+    # ADMIN is scoped to its own company's facilities; only DEVELOPER sees all.
+    allowed = await visible_facility_ids(db, user_id)
+    stmt = select(Facility).where(Facility.is_active == True).order_by(Facility.id.asc())
+    if allowed is not None:
+        stmt = stmt.where(Facility.id.in_(allowed))
+
     result = await db.execute(stmt)
     facilities = result.scalars().all()
     

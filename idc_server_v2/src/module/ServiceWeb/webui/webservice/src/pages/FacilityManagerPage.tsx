@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
+import type { SessionUser } from '../types';
 
-export const FacilityManagerPage: React.FC = () => {
+export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -29,7 +30,7 @@ export const FacilityManagerPage: React.FC = () => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
 
   const loadFacilities = async () => {
-    const res = await apiService.getAllFacilitiesAdmin();
+    const res = await apiService.getAllFacilitiesAdmin(user.id);
     setFacilities(res.facilities || []);
   };
 
@@ -102,7 +103,7 @@ export const FacilityManagerPage: React.FC = () => {
   // 핸들러들
   const handleCreateFacility = async () => {
     if (!newFac.name || !newFac.access_code) return alert('시설명과 접근 코드는 필수입니다.');
-    await apiService.createFacilityAdmin(newFac);
+    await apiService.createFacilityAdmin(user.id, newFac);
     alert('시설이 추가되었습니다.');
     setNewFac({ name: '', access_code: '', start_date: '', end_date: '' });
     loadFacilities();
