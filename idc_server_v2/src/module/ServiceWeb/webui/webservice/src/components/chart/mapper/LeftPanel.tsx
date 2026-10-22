@@ -12,6 +12,7 @@ interface Props {
   onFacilityChange: (id: number) => void;
   onRoomChange: (id: number) => void;
   onDragStart: (e: React.DragEvent, role: Role) => void;
+  onAddRole: (role: Role) => void;
 }
 
 const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
@@ -33,6 +34,7 @@ export const LeftPanel: React.FC<Props> = ({
   onFacilityChange,
   onRoomChange,
   onDragStart,
+  onAddRole,
 }) => {
   const visibleRoom0Roles = room0Roles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
@@ -48,11 +50,14 @@ export const LeftPanel: React.FC<Props> = ({
         key={role.role_id}
         draggable
         onDragStart={(e) => onDragStart(e, role)}
+        onDoubleClick={() => onAddRole(role)}
+        title="드래그하거나 더블클릭해서 추가"
         className="card"
         style={{
           padding: '8px 10px',
           marginBottom: 6,
           cursor: 'grab',
+          userSelect: 'none',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
