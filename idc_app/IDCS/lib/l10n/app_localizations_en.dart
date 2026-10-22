@@ -780,6 +780,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomStateNoData => 'No data';
 
   @override
+  String get roomStateNormal => 'Normal';
+
+  @override
+  String overviewShowNoData(int count) {
+    return 'Show $count rooms without data';
+  }
+
+  @override
+  String get overviewHideNoData => 'Hide rooms without data';
+
+  @override
   String get roomStatusFault => 'Fault';
 
   @override
