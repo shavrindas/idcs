@@ -109,10 +109,10 @@ function App() {
                 {/* Admin/Developer 전용 라우트 */}
                 {isAdmin && (
                   <>
-                    <Route path="/main" element={<MainPage />} />
+                    <Route path="/main" element={<MainPage user={user} />} />
                     <Route path="/mapping" element={<ChartMappingPage user={user} />} />
                     <Route path="/indexing" element={<PRIndexingPage user={user} />} />
-                    <Route path="/facility-manager" element={<FacilityManagerPage />} />
+                    <Route path="/facility-manager" element={<FacilityManagerPage user={user} />} />
                     <Route path="/compare" element={<RoomComparePage user={user} />} />
                   </>
                 )}
