@@ -1490,6 +1490,24 @@ abstract class AppLocalizations {
   /// **'값 없음'**
   String get roomStateNoData;
 
+  /// No description provided for @roomStateNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'정상'**
+  String get roomStateNormal;
+
+  /// No description provided for @overviewShowNoData.
+  ///
+  /// In ko, this message translates to:
+  /// **'값 없는 호실 {count}곳 보기'**
+  String overviewShowNoData(int count);
+
+  /// No description provided for @overviewHideNoData.
+  ///
+  /// In ko, this message translates to:
+  /// **'값 없는 호실 접기'**
+  String get overviewHideNoData;
+
   /// No description provided for @roomStatusFault.
   ///
   /// In ko, this message translates to:
