@@ -110,7 +110,7 @@ export const RightPanel: React.FC<Props> = ({
         }}
       >
         {droppedRoles.length === 0 && (
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>여기로 포인트 롤을 드래그하세요.</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>왼쪽 포인트 롤을 여기로 드래그하거나 더블클릭하세요.</p>
         )}
         {droppedRoles.map((role, idx) => {
           const { roleLabel, badgeLabel } = getRoleLabels(role, role.role_id);
@@ -122,6 +122,8 @@ export const RightPanel: React.FC<Props> = ({
               onDragStart={(e) => handleItemDragStart(e, idx)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleItemDrop(e, idx)}
+              onDoubleClick={() => onRemoveRole(role.role_id)}
+              title="더블클릭하면 빠집니다"
               className="card"
               style={{
                 display: 'flex',
@@ -130,6 +132,7 @@ export const RightPanel: React.FC<Props> = ({
                 padding: '8px 10px',
                 marginBottom: 6,
                 cursor: 'grab',
+                userSelect: 'none',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

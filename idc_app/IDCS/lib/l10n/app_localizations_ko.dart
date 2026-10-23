@@ -765,6 +765,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get roomStateNoData => '값 없음';
 
   @override
+  String get roomStateNormal => '정상';
+
+  @override
+  String overviewShowNoData(int count) {
+    return '값 없는 호실 $count곳 보기';
+  }
+
+  @override
+  String get overviewHideNoData => '값 없는 호실 접기';
+
+  @override
   String get roomStatusFault => '이상';
 
   @override

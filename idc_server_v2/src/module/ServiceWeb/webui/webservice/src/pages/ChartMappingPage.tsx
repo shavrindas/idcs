@@ -83,15 +83,15 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
     e.preventDefault();
   };
 
+  // Shared by drag-and-drop and double-click so both paths behave the same.
+  const addRole = (role: Role) => {
+    setDroppedRoles((prev) => (prev.some((r) => r.role_id === role.role_id) ? prev : [...prev, role]));
+  };
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const roleData = e.dataTransfer.getData('application/json');
-    if (roleData) {
-      const role: Role = JSON.parse(roleData);
-      if (!droppedRoles.find((r) => r.role_id === role.role_id)) {
-        setDroppedRoles([...droppedRoles, role]);
-      }
-    }
+    if (roleData) addRole(JSON.parse(roleData));
   };
 
   const handleReorderRoles = (sourceIndex: number, targetIndex: number) => {
@@ -135,6 +135,7 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
         onFacilityChange={handleFacilityChange}
         onRoomChange={handleRoomChange}
         onDragStart={onDragStart}
+        onAddRole={addRole}
       />
       <RightPanel
         existingGroups={existingGroups}
@@ -145,7 +146,7 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
         onGroupNameChange={setGroupName}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        onRemoveRole={(id) => setDroppedRoles(droppedRoles.filter((r) => r.role_id !== id))}
+        onRemoveRole={(id) => setDroppedRoles((prev) => prev.filter((r) => r.role_id !== id))}
         onReorderRoles={handleReorderRoles}
         onSaveGroup={handleSaveGroup}
       />

@@ -58,15 +58,16 @@ echarts.connect(SYNC_GROUP_NAME);
  * 툴팁에 찍을 값.
  *
  * 온도는 DB 에 REAL 로 들어 있어 그대로 내보내면 -20.299999237060547 처럼
- * 뜬다. 현장에서 의미 있는 자리는 소수점 아래 한두 자리뿐이라, 셋째 자리에서
+ * 뜬다. 현장에서 의미 있는 자리는 소수점 아래 한두 자리뿐이라, 둘째 자리에서
  * 끊고 뒤에 남는 0 은 지운다 (-20.3, 12.45, 380).
  */
 const round3 = (n: number) => Number(n.toFixed(3));
 
 const formatValue = (v: any) => {
-  const n = Array.isArray(v) ? v[1] : v;
-  if (typeof n !== 'number' || Number.isNaN(n)) return '-';
-  return String(Number(n.toFixed(3)));
+  const n = Number(Array.isArray(v) ? v[1] : v);
+  if (v == null || Number.isNaN(n)) return '-';
+  // `|| 0` folds -0 into 0 so tiny negatives don't print as "-0".
+  return String(Number(n.toFixed(2)) || 0);
 };
 
 const formatShortTime = (ts: number) => {
@@ -133,7 +134,7 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
         if (ds.target_low_limit != null) markLineData.push({ yAxis: Number(ds.target_low_limit), name: 'Low', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
         if (ds.target_high_limit != null) markLineData.push({ yAxis: Number(ds.target_high_limit), name: 'High', lineStyle: { type: 'dashed', color: color, width: 1.5 } });
         if (markLineData.length > 0) {
-          seriesItem.markLine = { data: markLineData, symbol: 'none', label: { show: true, position: 'start', distance: [10, -10], formatter: '{b}: {c}', color: color, fontSize: 11, backgroundColor: palette.labelBack, padding: [2, 4], borderRadius: 2 } };
+          seriesItem.markLine = { data: markLineData, symbol: 'none', label: { show: true, position: 'start', distance: [10, -10], formatter: (p: any) => `${p.name}: ${formatValue(p.value)}`, color: color, fontSize: 11, backgroundColor: palette.labelBack, padding: [2, 4], borderRadius: 2 } };
         }
       }
       return seriesItem;
@@ -203,6 +204,8 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
         min: yBuffer === 0 ? undefined : (value: any) => round3(value.min - pad(value)),
         max: yBuffer === 0 ? undefined : (value: any) => round3(value.max + pad(value)),
         axisLabel: { formatter: formatValue, color: palette.axisText },
+        // The cross pointer prints its own label; without this it shows the raw float.
+        axisPointer: { label: { formatter: (p: any) => formatValue(p.value) } },
         nameTextStyle: { color: palette.axisText },
       },
       dataZoom: [{ type: 'inside', filterMode: 'empty' }],

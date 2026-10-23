@@ -100,9 +100,9 @@ export const apiService = {
   },
 
   // 시설 매니지먼트
-  getAllFacilitiesAdmin: async () => (await fetch(`${BASE_URL}/facility-manager/facilities`)).json(),
-  createFacilityAdmin: async (data: any) => {
-    const res = await fetch(`${BASE_URL}/facility-manager/facility`, {
+  getAllFacilitiesAdmin: async (userId: number) => (await fetch(`${BASE_URL}/facility-manager/facilities?user_id=${userId}`)).json(),
+  createFacilityAdmin: async (userId: number, data: any) => {
+    const res = await fetch(`${BASE_URL}/facility-manager/facility?user_id=${userId}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error(await res.text());
@@ -137,8 +137,8 @@ export const apiService = {
   deletePointRoleAdmin: async (roleId: number) => (await fetch(`${BASE_URL}/facility-manager/role/${roleId}`, { method: 'DELETE' })).json(),
 
   // M2M 엣지 노드 관리 API
-  getNodeFacilities: async () => (await fetch(`${BASE_URL}/admin/nodes/facilities`)).json(),
-  getNodes: async () => (await fetch(`${BASE_URL}/admin/nodes`)).json(),
+  getNodeFacilities: async (userId: number) => (await fetch(`${BASE_URL}/admin/nodes/facilities?user_id=${userId}`)).json(),
+  getNodes: async (userId: number) => (await fetch(`${BASE_URL}/admin/nodes?user_id=${userId}`)).json(),
   createNode: async (data: { facility_id: number; node_code: string; node_name: string }) => {
     const res = await fetch(`${BASE_URL}/admin/nodes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
