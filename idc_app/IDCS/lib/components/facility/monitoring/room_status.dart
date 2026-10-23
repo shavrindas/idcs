@@ -222,7 +222,7 @@ class StatusRail extends StatefulWidget {
     super.key,
     required this.color,
     this.index = 0,
-    this.height = 4,
+    this.height = 6,
   });
 
   @override
@@ -232,7 +232,7 @@ class StatusRail extends StatefulWidget {
 class _StatusRailState extends State<StatusRail> with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 520),
+    duration: const Duration(milliseconds: 1100),
   );
   late final Animation<double> _fill =
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);

@@ -6,6 +6,7 @@
 // 옮기면 다른 사람 브랜치와 부딪힌다.
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
+import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
@@ -117,7 +118,6 @@ class RoomGrid extends StatelessWidget {
             alarmCount: count,
           );
           final accent = status.accent(colors);
-          final attention = status.needsAttention;
           final temp = status.temp;
           final deviation = status.deviation;
 
@@ -130,16 +130,16 @@ class RoomGrid extends StatelessWidget {
               boxShadow: colors.cardShadow,
             ),
             child: Material(
-              color: attention
-                  ? Color.alphaBlend(accent.withValues(alpha: 0.07), colors.surface)
-                  : colors.surface,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(14),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => onRoomPressed(roomId),
                 child: Container(
                   decoration: BoxDecoration(
-                    border: attention
+                    // Only faults get an outline; a drifting card is already tinted and
+                    // the extra yellow ring read as a rendering glitch.
+                    border: status.condition == RoomCondition.fault
                         ? Border.all(color: accent.withValues(alpha: 0.55), width: 1.2)
                         : null,
                   ),
@@ -187,36 +187,11 @@ class RoomGrid extends StatelessWidget {
                               const SizedBox(height: 4),
 
                               // 이 칸에서 가장 먼저 눈에 들어와야 하는 값.
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    temp == null ? '—' : temp.toStringAsFixed(1),
-                                    style: TextStyle(
-                                      fontSize: 25,
-                                      height: 1,
-                                      fontWeight: FontWeight.w700,
-                                      color: attention ? accent : colors.textPrimary,
-                                      // 제어판과 같은 7세그먼트 서체. 수치일 때만 쓴다.
-                                      fontFamily: temp != null && view.ledDigits
-                                          ? MonitoringViewSettings.ledFontFamily
-                                          : null,
-                                      letterSpacing: temp != null && view.ledDigits ? 1 : null,
-                                    ),
-                                  ),
-                                  if (temp != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 2, bottom: 2),
-                                      child: Text(
-                                        context.l10n.unitCelsius,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: colors.textSecondary,
-                                        ),
-                                      ),
-                                    ),
-                                ],
+                              TemperatureReadout(
+                                temp: temp,
+                                // Digits take the status colour too: green, yellow or red.
+                                color: status.condition == RoomCondition.offline ? colors.textPrimary : accent,
+                                ledDigits: view.ledDigits,
                               ),
                               const SizedBox(height: 3),
 
