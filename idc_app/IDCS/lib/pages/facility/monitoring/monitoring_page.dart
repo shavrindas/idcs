@@ -82,7 +82,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
     });
 
     _loadRoomName();
-    _loadPointRoles();
   }
 
   Future<void> _loadRoomName() async {
@@ -95,17 +94,6 @@ class _MonitoringPageState extends State<MonitoringPage> {
       if (mounted && match != null) setState(() => _roomName = match['name']);
     } catch (_) {
       // 이름을 못 불러와도 제어판 자체는 그대로 쓸 수 있으므로 조용히 넘어간다.
-    }
-  }
-
-  Future<void> _loadPointRoles() async {
-    try {
-      final roles = await FacilityApiService.getRoomRoles(widget.roomId);
-      for(final r in roles) {
-        print(r);
-      }
-    } catch (e) {
-      debugPrint('에러: $e');
     }
   }
 

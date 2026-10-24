@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
+import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/components/shared/app_toast.dart';
 import 'package:idcs/components/shared/skeleton.dart';
@@ -190,10 +191,18 @@ class _MonitoringAllState extends State<MonitoringAll> {
 
   List<dynamic> get _shownFacilities {
     final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return _facilities;
-    return _facilities
-        .where((f) => (f['name']?.toString() ?? '').toLowerCase().contains(q))
-        .toList();
+    final matched = q.isEmpty
+        ? _facilities
+        : _facilities
+            .where((f) => (f['name']?.toString() ?? '').toLowerCase().contains(q))
+            .toList();
+
+    // Facilities that are actually reporting come first; otherwise one live
+    // facility can sit below a dozen silent ones. Stable, so the order inside
+    // each group never shuffles.
+    bool hasData(dynamic f) => (_roomsByFacility[f['id'].toString()] ?? const [])
+        .any((r) => r['id'] is int && (_live[r['id']]?.isNotEmpty ?? false));
+    return [...matched.where(hasData), ...matched.where((f) => !hasData(f))];
   }
 
   /// 이 호실이 지금 어떤 상태인지.
@@ -339,8 +348,6 @@ class _OverviewSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
     return Skeleton(
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
@@ -348,30 +355,18 @@ class _OverviewSkeleton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 58,
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.outline),
-              ),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                child: Row(
-                  children: [
-                    SkeletonBox(width: 34, height: 34, radius: 17),
-                    SizedBox(width: 11),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SkeletonBox(width: 120, height: 14),
-                        SizedBox(height: 5),
-                        SkeletonBox(width: 90, height: 11),
-                      ],
-                    ),
-                  ],
-                ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 2),
+              child: Row(
+                children: [
+                  SkeletonBox(width: 52, height: 12),
+                  SizedBox(width: 14),
+                  SkeletonBox(width: 52, height: 12),
+                  SizedBox(width: 14),
+                  SkeletonBox(width: 52, height: 12),
+                  SizedBox(width: 14),
+                  SkeletonBox(width: 64, height: 12),
+                ],
               ),
             ),
             const SizedBox(height: 12),
@@ -393,12 +388,11 @@ class _OverviewSkeleton extends StatelessWidget {
   }
 }
 
-/// 화면 맨 위 한 줄 요약.
+/// 화면 맨 위 상태 집계 한 줄.
 ///
-/// 이 화면을 여는 이유는 "지금 다 괜찮은가" 하나다. 그런데 그 답을 얻으려면
-/// 카드를 전부 훑어야 했다 — 호실이 서른 개면 서른 개를 다 봐야 '없다'를
-/// 확인할 수 있다. 그 한 가지를 글자로 먼저 답해 둔다. 괜찮으면 초록 한 줄만
-/// 보고 화면을 닫을 수 있고, 아니면 몇 곳이 왜 걸렸는지 바로 읽는다.
+/// Plain counters like a control-panel legend (● 정상 5 · ● 이상 1 · ○ 값 없음 30)
+/// instead of a sentence in an icon card — the numbers are the answer, and the
+/// card with a badge icon read like a chatbot reply rather than an instrument.
 class _OverviewSummaryBand extends StatelessWidget {
   final List<RoomStatus> statuses;
 
@@ -412,80 +406,54 @@ class _OverviewSummaryBand extends StatelessWidget {
     final colors = context.colors;
     final l10n = context.l10n;
 
-    final faults = _count(RoomCondition.fault);
-    final drifts = _count(RoomCondition.drifting);
-    final offline = _count(RoomCondition.offline);
-    final attention = faults + drifts;
-
-    // 색은 가장 나쁜 쪽을 따른다. 이상이 하나라도 있으면 빨강이고, 그 다음이
-    // 설정값 이탈, 둘 다 없으면 초록이다. '값 없음'만 있을 때는 고장은 아니지만
-    // 정상이라고 말할 근거도 없으므로 초록까지는 가지 않는다.
-    final Color accent;
-    if (faults > 0) {
-      accent = colors.error;
-    } else if (drifts > 0) {
-      accent = colors.warning;
-    } else if (offline > 0 && offline == statuses.length) {
-      accent = colors.textSecondary;
-    } else {
-      accent = colors.success;
-    }
-
-    final breakdown = <String>[
-      if (faults > 0) '${l10n.roomStatusFault} $faults',
-      if (drifts > 0) '${l10n.roomStateDrift} $drifts',
-      if (offline > 0) '${l10n.roomStateNoData} $offline',
+    final items = <(String, int, Color, bool)>[
+      (l10n.roomStateNormal, _count(RoomCondition.normal), colors.success, true),
+      (l10n.roomStateDrift, _count(RoomCondition.drifting), colors.warning, true),
+      (l10n.roomStatusFault, _count(RoomCondition.fault), colors.error, true),
+      (l10n.roomStateNoData, _count(RoomCondition.offline), colors.textSecondary, false),
     ];
 
-    final title = attention == 0 ? l10n.overviewAllNormal : l10n.overviewAttention(attention);
-    final subtitle = breakdown.isEmpty
-        ? l10n.overviewWatching(statuses.length)
-        : '${l10n.overviewWatching(statuses.length)} · ${breakdown.join(' · ')}';
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.fromLTRB(12, 11, 14, 11),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withValues(alpha: 0.30)),
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 4,
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accent.withValues(alpha: 0.16),
+          for (final (label, count, color, filled) in items)
+            // Zero counts stay but fade, so the row keeps its shape and a new
+            // fault appears in a place the eye already knows.
+            Opacity(
+              opacity: count == 0 ? 0.45 : 1,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: filled ? color : null,
+                      border: filled ? null : Border.all(color: color, width: 1.5),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    label,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textSecondary),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: count > 0 && filled && color != colors.success ? color : colors.textPrimary,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            child: Icon(
-              attention == 0 ? Icons.verified_rounded : Icons.warning_amber_rounded,
-              size: 20,
-              color: accent,
-            ),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: colors.textSecondary),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -493,7 +461,11 @@ class _OverviewSummaryBand extends StatelessWidget {
 }
 
 /// 시설 한 곳: 이름 한 줄과 그 아래 호실 전부.
-class _FacilitySection extends StatelessWidget {
+///
+/// Rooms with live values come first in their original order; rooms without
+/// any value are folded behind one button, so finding the one reporting room no
+/// longer means scrolling past a wall of empty cards.
+class _FacilitySection extends StatefulWidget {
   final String name;
   final List<dynamic> rooms;
   final Map<int, Map<String, String>> liveValues;
@@ -516,8 +488,47 @@ class _FacilitySection extends StatelessWidget {
   });
 
   @override
+  State<_FacilitySection> createState() => _FacilitySectionState();
+}
+
+class _FacilitySectionState extends State<_FacilitySection> {
+  bool _showEmpty = false;
+
+  Widget _grid(List<dynamic> rooms) => GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          // 표시등 두 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.
+          childAspectRatio: 1.46,
+        ),
+        itemCount: rooms.length,
+        itemBuilder: (context, index) {
+          final room = rooms[index];
+          final roomId = room['id'];
+
+          return _OverviewRoomCard(
+            index: index,
+            name: room['name']?.toString() ?? '',
+            values: widget.liveValues[roomId] ?? const {},
+            status: widget.statuses[roomId] ?? RoomStatus.from(const {}),
+            ledDigits: widget.ledDigits,
+            onTap: () => widget.onRoomPressed(roomId),
+          );
+        },
+      );
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final rooms = widget.rooms;
+    final statuses = widget.statuses;
+
+    bool hasData(dynamic r) => widget.liveValues[r['id']]?.isNotEmpty ?? false;
+    final live = rooms.where(hasData).toList();
+    final empty = rooms.where((r) => !hasData(r)).toList();
 
     // 스크롤해서 내려온 뒤에도 시설 이름 줄만 보고 이 시설이 괜찮은지 알아야
     // 한다. 맨 위 요약 띠는 그때 화면 밖이다.
@@ -537,14 +548,14 @@ class _FacilitySection extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: onFacilityPressed,
+                onTap: widget.onFacilityPressed,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(2, 5, 2, 5),
                   child: Row(
                     children: [
                       Flexible(
                         child: Text(
-                          name,
+                          widget.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -584,31 +595,35 @@ class _FacilitySection extends StatelessWidget {
           // '내 시설' 안의 호실 목록보다 한 칸에 더 많이 담는다. 그쪽은 호실을
           // 고르러 가는 목록이고, 이 화면은 여러 시설을 한눈에 훑는 자리라
           // 보여줄 것이 다르다. 생김새는 같이 간다.
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              // 표시등 두 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.
-              childAspectRatio: 1.46,
+          if (live.isNotEmpty) _grid(live),
+          if (empty.isNotEmpty) ...[
+            if (live.isNotEmpty) const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _showEmpty = !_showEmpty),
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.textSecondary,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  minimumSize: const Size(0, 34),
+                  textStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                ),
+                icon: Icon(
+                  _showEmpty ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  _showEmpty
+                      ? context.l10n.overviewHideNoData
+                      : context.l10n.overviewShowNoData(empty.length),
+                ),
+              ),
             ),
-            itemCount: rooms.length,
-            itemBuilder: (context, index) {
-              final room = rooms[index];
-              final roomId = room['id'];
-
-              return _OverviewRoomCard(
-                index: index,
-                name: room['name']?.toString() ?? '',
-                values: liveValues[roomId] ?? const {},
-                status: statuses[roomId] ?? RoomStatus.from(const {}),
-                ledDigits: ledDigits,
-                onTap: () => onRoomPressed(roomId),
-              );
-            },
-          ),
+            if (_showEmpty) ...[
+              const SizedBox(height: 4),
+              _grid(empty),
+            ],
+          ],
         ],
       ),
     );
@@ -649,7 +664,6 @@ class _OverviewRoomCard extends StatelessWidget {
     final l10n = context.l10n;
 
     final accent = status.accent(colors);
-    final attention = status.needsAttention;
     final temp = status.temp;
     final deviation = status.deviation;
 
@@ -677,18 +691,17 @@ class _OverviewRoomCard extends StatelessWidget {
         boxShadow: colors.cardShadow,
       ),
       child: Material(
-        // 걸린 카드만 옅게 물들인다. 하얀 카드 열 장 사이에서 한 장이 붉으면
-        // 읽지 않고도 찾아낼 수 있다.
-        color: attention
-            ? Color.alphaBlend(accent.withValues(alpha: 0.07), colors.surface)
-            : colors.surface,
+        // The card stays plain; the status colour lives in the rail below.
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
-              border: attention
+              // Only faults get an outline; a drifting card is already tinted and
+              // the extra yellow ring read as a rendering glitch.
+              border: status.condition == RoomCondition.fault
                   ? Border.all(color: accent.withValues(alpha: 0.55), width: 1.2)
                   : null,
             ),
@@ -735,37 +748,11 @@ class _OverviewRoomCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              temp == null ? '—' : temp.toStringAsFixed(1),
-                              style: TextStyle(
-                                fontSize: 25,
-                                height: 1,
-                                fontWeight: FontWeight.w700,
-                                color: attention ? accent : colors.textPrimary,
-                                // 제어판과 같은 7세그먼트 서체. 수치일 때만
-                                // 쓴다 — '—' 를 7세그먼트로 그리면 읽을 수 없다.
-                                fontFamily: temp != null && ledDigits
-                                    ? MonitoringViewSettings.ledFontFamily
-                                    : null,
-                                letterSpacing: temp != null && ledDigits ? 1 : null,
-                              ),
-                            ),
-                            if (temp != null)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 2, bottom: 2),
-                                child: Text(
-                                  l10n.unitCelsius,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                          ],
+                        TemperatureReadout(
+                          temp: temp,
+                          // Digits take the status colour too: green, yellow or red.
+                          color: status.condition == RoomCondition.offline ? colors.textPrimary : accent,
+                          ledDigits: ledDigits,
                         ),
                         const SizedBox(height: 3),
                         // 숫자 하나만으로는 그게 정상인지 알 수 없다. 설정값과

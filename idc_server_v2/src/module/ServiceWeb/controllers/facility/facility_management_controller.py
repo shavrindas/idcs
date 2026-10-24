@@ -1,11 +1,13 @@
 # 경로 : src/module/ServiceWeb/controllers/facility/facility_management_controller.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date, datetime
 from src.config.database import get_db
+from src.module.Core.models.User import UserRole
+from src.module.ServiceWeb.controllers.facility.scope import visible_facility_ids, get_user_or_404
 
 router = APIRouter(prefix="/facility-manager", tags=["ServiceWeb - Facility Manager"])
 
@@ -49,13 +51,22 @@ def _parse_dt(dt_str: Optional[str]) -> Optional[datetime]:
     return datetime.fromisoformat(dt_str)
 
 @router.get("/facilities")
-async def get_all_facilities_admin(db: AsyncSession = Depends(get_db)):
-    q = text("SELECT id, name, access_code, is_active, start_date, end_date FROM facilities_table ORDER BY id ASC")
-    rows = (await db.execute(q)).fetchall()
+async def get_all_facilities_admin(user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    allowed = await visible_facility_ids(db, user_id)
+    if allowed is None:
+        q = text("SELECT id, name, access_code, is_active, start_date, end_date FROM facilities_table ORDER BY id ASC")
+        rows = (await db.execute(q)).fetchall()
+    else:
+        q = text("""
+            SELECT id, name, access_code, is_active, start_date, end_date FROM facilities_table
+            WHERE id = ANY(:ids) ORDER BY id ASC
+        """)
+        rows = (await db.execute(q, {"ids": list(allowed)})).fetchall()
     return {"facilities": [dict(r._mapping) for r in rows]}
 
 @router.post("/facility")
-async def create_facility_admin(req: FacilityCreateReq, db: AsyncSession = Depends(get_db)):
+async def create_facility_admin(req: FacilityCreateReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    creator = await get_user_or_404(db, user_id)
     q = text("""
         INSERT INTO facilities_table (name, access_code, is_active, start_date, end_date)
         VALUES (:name, :access_code, TRUE, :start_date, :end_date)
@@ -69,6 +80,9 @@ async def create_facility_admin(req: FacilityCreateReq, db: AsyncSession = Depen
     # 기본 공용 000호 및 게시판 생성
     await db.execute(text("INSERT INTO facilities_room_table (facility_id, name, status) VALUES (:fid, '000호 (공용)', 'OPERATING')"), {"fid": new_fac_id})
     await db.execute(text("INSERT INTO boards (facility_id, facility_name) VALUES (:fid, :fname)"), {"fid": new_fac_id, "fname": req.name})
+    # A company admin must keep seeing the facility it just created.
+    if creator.role != UserRole.DEVELOPER:
+        await db.execute(text("INSERT INTO facility_users (facility_id, user_id) VALUES (:fid, :uid)"), {"fid": new_fac_id, "uid": user_id})
     await db.commit()
     return {"status": "success", "id": new_fac_id}
 

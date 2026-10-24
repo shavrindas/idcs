@@ -2,7 +2,7 @@
 # 경로 : src/module/ServiceWeb/controllers/node_manage_controller.py
 # 명세 : 시스템 대 시스템 용 노드 관리 컨트롤러
 # ===============================================================
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -12,6 +12,7 @@ from typing import Optional
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityNode
 from src.module.Core.security import generate_facility_api_key
+from src.module.ServiceWeb.controllers.facility.scope import visible_facility_ids
 
 router = APIRouter(prefix="/admin/nodes", tags=["ServiceWeb - Nodes"])
 
@@ -25,8 +26,12 @@ class NodeUpdateReq(BaseModel):
     facility_id: Optional[int] = None
 
 @router.get("/facilities")
-async def get_facilities(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Facility).where(Facility.is_active == True).order_by(Facility.name.asc()))
+async def get_facilities(user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    allowed = await visible_facility_ids(db, user_id)
+    stmt = select(Facility).where(Facility.is_active == True).order_by(Facility.name.asc())
+    if allowed is not None:
+        stmt = stmt.where(Facility.id.in_(allowed))
+    result = await db.execute(stmt)
     facilities = result.scalars().all()
     return {
         "status": "success",
@@ -34,12 +39,16 @@ async def get_facilities(db: AsyncSession = Depends(get_db)):
     }
 
 @router.get("")
-async def get_nodes(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
+async def get_nodes(user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    allowed = await visible_facility_ids(db, user_id)
+    stmt = (
         select(FacilityNode)
         .options(joinedload(FacilityNode.facility))
         .order_by(FacilityNode.id.asc())
     )
+    if allowed is not None:
+        stmt = stmt.where(FacilityNode.facility_id.in_(allowed))
+    result = await db.execute(stmt)
     nodes = result.scalars().all()
     return {
         "status": "success",

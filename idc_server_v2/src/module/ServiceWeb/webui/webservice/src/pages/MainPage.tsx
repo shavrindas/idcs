@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Monogram } from '../components/Brand';
 import { apiService } from '../services/apiService';
 import { NodeCreatePanel, NodeListTable, ApiKeyModal } from '../components/node/NodeControlPanels';
+import type { SessionUser } from '../types';
 
-export const MainPage: React.FC = () => {
+export const MainPage: React.FC<{ user: SessionUser }> = ({ user }) => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [nodes, setNodes] = useState<any[]>([]);
   const [selectedFacId, setSelectedFacId] = useState<number | ''>('');
@@ -17,8 +18,8 @@ export const MainPage: React.FC = () => {
   const loadData = async () => {
     try {
       const [facRes, nodeRes] = await Promise.all([
-        apiService.getNodeFacilities(),
-        apiService.getNodes(),
+        apiService.getNodeFacilities(user.id),
+        apiService.getNodes(user.id),
       ]);
       const facList = facRes.data || [];
       setFacilities(facList);
