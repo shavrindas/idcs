@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:idcs/l10n/app_localizations.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
+import 'package:idcs/services/common/home_widget_bridge.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/motion.dart';
@@ -28,6 +29,9 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
   AlarmSettings _alarm = const AlarmSettings();
   bool _loaded = false;
 
+  /// Home-screen widget keeps updating while the app is closed (Android only).
+  bool _widgetLive = true;
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +40,11 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
 
   Future<void> _load() async {
     final loaded = await AlarmSettings.load();
+    final widgetLive = await HomeWidgetBridge.isLive();
     if (!mounted) return;
     setState(() {
       _alarm = loaded;
+      _widgetLive = widgetLive;
       _loaded = true;
     });
   }
@@ -174,6 +180,24 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
               ),
             ],
           ),
+          if (HomeWidgetBridge.supported) ...[
+            const SizedBox(height: 16),
+            SettingsCard(
+              title: l10n.settingsHomeWidget,
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.widgetLive),
+                  subtitle: Text(l10n.widgetLiveNote),
+                  value: _widgetLive,
+                  onChanged: (val) {
+                    setState(() => _widgetLive = val);
+                    HomeWidgetBridge.setLive(val);
+                  },
+                ),
+              ],
+            ),
+          ],
         ],
       ],
     );

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_title">IDCool</string>
+    <string name="widget_description">호실 온도와 상태를 홈 화면에서 실시간으로 봅니다.</string>
+    <string name="widget_empty">앱을 한 번 열면 호실이 여기 나타납니다.</string>
+    <string name="widget_refresh">새로고침</string>
+    <string name="widget_live_channel">위젯 실시간 갱신</string>
+    <string name="widget_live_notice">홈 화면 위젯을 실시간으로 갱신하는 중</string>
+</resources>

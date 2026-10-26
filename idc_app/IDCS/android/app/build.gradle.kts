@@ -46,6 +46,9 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // 홈 화면 위젯 실시간 갱신(LiveWidgetService)의 웹소켓과 알림.
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.core:core-ktx:1.13.1")
 }
 
 flutter {

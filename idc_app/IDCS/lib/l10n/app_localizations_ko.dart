@@ -72,6 +72,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get panelTempDividersNote => '호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.';
 
   @override
+  String get settingsHomeWidget => '홈 화면 위젯';
+
+  @override
+  String get widgetLive => '위젯 실시간 갱신';
+
+  @override
+  String get widgetLiveNote =>
+      '앱을 닫아도 홈 화면 위젯의 온도가 실시간으로 바뀝니다. 켜 두는 동안 알림 영역에 표시가 남고 배터리를 조금 더 씁니다. 끄면 앱을 열었을 때만 갱신됩니다.';
+
+  @override
   String get panelSampleLabel => '고내온도';
 
   @override
