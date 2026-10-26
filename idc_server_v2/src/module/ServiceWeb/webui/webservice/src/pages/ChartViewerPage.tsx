@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useSearchParams } from 'react-router-dom';
 import { MainChartViewer, SubChartViewer } from '../components/chart/viewer/EChartsViewer';
 import { TopToolBar } from '../components/chart/viewer/TopToolBar';
 import { LowerToolBar } from '../components/chart/viewer/LowerToolBar';
@@ -49,7 +50,10 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   const [groups, setGroups] = useState<ChartGroup[]>([]);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
 
-  const [selectedFacility, setSelectedFacility] = useState<number | ''>('');
+  // Opened from an overview card: /viewer?facility=3&room=12 preselects that room.
+  const [searchParams] = useSearchParams();
+  const requestedRoom = useRef<number | null>(Number(searchParams.get('room')) || null);
+  const [selectedFacility, setSelectedFacility] = useState<number | ''>(Number(searchParams.get('facility')) || '');
   const [selectedRoom, setSelectedRoom] = useState<number | ''>('');
   const [selectedGroupId, setSelectedGroupId] = useState<number | ''>('');
   const [checkedRoles, setCheckedRoles] = useState<number[]>([]);
@@ -130,7 +134,11 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   apiService.getRooms(Number(selectedFacility)).then(res => {
     const fetchedRooms = res.rooms || [];
     setRooms(fetchedRooms);
-    if (fetchedRooms.length > 0) {
+    const wanted = fetchedRooms.find((r: any) => r.id === requestedRoom.current);
+    requestedRoom.current = null;
+    if (wanted) {
+      setSelectedRoom(wanted.id);
+    } else if (fetchedRooms.length > 0) {
       setSelectedRoom(fetchedRooms[0].id);
     }
   }).catch(err => {
