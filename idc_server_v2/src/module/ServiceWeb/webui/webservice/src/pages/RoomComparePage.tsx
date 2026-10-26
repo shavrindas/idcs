@@ -14,6 +14,7 @@ const SCALE_OPTIONS = [
   { value: '1m', label: '1분 단위' },
   { value: '5m', label: '5분 단위' },
   { value: '10m', label: '10분 단위' },
+  { value: '30m', label: '30분 단위' },
   { value: '1h', label: '1시간 단위' },
 ];
 
