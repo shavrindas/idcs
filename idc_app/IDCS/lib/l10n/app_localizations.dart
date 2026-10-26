@@ -224,6 +224,24 @@ abstract class AppLocalizations {
   /// **'호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.'**
   String get panelTempDividersNote;
 
+  /// No description provided for @settingsHomeWidget.
+  ///
+  /// In ko, this message translates to:
+  /// **'홈 화면 위젯'**
+  String get settingsHomeWidget;
+
+  /// No description provided for @widgetLive.
+  ///
+  /// In ko, this message translates to:
+  /// **'위젯 실시간 갱신'**
+  String get widgetLive;
+
+  /// No description provided for @widgetLiveNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱을 닫아도 홈 화면 위젯의 온도가 실시간으로 바뀝니다. 켜 두는 동안 알림 영역에 표시가 남고 배터리를 조금 더 씁니다. 끄면 앱을 열었을 때만 갱신됩니다.'**
+  String get widgetLiveNote;
+
   /// No description provided for @panelSampleLabel.
   ///
   /// In ko, this message translates to:

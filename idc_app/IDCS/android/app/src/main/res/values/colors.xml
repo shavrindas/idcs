@@ -4,4 +4,15 @@
          여기 색이 앱의 배경색과 다르면 그 순간 화면이 한 번 깜빡인다.
          lib/theme/app_theme.dart 의 background 와 같은 값이다. -->
     <color name="splash_bg">#F5F8FA</color>
+
+    <!-- 홈 화면 위젯. lib/theme/app_theme.dart 의 AppPalette 와 같은 값이다. -->
+    <color name="widget_bg">#F5F8FA</color>
+    <color name="widget_surface">#FFFFFF</color>
+    <color name="widget_text">#16232A</color>
+    <color name="widget_text_secondary">#5B6B73</color>
+    <color name="widget_rule">#595B6B73</color>
+    <color name="widget_success">#1D875A</color>
+    <color name="widget_warning">#A26B1C</color>
+    <color name="widget_error">#D54141</color>
+    <color name="widget_outline">#C0CED6</color>
 </resources>

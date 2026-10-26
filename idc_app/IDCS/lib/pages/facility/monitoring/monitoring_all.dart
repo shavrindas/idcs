@@ -12,6 +12,7 @@ import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/components/shared/app_toast.dart';
 import 'package:idcs/components/shared/skeleton.dart';
+import 'package:idcs/services/common/home_widget_bridge.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
@@ -77,7 +78,10 @@ class _MonitoringAllState extends State<MonitoringAll> {
     super.initState();
     _load();
 
-    _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}');
+    final liveUrl = '${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}';
+    _webSocketService.connect(liveUrl);
+    // The home-screen widget listens to the same feed when the app is closed.
+    HomeWidgetBridge.configure(liveUrl);
     _wsSubscription = _webSocketService.messageStream.listen(_handleLiveMessage);
   }
 
@@ -141,6 +145,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
           ..clear()
           ..addAll(counts);
       });
+      _publishWidget();
       _maybeOpenOnlyFacility(facilities);
     } catch (e) {
       if (!mounted) return;
@@ -184,9 +189,27 @@ class _MonitoringAllState extends State<MonitoringAll> {
         (_live[roomId] ??= {})[parts[1]] = entry.value.toString();
       }
       if (mounted) setState(() {});
+      _publishWidget();
     } catch (_) {
       // 한 묶음이 깨져 있어도 화면은 계속 돌아가야 한다.
     }
+  }
+
+  /// Hand the home-screen widget what this screen shows (throttled in the bridge).
+  void _publishWidget() {
+    final names = {for (final f in _facilities) f['id'].toString(): f['name']?.toString() ?? ''};
+    HomeWidgetBridge.publish([
+      for (final entry in _roomsByFacility.entries)
+        for (final r in entry.value)
+          if (r['id'] is int)
+            {
+              'id': r['id'],
+              'facility': names[entry.key] ?? '',
+              'name': r['name']?.toString() ?? '',
+              'alarms': _alarmCounts[r['id']] ?? 0,
+              'fields': _live[r['id']] ?? const <String, String>{},
+            },
+    ]);
   }
 
   List<dynamic> get _shownFacilities {

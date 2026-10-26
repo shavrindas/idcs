@@ -74,6 +74,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Draw a line above and below the current temperature on room cards.';
 
   @override
+  String get settingsHomeWidget => 'Home-screen widget';
+
+  @override
+  String get widgetLive => 'Live widget updates';
+
+  @override
+  String get widgetLiveNote =>
+      'Keeps the widget temperatures live even when the app is closed. While on, a notification stays in the status bar and battery use is slightly higher. When off, the widget updates only while the app is open.';
+
+  @override
   String get panelSampleLabel => 'Room temp';
 
   @override
