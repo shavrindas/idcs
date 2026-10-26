@@ -19,7 +19,8 @@ export default defineConfig({
     // 하지만 npm run dev 는 5173 에서 따로 돌아 /api 를 받아 줄 사람이 없다.
     // 개발 중에만 중앙 노드로 넘겨 준다 — 빌드 결과물에는 영향이 없다.
     proxy: {
-      '/api': { target: 'http://127.0.0.1:8900', changeOrigin: true },
+      // ws: the overview page's live feed is a WebSocket under /api as well.
+      '/api': { target: 'http://127.0.0.1:8900', changeOrigin: true, ws: true },
     },
   },
   plugins: [react()],

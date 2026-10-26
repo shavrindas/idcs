@@ -2,7 +2,10 @@
 # 경로 : src/module/ServiceWeb/controllers/facility_controller.py
 # 명세 : 시설 관련 API 엔드포인트 정의
 # ===============================================================
-from fastapi import APIRouter, Depends, HTTPException
+import asyncio
+import json
+
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
@@ -10,6 +13,7 @@ from src.module.Core.models.User import User, UserRole
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.module.ServiceWeb.controllers.facility.scope import visible_facility_ids
+from src.module.CServer.controllers.sys_auth_controller import stream_bridge
 
 router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
 
@@ -88,3 +92,50 @@ async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db
             } for r in rooms
         ]
     }
+
+
+# Fields the overview cards draw. Everything else in a facility frame (dozens of
+# control registers per room) is dropped before it goes over the wire.
+_OVERVIEW_FIELDS = (
+    "temp_pv", "temp_sv", "temp_comp", "deforest_def", "control_runsw",
+    "emergency_emg", "emergency_cint", "emergency_high",
+)
+
+
+@router.websocket("/live/{user_id}")
+async def web_overview_live(websocket: WebSocket, user_id: int):
+    """개괄 모니터링 실시간 값 (웹).
+
+    Same frames as the app's /data/outget, but scoped like every other web list:
+    ADMIN only gets its own company's facilities, DEVELOPER gets all of them.
+    """
+    allowed = None
+    async for db in get_db():
+        try:
+            allowed = await visible_facility_ids(db, user_id)
+            if allowed is None:
+                rows = await db.execute(select(Facility.id).where(Facility.is_active == True))
+                allowed = set(rows.scalars().all())
+        except HTTPException:
+            allowed = set()
+
+    await websocket.accept()
+    try:
+        while True:
+            for f_id in allowed:
+                frame = stream_bridge.latest_data.get(f_id)
+                datas = frame.get("datas") if isinstance(frame, dict) else None
+                if not isinstance(datas, dict):
+                    continue
+                picked = {k: v for k, v in datas.items() if any(f in k for f in _OVERVIEW_FIELDS)}
+                if picked:
+                    await websocket.send_text(json.dumps({"facility_id": f_id, "datas": picked}))
+
+            # Notice a closed browser tab instead of writing into a dead socket.
+            try:
+                await asyncio.wait_for(websocket.receive_text(), timeout=0.1)
+            except asyncio.TimeoutError:
+                pass
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        pass

@@ -44,6 +44,12 @@ export const apiService = {
     const res = await fetch(`${BASE_URL}/facilities/${userId}`);
     return res.json();
   },
+  getFacilityAlarms: async (facilityId: number) => {
+    const res = await fetch(`${BASE_URL}/alarms/facility/${facilityId}`);
+    if (!res.ok) throw new Error('알람을 불러오지 못했습니다.');
+    const json = await res.json();
+    return Array.isArray(json) ? json : (json.alarms ?? []);
+  },
   getRooms: async (facilityId: number) => {
     const res = await fetch(`${BASE_URL}/facilities/rooms/${facilityId}`);
     return res.json();
