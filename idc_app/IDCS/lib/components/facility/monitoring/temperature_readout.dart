@@ -10,31 +10,58 @@ import 'package:idcs/theme/app_theme.dart';
 /// Right-aligned so the digits line up across cards like a panel readout. The
 /// minus always sits in its own slot like an LED segment: lit when the value is
 /// negative, faint otherwise — so -18.5 and 3.2 keep their digits in place.
+///
+/// Owns the gap above and below itself. With [dividers] on, a hairline rule
+/// takes part of that gap instead of adding to it, so the lamp row under the
+/// reading keeps its height and does not get clipped.
 class TemperatureReadout extends StatelessWidget {
   final double? temp;
   final Color color;
   final bool ledDigits;
+
+  /// Rule a line above and below the reading (settings → card dividers).
+  final bool dividers;
+
+  /// Space kept free right of the °C so the reading does not hug the card edge.
+  static const double trailingGap = 10;
 
   const TemperatureReadout({
     super.key,
     required this.temp,
     required this.color,
     required this.ledDigits,
+    this.dividers = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final rule = Container(height: 1, color: context.colors.textSecondary.withValues(alpha: 0.35));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (dividers) ...[const SizedBox(height: 2), rule, const SizedBox(height: 2)] else const SizedBox(height: 4),
+        _reading(context),
+        if (dividers) ...[const SizedBox(height: 2), rule, const SizedBox(height: 1)] else const SizedBox(height: 3),
+      ],
+    );
+  }
+
+  Widget _reading(BuildContext context) {
     final value = temp;
 
+    // Top-aligned: the °C sits up by the top of the digits like a superscript,
+    // as on a panel readout, and the minus is placed at mid-height by padding.
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (value != null)
           // Drawn as a bar rather than a '-' glyph so it looks the same in the
           // regular and the 7-segment font.
           Padding(
-            padding: const EdgeInsets.only(right: 2, bottom: 10),
+            padding: const EdgeInsets.only(right: 2, top: 11),
             child: Container(
               width: 10,
               height: 3,
@@ -60,7 +87,7 @@ class TemperatureReadout extends StatelessWidget {
         ),
         if (value != null)
           Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 2),
+            padding: const EdgeInsets.only(left: 2),
             child: Text(
               context.l10n.unitCelsius,
               style: TextStyle(
@@ -70,6 +97,7 @@ class TemperatureReadout extends StatelessWidget {
               ),
             ),
           ),
+        const SizedBox(width: trailingGap),
       ],
     );
   }

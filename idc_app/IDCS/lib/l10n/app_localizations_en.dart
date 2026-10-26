@@ -67,6 +67,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get panelLedDigitsNote => 'Show numbers as a seven-segment display.';
 
   @override
+  String get panelTempDividers => 'Temperature dividers';
+
+  @override
+  String get panelTempDividersNote =>
+      'Draw a line above and below the current temperature on room cards.';
+
+  @override
   String get panelSampleLabel => 'Room temp';
 
   @override

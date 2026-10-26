@@ -174,38 +174,6 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SettingsCard(
-            title: l10n.alarmRepeat,
-            children: [
-              Text(
-                l10n.alarmRepeatNote(AlarmSettings.maxRepeatCount),
-                style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: AlarmSettings.repeatOptions.map((minutes) {
-                  final selected = _alarm.repeatMinutes == minutes;
-                  return ChoiceChip(
-                    showCheckmark: false,
-                    label: Text(minutes == 0 ? l10n.alarmRepeatNone : l10n.alarmRepeatMinutes(minutes)),
-                    selected: selected,
-                    onSelected: (_) => _updateAlarm(_alarm.copyWith(repeatMinutes: minutes)),
-                    labelStyle: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? context.colors.onPrimary : context.colors.textPrimary,
-                    ),
-                    selectedColor: context.colors.primary,
-                    backgroundColor: context.colors.background,
-                    side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
         ],
       ],
     );
@@ -309,6 +277,14 @@ class _PanelAppearanceCard extends StatelessWidget {
           subtitle: Text(l10n.panelLedDigitsNote),
           value: view.ledDigits,
           onChanged: (val) => _update(view.copyWith(ledDigits: val)),
+        ),
+
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.panelTempDividers),
+          subtitle: Text(l10n.panelTempDividersNote),
+          value: view.tempDividers,
+          onChanged: (val) => _update(view.copyWith(tempDividers: val)),
         ),
       ],
     );

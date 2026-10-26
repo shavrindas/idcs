@@ -321,6 +321,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
                                   liveValues: _live,
                                   statuses: statuses,
                                   ledDigits: view.ledDigits,
+                                  dividers: view.tempDividers,
                                   onRoomPressed: (roomId) => context.push(
                                     '/facility_monitoring/${widget.userId}/$facilityId/$roomId',
                                   ),
@@ -471,6 +472,7 @@ class _FacilitySection extends StatefulWidget {
   final Map<int, Map<String, String>> liveValues;
   final Map<int, RoomStatus> statuses;
   final bool ledDigits;
+  final bool dividers;
   final Function(int) onRoomPressed;
 
   /// 시설 이름 줄을 누르면 그 시설 안(차트·기록·알람)으로 들어간다.
@@ -483,6 +485,7 @@ class _FacilitySection extends StatefulWidget {
     required this.liveValues,
     required this.statuses,
     required this.ledDigits,
+    required this.dividers,
     required this.onRoomPressed,
     required this.onFacilityPressed,
   });
@@ -515,6 +518,7 @@ class _FacilitySectionState extends State<_FacilitySection> {
             values: widget.liveValues[roomId] ?? const {},
             status: widget.statuses[roomId] ?? RoomStatus.from(const {}),
             ledDigits: widget.ledDigits,
+            dividers: widget.dividers,
             onTap: () => widget.onRoomPressed(roomId),
           );
         },
@@ -647,6 +651,7 @@ class _OverviewRoomCard extends StatelessWidget {
   final Map<String, String> values;
   final RoomStatus status;
   final bool ledDigits;
+  final bool dividers;
   final VoidCallback onTap;
 
   const _OverviewRoomCard({
@@ -655,6 +660,7 @@ class _OverviewRoomCard extends StatelessWidget {
     required this.values,
     required this.status,
     required this.ledDigits,
+    required this.dividers,
     required this.onTap,
   });
 
@@ -747,14 +753,13 @@ class _OverviewRoomCard extends StatelessWidget {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 4),
                         TemperatureReadout(
                           temp: temp,
                           // Digits take the status colour too: green, yellow or red.
                           color: status.condition == RoomCondition.offline ? colors.textPrimary : accent,
                           ledDigits: ledDigits,
+                          dividers: dividers,
                         ),
-                        const SizedBox(height: 3),
                         // 숫자 하나만으로는 그게 정상인지 알 수 없다. 설정값과
                         // 얼마나 벌어져 있는지가 실제로 보고 싶은 값이다.
                         Row(

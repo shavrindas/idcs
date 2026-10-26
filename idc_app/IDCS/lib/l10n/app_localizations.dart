@@ -212,6 +212,18 @@ abstract class AppLocalizations {
   /// **'숫자를 7세그먼트 표시기 모양으로 보여줍니다.'**
   String get panelLedDigitsNote;
 
+  /// No description provided for @panelTempDividers.
+  ///
+  /// In ko, this message translates to:
+  /// **'온도 구분선'**
+  String get panelTempDividers;
+
+  /// No description provided for @panelTempDividersNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.'**
+  String get panelTempDividersNote;
+
   /// No description provided for @panelSampleLabel.
   ///
   /// In ko, this message translates to:

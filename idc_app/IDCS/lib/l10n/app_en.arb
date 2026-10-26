@@ -19,6 +19,8 @@
   "panelValueSize": "Reading size",
   "panelLedDigits": "LED digits",
   "panelLedDigitsNote": "Show numbers as a seven-segment display.",
+  "panelTempDividers": "Temperature dividers",
+  "panelTempDividersNote": "Draw a line above and below the current temperature on room cards.",
   "panelSampleLabel": "Room temp",
   "backgroundNone": "None",
   "backgroundBlueprint": "Blueprint",
