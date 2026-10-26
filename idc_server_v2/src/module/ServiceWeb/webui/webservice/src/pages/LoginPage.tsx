@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { Monogram, Wordmark } from '../components/Brand';
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
 
 interface DebugConfig {
   enabled: boolean;
@@ -35,28 +36,41 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
     setPassword(debugConfig.user_pass || '');
   };
 
+  // Shared by the email form and the Google button.
+  const finishLogin = async (loginRes: any, loginEmail: string) => {
+    const profile = await apiService.getUserProfile(loginRes.user_id);
+
+    const user = {
+      id: loginRes.user_id,
+      email: loginEmail,
+      name: profile.name,
+      role: loginRes.role,
+    };
+
+    onLogin(user);
+
+    if (user.role === 'ADMIN' || user.role === 'DEVELOPER') {
+      navigate('/main');
+    } else {
+      navigate('/overview');
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const loginRes = await apiService.login(email, password);
-      const profile = await apiService.getUserProfile(loginRes.user_id);
-
-      const user = {
-        id: loginRes.user_id,
-        email,
-        name: profile.name,
-        role: loginRes.role,
-      };
-
-      onLogin(user);
-
-      if (user.role === 'ADMIN' || user.role === 'DEVELOPER') {
-        navigate('/main');
-      } else {
-        navigate('/viewer');
-      }
+      await finishLogin(await apiService.login(email, password), email);
     } catch (error: any) {
       alert(error.message || '로그인 실패');
+    }
+  };
+
+  const handleGoogle = async (credential: string) => {
+    try {
+      const res = await apiService.loginGoogle(credential);
+      await finishLogin(res, res.email ?? '');
+    } catch (error: any) {
+      alert(error.message || '구글 로그인 실패');
     }
   };
 
@@ -91,6 +105,13 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
         <button type="submit" className="btn btn-primary" style={{ height: 44 }}>
           로그인
         </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--text-secondary)', fontSize: 12 }}>
+          <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          또는
+          <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        </div>
+        <GoogleSignInButton onCredential={handleGoogle} width={290} />
       </form>
 
       {/* ENABLE_SERVICE_WEB_DEBUG=true 일 때만 개발자 도구 노출 */}

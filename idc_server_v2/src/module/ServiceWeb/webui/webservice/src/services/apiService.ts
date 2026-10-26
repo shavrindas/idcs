@@ -27,6 +27,28 @@ export const apiService = {
     }
     return res.json();
   },
+  /**
+   * 구글 로그인. Google 이 서명한 ID 토큰(credential)을 그대로 넘기고,
+   * 진짜인지는 서버가 확인한다.
+   */
+  loginGoogle: async (credential: string) => {
+    let res: Response;
+    try {
+      res = await fetch(`${BASE_URL}/auth/login/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      throw new Error(`서버(${BASE_URL})에 연결할 수 없습니다. 백엔드 주소를 확인해주세요.`);
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || '구글 로그인에 실패했습니다.');
+    }
+    return res.json();
+  },
   getUserProfile: async (userId: number) => {
     const res = await fetch(`${BASE_URL}/auth/${userId}/profile`, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('사용자 정보를 불러올 수 없습니다.');
