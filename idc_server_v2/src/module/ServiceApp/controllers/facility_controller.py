@@ -19,7 +19,7 @@ class RegisterFacilityReq(BaseModel):
 
 @router.get("/{user_id}")
 async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
-    """유저가 소속된 시설 목록 조회 (관리자는 전체 조회)"""
+    """유저가 소속된 시설 목록 조회 (개발자만 전체 조회)"""
     
     # 1. 유저 권한 확인
     user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
@@ -27,8 +27,11 @@ async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
     # 2. 권한에 따른 조회 쿼리 분기
-    if user.role in [UserRole.ADMIN, UserRole.DEVELOPER]:
-        # 관리자는 매핑 관계없이 활성화된 모든 시설 조회
+    # ADMIN is a company-side administrator: like USER it only sees the
+    # facilities it is linked to, or one company's admin sees every other
+    # company's warehouses (same rule as the web console).
+    if user.role == UserRole.DEVELOPER:
+        # 개발자는 매핑 관계없이 활성화된 모든 시설 조회
         stmt = select(Facility).where(Facility.is_active == True)
     else:
         # 일반 유저는 자신에게 매핑된 시설만 조회
@@ -129,7 +132,8 @@ async def app_facility_monitoring_ws(websocket: WebSocket, user_id: int):
         res = await db.execute(stmt)
         role = res.scalars().first()
 
-        if role == UserRole.ADMIN:
+        # Only DEVELOPER gets every facility; ADMIN is scoped to its own company.
+        if role == UserRole.DEVELOPER:
             stmt = select(Facility.id).distinct()
         else:
             stmt = select(FacilityUser.facility_id).where(FacilityUser.user_id == user_id).distinct()
