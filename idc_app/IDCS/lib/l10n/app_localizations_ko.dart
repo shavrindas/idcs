@@ -66,6 +66,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get panelLedDigitsNote => '숫자를 7세그먼트 표시기 모양으로 보여줍니다.';
 
   @override
+  String get panelTempDividers => '온도 구분선';
+
+  @override
+  String get panelTempDividersNote => '호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.';
+
+  @override
   String get panelSampleLabel => '고내온도';
 
   @override

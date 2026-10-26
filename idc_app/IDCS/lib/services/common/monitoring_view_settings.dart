@@ -21,11 +21,16 @@ class MonitoringViewSettings {
   /// 모든 화면 뒤에서 눈을 내릴지.
   final bool snow;
 
+  /// Rule a line above and below the big temperature on room cards, so the
+  /// reading stands apart from the setpoint and lamps around it.
+  final bool tempDividers;
+
   const MonitoringViewSettings({
     this.panelOpacity = 1.0,
     this.valueFontScale = 1.0,
     this.ledDigits = true,
     this.snow = true,
+    this.tempDividers = true,
   });
 
   /// 카드를 얼마나 비칠 수 있게 할지의 한계.
@@ -61,6 +66,7 @@ class MonitoringViewSettings {
   static const _kFontScale = 'panel_value_font_scale';
   static const _kLedDigits = 'panel_led_digits';
   static const _kSnow = 'app_snowfall';
+  static const _kTempDividers = 'card_temp_dividers';
 
   /// Value text size after the user's scale is applied.
   double get valueFontSize => baseValueFontSize * valueFontScale;
@@ -70,12 +76,14 @@ class MonitoringViewSettings {
     double? valueFontScale,
     bool? ledDigits,
     bool? snow,
+    bool? tempDividers,
   }) {
     return MonitoringViewSettings(
       panelOpacity: panelOpacity ?? this.panelOpacity,
       valueFontScale: valueFontScale ?? this.valueFontScale,
       ledDigits: ledDigits ?? this.ledDigits,
       snow: snow ?? this.snow,
+      tempDividers: tempDividers ?? this.tempDividers,
     );
   }
 
@@ -89,6 +97,7 @@ class MonitoringViewSettings {
           (prefs.getDouble(_kFontScale) ?? 1.0).clamp(minFontScale, maxFontScale),
       ledDigits: prefs.getBool(_kLedDigits) ?? true,
       snow: prefs.getBool(_kSnow) ?? true,
+      tempDividers: prefs.getBool(_kTempDividers) ?? true,
     );
   }
 
@@ -98,6 +107,7 @@ class MonitoringViewSettings {
     await prefs.setDouble(_kFontScale, valueFontScale);
     await prefs.setBool(_kLedDigits, ledDigits);
     await prefs.setBool(_kSnow, snow);
+    await prefs.setBool(_kTempDividers, tempDividers);
   }
 }
 

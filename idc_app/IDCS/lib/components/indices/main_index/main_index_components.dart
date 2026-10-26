@@ -184,7 +184,6 @@ class RoomGrid extends StatelessWidget {
                                     ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
 
                               // 이 칸에서 가장 먼저 눈에 들어와야 하는 값.
                               TemperatureReadout(
@@ -192,8 +191,8 @@ class RoomGrid extends StatelessWidget {
                                 // Digits take the status colour too: green, yellow or red.
                                 color: status.condition == RoomCondition.offline ? colors.textPrimary : accent,
                                 ledDigits: view.ledDigits,
+                                dividers: view.tempDividers,
                               ),
-                              const SizedBox(height: 3),
 
                               // 숫자 하나만으로는 그게 정상인지 알 수 없다.
                               Row(
