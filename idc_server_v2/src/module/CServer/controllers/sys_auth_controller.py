@@ -148,7 +148,7 @@ async def monitor_facility_connections():
                     print(f"⚠️ [경고] 시설 {facility_id}이(가) 1시간 이상 응답이 없습니다. (마지막 통신: {last_time})")
                     # 필요한 추가 조치 (예: 메모리 정리, 알람 전송, 11+1시간 미루기 등)
                     facility_list.append(facility_id)
-                    stream_bridge.fserver_last[facility_id] = datetime.now() + timedelta(hours=12)
+                    stream_bridge.fserver_last[facility_id] = datetime.now() + timedelta(hours=11)
 
             if facility_list:
                 async for db in get_db():
