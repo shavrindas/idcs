@@ -310,5 +310,4 @@ class Ethernet:
 
                 self.payload_queue.put(json_string)
 
-
 facility_ethernet = Ethernet()
