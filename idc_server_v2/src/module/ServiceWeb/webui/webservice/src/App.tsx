@@ -10,6 +10,7 @@ import { FacilityManagerPage } from './pages/FacilityManagerPage';
 import { RoomComparePage } from './pages/RoomComparePage';
 import { LoginPage } from './pages/LoginPage';
 import { MainPage } from './pages/MainPage';
+import { OverviewPage } from './pages/OverviewPage';
 import { Monogram, Wordmark } from './components/Brand';
 import { ThemeProvider, ThemeToggle } from './services/theme';
 
@@ -75,6 +76,9 @@ function App() {
               background: 'var(--surface)',
             }}
           >
+            {/* 모든 사용자 공통 — 앱의 '전체 현황'과 같은 실시간 카드 화면 */}
+            <NavLink to="/overview" className={navLinkStyle}>전체 현황</NavLink>
+
             {isAdmin && (
               <>
                 <NavLink to="/main" className={navLinkStyle}>메인 대시보드</NavLink>
@@ -118,11 +122,12 @@ function App() {
                 )}
 
                 {/* User/Admin 공통 라우트 */}
+                <Route path="/overview" element={<OverviewPage user={user} />} />
                 <Route path="/viewer" element={<ChartViewerPage user={user} />} />
 
-                {/* 기본 리다이렉트 (관리자는 메인, 유저는 뷰어로) */}
+                {/* 기본 리다이렉트 (관리자는 메인, 유저는 전체 현황으로) */}
                 <Route path="*" element={
-                  <Navigate to={isAdmin ? "/main" : "/viewer"} />
+                  <Navigate to={isAdmin ? "/main" : "/overview"} />
                 } />
               </>
             )}

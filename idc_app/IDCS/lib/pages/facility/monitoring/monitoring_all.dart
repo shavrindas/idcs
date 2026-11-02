@@ -12,6 +12,7 @@ import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/components/shared/app_toast.dart';
 import 'package:idcs/components/shared/skeleton.dart';
+import 'package:idcs/services/common/home_widget_bridge.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
@@ -77,7 +78,10 @@ class _MonitoringAllState extends State<MonitoringAll> {
     super.initState();
     _load();
 
-    _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}');
+    final liveUrl = '${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}';
+    _webSocketService.connect(liveUrl);
+    // The home-screen widget listens to the same feed when the app is closed.
+    HomeWidgetBridge.configure(liveUrl);
     _wsSubscription = _webSocketService.messageStream.listen(_handleLiveMessage);
   }
 
@@ -141,6 +145,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
           ..clear()
           ..addAll(counts);
       });
+      _publishWidget();
       _maybeOpenOnlyFacility(facilities);
     } catch (e) {
       if (!mounted) return;
@@ -184,9 +189,27 @@ class _MonitoringAllState extends State<MonitoringAll> {
         (_live[roomId] ??= {})[parts[1]] = entry.value.toString();
       }
       if (mounted) setState(() {});
+      _publishWidget();
     } catch (_) {
       // 한 묶음이 깨져 있어도 화면은 계속 돌아가야 한다.
     }
+  }
+
+  /// Hand the home-screen widget what this screen shows (throttled in the bridge).
+  void _publishWidget() {
+    final names = {for (final f in _facilities) f['id'].toString(): f['name']?.toString() ?? ''};
+    HomeWidgetBridge.publish([
+      for (final entry in _roomsByFacility.entries)
+        for (final r in entry.value)
+          if (r['id'] is int)
+            {
+              'id': r['id'],
+              'facility': names[entry.key] ?? '',
+              'name': r['name']?.toString() ?? '',
+              'alarms': _alarmCounts[r['id']] ?? 0,
+              'fields': _live[r['id']] ?? const <String, String>{},
+            },
+    ]);
   }
 
   List<dynamic> get _shownFacilities {
@@ -321,6 +344,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
                                   liveValues: _live,
                                   statuses: statuses,
                                   ledDigits: view.ledDigits,
+                                  dividers: view.tempDividers,
                                   onRoomPressed: (roomId) => context.push(
                                     '/facility_monitoring/${widget.userId}/$facilityId/$roomId',
                                   ),
@@ -471,6 +495,7 @@ class _FacilitySection extends StatefulWidget {
   final Map<int, Map<String, String>> liveValues;
   final Map<int, RoomStatus> statuses;
   final bool ledDigits;
+  final bool dividers;
   final Function(int) onRoomPressed;
 
   /// 시설 이름 줄을 누르면 그 시설 안(차트·기록·알람)으로 들어간다.
@@ -483,6 +508,7 @@ class _FacilitySection extends StatefulWidget {
     required this.liveValues,
     required this.statuses,
     required this.ledDigits,
+    required this.dividers,
     required this.onRoomPressed,
     required this.onFacilityPressed,
   });
@@ -515,6 +541,7 @@ class _FacilitySectionState extends State<_FacilitySection> {
             values: widget.liveValues[roomId] ?? const {},
             status: widget.statuses[roomId] ?? RoomStatus.from(const {}),
             ledDigits: widget.ledDigits,
+            dividers: widget.dividers,
             onTap: () => widget.onRoomPressed(roomId),
           );
         },
@@ -647,6 +674,7 @@ class _OverviewRoomCard extends StatelessWidget {
   final Map<String, String> values;
   final RoomStatus status;
   final bool ledDigits;
+  final bool dividers;
   final VoidCallback onTap;
 
   const _OverviewRoomCard({
@@ -655,6 +683,7 @@ class _OverviewRoomCard extends StatelessWidget {
     required this.values,
     required this.status,
     required this.ledDigits,
+    required this.dividers,
     required this.onTap,
   });
 
@@ -747,14 +776,13 @@ class _OverviewRoomCard extends StatelessWidget {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 4),
                         TemperatureReadout(
                           temp: temp,
                           // Digits take the status colour too: green, yellow or red.
                           color: status.condition == RoomCondition.offline ? colors.textPrimary : accent,
                           ledDigits: ledDigits,
+                          dividers: dividers,
                         ),
-                        const SizedBox(height: 3),
                         // 숫자 하나만으로는 그게 정상인지 알 수 없다. 설정값과
                         // 얼마나 벌어져 있는지가 실제로 보고 싶은 값이다.
                         Row(

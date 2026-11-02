@@ -96,7 +96,11 @@ NotificationDetails _detailsFor(AlarmSettings s, AppLocalizations l10n) {
   );
 }
 
-/// 알람을 띄우고, '다시 알림'이 켜져 있으면 뒤이어 재알림을 예약한다.
+/// 알람을 띄운다.
+///
+/// The '다시 알림' repeat was removed from settings at the client's request.
+/// Repeats are no longer scheduled at all — otherwise a value saved by an older
+/// build would keep re-firing with no switch left to turn it off.
 Future<void> showAlarmNotification(
   FlutterLocalNotificationsPlugin plugin,
   String title,
@@ -108,21 +112,6 @@ Future<void> showAlarmNotification(
   final baseId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
   await plugin.show(baseId, title, body, details);
-
-  if (settings.repeatMinutes <= 0) return;
-
-  // 확인하지 못했을 때를 대비한 재알림. 무한 반복은 알림 폭탄이 되므로 횟수를 제한한다.
-  for (int i = 1; i <= AlarmSettings.maxRepeatCount; i++) {
-    await plugin.zonedSchedule(
-      baseId + i,
-      title,
-      l10n.alarmRepeatSuffix(body, i, AlarmSettings.maxRepeatCount),
-      tz.TZDateTime.now(tz.local).add(Duration(minutes: settings.repeatMinutes * i)),
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-  }
 }
 
 // 🔥 최상단 백그라운드 핸들러 (앱이 백그라운드/종료 상태일 때 처리)
