@@ -70,7 +70,7 @@ function App() {
         {user && (
           <nav
             style={{
-              display: 'flex', gap: 6, alignItems: 'center',
+              display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
               padding: '10px 24px',
               borderBottom: '1px solid var(--border)',
               background: 'var(--surface)',
