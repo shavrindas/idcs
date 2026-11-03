@@ -2,8 +2,13 @@
 export interface Role {
   role_id: number;
   role_name: string;       
+  //한글
   display_name?: string;    
   short_name?: string;      
+  //영어
+  eng_display_name?: string;
+  eng_short_name?: string;
+
   target_value?: string;
   data_type?: string;
 }
