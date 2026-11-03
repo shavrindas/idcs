@@ -2378,6 +2378,12 @@ abstract class AppLocalizations {
   /// **'{minutes}분째 신호가 없습니다'**
   String panelNoSignal(int minutes);
 
+  /// No description provided for @panelOfflineSnapshot.
+  ///
+  /// In ko, this message translates to:
+  /// **'실시간 아님 — 마지막 값 {date}'**
+  String panelOfflineSnapshot(String date);
+
   /// No description provided for @alarmsNoneActive.
   ///
   /// In ko, this message translates to:
