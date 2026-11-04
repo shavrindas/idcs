@@ -29,6 +29,12 @@ class FacilityUser(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     facility_id = Column(Integer, ForeignKey("facilities_table.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("user_table.id", ondelete="CASCADE"), nullable=False)
+
+    # [신규] 향후 확장 및 권한 제어를 위한 필드 (기본값 True)
+    can_control_device = Column(Boolean, nullable=False, default=True)
+    can_manage_board = Column(Boolean, nullable=False, default=True)
+    can_manage_alarm = Column(Boolean, nullable=False, default=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
@@ -42,6 +48,10 @@ class Facility(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
     access_code = Column(String(50), unique=True, nullable=False, index=True)
+
+    # [신규] 시설당 1명 존재하는 수석 어드민 ID (Nullable 허용)
+    user_admin_id = Column(Integer, ForeignKey("user_table.id", ondelete="SET NULL"), nullable=True)
+
     is_active = Column(Boolean, nullable=False, default=True)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
