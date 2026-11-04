@@ -3,7 +3,8 @@
 # 명세 : User 계정 및 권한(Role) 관련 데이터 모델 정의
 # ===============================================================
 import enum
-from sqlalchemy import Column, Integer, String, Enum, DateTime, func, ForeignKey
+
+from sqlalchemy import Column, Integer, String, Enum, DateTime, func, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from src.config.database import Base
 # ===============================================================
@@ -23,7 +24,8 @@ class User(Base):
     name = Column(String(100), nullable=False)
     role = Column(Enum(UserRole, name="user_role"), nullable=False, default=UserRole.USER)
     phone_number = Column(String(20), nullable=True)
-    
+    user_code = Column(String(32), unique=True, nullable=True, index=True)
+
     # 타임존을 포함하는 생성일, 수정일 (자동 갱신)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
