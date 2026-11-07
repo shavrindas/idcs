@@ -24,7 +24,7 @@ class FacilityChartPage extends StatefulWidget {
 
 class _FacilityChartPageState extends State<FacilityChartPage> {
   // 1. 필터 상태 (dataType 완전 제거)
-  String _currentScale = '1m';
+  String _currentScale = '5m';
   String _currentTimeRange = '1d';
 
   // 2. 조회 대상 호실 상태

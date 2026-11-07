@@ -908,23 +908,23 @@ abstract class AppLocalizations {
   /// **'해상도'**
   String get chartResolution;
 
-  /// No description provided for @chartRes10s.
-  ///
-  /// In ko, this message translates to:
-  /// **'10초 단위'**
-  String get chartRes10s;
-
-  /// No description provided for @chartRes1m.
-  ///
-  /// In ko, this message translates to:
-  /// **'1분 단위'**
-  String get chartRes1m;
-
   /// No description provided for @chartRes5m.
   ///
   /// In ko, this message translates to:
   /// **'5분 단위'**
   String get chartRes5m;
+
+  /// No description provided for @chartRes10m.
+  ///
+  /// In ko, this message translates to:
+  /// **'10분 단위'**
+  String get chartRes10m;
+
+  /// No description provided for @chartRes30m.
+  ///
+  /// In ko, this message translates to:
+  /// **'30분 단위'**
+  String get chartRes30m;
 
   /// No description provided for @chartRes1h.
   ///
