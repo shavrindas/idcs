@@ -1,5 +1,6 @@
 package com.idcoolsystems.idcs.widget
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -12,14 +13,18 @@ import kotlin.math.abs
 
 /** Supplies the room cards to the widget's GridView. */
 class RoomWidgetService : RemoteViewsService() {
-    override fun onGetViewFactory(intent: Intent): RemoteViewsFactory = Factory(applicationContext)
+    override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
+        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        return Factory(applicationContext, widgetId)
+    }
 
-    private class Factory(private val context: Context) : RemoteViewsFactory {
-        private var rooms: List<WidgetStore.Room> = emptyList()
+    private class Factory(private val context: Context, private val widgetId: Int) : RemoteViewsFactory {
+        /** null은 사용자가 고정 칸 수에서 비워 둔 칸(또는 아직 못 고른 칸). */
+        private var rooms: List<WidgetStore.Room?> = emptyList()
 
         override fun onCreate() {}
         override fun onDataSetChanged() {
-            rooms = WidgetStore.orderedRooms(context)
+            rooms = WidgetStore.roomsForWidget(context, widgetId)
         }
         override fun onDestroy() {}
         override fun getCount() = rooms.size
@@ -32,7 +37,19 @@ class RoomWidgetService : RemoteViewsService() {
 
         override fun getViewAt(position: Int): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_room_item)
-            val room = rooms.getOrNull(position) ?: return views
+            val room = rooms.getOrNull(position)
+            if (room == null) {
+                // 고정 칸 수인데 아직 호실을 안 고른 칸: 톱니로 설정하라고 옅게 안내만 한다.
+                views.setTextViewText(R.id.item_name, context.getString(R.string.widget_config_slot_empty))
+                views.setTextColor(R.id.item_name, color(R.color.widget_text_secondary))
+                views.setViewVisibility(R.id.item_faults, android.view.View.GONE)
+                views.setTextViewText(R.id.item_temp, "")
+                views.setTextColor(R.id.item_minus, Color.TRANSPARENT)
+                views.setViewVisibility(R.id.item_unit, android.view.View.GONE)
+                views.setTextViewText(R.id.item_detail, "")
+                views.setInt(R.id.item_rail, "setBackgroundColor", Color.TRANSPARENT)
+                return views
+            }
 
             val condition = room.condition
             val accent = when (condition) {

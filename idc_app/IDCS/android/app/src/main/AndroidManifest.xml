@@ -51,6 +51,15 @@
             </intent-filter>
         </activity>
         <!-- 홈 화면 위젯: 전체 현황 카드 -->
+        <activity
+            android:name=".widget.RoomWidgetConfigureActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/NormalTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
         <receiver
             android:name=".widget.RoomWidgetProvider"
             android:exported="false">
