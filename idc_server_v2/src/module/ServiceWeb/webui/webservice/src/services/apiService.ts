@@ -45,7 +45,31 @@ export const apiService = {
     }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || '구글 로그인에 실패했습니다.');
+      const e: Error & { status?: number } = new Error(err.detail || '구글 로그인에 실패했습니다.');
+      e.status = res.status;
+      throw e;
+    }
+    return res.json();
+  },
+  /**
+   * 구글 가입. loginGoogle이 404(연동된 계정 없음)를 돌려줬을 때만 호출해서,
+   * 같은 credential으로 계정을 만들고 바로 로그인 상태로 돌려준다.
+   */
+  signupGoogle: async (credential: string) => {
+    let res: Response;
+    try {
+      res = await fetch(`${BASE_URL}/auth/signup/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      throw new Error(`서버(${BASE_URL})에 연결할 수 없습니다. 백엔드 주소를 확인해주세요.`);
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || '구글 가입에 실패했습니다.');
     }
     return res.json();
   },

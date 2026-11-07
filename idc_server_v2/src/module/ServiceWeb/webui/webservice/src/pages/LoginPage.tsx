@@ -67,7 +67,14 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
 
   const handleGoogle = async (credential: string) => {
     try {
-      const res = await apiService.loginGoogle(credential);
+      let res;
+      try {
+        res = await apiService.loginGoogle(credential);
+      } catch (error: any) {
+        // 연동된 계정이 없을 때만(404) 같은 credential으로 가입을 시도한다.
+        if (error.status !== 404) throw error;
+        res = await apiService.signupGoogle(credential);
+      }
       await finishLogin(res, res.email ?? '');
     } catch (error: any) {
       alert(error.message || '구글 로그인 실패');
