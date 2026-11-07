@@ -21,6 +21,25 @@ object WidgetStore {
     private const val KEY_UPDATED = "updated_at"
     private const val KEY_WS_URL = "ws_url"
     private const val KEY_LIVE = "live_enabled"
+    private const val KEY_LAYOUT_PREFIX = "layout_"
+    private const val KEY_SLOTS_PREFIX = "slots_"
+
+    /**
+     * 위젯 한 칸의 격자 모양. ALL은 지금까지의 기본 동작(보고된 순서대로 전부,
+     * 2열) 그대로이고, 나머지는 사용자가 설정 화면에서 칸마다 호실을 직접
+     * 고른다 — count는 고른 숫자, cols/rows는 그 숫자를 담는 격자 모양이다.
+     */
+    enum class Layout(val count: Int, val cols: Int) {
+        ALL(0, 2),
+        SIX(6, 3),
+        EIGHT(8, 4),
+        NINE(9, 3),
+        TWELVE(12, 4);
+
+        companion object {
+            fun from(count: Int): Layout = entries.firstOrNull { it.count == count } ?: ALL
+        }
+    }
 
     /** Same threshold as RoomStatus.driftThreshold in the app. */
     private const val DRIFT_THRESHOLD = 2.0
@@ -139,6 +158,49 @@ object WidgetStore {
             .getAppWidgetIds(ComponentName(context, RoomWidgetProvider::class.java))
 
     fun hasWidgets(context: Context) = widgetIds(context).isNotEmpty()
+
+    fun widgetLayout(context: Context, widgetId: Int): Layout =
+        Layout.from(prefs(context).getInt("$KEY_LAYOUT_PREFIX$widgetId", 0))
+
+    /** 칸마다 고른 호실 id. 비워 둔 칸은 null. 저장된 적 없으면 빈 리스트. */
+    fun widgetSlots(context: Context, widgetId: Int): List<Int?> {
+        val raw = prefs(context).getString("$KEY_SLOTS_PREFIX$widgetId", null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).map { i -> if (arr.isNull(i)) null else arr.getInt(i) }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveWidgetConfig(context: Context, widgetId: Int, layout: Layout, slots: List<Int?>) {
+        val arr = JSONArray()
+        slots.forEach { arr.put(it ?: JSONObject.NULL) }
+        prefs(context).edit()
+            .putInt("$KEY_LAYOUT_PREFIX$widgetId", layout.count)
+            .putString("$KEY_SLOTS_PREFIX$widgetId", arr.toString())
+            .apply()
+    }
+
+    /** 위젯이 삭제될 때 같이 지운다. 안 지우면 같은 id가 재배치됐을 때 예전 설정이 되살아난다. */
+    fun clearWidgetConfig(context: Context, widgetId: Int) {
+        prefs(context).edit()
+            .remove("$KEY_LAYOUT_PREFIX$widgetId")
+            .remove("$KEY_SLOTS_PREFIX$widgetId")
+            .apply()
+    }
+
+    /**
+     * 위젯 한 개가 그릴 칸들. ALL이면 지금까지처럼 보고된 순서대로 전부이고,
+     * 고정 칸 수면 사용자가 고른 순서 그대로 — 안 고른 칸은 null(빈 칸)이다.
+     */
+    fun roomsForWidget(context: Context, widgetId: Int): List<Room?> {
+        val layout = widgetLayout(context, widgetId)
+        if (layout == Layout.ALL) return orderedRooms(context)
+        val all = rooms(context)
+        val slots = widgetSlots(context, widgetId)
+        return (0 until layout.count).map { i -> slots.getOrNull(i)?.let { id -> all.firstOrNull { it.id == id } } }
+    }
 
     /** Redraw every placed widget: header text and the card grid. */
     fun refreshWidgets(context: Context) {
