@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useSearchParams } from 'react-router-dom';
 import { MainChartViewer, SubChartViewer } from '../components/chart/viewer/EChartsViewer';
 import { TopToolBar } from '../components/chart/viewer/TopToolBar';
 import { LowerToolBar } from '../components/chart/viewer/LowerToolBar';
 import { SmartOmniboxPanel } from '../components/chart/viewer/panels/SmartOmniboxPanel';
 import { ScopingPanel } from '../components/chart/viewer/panels/ScopingPanel';
 import { PostViewerPanel } from '../components/chart/viewer/panels/PostViewerPanel';
+import { AlarmViewerPanel } from '../components/chart/viewer/panels/AlarmViewerPanel';
 import { MappingActivePanel } from '../components/chart/viewer/panels/MappingActivePanel';
 import { BlacklistPanel } from '../components/chart/viewer/panels/BlacklistPanel';
 import { ChartStatsPanel } from '../components/chart/viewer/panels/ChartStatsPanel';
@@ -49,7 +51,10 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   const [groups, setGroups] = useState<ChartGroup[]>([]);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
 
-  const [selectedFacility, setSelectedFacility] = useState<number | ''>('');
+  // Opened from an overview card: /viewer?facility=3&room=12 preselects that room.
+  const [searchParams] = useSearchParams();
+  const requestedRoom = useRef<number | null>(Number(searchParams.get('room')) || null);
+  const [selectedFacility, setSelectedFacility] = useState<number | ''>(Number(searchParams.get('facility')) || '');
   const [selectedRoom, setSelectedRoom] = useState<number | ''>('');
   const [selectedGroupId, setSelectedGroupId] = useState<number | ''>('');
   const [checkedRoles, setCheckedRoles] = useState<number[]>([]);
@@ -71,6 +76,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   const [alarms, setAlarms] = useState<any[]>([]);
   const [hiddenPosts, setHiddenPosts] = useState<any[]>([]);
   const [selectedPostViewerIds, setSelectedPostViewerIds] = useState<number[]>([]);
+  const [selectedAlarmViewerIds, setSelectedAlarmViewerIds] = useState<number[]>([]);
 
   const [omniboxInput, setOmniboxInput] = useState('');
   const [omniboxSuggestions, setOmniboxSuggestions] = useState<any[]>([]);
@@ -121,6 +127,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   setHiddenPosts([]);
   setAlarms([]);
   setSelectedPostViewerIds([]);
+  setSelectedAlarmViewerIds([]);
   setInvertedBools([]);
   loadedRangeRef.current = null;
   setLoadedRangeState(null);
@@ -130,7 +137,11 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   apiService.getRooms(Number(selectedFacility)).then(res => {
     const fetchedRooms = res.rooms || [];
     setRooms(fetchedRooms);
-    if (fetchedRooms.length > 0) {
+    const wanted = fetchedRooms.find((r: any) => r.id === requestedRoom.current);
+    requestedRoom.current = null;
+    if (wanted) {
+      setSelectedRoom(wanted.id);
+    } else if (fetchedRooms.length > 0) {
       setSelectedRoom(fetchedRooms[0].id);
     }
   }).catch(err => {
@@ -153,7 +164,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
         roles.forEach((r: Role, idx: number) => { newColorMap[r.role_id] = COLOR_PALETTE[idx % COLOR_PALETTE.length]; });
         setRoleColors(newColorMap);
       });
-      setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
+      setSelectedGroupId(''); setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setSelectedAlarmViewerIds([]); setInvertedBools([]);
       loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
     }
   }, [selectedRoom, selectedFacility]); 
@@ -163,7 +174,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
       const group = groups.find(g => g.group_id === Number(selectedGroupId));
       if (group && group.role_ids) setCheckedRoles(group.role_ids.filter(id => id !== null));
     } else {
-      setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setInvertedBools([]);
+      setCheckedRoles([]); setChartDataSets([]); setPosts([]); setHiddenPosts([]); setAlarms([]); setSelectedPostViewerIds([]); setSelectedAlarmViewerIds([]); setInvertedBools([]);
       loadedRangeRef.current = null; setLoadedRangeState(null); setCurrentViewStart(null);
     }
   }, [selectedGroupId, groups]); 
@@ -371,6 +382,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
 
   const handleChartClick = (type: 'post' | 'alarm', ids: number | number[]) => {
     if (type === 'post') setSelectedPostViewerIds(Array.isArray(ids) ? ids : [ids]);
+    else if (type === 'alarm') setSelectedAlarmViewerIds(Array.isArray(ids) ? ids : [ids]);
   };
 
   const handleHidePost = async (postId: number) => {
@@ -475,6 +487,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
           <SmartOmniboxPanel input={omniboxInput} suggestions={omniboxSuggestions} isChartLoading={isChartLoading} activeIndex={omniboxActive} onActiveIndexChange={setOmniboxActive} onInputChange={setOmniboxInput} onSubmit={handleOmniboxSubmit} onSelect={handleOmniboxSelect} />
           <ScopingPanel mode={mode} scale={scale} facilities={facilities} rooms={rooms} selectedFacility={selectedFacility} selectedRoom={selectedRoom} isChartLoading={isChartLoading} onModeToggle={handleModeToggle} onScaleChange={setScale} onFacilityChange={setSelectedFacility} onRoomChange={setSelectedRoom} onQuickTime={handleQuickTimeSelect} onQuickDay={handleQuickDaySelect} />
           <PostViewerPanel selectedPostIds={selectedPostViewerIds} posts={posts} selectedGroupId={selectedGroupId} onHidePost={handleHidePost} />
+          <AlarmViewerPanel selectedAlarmIds={selectedAlarmViewerIds} alarms={alarms} allRoles={allRoles} />
           <ChartStatsPanel datasets={mainDataSets} roleColors={roleColors} />
         </div>
       </div>

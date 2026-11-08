@@ -67,6 +67,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get panelLedDigitsNote => 'Show numbers as a seven-segment display.';
 
   @override
+  String get panelTempDividers => 'Temperature dividers';
+
+  @override
+  String get panelTempDividersNote =>
+      'Draw a line above and below the current temperature on room cards.';
+
+  @override
+  String get settingsHomeWidget => 'Home-screen widget';
+
+  @override
+  String get widgetLive => 'Live widget updates';
+
+  @override
+  String get widgetLiveNote =>
+      'Keeps the widget temperatures live even when the app is closed. While on, a notification stays in the status bar and battery use is slightly higher. When off, the widget updates only while the app is open.';
+
+  @override
   String get panelSampleLabel => 'Room temp';
 
   @override
@@ -426,13 +443,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartResolution => 'Resolution';
 
   @override
-  String get chartRes10s => '10 seconds';
-
-  @override
-  String get chartRes1m => '1 minute';
-
-  @override
   String get chartRes5m => '5 minutes';
+
+  @override
+  String get chartRes10m => '10 minutes';
+
+  @override
+  String get chartRes30m => '30 minutes';
 
   @override
   String get chartRes1h => '1 hour';

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:idcs/l10n/app_localizations.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/alarm/alarm_settings.dart';
+import 'package:idcs/services/common/home_widget_bridge.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/motion.dart';
@@ -28,6 +29,9 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
   AlarmSettings _alarm = const AlarmSettings();
   bool _loaded = false;
 
+  /// Home-screen widget keeps updating while the app is closed (Android only).
+  bool _widgetLive = true;
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +40,11 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
 
   Future<void> _load() async {
     final loaded = await AlarmSettings.load();
+    final widgetLive = await HomeWidgetBridge.isLive();
     if (!mounted) return;
     setState(() {
       _alarm = loaded;
+      _widgetLive = widgetLive;
       _loaded = true;
     });
   }
@@ -174,38 +180,24 @@ class _AppSettingsSectionsState extends State<AppSettingsSections> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SettingsCard(
-            title: l10n.alarmRepeat,
-            children: [
-              Text(
-                l10n.alarmRepeatNote(AlarmSettings.maxRepeatCount),
-                style: TextStyle(fontSize: 13, color: context.colors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                children: AlarmSettings.repeatOptions.map((minutes) {
-                  final selected = _alarm.repeatMinutes == minutes;
-                  return ChoiceChip(
-                    showCheckmark: false,
-                    label: Text(minutes == 0 ? l10n.alarmRepeatNone : l10n.alarmRepeatMinutes(minutes)),
-                    selected: selected,
-                    onSelected: (_) => _updateAlarm(_alarm.copyWith(repeatMinutes: minutes)),
-                    labelStyle: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? context.colors.onPrimary : context.colors.textPrimary,
-                    ),
-                    selectedColor: context.colors.primary,
-                    backgroundColor: context.colors.background,
-                    side: BorderSide(color: selected ? context.colors.primary : context.colors.outline),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
+          if (HomeWidgetBridge.supported) ...[
+            const SizedBox(height: 16),
+            SettingsCard(
+              title: l10n.settingsHomeWidget,
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.widgetLive),
+                  subtitle: Text(l10n.widgetLiveNote),
+                  value: _widgetLive,
+                  onChanged: (val) {
+                    setState(() => _widgetLive = val);
+                    HomeWidgetBridge.setLive(val);
+                  },
+                ),
+              ],
+            ),
+          ],
         ],
       ],
     );
@@ -309,6 +301,14 @@ class _PanelAppearanceCard extends StatelessWidget {
           subtitle: Text(l10n.panelLedDigitsNote),
           value: view.ledDigits,
           onChanged: (val) => _update(view.copyWith(ledDigits: val)),
+        ),
+
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.panelTempDividers),
+          subtitle: Text(l10n.panelTempDividersNote),
+          value: view.tempDividers,
+          onChanged: (val) => _update(view.copyWith(tempDividers: val)),
         ),
       ],
     );

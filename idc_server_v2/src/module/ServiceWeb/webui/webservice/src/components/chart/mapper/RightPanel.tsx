@@ -16,13 +16,39 @@ interface Props {
 }
 
 // 명칭 및 약어 Fallback 헬퍼 함수
-const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
-  const roleName = roleInfo?.role_name || (fallbackId ? `Role ${fallbackId}` : '');
-  const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${fallbackId}`;
-  const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${fallbackId}`;
+type Language = 'ko' | 'en';
+// -------------- 구버전 
+// const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
+//   const roleName = roleInfo?.role_name || (fallbackId ? `Role ${fallbackId}` : '');
+//   const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${fallbackId}`;
+//   const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${fallbackId}`;
+
+//   return { roleName, roleLabel, badgeLabel };
+// };
+// -------------- 신버전
+const getRoleLabels = (roleInfo?: Role, fallbackId?: number, lang: Language = 'ko') => {
+  const fallbackLabel = fallbackId ? `Role ${fallbackId}` : '';
+  const fallbackBadge = fallbackId ? `${fallbackId}` : '';
+
+  const roleName = roleInfo?.role_name || fallbackLabel;
+
+  // 언어별 우선순위 지정: 요청 언어 필드 -> 기본 필드 -> role_name -> Fallback
+  const roleLabel = roleInfo
+    ? (lang === 'en'
+        ? (roleInfo.eng_display_name || roleInfo.display_name || roleInfo.role_name || fallbackLabel)
+        : (roleInfo.display_name || roleInfo.eng_display_name || roleInfo.role_name || fallbackLabel))
+    : fallbackLabel;
+
+  const badgeLabel = roleInfo
+    ? (lang === 'en'
+        ? (roleInfo.eng_short_name || roleInfo.short_name || roleInfo.role_name || fallbackBadge)
+        : (roleInfo.short_name || roleInfo.eng_short_name || roleInfo.role_name || fallbackBadge))
+    : fallbackBadge;
 
   return { roleName, roleLabel, badgeLabel };
-};
+}
+
+
 
 export const RightPanel: React.FC<Props> = ({
   existingGroups,

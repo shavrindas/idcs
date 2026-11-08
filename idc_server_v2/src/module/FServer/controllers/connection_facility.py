@@ -40,6 +40,10 @@ if IS_FACILITY_SERVER == "true":
     except (ImportError, ModuleNotFoundError) as e:
         config = None
 
+    for t1, t2, t3, t4 in LM.DataLists:
+        if not t1 in EM.DataMaps:
+            print(t1)
+
 
 class Ethernet:
     def __init__(self):
@@ -250,7 +254,7 @@ class Ethernet:
             
             with self.data_lock:
                 current_time_str = datetime.now().strftime("%H:%M:%S")
-                print(f"\n📊 [{current_time_str} - 통계 집계 시작]")
+                #print(f"\n📊 [{current_time_str} - 통계 집계 시작]")
                 json_ready_data = {}
                 
                 for cate, lab_dict in self.categorizedpayload.items():
@@ -258,7 +262,7 @@ class Ethernet:
                     if cate == CT.bool_logs or cate == CT.real_static_logs:
                         for lab, fmt in lab_dict.items():
                             if fmt.vals: # 데이터가 있을 때만 처리
-                                print(f"[{cate} > {lab}] 값: {fmt.vals[-1]}")
+                                #print(f"[{cate} > {lab}] 값: {fmt.vals[-1]}")
                                 tmpval = fmt.to_dict(is_bool=True)
     
                                 # 기존 캐시된 값 확인 (없으면 None)
@@ -292,7 +296,7 @@ class Ethernet:
                             
                                 fmt.val_std = round(math.sqrt(variance), 4)
     
-                                print(f"[{cate} > {lab}] 개수:{n} | 평균:{fmt.val_mean} | 분산:{fmt.val_var} | 최소:{fmt.val_min} | 최대:{fmt.val_max}")
+                                #print(f"[{cate} > {lab}] 개수:{n} | 평균:{fmt.val_mean} | 분산:{fmt.val_var} | 최소:{fmt.val_min} | 최대:{fmt.val_max}")
     
                                 json_ready_data[cate][lab] = fmt.to_dict(is_bool=False)
     

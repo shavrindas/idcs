@@ -66,6 +66,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get panelLedDigitsNote => '숫자를 7세그먼트 표시기 모양으로 보여줍니다.';
 
   @override
+  String get panelTempDividers => '온도 구분선';
+
+  @override
+  String get panelTempDividersNote => '호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.';
+
+  @override
+  String get settingsHomeWidget => '홈 화면 위젯';
+
+  @override
+  String get widgetLive => '위젯 실시간 갱신';
+
+  @override
+  String get widgetLiveNote =>
+      '앱을 닫아도 홈 화면 위젯의 온도가 실시간으로 바뀝니다. 켜 두는 동안 알림 영역에 표시가 남고 배터리를 조금 더 씁니다. 끄면 앱을 열었을 때만 갱신됩니다.';
+
+  @override
   String get panelSampleLabel => '고내온도';
 
   @override
@@ -416,13 +432,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chartResolution => '해상도';
 
   @override
-  String get chartRes10s => '10초 단위';
-
-  @override
-  String get chartRes1m => '1분 단위';
-
-  @override
   String get chartRes5m => '5분 단위';
+
+  @override
+  String get chartRes10m => '10분 단위';
+
+  @override
+  String get chartRes30m => '30분 단위';
 
   @override
   String get chartRes1h => '1시간 단위';

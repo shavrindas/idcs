@@ -78,7 +78,7 @@ export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <span className="label">점 간격</span>
       <select value={scale} onChange={e => onScaleChange(e.target.value as ChartScale)} disabled={isChartLoading} className="input">
-        <option value="1m">1분마다</option><option value="5m">5분마다</option><option value="10m">10분마다</option><option value="15m">15분마다</option><option value="1h">1시간마다</option>
+        <option value="1m">1분마다</option><option value="5m">5분마다</option><option value="10m">10분마다</option><option value="30m">30분마다</option><option value="1h">1시간마다</option>
       </select>
     </div>
 

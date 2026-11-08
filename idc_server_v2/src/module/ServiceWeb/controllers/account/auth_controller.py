@@ -45,6 +45,14 @@ class LoginSocialRequest(BaseModel):
     provider_id: str
     keep_login: bool = False
 
+class LoginGoogleRequest(BaseModel):
+    credential: str
+    keep_login: bool = False
+
+class SignupGoogleRequest(BaseModel):
+    credential: str
+    keep_login: bool = False
+
 class LinkSocialProvider(BaseModel):
     email: EmailStr
     provider: str
@@ -166,6 +174,109 @@ async def login_social(req: LoginSocialRequest, db: AsyncSession = Depends(get_d
         "access_token": "dummy_social_token_here",
         "user_id": user.id,
         "expiry_policy": token_expiry
+    }
+
+# Web OAuth client the console's Google button is issued for. The app signs in
+# against the same client (serverClientId), so `sub` matches what it stored.
+GOOGLE_WEB_CLIENT_ID = os.getenv(
+    "GOOGLE_WEB_CLIENT_ID",
+    "415636031627-asr8rncpbq4c5jkn3r44d0u65cf64lvb.apps.googleusercontent.com",
+)
+
+@router.post("/login/google", status_code=status.HTTP_200_OK)
+async def login_google(req: LoginGoogleRequest, db: AsyncSession = Depends(get_db)):
+    """웹 구글 로그인.
+
+    The browser sends Google's signed ID token, not a bare provider_id, and the
+    server checks the signature and audience itself — a web page can be made to
+    post any id it likes, so trusting the client here would let anyone log in
+    as anyone whose Google id they know.
+    """
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+
+    try:
+        info = google_id_token.verify_oauth2_token(
+            req.credential, google_requests.Request(), GOOGLE_WEB_CLIENT_ID
+        )
+    except ValueError:
+        raise HTTPException(status_code=401, detail="구글 인증을 확인하지 못했습니다. 다시 시도해주세요.")
+
+    google_sub = info.get("sub")
+    result = await db.execute(
+        select(ExternalProvider).where(ExternalProvider.provider == "google", ExternalProvider.provider_id == google_sub)
+    )
+    provider_info = result.scalars().first()
+    if not provider_info:
+        raise HTTPException(
+            status_code=404,
+            detail="이 구글 계정으로 가입된 IDCool 계정이 없습니다. 앱에서 구글로 가입하거나 계정을 연동해주세요.",
+        )
+
+    user = (await db.execute(select(User).where(User.id == provider_info.account_id))).scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    return {
+        "message": "google 소셜 로그인 성공",
+        "access_token": "dummy_social_token_here",
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role.value if hasattr(user.role, 'value') else user.role,
+        "expiry_policy": "30days" if req.keep_login else "1day",
+    }
+
+@router.post("/signup/google", status_code=status.HTTP_201_CREATED)
+async def signup_google(req: SignupGoogleRequest, db: AsyncSession = Depends(get_db)):
+    """웹 구글 가입.
+
+    로그인 화면의 구글 버튼은 로그인을 먼저 시도하고, 연동된 계정이 없을 때만
+    이걸 호출한다. 여기서도 credential은 서버가 직접 검증한다 — 이미 가입된
+    이메일/구글 계정을 다시 만들 수는 없다.
+    """
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+
+    try:
+        info = google_id_token.verify_oauth2_token(
+            req.credential, google_requests.Request(), GOOGLE_WEB_CLIENT_ID
+        )
+    except ValueError:
+        raise HTTPException(status_code=401, detail="구글 인증을 확인하지 못했습니다. 다시 시도해주세요.")
+
+    google_sub = info.get("sub")
+    email = info.get("email")
+
+    existing_provider = (await db.execute(
+        select(ExternalProvider).where(ExternalProvider.provider == "google", ExternalProvider.provider_id == google_sub)
+    )).scalars().first()
+    if existing_provider:
+        raise HTTPException(status_code=400, detail="이미 가입된 구글 계정입니다. 로그인해주세요.")
+
+    existing_user = (await db.execute(select(User).where(User.email == email))).scalars().first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
+
+    new_user = User(
+        email=email,
+        password=None,
+        name=info.get("name") or (email.split("@")[0] if email else "구글 사용자"),
+        role=UserRole.USER,
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+
+    db.add(ExternalProvider(account_id=new_user.id, provider="google", provider_id=google_sub))
+    await db.commit()
+
+    return {
+        "message": "google 가입 및 로그인 성공",
+        "access_token": "dummy_social_token_here",
+        "user_id": new_user.id,
+        "email": new_user.email,
+        "role": new_user.role.value if hasattr(new_user.role, 'value') else new_user.role,
+        "expiry_policy": "30days" if req.keep_login else "1day",
     }
 
 @router.post("/check-account", status_code=status.HTTP_200_OK)

@@ -50,4 +50,16 @@ class FacilityApiService {
       throw ApiException.rejected();
     }
   }
+
+  //시설 포인트롤 목록 조회
+  static Future<List<dynamic>> getFacilityPointRoleMeta(String roomId) async {
+    final url = Uri.parse('$_baseUrl/$roomId/room_roles_meta');
+    final response = await ApiClient.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['roles'] ?? [];
+    } else {
+      throw ApiException.rejected();
+    }
+  }
 }

@@ -46,12 +46,19 @@ class _MonitoringPageState extends State<MonitoringPage> {
   final Map<String, String> _pendingCommands = {};
 
   // 평평한 1층 딕셔너리 데이터 구조
-  Map<String, String> realtempData = {'temp_comp': 'NA', 'temp_pv': 'NA', 'temp_sv': 'NA', 'temp_hey': 'NA', 'temp_zero': 'NA'};
-  Map<String, String> deforestData = {'deforest_def': 'NA', 'deforest_dfcm': 'NA', 'deforest_dfct': 'NA', 'deforest_sysm': 'NA', 'deforest_syst': 'NA'};
-  Map<String, String> emergencyData = {'emergency_cint': 'NA', 'emergency_high': 'NA', 'emergency_uf_ocr': 'NA', 'emergency_locked': 'NA', 'emergency_outtemp': 'NA', 'emergency_gas': 'NA', 'emergency_tempsensor': 'NA', 'emergency_defemg': 'NA', 'emergency_lowsw': 'NA', 'emergency_hottic': 'NA', 'emergency_emg': 'NA', 'emergency_emgreset': 'NA'};
-  Map<String, String> inverterData = {'inverter_error': 'NA', 'inverter_hz': 'NA', 'inverter_kw': 'NA', 'inverter_outv': 'NA', 'inverter_outa': 'NA', 'inverter_outhz': 'NA'};
-  Map<String, String> equipmentData = {'equipment_temp1': 'NA', 'equipment_press1': 'NA', 'equipment_press2': 'NA'};
-  Map<String, String> controlData = {'control_runsw': 'NA', 'control_roomtemp': 'NA', 'control_cffan1': 'NA', 'control_cffan2': 'NA', 'control_lsv': 'NA', 'control_ingsv': 'NA', 'control_uffan': 'NA', 'control_tica': 'NA', 'control_efa': 'NA', 'control_heatdelflag': 'NA', 'control_initdelflag': 'NA', 'control_compdelflag': 'NA', 'control_coolerdelflag': 'NA', 'control_mdf': 'NA', 'control_sw': 'NA', 'control_runtimelow': 'NA', 'control_runtimehigh': 'NA', 'control_initdeltm': 'NA', 'control_compdelst': 'NA', 'control_cooldeltm': 'NA', 'control_defdeltm': 'NA'};
+  // Map<String, String> realtempData = {'temp_comp': 'NA',  'temp_sv': 'NA', 'temp_hey': 'NA', 'temp_zero': 'NA'};
+  // Map<String, String> deforestData = {'deforest_def': 'NA', 'deforest_dfcm': 'NA', 'deforest_dfct': 'NA', 'deforest_sysm': 'NA', 'deforest_syst': 'NA'};
+  // Map<String, String> emergencyData = {'emergency_cint': 'NA', 'emergency_high': 'NA', 'emergency_uf_ocr': 'NA', 'emergency_locked': 'NA', 'emergency_outtemp': 'NA', 'emergency_gas': 'NA', 'emergency_tempsensor': 'NA', 'emergency_defemg': 'NA', 'emergency_lowsw': 'NA', 'emergency_hottic': 'NA', 'emergency_emg': 'NA', 'emergency_emgreset': 'NA'};
+  // Map<String, String> inverterData = {'inverter_error': 'NA', 'inverter_hz': 'NA', 'inverter_kw': 'NA', 'inverter_outv': 'NA', 'inverter_outa': 'NA', 'inverter_outhz': 'NA'};
+  // Map<String, String> equipmentData = {'equipment_temp1': 'NA', 'equipment_press1': 'NA', 'equipment_press2': 'NA'};
+  // Map<String, String> controlData = {'control_runsw': 'NA', 'control_roomtemp': 'NA', 'control_cffan1': 'NA', 'control_cffan2': 'NA', 'control_lsv': 'NA', 'control_ingsv': 'NA', 'control_uffan': 'NA', 'control_tica': 'NA', 'control_efa': 'NA', 'control_heatdelflag': 'NA', 'control_initdelflag': 'NA', 'control_compdelflag': 'NA', 'control_coolerdelflag': 'NA', 'control_mdf': 'NA', 'control_sw': 'NA', 'control_runtimelow': 'NA', 'control_runtimehigh': 'NA', 'control_initdeltm': 'NA', 'control_compdelst': 'NA', 'control_cooldeltm': 'NA', 'control_defdeltm': 'NA'};
+  Map<String, String> realtempData = {};
+  Map<String, String> deforestData = {};
+  Map<String, String> emergencyData = {};
+  Map<String, String> inverterData = {};
+  Map<String, String> equipmentData = {};
+  Map<String, String> controlData = {};
+
   /// 그룹 맵은 모두 서버가 보내는 필드 이름을 키로 쓴다. 화면에 보여줄 이름은
   /// DeviceLabels 가 그릴 때 붙이므로, 라벨을 바꿔도 데이터 경로는 그대로다.
   ///
@@ -66,9 +73,20 @@ class _MonitoringPageState extends State<MonitoringPage> {
     return controlData;
   }
 
+  void _groupAdd(String key) {
+    if (key.contains("temp_")) realtempData[key] = "NA";
+    else if(key.contains("deforest_")) deforestData[key] = "NA";
+    else if(key.contains("emergency_")) emergencyData[key] = "NA";
+    else if(key.contains("inverter_")) inverterData[key] = "NA";
+    else if(key.contains("equipment_")) equipmentData[key] = "NA";
+    else if(key.contains("control_")) controlData[key] = "NA";
+  }
+
   @override
   void initState() {
     super.initState();
+
+    _loadPointRoles();
     // 💡 [핵심] 페이지 진입 시 웹소켓 서비스 연결 및 스트림 구독 시작
     _webSocketService.connect('${AppConfig.basewsUrl}/facilities/data/get/${widget.facilityId}');
 
@@ -94,6 +112,35 @@ class _MonitoringPageState extends State<MonitoringPage> {
       if (mounted && match != null) setState(() => _roomName = match['name']);
     } catch (_) {
       // 이름을 못 불러와도 제어판 자체는 그대로 쓸 수 있으므로 조용히 넘어간다.
+    }
+  }
+
+  Future<void> _loadPointRoles() async {
+    try {
+      final roles = await FacilityApiService.getFacilityPointRoleMeta(widget.roomId);
+
+      for (var r in roles) {
+        // display_name이 존재하고 비어있지 않은 경우에만 사용, 아니면 role_name 사용
+        final roleName = r["role_name"]?.toString();
+
+        if (roleName == null || roleName.trim().isEmpty) {
+          continue;
+        }
+
+        final displayName = r["display_name"]?.toString();
+        final shortName = r["short_name"]?.toString();
+
+        _groupAdd(roleName);
+
+        if (displayName != null && displayName.toString().trim().isNotEmpty) {
+          debugPrint(displayName);
+        } else {
+          debugPrint(roleName);
+        }
+      }
+    } catch (e) {
+      // 디버깅을 위해 에러를 출력해보도록 수정하는 것이 좋습니다.
+      debugPrint("포인트 롤 로드 중 에러 발생: $e");
     }
   }
 
