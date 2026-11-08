@@ -15,7 +15,7 @@ import 'package:idcs/services/common/facility_shortcut.dart';
 import 'package:idcs/components/shared/glass_nav_bar.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
-
+import 'package:idcs/services/common/user_api_service.dart';
 class FacilityShellPage extends StatefulWidget {
   final String userId;
   final String facilityId;
@@ -34,25 +34,38 @@ class FacilityShellPage extends StatefulWidget {
 
 class _FacilityShellPageState extends State<FacilityShellPage> {
   String? _facilityName;
+  // bool _canManageEmployees = false;
 
   @override
   void initState() {
     super.initState();
-    _loadFacilityName();
+    _loadFacilityData();
   }
 
-  Future<void> _loadFacilityName() async {
+  Future<void> _loadFacilityData() async {
     try {
+      // 1. 시설 이름 조회를 위한 전체 시설 목록 로드
       final facilities = await FacilityApiService.getFacilities(widget.userId);
       final match = facilities.firstWhere(
         (f) => f['id'].toString() == widget.facilityId,
         orElse: () => null,
       );
-      if (mounted && match != null) {
-        setState(() => _facilityName = match['name']);
+      
+      // 2. 현재 로그인한 유저의 Role 검사
+      final role = await UserApiService.getUserRole(widget.userId);
+      final isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
+      
+      // 3. 해당 시설의 user_admin 여부 확인 (시설 응답에 user_admin_id가 포함되어야 함)
+      final isUserAdmin = match != null && match['user_admin_id']?.toString() == widget.userId;
+
+      if (mounted) {
+        setState(() {
+          _facilityName = match?['name'];
+          // _canManageEmployees = isAdmin || isUserAdmin;
+        });
       }
     } catch (_) {
-      // 이름을 못 불러와도 시설 ID로 대체 표시하므로 별도 에러 처리는 생략
+      // 에러 발생 시 버튼 노출 생략
     }
   }
 
@@ -115,6 +128,14 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
             tooltip: context.l10n.settingsTitle,
             onPressed: () => context.push('/index/${widget.userId}/profile'),
           ),
+          // if (_canManageEmployees)
+          //   IconButton(
+          //     icon: const Icon(Icons.people_outline_rounded),
+          //     tooltip: '직원 관리',
+          //     onPressed: () => context.push(
+          //       '/facility_employees/${widget.userId}/${widget.facilityId}',
+          //     ),
+          //   ),
         ],
       ),
       body: widget.navigationShell,

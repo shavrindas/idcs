@@ -46,7 +46,7 @@ const getRoleLabels = (roleInfo?: Role, fallbackId?: number, lang: Language = 'k
     : fallbackBadge;
 
   return { roleName, roleLabel, badgeLabel };
-
+}
 
 
 export const RightPanel: React.FC<Props> = ({

@@ -202,4 +202,31 @@ export const apiService = {
       return { enabled: false };
     }
   },
+
+
+
+  getFacilityEmployeesWeb: async (facId: number, userId: number) => 
+    (await fetch(`${BASE_URL}/facility-manager/facility/${facId}/employees?user_id=${userId}`)).json(),
+  
+  inviteEmployeeWeb: async (facId: number, userId: number, userCode: string) => {
+    const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/employee?user_id=${userId}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_code: userCode })
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || '초대 실패');
+    return res.json();
+  },
+
+  removeEmployeeWeb: async (facId: number, targetUserId: number, userId: number) => {
+    const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/employee/${targetUserId}?user_id=${userId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error((await res.json()).detail || '해제 실패');
+    return res.json();
+  },
+
+  setUserAdminWeb: async (facId: number, userId: number, userAdminId: number | null) => {
+    const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/user-admin?user_id=${userId}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_admin_id: userAdminId })
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || '권한 변경 실패');
+    return res.json();
+  },
 };
