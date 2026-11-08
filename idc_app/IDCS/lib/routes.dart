@@ -1,6 +1,8 @@
 // 경로: lib/routes.dart
 part of 'main.dart';
 
+
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   errorBuilder: (context, state) => const NotFoundScreen(),
@@ -199,6 +201,19 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
+
+
+
+    //-------------------------------------------------------------------
+
+
+    // GoRoute(
+    //   path: '/facility_employees/:userId/:facilityId',
+    //   builder: (context, state) => FacilityEmployeesPage(
+    //     userId: state.pathParameters['userId']!,
+    //     facilityId: state.pathParameters['facilityId']!,
+    //   ),
+    // ),
   ],
 );
 

@@ -50,4 +50,36 @@ class FacilityApiService {
       throw ApiException.rejected();
     }
   }
+
+  static Future<List<dynamic>> getFacilityEmployees(String facilityId, String userId) async {
+    // 쿼리파라미터로 본인 ID 전달
+    final url = Uri.parse('$_baseUrl/$facilityId/employees?user_id=$userId');
+    final response = await ApiClient.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['employees'] ?? [];
+    } else {
+      throw ApiException.rejected();
+    }
+  }
+
+  static Future<String> inviteUserByCode(String facilityId, String userId, String userCode) async {
+    final url = Uri.parse('$_baseUrl/$facilityId/invite-by-code?user_id=$userId');
+    final response = await ApiClient.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_code': userCode}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw ApiException.rejected(data);
+  }
+
+  static Future<String> removeEmployee(String facilityId, String userId, int targetUserId) async {
+    final url = Uri.parse('$_baseUrl/$facilityId/remove-employee/$targetUserId?user_id=$userId');
+    final response = await ApiClient.delete(url);
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw ApiException.rejected(data);
+  }
 }

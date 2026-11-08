@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import jwt
 import hashlib
+import secrets
+import string
 import random
 from datetime import datetime, timedelta, timezone
 
@@ -199,5 +201,36 @@ async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
     return {
         "name": user.name,
         "phone_number": user.phone_number or "",
+        "user_code": user.user_code or "", 
         "linked_providers": providers_result.scalars().all()
     }
+
+
+
+def generate_user_code() -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(8))
+
+@router.post("/signup/general", status_code=status.HTTP_201_CREATED)
+async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    if result.scalars().first():
+        raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
+
+    # 유저 코드 생성 및 중복 방지
+    code = generate_user_code()
+    while (await db.execute(select(User).where(User.user_code == code))).scalars().first():
+        code = generate_user_code()
+
+    new_user = User(
+        email=user_in.email,
+        password=user_in.password,
+        name=user_in.name,
+        phone_number=user_in.phone_number,
+        role=UserRole.USER,
+        user_code=code
+    )
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id, "user_code": code}

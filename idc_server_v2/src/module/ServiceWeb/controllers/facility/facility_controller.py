@@ -35,7 +35,7 @@ async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
     
     return {
         "facilities": [
-            {"id": f.id, "name": f.name, "start_date": f.start_date, "end_date": f.end_date}
+            {"id": f.id, "name": f.name, "start_date": f.start_date, "end_date": f.end_date, "user_admin_id": f.user_admin_id}
             for f in facilities
         ]
     }

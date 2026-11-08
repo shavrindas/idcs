@@ -11,30 +11,28 @@ import asyncio
 from src.config.database import get_db
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.module.Core.models.User import User, UserRole
+from sqlalchemy import text
+from src.module.Core.models.Chat import ChatRoom, ChatParticipant, ChatRoomType
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
 
 class RegisterFacilityReq(BaseModel):
     access_code: str
 
+class InviteUserReq(BaseModel):
+    user_code: str
+
 @router.get("/{user_id}")
 async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
-    """유저가 소속된 시설 목록 조회 (개발자만 전체 조회)"""
-    
-    # 1. 유저 권한 확인
+    """유저가 소속된 시설 목록 조회 (앱 셸 권한 검증용)"""
     user = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
-    # 2. 권한에 따른 조회 쿼리 분기
-    # ADMIN is a company-side administrator: like USER it only sees the
-    # facilities it is linked to, or one company's admin sees every other
-    # company's warehouses (same rule as the web console).
     if user.role == UserRole.DEVELOPER:
-        # 개발자는 매핑 관계없이 활성화된 모든 시설 조회
         stmt = select(Facility).where(Facility.is_active == True)
     else:
-        # 일반 유저는 자신에게 매핑된 시설만 조회
         stmt = (
             select(Facility)
             .join(FacilityUser, Facility.id == FacilityUser.facility_id)
@@ -46,10 +44,61 @@ async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
     
     return {
         "facilities": [
-            {"id": f.id, "name": f.name, "start_date": f.start_date, "end_date": f.end_date}
+            {
+                "id": f.id, 
+                "name": f.name, 
+                "start_date": f.start_date, 
+                "end_date": f.end_date,
+                # [수정] 앱 셸에서 user_admin 여부를 알 수 있도록 ID 포함
+                "user_admin_id": getattr(f, 'user_admin_id', None) 
+            }
             for f in facilities
         ]
     }
+
+
+@router.get("/{facility_id}/employees")
+async def get_facility_employees(facility_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    actor = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    if not actor:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # [수정된 부분] Enum 객체 문자열 변환 비교 (Rejected 에러 완벽 방지)
+    actor_role_str = actor.role.value if hasattr(actor.role, 'value') else str(actor.role)
+    is_admin = actor_role_str in ['ADMIN', 'DEVELOPER', 'UserRole.ADMIN', 'UserRole.DEVELOPER']
+
+    if not is_admin:
+        exist = (await db.execute(select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility_id))).scalars().first()
+        if not exist:
+            raise HTTPException(status_code=403, detail="해당 시설의 직원 목록을 볼 권한이 없습니다.")
+
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    user_admin_id = getattr(facility, 'user_admin_id', None)
+
+    query = text("""
+        SELECT u.id, u.name, u.email, u.user_code, u.role
+        FROM facility_users fu
+        JOIN user_table u ON fu.user_id = u.id
+        WHERE fu.facility_id = :fid
+          AND u.role NOT IN ('ADMIN', 'DEVELOPER')
+    """)
+    result = await db.execute(query, {"fid": facility_id})
+    employees = result.fetchall()
+
+    return {
+        "status": "success",
+        "employees": [
+            {
+                "id": row.id,
+                "name": row.name,
+                "email": row.email,
+                "user_code": getattr(row, 'user_code', None),
+                "is_user_admin": row.id == user_admin_id,
+                "is_system_admin": False
+            } for row in employees
+        ]
+    }
+
 
 @router.post("/{user_id}/register")
 async def register_facility(user_id: int, req: RegisterFacilityReq, db: AsyncSession = Depends(get_db)):
@@ -72,9 +121,23 @@ async def register_facility(user_id: int, req: RegisterFacilityReq, db: AsyncSes
     
     return {"message": f"'{facility.name}' 시설이 등록되었습니다."}
 
+# @router.delete("/{user_id}/unlink/{facility_id}")
+# async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
+#     """시설 연결 해제"""
+#     result = await db.execute(
+#         select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility_id)
+#     )
+#     mapping = result.scalars().first()    
+#     if not mapping:
+#         raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")        
+#     await db.delete(mapping)
+#     await db.commit()
+#     return {"message": "시설 등록이 해제되었습니다."}
+
 @router.delete("/{user_id}/unlink/{facility_id}")
 async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Depends(get_db)):
-    """시설 연결 해제"""
+    """시설 연결 해제 및 채팅방 자동 퇴장"""
+    # 1. 시설 매핑 해제
     result = await db.execute(
         select(FacilityUser).where(FacilityUser.user_id == user_id, FacilityUser.facility_id == facility_id)
     )
@@ -84,8 +147,27 @@ async def unlink_facility(user_id: int, facility_id: int, db: AsyncSession = Dep
         raise HTTPException(status_code=404, detail="해당 시설에 등록되어 있지 않습니다.")
         
     await db.delete(mapping)
+
+    # 2. [추가] 해당 시설의 공식 채팅방(FACILITY)에서 참가자(ChatParticipant) 삭제
+    chat_room = (await db.execute(
+        select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY)
+    )).scalars().first()
+
+    if chat_room:
+        part_result = await db.execute(
+            select(ChatParticipant).where(
+                ChatParticipant.room_id == chat_room.room_id, 
+                ChatParticipant.user_id == user_id
+            )
+        )
+        participant = part_result.scalars().first()
+        if participant:
+            await db.delete(participant)
+
     await db.commit()
-    return {"message": "시설 등록이 해제되었습니다."}
+    return {"message": "시설 등록이 해제되었으며 채팅방에서 퇴장 처리되었습니다."}
+
+
 
 @router.get("/rooms/{facility_id}")
 async def get_facility_rooms(facility_id: int, db: AsyncSession = Depends(get_db)):
@@ -170,3 +252,90 @@ async def app_facility_monitoring_ws(websocket: WebSocket, user_id: int):
             
     except WebSocketDisconnect:
         print(f"[CServer] 개괄 모니터링 유저({user_id}) 연결 단절됨 (WebSocketDisconnect)")
+
+
+
+@router.post("/{facility_id}/invite-by-code")
+async def invite_user_by_code(facility_id: int, req: InviteUserReq, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[Admin / UserAdmin 전용] 유저 코드로 직원을 해당 시설에 즉시 등록 및 시설 채팅방 자동 초대"""
+    # 1. 요청 주체 권한 확인 (Admin 이거나 해당 시설의 user_admin 인지)
+    actor = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    if not actor or not facility:
+        raise HTTPException(status_code=404, detail="사용자 또는 시설을 찾을 수 없습니다.")
+
+    is_admin = actor.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+    is_user_admin = (facility.user_admin_id == user_id)
+    if not is_admin and not is_user_admin:
+        raise HTTPException(status_code=403, detail="직원을 초대할 권한이 없습니다.")
+
+    # 2. 초대할 유저 조회
+    target_user = (await db.execute(select(User).where(User.user_code == req.user_code))).scalars().first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="해당 유저 코드를 가진 사용자를 찾을 수 없습니다.")
+
+    # 3. 이미 등록되어 있는지 확인
+    exist = (await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user.id)
+    )).scalars().first()
+    if exist:
+        raise HTTPException(status_code=400, detail="이미 해당 시설에 등록된 직원입니다.")
+
+    # 4. 시설-유저 매핑 추가 (즉시 등록)
+    new_mapping = FacilityUser(facility_id=facility_id, user_id=target_user.id)
+    db.add(new_mapping)
+
+    # 5. [채팅 연동] 해당 시설의 공식 채팅방(FACILITY)에 자동 참여 처리
+    chat_room = (await db.execute(
+        select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY)
+    )).scalars().first()
+    
+    if chat_room:
+        part_exist = (await db.execute(
+            select(ChatParticipant).where(ChatParticipant.room_id == chat_room.room_id, ChatParticipant.user_id == target_user.id)
+        )).scalars().first()
+        if not part_exist:
+            db.add(ChatParticipant(room_id=chat_room.room_id, user_id=target_user.id))
+
+    await db.commit()
+    return {"status": "success", "message": f"'{target_user.name}' 직원이 시설에 초대되었습니다."}
+
+
+
+
+
+@router.delete("/{facility_id}/remove-employee/{target_user_id}")
+async def remove_employee(facility_id: int, target_user_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[신규] 직원을 시설에서 퇴출 (관리자/user_admin 전용) 및 채팅방 자동 퇴장"""
+    actor = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    
+    if not actor or not facility:
+        raise HTTPException(status_code=404, detail="사용자 또는 시설을 찾을 수 없습니다.")
+
+    is_admin = actor.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+    is_user_admin = (facility.user_admin_id == user_id)
+    
+    # 자기 자신은 나갈 수 있음 (onUnlink 연동), 타인은 권한 필요
+    if user_id != target_user_id and not is_admin and not is_user_admin:
+        raise HTTPException(status_code=403, detail="직원을 퇴출시킬 권한이 없습니다.")
+    
+    # user_admin 본인이 나가는 경우, user_admin_id 공석 처리 방어 로직
+    if facility.user_admin_id == target_user_id:
+        facility.user_admin_id = None
+
+    mapping = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user_id))).scalars().first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 직원이 시설에 존재하지 않습니다.")
+        
+    await db.delete(mapping)
+
+    # 공식 채팅방 자동 퇴장
+    chat_room = (await db.execute(select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY))).scalars().first()
+    if chat_room:
+        participant = (await db.execute(select(ChatParticipant).where(ChatParticipant.room_id == chat_room.room_id, ChatParticipant.user_id == target_user_id))).scalars().first()
+        if participant:
+            await db.delete(participant)
+
+    await db.commit()
+    return {"status": "success", "message": "직원이 시설에서 제외되었습니다."}

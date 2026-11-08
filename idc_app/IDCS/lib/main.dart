@@ -42,6 +42,7 @@ import 'package:idcs/pages/facility/chart/facility_chart_page.dart';
 import 'pages/common/opening_page.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/theme_controller.dart';
+import 'package:idcs/pages/facility/facility_employees_page.dart';
 
 part 'config.dart';
 part 'auth_service.dart';

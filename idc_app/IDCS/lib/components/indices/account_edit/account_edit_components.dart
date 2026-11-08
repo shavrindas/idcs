@@ -13,7 +13,8 @@ class ProfileInfoBox extends StatefulWidget {
   final String userId;
   final String name;
   final String phone;
-
+  final String? userCode;
+  final VoidCallback? onCopyUserCode;
   /// 이 계정이 어떤 방식으로 로그인하는지 (예: '이메일', 'Google').
   final String loginMethod;
 
@@ -23,6 +24,8 @@ class ProfileInfoBox extends StatefulWidget {
   const ProfileInfoBox({
     super.key,
     required this.userId,
+    this.userCode,
+    this.onCopyUserCode,
     required this.name,
     required this.phone,
     required this.loginMethod,
