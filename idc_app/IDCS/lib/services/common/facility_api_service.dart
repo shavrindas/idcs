@@ -52,14 +52,18 @@ class FacilityApiService {
   }
 
   static Future<List<dynamic>> getFacilityEmployees(String facilityId, String userId) async {
-    // 쿼리파라미터로 본인 ID 전달
     final url = Uri.parse('$_baseUrl/$facilityId/employees?user_id=$userId');
     final response = await ApiClient.get(url);
+    
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['employees'] ?? [];
     } else {
-      throw ApiException.rejected();
+      Map<String, dynamic> errorData = {};
+      try {
+        errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      } catch (_) {}
+      throw ApiException.rejected(errorData); // 상세 에러 전달
     }
   }
 
@@ -75,6 +79,7 @@ class FacilityApiService {
     throw ApiException.rejected(data);
   }
 
+  // 해제 로직 에러 파싱 강화
   static Future<String> removeEmployee(String facilityId, String userId, int targetUserId) async {
     final url = Uri.parse('$_baseUrl/$facilityId/remove-employee/$targetUserId?user_id=$userId');
     final response = await ApiClient.delete(url);
