@@ -432,13 +432,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chartResolution => '해상도';
 
   @override
-  String get chartRes10s => '10초 단위';
-
-  @override
-  String get chartRes1m => '1분 단위';
-
-  @override
   String get chartRes5m => '5분 단위';
+
+  @override
+  String get chartRes10m => '10분 단위';
+
+  @override
+  String get chartRes30m => '30분 단위';
 
   @override
   String get chartRes1h => '1시간 단위';

@@ -80,23 +80,23 @@ class ChartFilterBox extends StatelessWidget {
                   ),
                   items: [
                     DropdownMenuItem(
-                      value: '10s',
-                      child: Text(
-                        context.l10n.chartRes10s,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: '1m',
-                      child: Text(
-                        context.l10n.chartRes1m,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    DropdownMenuItem(
                       value: '5m',
                       child: Text(
                         context.l10n.chartRes5m,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: '10m',
+                      child: Text(
+                        context.l10n.chartRes10m,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: '30m',
+                      child: Text(
+                        context.l10n.chartRes30m,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

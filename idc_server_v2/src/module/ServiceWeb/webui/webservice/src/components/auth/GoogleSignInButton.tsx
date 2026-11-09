@@ -69,7 +69,7 @@ export const GoogleSignInButton: React.FC<Props> = ({ onCredential, width = 320 
           type: 'standard',
           theme: dark ? 'filled_black' : 'outline',
           size: 'large',
-          text: 'signin_with',
+          text: 'continue_with',
           shape: 'rectangular',
           width,
           locale: 'ko',

@@ -4,6 +4,17 @@
     <string name="widget_description">호실 온도와 상태를 홈 화면에서 실시간으로 봅니다.</string>
     <string name="widget_empty">앱을 한 번 열면 호실이 여기 나타납니다.</string>
     <string name="widget_refresh">새로고침</string>
+    <string name="widget_settings">위젯 설정</string>
     <string name="widget_live_channel">위젯 실시간 갱신</string>
     <string name="widget_live_notice">홈 화면 위젯을 실시간으로 갱신하는 중</string>
+
+    <!-- 위젯 설정 화면 (칸 수 + 칸마다 호실 배치) -->
+    <string name="widget_config_title">위젯에 보일 호실</string>
+    <string name="widget_config_layout_label">보여줄 칸 수</string>
+    <string name="widget_config_layout_all">전체 (자동)</string>
+    <string name="widget_config_layout_n">%1$d칸</string>
+    <string name="widget_config_slot_label">%1$d번 칸</string>
+    <string name="widget_config_slot_empty">(비워두기)</string>
+    <string name="widget_config_save">저장</string>
+    <string name="widget_config_all_hint">전체를 고르면 보고된 순서대로 모든 호실이 자동으로 채워집니다.</string>
 </resources>
