@@ -216,16 +216,6 @@ final GoRouter appRouter = GoRouter(
 
 
 
-    //-------------------------------------------------------------------
-
-
-    // GoRoute(
-    //   path: '/facility_employees/:userId/:facilityId',
-    //   builder: (context, state) => FacilityEmployeesPage(
-    //     userId: state.pathParameters['userId']!,
-    //     facilityId: state.pathParameters['facilityId']!,
-    //   ),
-    // ),
   ],
 );
 

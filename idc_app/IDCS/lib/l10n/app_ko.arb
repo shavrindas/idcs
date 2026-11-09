@@ -703,5 +703,64 @@
       }
     }
   },
-  "alarmsNoneActive": "지금 진행 중인 알람이 없습니다"
+  "alarmsNoneActive": "지금 진행 중인 알람이 없습니다",
+  "navEmployees": "직원 관리",
+  "employeesAccessDenied": "접근 권한이 없습니다.\n(관리자 및 시설 수석 어드민 전용)",
+  "employeesSearchHint": "직원 이름 검색...",
+  "employeesAddButton": "추가",
+  "employeesListTitle": "시설 직원 ({count})",
+  "@employeesListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "employeesRemoveColumnLabel": "해제",
+  "employeesChiefAdminBadge": "수석 어드민",
+  "employeesMeBadge": "나",
+  "employeesIdEmailLabel": "ID: {id} · {email}",
+  "@employeesIdEmailLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "employeesRemoveTooltip": "직원 해제",
+  "employeesPermissionsTooltip": "권한 설정",
+  "employeesInviteDialogTitle": "직원 초대",
+  "employeesInviteDialogBody": "초대할 직원의 유저 코드를 입력하세요.",
+  "employeesUserCodeLabel": "유저 코드",
+  "employeesInviteConfirm": "초대",
+  "employeesRemoveDialogTitle": "직원 해제",
+  "employeesRemoveDialogBody": "'{name}' 직원을 시설에서 해제하시겠습니까?",
+  "@employeesRemoveDialogBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "employeesRemoveConfirm": "해제",
+  "employeesRemovedToast": "직원이 시설에서 해제되었습니다.",
+  "employeesLoadFailed": "직원 목록을 불러오지 못했습니다.",
+  "employeesEmptyState": "아직 등록된 직원이 없습니다.",
+  "employeesEmptySearchState": "검색 결과가 없습니다.",
+  "employeesPermissionsDialogTitle": "'{name}' 권한 설정",
+  "@employeesPermissionsDialogTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "employeesPermDevice": "기기 제어",
+  "employeesPermBoard": "게시판 관리",
+  "employeesPermAlarm": "알람 관리",
+  "employeesPermissionsUpdated": "권한이 저장되었습니다.",
+  "actionRetry": "다시 시도"
 }

@@ -1267,4 +1267,96 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get alarmsNoneActive => '지금 진행 중인 알람이 없습니다';
+
+  @override
+  String get navEmployees => '직원 관리';
+
+  @override
+  String get employeesAccessDenied => '접근 권한이 없습니다.\n(관리자 및 시설 수석 어드민 전용)';
+
+  @override
+  String get employeesSearchHint => '직원 이름 검색...';
+
+  @override
+  String get employeesAddButton => '추가';
+
+  @override
+  String employeesListTitle(int count) {
+    return '시설 직원 ($count)';
+  }
+
+  @override
+  String get employeesRemoveColumnLabel => '해제';
+
+  @override
+  String get employeesChiefAdminBadge => '수석 어드민';
+
+  @override
+  String get employeesMeBadge => '나';
+
+  @override
+  String employeesIdEmailLabel(String id, String email) {
+    return 'ID: $id · $email';
+  }
+
+  @override
+  String get employeesRemoveTooltip => '직원 해제';
+
+  @override
+  String get employeesPermissionsTooltip => '권한 설정';
+
+  @override
+  String get employeesInviteDialogTitle => '직원 초대';
+
+  @override
+  String get employeesInviteDialogBody => '초대할 직원의 유저 코드를 입력하세요.';
+
+  @override
+  String get employeesUserCodeLabel => '유저 코드';
+
+  @override
+  String get employeesInviteConfirm => '초대';
+
+  @override
+  String get employeesRemoveDialogTitle => '직원 해제';
+
+  @override
+  String employeesRemoveDialogBody(String name) {
+    return '\'$name\' 직원을 시설에서 해제하시겠습니까?';
+  }
+
+  @override
+  String get employeesRemoveConfirm => '해제';
+
+  @override
+  String get employeesRemovedToast => '직원이 시설에서 해제되었습니다.';
+
+  @override
+  String get employeesLoadFailed => '직원 목록을 불러오지 못했습니다.';
+
+  @override
+  String get employeesEmptyState => '아직 등록된 직원이 없습니다.';
+
+  @override
+  String get employeesEmptySearchState => '검색 결과가 없습니다.';
+
+  @override
+  String employeesPermissionsDialogTitle(String name) {
+    return '\'$name\' 권한 설정';
+  }
+
+  @override
+  String get employeesPermDevice => '기기 제어';
+
+  @override
+  String get employeesPermBoard => '게시판 관리';
+
+  @override
+  String get employeesPermAlarm => '알람 관리';
+
+  @override
+  String get employeesPermissionsUpdated => '권한이 저장되었습니다.';
+
+  @override
+  String get actionRetry => '다시 시도';
 }

@@ -382,13 +382,14 @@ async def get_facility_employees(facility_id: int, user_id: int, db: AsyncSessio
 
     # 쿼리: ADMIN과 DEVELOPER는 직원 목록에 뜨지 않도록 제외
     query = text("""
-        SELECT u.id, u.name, u.email, u.role
+        SELECT u.id, u.name, u.email, u.role,
+               fu.can_control_device, fu.can_manage_board, fu.can_manage_alarm
         FROM facility_users fu
         JOIN user_table u ON fu.user_id = u.id
         WHERE fu.facility_id = :fid
           AND u.role NOT IN ('ADMIN', 'DEVELOPER')
     """)
-    
+
     try:
         result = await db.execute(query, {"fid": facility_id})
         employees = result.fetchall()
@@ -405,10 +406,42 @@ async def get_facility_employees(facility_id: int, user_id: int, db: AsyncSessio
                 "name": row._mapping["name"],
                 "email": row._mapping["email"],
                 "is_user_admin": (row._mapping["id"] == user_admin_id),
-                "is_system_admin": False
+                "is_system_admin": False,
+                "can_control_device": row._mapping["can_control_device"],
+                "can_manage_board": row._mapping["can_manage_board"],
+                "can_manage_alarm": row._mapping["can_manage_alarm"],
             } for row in employees
         ]
     }
+
+class EmployeePermissionReq(BaseModel):
+    can_control_device: bool
+    can_manage_board: bool
+    can_manage_alarm: bool
+
+@router.put("/{facility_id}/employee/{target_user_id}/permissions")
+async def update_employee_permissions(facility_id: int, target_user_id: int, req: EmployeePermissionReq, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[앱 전용] 직원의 권한(기기 제어/게시판/알람 관리) 수정"""
+    actor = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    if not actor or not facility:
+        raise HTTPException(status_code=404, detail="사용자 또는 시설을 찾을 수 없습니다.")
+
+    role_str = str(actor.role).upper()
+    is_admin = "ADMIN" in role_str or "DEVELOPER" in role_str
+    is_user_admin = (getattr(facility, 'user_admin_id', None) == user_id)
+    if not is_admin and not is_user_admin:
+        raise HTTPException(status_code=403, detail="직원 권한을 수정할 권한이 없습니다.")
+
+    mapping = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user_id))).scalars().first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 직원이 시설에 존재하지 않습니다.")
+
+    mapping.can_control_device = req.can_control_device
+    mapping.can_manage_board = req.can_manage_board
+    mapping.can_manage_alarm = req.can_manage_alarm
+    await db.commit()
+    return {"status": "success"}
 
 @router.post("/{facility_id}/invite-by-code")
 async def invite_user_by_code(facility_id: int, req: InviteUserReq, user_id: int, db: AsyncSession = Depends(get_db)):

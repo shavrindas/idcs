@@ -2389,6 +2389,174 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'지금 진행 중인 알람이 없습니다'**
   String get alarmsNoneActive;
+
+  /// No description provided for @navEmployees.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원 관리'**
+  String get navEmployees;
+
+  /// No description provided for @employeesAccessDenied.
+  ///
+  /// In ko, this message translates to:
+  /// **'접근 권한이 없습니다.\n(관리자 및 시설 수석 어드민 전용)'**
+  String get employeesAccessDenied;
+
+  /// No description provided for @employeesSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원 이름 검색...'**
+  String get employeesSearchHint;
+
+  /// No description provided for @employeesAddButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가'**
+  String get employeesAddButton;
+
+  /// No description provided for @employeesListTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시설 직원 ({count})'**
+  String employeesListTitle(int count);
+
+  /// No description provided for @employeesRemoveColumnLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'해제'**
+  String get employeesRemoveColumnLabel;
+
+  /// No description provided for @employeesChiefAdminBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'수석 어드민'**
+  String get employeesChiefAdminBadge;
+
+  /// No description provided for @employeesMeBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'나'**
+  String get employeesMeBadge;
+
+  /// No description provided for @employeesIdEmailLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'ID: {id} · {email}'**
+  String employeesIdEmailLabel(String id, String email);
+
+  /// No description provided for @employeesRemoveTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원 해제'**
+  String get employeesRemoveTooltip;
+
+  /// No description provided for @employeesPermissionsTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 설정'**
+  String get employeesPermissionsTooltip;
+
+  /// No description provided for @employeesInviteDialogTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원 초대'**
+  String get employeesInviteDialogTitle;
+
+  /// No description provided for @employeesInviteDialogBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대할 직원의 유저 코드를 입력하세요.'**
+  String get employeesInviteDialogBody;
+
+  /// No description provided for @employeesUserCodeLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'유저 코드'**
+  String get employeesUserCodeLabel;
+
+  /// No description provided for @employeesInviteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대'**
+  String get employeesInviteConfirm;
+
+  /// No description provided for @employeesRemoveDialogTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원 해제'**
+  String get employeesRemoveDialogTitle;
+
+  /// No description provided for @employeesRemoveDialogBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\' 직원을 시설에서 해제하시겠습니까?'**
+  String employeesRemoveDialogBody(String name);
+
+  /// No description provided for @employeesRemoveConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'해제'**
+  String get employeesRemoveConfirm;
+
+  /// No description provided for @employeesRemovedToast.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원이 시설에서 해제되었습니다.'**
+  String get employeesRemovedToast;
+
+  /// No description provided for @employeesLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원 목록을 불러오지 못했습니다.'**
+  String get employeesLoadFailed;
+
+  /// No description provided for @employeesEmptyState.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 등록된 직원이 없습니다.'**
+  String get employeesEmptyState;
+
+  /// No description provided for @employeesEmptySearchState.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과가 없습니다.'**
+  String get employeesEmptySearchState;
+
+  /// No description provided for @employeesPermissionsDialogTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\' 권한 설정'**
+  String employeesPermissionsDialogTitle(String name);
+
+  /// No description provided for @employeesPermDevice.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기 제어'**
+  String get employeesPermDevice;
+
+  /// No description provided for @employeesPermBoard.
+  ///
+  /// In ko, this message translates to:
+  /// **'게시판 관리'**
+  String get employeesPermBoard;
+
+  /// No description provided for @employeesPermAlarm.
+  ///
+  /// In ko, this message translates to:
+  /// **'알람 관리'**
+  String get employeesPermAlarm;
+
+  /// No description provided for @employeesPermissionsUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한이 저장되었습니다.'**
+  String get employeesPermissionsUpdated;
+
+  /// No description provided for @actionRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시도'**
+  String get actionRetry;
 }
 
 class _AppLocalizationsDelegate

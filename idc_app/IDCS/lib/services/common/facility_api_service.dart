@@ -87,4 +87,31 @@ class FacilityApiService {
     if (response.statusCode == 200) return data['message'];
     throw ApiException.rejected(data);
   }
+
+  // 직원 권한(기기 제어 / 게시판 / 알람 관리) 수정
+  static Future<void> updateEmployeePermissions(
+    String facilityId,
+    String userId,
+    int targetUserId, {
+    required bool canControlDevice,
+    required bool canManageBoard,
+    required bool canManageAlarm,
+  }) async {
+    final url = Uri.parse('$_baseUrl/$facilityId/employee/$targetUserId/permissions?user_id=$userId');
+    final response = await ApiClient.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'can_control_device': canControlDevice,
+        'can_manage_board': canManageBoard,
+        'can_manage_alarm': canManageAlarm,
+      }),
+    );
+    if (response.statusCode == 200) return;
+    Map<String, dynamic> errorData = {};
+    try {
+      errorData = jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (_) {}
+    throw ApiException.rejected(errorData);
+  }
 }
