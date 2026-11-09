@@ -443,13 +443,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartResolution => 'Resolution';
 
   @override
-  String get chartRes10s => '10 seconds';
-
-  @override
-  String get chartRes1m => '1 minute';
-
-  @override
   String get chartRes5m => '5 minutes';
+
+  @override
+  String get chartRes10m => '10 minutes';
+
+  @override
+  String get chartRes30m => '30 minutes';
 
   @override
   String get chartRes1h => '1 hour';

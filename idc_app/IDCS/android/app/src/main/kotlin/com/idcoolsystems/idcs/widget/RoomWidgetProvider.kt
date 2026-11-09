@@ -25,6 +25,10 @@ class RoomWidgetProvider : AppWidgetProvider() {
         LiveWidgetService.stop(context)
     }
 
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        appWidgetIds.forEach { WidgetStore.clearWidgetConfig(context, it) }
+    }
+
     companion object {
         fun render(context: Context, manager: AppWidgetManager, ids: IntArray) {
             val rooms = WidgetStore.rooms(context)
@@ -58,8 +62,15 @@ class RoomWidgetProvider : AppWidgetProvider() {
                 views.setPendingIntentTemplate(R.id.widget_grid, openApp)
                 views.setOnClickPendingIntent(R.id.widget_title, openApp)
 
+                // 칸 수 설정에 맞춰 열 수를 바꾼다. GridView.setNumColumns 는 public
+                // setter라 RemoteViews.setInt 로 리플렉션 호출이 된다 — XML에 고정해
+                // 두면 전체(2열)와 12칸(4열)이 똑같은 모양으로 눌려 버린다.
+                views.setInt(R.id.widget_grid, "setNumColumns", WidgetStore.widgetLayout(context, id).cols)
+
                 views.setTextViewText(R.id.widget_summary, summary)
                 views.setTextViewText(R.id.widget_updated, updatedText)
+
+                views.setOnClickPendingIntent(R.id.widget_settings, configurePendingIntent(context, id))
 
                 // Tapping refresh is a user interaction, so it may (re)start the
                 // foreground service even while the app is closed.
@@ -67,6 +78,20 @@ class RoomWidgetProvider : AppWidgetProvider() {
 
                 manager.updateAppWidget(id, views)
             }
+        }
+
+        /** 톱니 아이콘 → 이 위젯 하나의 설정 화면. id별로 달라야 하므로 요청 코드로 id를 쓴다. */
+        private fun configurePendingIntent(context: Context, widgetId: Int): PendingIntent {
+            val intent = Intent(context, RoomWidgetConfigureActivity::class.java)
+                // SINGLE_TOP 없이는 이미 떠 있는(백그라운드로 남은) 설정 화면을 다시 열 때
+                // OS 가 그냥 기존 화면을 보여주기만 하고 onNewIntent 를 안 불러서,
+                // 저장 안 하고 나간 이전 상태가 그대로 남아 있는 것처럼 보인다.
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+            return PendingIntent.getActivity(
+                context, widgetId, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
         }
     }
 }

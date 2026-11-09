@@ -108,6 +108,8 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
       instance.on('click', (params: any) => {
         if (params.seriesName === 'GlobalAnnotations' && params.data && params.data.postIds) {
           if (onChartClick) onChartClick('post', params.data.postIds);
+        } else if (params.componentType === 'markLine' && params.data && params.data.alarmId != null) {
+          if (onChartClick) onChartClick('alarm', params.data.alarmId);
         }
       });
     }
@@ -164,8 +166,8 @@ export const MainChartViewer: React.FC<Props> = ({ datasets, roleColors, showInf
     });
     alarms.forEach(a => {
       const time = new Date(a.timestamp).getTime();
-      globalLines.push({ xAxis: time, label: { show: true, position: 'end', formatter: formatShortTime(time), color: palette.alarm, fontSize: 10 }, lineStyle: { type: 'dashed', color: palette.alarm, width: 2 } });
-      globalLines.push({ xAxis: time, label: { show: true, position: 'start', formatter: a.alarm_name, color: palette.alarm, fontSize: 10 }, lineStyle: { type: 'dashed', color: palette.alarm, width: 2 } });
+      globalLines.push({ xAxis: time, alarmId: a.alarm_id, label: { show: true, position: 'end', formatter: formatShortTime(time), color: palette.alarm, fontSize: 10 }, lineStyle: { type: 'dashed', color: palette.alarm, width: 2 } });
+      globalLines.push({ xAxis: time, alarmId: a.alarm_id, label: { show: true, position: 'start', formatter: a.alarm_name, color: palette.alarm, fontSize: 10 }, lineStyle: { type: 'dashed', color: palette.alarm, width: 2 } });
     });
 
     const annotationSeries: any = { name: 'GlobalAnnotations', type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [], markArea: { silent: false, data: postAreas }, markLine: { silent: false, symbol: ['none', 'none'], z: 10, data: globalLines } };
