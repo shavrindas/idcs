@@ -26,6 +26,11 @@ class PanelSummaryCard extends StatelessWidget {
   /// 마지막으로 값이 들어온 시각. 한 번도 못 받았으면 null.
   final DateTime? lastUpdate;
 
+  /// 실시간 연결이 없어 서버가 DB 스냅샷을 대신 보낸 경우, 그 값이 측정된
+  /// 시각(이미 사람이 읽을 형식으로 포맷됨). lastUpdate와 동시에 값을 갖지
+  /// 않는다 — 하나는 "방금", 하나는 "이 시각 당시"라 섞으면 안 된다.
+  final String? snapshotTimeLabel;
+
   final MonitoringViewSettings view;
 
   const PanelSummaryCard({
@@ -33,6 +38,7 @@ class PanelSummaryCard extends StatelessWidget {
     required this.currentTemp,
     required this.setpoint,
     required this.lastUpdate,
+    this.snapshotTimeLabel,
     required this.view,
   });
 
@@ -121,21 +127,27 @@ class PanelSummaryCard extends StatelessWidget {
                 width: 7,
                 height: 7,
                 decoration: BoxDecoration(
-                  color: !hasSignal
+                  color: snapshotTimeLabel != null
                       ? colors.textSecondary
-                      : stale > 0
-                          ? colors.warning
-                          : colors.success,
+                      : !hasSignal
+                          ? colors.textSecondary
+                          : stale > 0
+                              ? colors.warning
+                              : colors.success,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 7),
-              Text(
-                _freshnessLabel(context, stale),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: stale > 0 ? FontWeight.w700 : FontWeight.w500,
-                  color: stale > 0 ? colors.warning : colors.textSecondary,
+              Expanded(
+                child: Text(
+                  snapshotTimeLabel != null
+                      ? context.l10n.panelOfflineSnapshot(snapshotTimeLabel!)
+                      : _freshnessLabel(context, stale),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: stale > 0 ? FontWeight.w700 : FontWeight.w500,
+                    color: stale > 0 ? colors.warning : colors.textSecondary,
+                  ),
                 ),
               ),
             ],

@@ -695,5 +695,13 @@
       }
     }
   },
+  "panelOfflineSnapshot": "Not live — last reading {date}",
+  "@panelOfflineSnapshot": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "alarmsNoneActive": "No alarms running right now"
 }
