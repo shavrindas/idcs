@@ -16,6 +16,10 @@ import 'package:idcs/components/shared/glass_nav_bar.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/user_api_service.dart';
+
+// ... (기존 임포트 유지) ...
+import 'package:idcs/services/common/user_api_service.dart';
+
 class FacilityShellPage extends StatefulWidget {
   final String userId;
   final String facilityId;
@@ -34,7 +38,7 @@ class FacilityShellPage extends StatefulWidget {
 
 class _FacilityShellPageState extends State<FacilityShellPage> {
   String? _facilityName;
-  // bool _canManageEmployees = false;
+  bool _canManageEmployees = false; // 권한 상태
 
   @override
   void initState() {
@@ -44,29 +48,23 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
 
   Future<void> _loadFacilityData() async {
     try {
-      // 1. 시설 이름 조회를 위한 전체 시설 목록 로드
       final facilities = await FacilityApiService.getFacilities(widget.userId);
       final match = facilities.firstWhere(
         (f) => f['id'].toString() == widget.facilityId,
         orElse: () => null,
       );
-      
-      // 2. 현재 로그인한 유저의 Role 검사
+
       final role = await UserApiService.getUserRole(widget.userId);
       final isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
-      
-      // 3. 해당 시설의 user_admin 여부 확인 (시설 응답에 user_admin_id가 포함되어야 함)
       final isUserAdmin = match != null && match['user_admin_id']?.toString() == widget.userId;
 
       if (mounted) {
         setState(() {
           _facilityName = match?['name'];
-          // _canManageEmployees = isAdmin || isUserAdmin;
+          _canManageEmployees = isAdmin || isUserAdmin;
         });
       }
-    } catch (_) {
-      // 에러 발생 시 버튼 노출 생략
-    }
+    } catch (_) {}
   }
 
   void _backToHome() {
@@ -79,11 +77,6 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 모니터링 탭을 눕히면 호실 하나를 지켜보는 화면이 된다. 가로 높이는
-    // 세로의 절반도 안 되는데 앱바와 탭 줄이 그중 3분의 1을 먹어서, 정작
-    // 멀리서 읽으라고 키운 숫자가 들어갈 자리가 없다. 그 화면에서만 걷어낸다.
-    // 차트·소요기록·알람은 가로에서도 평소대로 둔다 — 그쪽은 눕혀도 하는 일이
-    // 달라지지 않으니 길을 없애면 갇힌다.
     final watching = widget.navigationShell.currentIndex == 0 &&
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
@@ -91,10 +84,23 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
       return Scaffold(body: widget.navigationShell);
     }
 
+    // 기본 탭 4개 구성
+    final List<GlassNavItem> navItems = [
+      GlassNavItem(icon: Icons.sensors_outlined, selectedIcon: Icons.sensors_rounded, label: context.l10n.navMonitoring),
+      GlassNavItem(icon: Icons.notifications_none_rounded, selectedIcon: Icons.notifications_rounded, label: context.l10n.navAlarm),
+      GlassNavItem(icon: Icons.show_chart_rounded, label: context.l10n.navChart),
+      GlassNavItem(icon: Icons.assignment_outlined, selectedIcon: Icons.assignment_rounded, label: context.l10n.navBoard),
+    ];
+
+    // 권한이 있으면 5번째 탭 추가
+    if (_canManageEmployees) {
+      navItems.add(
+        const GlassNavItem(icon: Icons.people_outline_rounded, selectedIcon: Icons.people_rounded, label: "직원 관리")
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        // 시설이 하나뿐인 계정은 이 셸이 홈이라 돌아갈 목록이 없다. 대신 그 경우에만
-        // 내 정보로 가는 버튼을 둔다 — 없으면 설정·로그아웃에 닿을 길이 사라진다.
         leading: FacilityShortcut.isSoleFacility
             ? null
             : IconButton(
@@ -106,14 +112,9 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
         title: Text(_facilityName ?? context.l10n.facilityFallbackName(widget.facilityId)),
         centerTitle: true,
         elevation: 0,
-        // 카드 투명도 설정이 surface 에 걸려 있어서, 앱바에 surface 를 쓰면
-        // 제목 뒤로 눈이 지나간다. 앱바는 테마가 정한 색을 그대로 쓴다.
         backgroundColor: null,
         foregroundColor: context.colors.textPrimary,
         actions: [
-          // 메신저와 내 정보는 아래 탭이 아니라 여기에 둔다. 아래 네 칸은
-          // '설비를 본다'는 한 가지 일로 묶이고, 이 둘은 그 일과 상관없이
-          // 언제든 열리는 화면이다.
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline_rounded),
             tooltip: context.l10n.navMessenger,
@@ -121,46 +122,28 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
               '/facility_chat/${widget.userId}/${widget.facilityId}',
             ),
           ),
-          // 사람 아이콘이 아니라 톱니다. 이 길로 들어가면 계정뿐 아니라
-          // 테마·언어·알람·제어판 설정이 다 있고, 계정은 그 안의 카드 하나다.
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: context.l10n.settingsTitle,
             onPressed: () => context.push('/index/${widget.userId}/profile'),
           ),
-          // if (_canManageEmployees)
-          //   IconButton(
-          //     icon: const Icon(Icons.people_outline_rounded),
-          //     tooltip: '직원 관리',
-          //     onPressed: () => context.push(
-          //       '/facility_employees/${widget.userId}/${widget.facilityId}',
-          //     ),
-          //   ),
         ],
       ),
       body: widget.navigationShell,
-      // 막대가 떠 있으므로 그 아래로 내용이 이어지게 둔다. 그래야 목록이
-      // 막대에서 끊긴 것처럼 보이지 않는다. 각 화면은 자기 목록 끝에
-      // 제스처 바 + 막대 높이만큼 여백을 둔다.
       extendBody: true,
       bottomNavigationBar: GlassNavBar(
-        selectedIndex: widget.navigationShell.currentIndex,
-        onSelected: (index) => widget.navigationShell.goBranch(
-          index,
-          initialLocation: index == widget.navigationShell.currentIndex,
-        ),
-        items: [
-          // 순서는 라우터의 branch 순서를 그대로 따라야 한다.
-          //
-          // 알람을 맨 끝에서 모니터링 바로 옆으로 옮겼다. 이 둘은 같은 질문의
-          // 앞뒤다 — '지금 어떤가'와 '뭐가 잘못됐나'. 차트와 소요기록은 둘 다
-          // 지나간 것을 들춰 보는 자리라 뒤로 묶인다. 맨 끝은 엄지가 제일 늦게
-          // 닿는 칸이기도 해서, 이 앱에서 가장 급한 화면을 둘 자리가 아니다.
-          GlassNavItem(icon: Icons.sensors_outlined, selectedIcon: Icons.sensors_rounded, label: context.l10n.navMonitoring),
-          GlassNavItem(icon: Icons.notifications_none_rounded, selectedIcon: Icons.notifications_rounded, label: context.l10n.navAlarm),
-          GlassNavItem(icon: Icons.show_chart_rounded, label: context.l10n.navChart),
-          GlassNavItem(icon: Icons.assignment_outlined, selectedIcon: Icons.assignment_rounded, label: context.l10n.navBoard),
-        ],
+        // 현재 라우터의 브랜치 인덱스가 탭 아이템 범위를 벗어나는 경우 방어 로직
+        selectedIndex: widget.navigationShell.currentIndex < navItems.length 
+            ? widget.navigationShell.currentIndex 
+            : 0, 
+        onSelected: (index) {
+            // 선택된 탭 인덱스로 브랜치 전환
+            widget.navigationShell.goBranch(
+              index,
+              initialLocation: index == widget.navigationShell.currentIndex,
+            );
+        },
+        items: navItems,
       ),
     );
   }
