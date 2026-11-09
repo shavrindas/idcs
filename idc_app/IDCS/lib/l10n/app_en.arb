@@ -703,5 +703,64 @@
       }
     }
   },
-  "alarmsNoneActive": "No alarms running right now"
+  "alarmsNoneActive": "No alarms running right now",
+  "navEmployees": "Employees",
+  "employeesAccessDenied": "You don't have access.\n(Admins and the facility's chief admin only)",
+  "employeesSearchHint": "Search employee name...",
+  "employeesAddButton": "Add",
+  "employeesListTitle": "Facility Employees ({count})",
+  "@employeesListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "employeesRemoveColumnLabel": "Remove",
+  "employeesChiefAdminBadge": "Chief Admin",
+  "employeesMeBadge": "Me",
+  "employeesIdEmailLabel": "ID: {id} · {email}",
+  "@employeesIdEmailLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "employeesRemoveTooltip": "Remove employee",
+  "employeesPermissionsTooltip": "Permissions",
+  "employeesInviteDialogTitle": "Invite Employee",
+  "employeesInviteDialogBody": "Enter the user code of the employee to invite.",
+  "employeesUserCodeLabel": "User code",
+  "employeesInviteConfirm": "Invite",
+  "employeesRemoveDialogTitle": "Remove Employee",
+  "employeesRemoveDialogBody": "Remove '{name}' from this facility?",
+  "@employeesRemoveDialogBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "employeesRemoveConfirm": "Remove",
+  "employeesRemovedToast": "The employee has been removed from this facility.",
+  "employeesLoadFailed": "Couldn't load the employee list.",
+  "employeesEmptyState": "No employees yet.",
+  "employeesEmptySearchState": "No matching results.",
+  "employeesPermissionsDialogTitle": "Permissions for '{name}'",
+  "@employeesPermissionsDialogTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "employeesPermDevice": "Device control",
+  "employeesPermBoard": "Board management",
+  "employeesPermAlarm": "Alarm management",
+  "employeesPermissionsUpdated": "Permissions saved.",
+  "actionRetry": "Retry"
 }

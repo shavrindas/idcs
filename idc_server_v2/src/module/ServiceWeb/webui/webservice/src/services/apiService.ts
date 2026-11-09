@@ -253,4 +253,17 @@ export const apiService = {
     if (!res.ok) throw new Error((await res.json()).detail || '권한 변경 실패');
     return res.json();
   },
+
+  updateEmployeePermissionsWeb: async (
+    facId: number,
+    userId: number,
+    targetUserId: number,
+    perms: { can_control_device: boolean; can_manage_board: boolean; can_manage_alarm: boolean },
+  ) => {
+    const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/employee/${targetUserId}/permissions?user_id=${userId}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(perms)
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || '권한 수정 실패');
+    return res.json();
+  },
 };

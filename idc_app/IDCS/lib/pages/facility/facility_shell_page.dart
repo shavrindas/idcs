@@ -17,9 +17,6 @@ import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 
-// ... (기존 임포트 유지) ...
-import 'package:idcs/services/common/user_api_service.dart';
-
 class FacilityShellPage extends StatefulWidget {
   final String userId;
   final String facilityId;
@@ -95,7 +92,7 @@ class _FacilityShellPageState extends State<FacilityShellPage> {
     // 권한이 있으면 5번째 탭 추가
     if (_canManageEmployees) {
       navItems.add(
-        const GlassNavItem(icon: Icons.people_outline_rounded, selectedIcon: Icons.people_rounded, label: "직원 관리")
+        GlassNavItem(icon: Icons.people_outline_rounded, selectedIcon: Icons.people_rounded, label: context.l10n.navEmployees)
       );
     }
 

@@ -1288,4 +1288,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alarmsNoneActive => 'No alarms running right now';
+
+  @override
+  String get navEmployees => 'Employees';
+
+  @override
+  String get employeesAccessDenied =>
+      'You don\'t have access.\n(Admins and the facility\'s chief admin only)';
+
+  @override
+  String get employeesSearchHint => 'Search employee name...';
+
+  @override
+  String get employeesAddButton => 'Add';
+
+  @override
+  String employeesListTitle(int count) {
+    return 'Facility Employees ($count)';
+  }
+
+  @override
+  String get employeesRemoveColumnLabel => 'Remove';
+
+  @override
+  String get employeesChiefAdminBadge => 'Chief Admin';
+
+  @override
+  String get employeesMeBadge => 'Me';
+
+  @override
+  String employeesIdEmailLabel(String id, String email) {
+    return 'ID: $id · $email';
+  }
+
+  @override
+  String get employeesRemoveTooltip => 'Remove employee';
+
+  @override
+  String get employeesPermissionsTooltip => 'Permissions';
+
+  @override
+  String get employeesInviteDialogTitle => 'Invite Employee';
+
+  @override
+  String get employeesInviteDialogBody =>
+      'Enter the user code of the employee to invite.';
+
+  @override
+  String get employeesUserCodeLabel => 'User code';
+
+  @override
+  String get employeesInviteConfirm => 'Invite';
+
+  @override
+  String get employeesRemoveDialogTitle => 'Remove Employee';
+
+  @override
+  String employeesRemoveDialogBody(String name) {
+    return 'Remove \'$name\' from this facility?';
+  }
+
+  @override
+  String get employeesRemoveConfirm => 'Remove';
+
+  @override
+  String get employeesRemovedToast =>
+      'The employee has been removed from this facility.';
+
+  @override
+  String get employeesLoadFailed => 'Couldn\'t load the employee list.';
+
+  @override
+  String get employeesEmptyState => 'No employees yet.';
+
+  @override
+  String get employeesEmptySearchState => 'No matching results.';
+
+  @override
+  String employeesPermissionsDialogTitle(String name) {
+    return 'Permissions for \'$name\'';
+  }
+
+  @override
+  String get employeesPermDevice => 'Device control';
+
+  @override
+  String get employeesPermBoard => 'Board management';
+
+  @override
+  String get employeesPermAlarm => 'Alarm management';
+
+  @override
+  String get employeesPermissionsUpdated => 'Permissions saved.';
+
+  @override
+  String get actionRetry => 'Retry';
 }

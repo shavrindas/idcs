@@ -284,19 +284,48 @@ async def get_facility_employees_web(facility_id: int, user_id: int = Query(...)
         raise HTTPException(status_code=403, detail="권한이 없습니다.")
 
     q = text("""
-        SELECT u.id, u.name, u.email, u.user_code, u.role
+        SELECT u.id, u.name, u.email, u.user_code, u.role,
+               fu.can_control_device, fu.can_manage_board, fu.can_manage_alarm
         FROM facility_users fu
         JOIN user_table u ON fu.user_id = u.id
         WHERE fu.facility_id = :fid
           AND u.role NOT IN ('ADMIN', 'DEVELOPER')
     """)
     rows = (await db.execute(q, {"fid": facility_id})).fetchall()
-    
+
     return {
         "status": "success",
         "user_admin_id": facility.user_admin_id,
         "employees": [dict(r._mapping) for r in rows]
     }
+
+class EmployeePermissionReq(BaseModel):
+    can_control_device: bool
+    can_manage_board: bool
+    can_manage_alarm: bool
+
+@router.put("/facility/{facility_id}/employee/{target_user_id}/permissions")
+async def update_employee_permissions_web(facility_id: int, target_user_id: int, req: EmployeePermissionReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    """[웹 전용] 직원의 권한(기기 제어/게시판/알람 관리) 수정"""
+    actor = await get_user_or_404(db, user_id)
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="시설을 찾을 수 없습니다.")
+
+    is_admin = actor.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+    is_user_admin = (facility.user_admin_id == user_id)
+    if not is_admin and not is_user_admin:
+        raise HTTPException(status_code=403, detail="직원 권한을 수정할 권한이 없습니다.")
+
+    mapping = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user_id))).scalars().first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 직원이 없습니다.")
+
+    mapping.can_control_device = req.can_control_device
+    mapping.can_manage_board = req.can_manage_board
+    mapping.can_manage_alarm = req.can_manage_alarm
+    await db.commit()
+    return {"status": "success"}
 
 @router.post("/facility/{facility_id}/employee")
 async def invite_employee_web(facility_id: int, req: InviteEmployeeReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
