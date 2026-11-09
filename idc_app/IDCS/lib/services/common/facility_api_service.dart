@@ -50,4 +50,41 @@ class FacilityApiService {
       throw ApiException.rejected();
     }
   }
+
+  static Future<List<dynamic>> getFacilityEmployees(String facilityId, String userId) async {
+    final url = Uri.parse('$_baseUrl/$facilityId/employees?user_id=$userId');
+    final response = await ApiClient.get(url);
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['employees'] ?? [];
+    } else {
+      Map<String, dynamic> errorData = {};
+      try {
+        errorData = jsonDecode(utf8.decode(response.bodyBytes));
+      } catch (_) {}
+      throw ApiException.rejected(errorData); // 상세 에러 전달
+    }
+  }
+
+  static Future<String> inviteUserByCode(String facilityId, String userId, String userCode) async {
+    final url = Uri.parse('$_baseUrl/$facilityId/invite-by-code?user_id=$userId');
+    final response = await ApiClient.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_code': userCode}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw ApiException.rejected(data);
+  }
+
+  // 해제 로직 에러 파싱 강화
+  static Future<String> removeEmployee(String facilityId, String userId, int targetUserId) async {
+    final url = Uri.parse('$_baseUrl/$facilityId/remove-employee/$targetUserId?user_id=$userId');
+    final response = await ApiClient.delete(url);
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw ApiException.rejected(data);
+  }
 }

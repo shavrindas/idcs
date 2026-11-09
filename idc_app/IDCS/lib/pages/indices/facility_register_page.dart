@@ -44,25 +44,25 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
     }
   }
 
-  Future<void> _handleRegister() async {
-    final code = _codeController.text.trim();
-    if (code.isEmpty) return;
+  // Future<void> _handleRegister() async {
+  //   final code = _codeController.text.trim();
+  //   if (code.isEmpty) return;
 
-    // Read before awaiting: context may no longer be valid in the catch.
-    final l10n = context.l10n;
-    try {
-      await FacilityApiService.registerFacility(widget.userId, code);
-      setState(() {
-        _collapseMessage = l10n.facilityRegisterDone;
-        _codeController.clear();
-      });
-      await _loadData(); // 목록 새로고침
-    } catch (e) {
-      // The await above may have outlived this screen.
-      if (!mounted) return;
-      setState(() => _collapseMessage = l10n.facilityRegisterFailed(describeApiError(context, e)));
-    }
-  }
+  //   // Read before awaiting: context may no longer be valid in the catch.
+  //   final l10n = context.l10n;
+  //   try {
+  //     await FacilityApiService.registerFacility(widget.userId, code);
+  //     setState(() {
+  //       _collapseMessage = l10n.facilityRegisterDone;
+  //       _codeController.clear();
+  //     });
+  //     await _loadData(); // 목록 새로고침
+  //   } catch (e) {
+  //     // The await above may have outlived this screen.
+  //     if (!mounted) return;
+  //     setState(() => _collapseMessage = l10n.facilityRegisterFailed(describeApiError(context, e)));
+  //   }
+  // }
 
   Future<void> _handleUnlink(int facilityId) async {
     try {
@@ -88,7 +88,8 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.facilityRegisterTitle)),
+      //appBar: AppBar(title: Text(context.l10n.facilityRegisterTitle)),
+      appBar: AppBar(title: Text(context.l10n.facilitiesTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -96,9 +97,9 @@ class _FacilityRegisterPageState extends State<FacilityRegisterPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            FacilityInputBox(
-              codeController: _codeController, onSubmit: _handleRegister, collapseMessage: _collapseMessage,
-            ),
+            // FacilityInputBox(
+            //   codeController: _codeController, onSubmit: _handleRegister, collapseMessage: _collapseMessage,
+            // ),
             const SizedBox(height: 16),
             FacilityListEditBox(
               facilities: _facilities, onUnlink: _handleUnlink,

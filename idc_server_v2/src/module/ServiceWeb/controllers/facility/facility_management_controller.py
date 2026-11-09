@@ -2,14 +2,21 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.future import select
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date, datetime
 from src.config.database import get_db
-from src.module.Core.models.User import UserRole
+
 from src.module.ServiceWeb.controllers.facility.scope import visible_facility_ids, get_user_or_404
+from src.module.Core.models.User import User, UserRole
+from src.module.Core.models.Facility import Facility, FacilityUser
+from src.module.Core.models.Chat import ChatRoom, ChatParticipant, ChatRoomType
+
 
 router = APIRouter(prefix="/facility-manager", tags=["ServiceWeb - Facility Manager"])
+
+
 
 class FacilityCreateReq(BaseModel):
     name: str
@@ -41,6 +48,16 @@ class RoleUpsertReq(BaseModel):
     target_high_limit: Optional[str] = None
     valid_from: Optional[str] = None
     valid_to: Optional[str] = None
+
+class InviteUserReq(BaseModel):
+    user_code: str
+
+
+class InviteEmployeeReq(BaseModel):
+    user_code: str
+
+class SetUserAdminReq(BaseModel):
+    user_admin_id: Optional[int] = None
 
 def _parse_date(d_str: Optional[str]) -> Optional[date]:
     if not d_str or not d_str.strip(): return None
@@ -195,5 +212,165 @@ async def update_point_role_admin(role_id: int, req: RoleUpsertReq, db: AsyncSes
 @router.delete("/role/{role_id}")
 async def delete_point_role_admin(role_id: int, db: AsyncSession = Depends(get_db)):
     await db.execute(text("DELETE FROM point_role_table WHERE id = :rid"), {"rid": role_id})
+    await db.commit()
+    return {"status": "success"}
+
+
+
+
+
+
+
+@router.post("/{facility_id}/invite-by-code")
+async def invite_user_by_code(facility_id: int, req: InviteUserReq, user_id: int, db: AsyncSession = Depends(get_db)):
+    """[Admin / UserAdmin 전용] 유저 코드로 직원을 해당 시설에 즉시 등록 및 시설 채팅방 자동 초대"""
+    # 1. 요청 주체 권한 확인 (Admin 이거나 해당 시설의 user_admin 인지)
+    actor = (await db.execute(select(User).where(User.id == user_id))).scalars().first()
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    if not actor or not facility:
+        raise HTTPException(status_code=404, detail="사용자 또는 시설을 찾을 수 없습니다.")
+
+    is_admin = actor.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+    is_user_admin = (facility.user_admin_id == user_id)
+    if not is_admin and not is_user_admin:
+        raise HTTPException(status_code=403, detail="직원을 초대할 권한이 없습니다.")
+
+    # 2. 초대할 유저 조회
+    target_user = (await db.execute(select(User).where(User.user_code == req.user_code))).scalars().first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="해당 유저 코드를 가진 사용자를 찾을 수 없습니다.")
+
+    # 3. 이미 등록되어 있는지 확인
+    exist = (await db.execute(
+        select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user.id)
+    )).scalars().first()
+    if exist:
+        raise HTTPException(status_code=400, detail="이미 해당 시설에 등록된 직원입니다.")
+
+    # 4. 시설-유저 매핑 추가 (즉시 등록)
+    new_mapping = FacilityUser(facility_id=facility_id, user_id=target_user.id)
+    db.add(new_mapping)
+
+    # 5. [채팅 연동] 해당 시설의 공식 채팅방(FACILITY)에 자동 참여 처리
+    chat_room = (await db.execute(
+        select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY)
+    )).scalars().first()
+    
+    if chat_room:
+        part_exist = (await db.execute(
+            select(ChatParticipant).where(ChatParticipant.room_id == chat_room.room_id, ChatParticipant.user_id == target_user.id)
+        )).scalars().first()
+        if not part_exist:
+            db.add(ChatParticipant(room_id=chat_room.room_id, user_id=target_user.id))
+
+    await db.commit()
+    return {"status": "success", "message": f"'{target_user.name}' 직원이 시설에 초대되었습니다."}
+
+
+
+
+@router.get("/facility/{facility_id}/employees")
+async def get_facility_employees_web(facility_id: int, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    
+    actor = await get_user_or_404(db, user_id)
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="시설을 찾을 수 없습니다.")
+
+    is_admin = actor.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+    is_user_admin = (facility.user_admin_id == user_id)
+    
+    if not is_admin and not is_user_admin:
+        raise HTTPException(status_code=403, detail="권한이 없습니다.")
+
+    q = text("""
+        SELECT u.id, u.name, u.email, u.user_code, u.role
+        FROM facility_users fu
+        JOIN user_table u ON fu.user_id = u.id
+        WHERE fu.facility_id = :fid
+          AND u.role NOT IN ('ADMIN', 'DEVELOPER')
+    """)
+    rows = (await db.execute(q, {"fid": facility_id})).fetchall()
+    
+    return {
+        "status": "success",
+        "user_admin_id": facility.user_admin_id,
+        "employees": [dict(r._mapping) for r in rows]
+    }
+
+@router.post("/facility/{facility_id}/employee")
+async def invite_employee_web(facility_id: int, req: InviteEmployeeReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    actor = await get_user_or_404(db, user_id)
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    
+    if not facility: raise HTTPException(status_code=404, detail="시설 없음")
+    if actor.role not in [UserRole.ADMIN, UserRole.DEVELOPER] and facility.user_admin_id != user_id:
+        raise HTTPException(status_code=403, detail="초대 권한이 없습니다.")
+
+    target_user = (await db.execute(select(User).where(User.user_code == req.user_code))).scalars().first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="유효하지 않은 유저 코드입니다.")
+
+    exist = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user.id))).scalars().first()
+    if exist:
+        raise HTTPException(status_code=400, detail="이미 시설에 등록된 직원입니다.")
+
+    # 매핑 및 채팅방 자동 등록
+    db.add(FacilityUser(facility_id=facility_id, user_id=target_user.id))
+    
+    chat_room = (await db.execute(select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY))).scalars().first()
+    if chat_room:
+        db.add(ChatParticipant(room_id=chat_room.room_id, user_id=target_user.id))
+
+    await db.commit()
+    return {"status": "success", "message": f"'{target_user.name}' 직원이 추가되었습니다."}
+
+
+@router.delete("/facility/{facility_id}/employee/{target_user_id}")
+async def remove_employee_web(facility_id: int, target_user_id: int, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    actor = await get_user_or_404(db, user_id)
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    
+    if not facility: raise HTTPException(status_code=404, detail="시설 없음")
+    if actor.role not in [UserRole.ADMIN, UserRole.DEVELOPER] and facility.user_admin_id != user_id:
+        raise HTTPException(status_code=403, detail="해제 권한이 없습니다.")
+
+    mapping = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user_id))).scalars().first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="해당 직원이 없습니다.")
+
+    # 수석 관리자를 해제할 경우 공석 처리
+    if facility.user_admin_id == target_user_id:
+        facility.user_admin_id = None
+
+    await db.delete(mapping)
+
+    chat_room = (await db.execute(select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY))).scalars().first()
+    if chat_room:
+        part = (await db.execute(select(ChatParticipant).where(ChatParticipant.room_id == chat_room.room_id, ChatParticipant.user_id == target_user_id))).scalars().first()
+        if part:
+            await db.delete(part)
+
+    await db.commit()
+    return {"status": "success"}
+
+
+@router.put("/facility/{facility_id}/user-admin")
+async def set_user_admin_web(facility_id: int, req: SetUserAdminReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    actor = await get_user_or_404(db, user_id)
+    if actor.role not in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        raise HTTPException(status_code=403, detail="수석 관리자 지정은 최고 관리자(Admin)만 가능합니다.")
+
+    facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
+    if not facility:
+        raise HTTPException(status_code=404, detail="시설을 찾을 수 없습니다.")
+
+    if req.user_admin_id is not None:
+        # 지정하려는 유저가 해당 시설 직원이 맞는지 검증
+        exist = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == req.user_admin_id))).scalars().first()
+        if not exist:
+            raise HTTPException(status_code=400, detail="해당 시설의 직원 리스트에 있는 사람만 지정할 수 있습니다.")
+
+    facility.user_admin_id = req.user_admin_id
     await db.commit()
     return {"status": "success"}

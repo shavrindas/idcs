@@ -1,6 +1,8 @@
 // 경로: lib/routes.dart
 part of 'main.dart';
 
+
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   errorBuilder: (context, state) => const NotFoundScreen(),
@@ -82,8 +84,6 @@ final GoRouter appRouter = GoRouter(
     // userId/facilityId는 상위 라우트가 소유하고 브랜치는 상대 경로(monitoring, chart 등)만 갖는다.
     GoRoute(
       path: '/facility/:userId/:facilityId',
-      // 하위 라우트(monitoring/chart/board/chat/alarm) 없이 이 경로만 단독으로
-      // 방문되는 경우는 없으므로(항상 구체적 탭 경로로 이동) 별도 redirect는 두지 않는다.
       redirect: (context, state) => state.matchedLocation == state.uri.toString()
           ? '${state.matchedLocation}/monitoring'
           : null,
@@ -95,6 +95,7 @@ final GoRouter appRouter = GoRouter(
             navigationShell: navigationShell,
           ),
           branches: [
+            // 0: 모니터링
             StatefulShellBranch(routes: [
               GoRoute(
                 path: 'monitoring',
@@ -104,6 +105,7 @@ final GoRouter appRouter = GoRouter(
                 ),
               ),
             ]),
+            // 1: 알람
             StatefulShellBranch(routes: [
               GoRoute(
                 path: 'alarm',
@@ -113,6 +115,7 @@ final GoRouter appRouter = GoRouter(
                 ),
               ),
             ]),
+            // 2: 차트
             StatefulShellBranch(routes: [
               GoRoute(
                 path: 'chart',
@@ -122,10 +125,21 @@ final GoRouter appRouter = GoRouter(
                 ),
               ),
             ]),
+            // 3: 소요 기록 (게시판)
             StatefulShellBranch(routes: [
               GoRoute(
                 path: 'board',
                 builder: (context, state) => FacilityBoardPage(
+                  userId: state.pathParameters['userId']!,
+                  facilityId: state.pathParameters['facilityId']!,
+                ),
+              ),
+            ]),
+            // 4: [신규] 직원 관리 (하단 탭 5번째)
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: 'employees',
+                builder: (context, state) => FacilityEmployeesPage(
                   userId: state.pathParameters['userId']!,
                   facilityId: state.pathParameters['facilityId']!,
                 ),
@@ -199,6 +213,19 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
 
+
+
+
+    //-------------------------------------------------------------------
+
+
+    // GoRoute(
+    //   path: '/facility_employees/:userId/:facilityId',
+    //   builder: (context, state) => FacilityEmployeesPage(
+    //     userId: state.pathParameters['userId']!,
+    //     facilityId: state.pathParameters['facilityId']!,
+    //   ),
+    // ),
   ],
 );
 

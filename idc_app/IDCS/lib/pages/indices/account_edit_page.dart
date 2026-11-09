@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 클립보드 사용을 위해 추가
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
 import 'package:idcs/components/indices/settings/settings_sections.dart';
@@ -28,6 +29,8 @@ class _PersonalPageState extends State<PersonalPage> {
 
   String _name = '';
   String _phone = '';
+  String _userCode = ''; // 👈 유저 코드 상태 추가
+
 
   /// 소셜로만 가입한 계정은 비밀번호가 없어 변경 UI를 숨긴다.
   bool _hasPassword = true;
@@ -70,6 +73,7 @@ class _PersonalPageState extends State<PersonalPage> {
           _isAdmin = (role == 'ADMIN' || role == 'DEVELOPER');
           _name = profile['name'] ?? '';
           _phone = profile['phone_number'] ?? '';
+          _userCode = profile['user_code'] ?? ''; 
           _linkedProviders = profile['linked_providers'] ?? [];
           _hasPassword = profile['has_password'] ?? true;
         });
@@ -84,8 +88,6 @@ class _PersonalPageState extends State<PersonalPage> {
   /// 수정 모드에서 저장. 실제로 바뀐 값만 서버에 보낸다.
   /// 실패하면 예외를 그대로 올려 수정 모드가 닫히지 않게 한다.
   Future<void> _handleSaveProfile(String name, String phone) async {
-    // 바뀐 것만 보낸다. 서버가 돌려주는 문구는 한국어로 고정돼 있어 쓰지 않고,
-    // 무엇이 저장됐는지만 세어 둔다.
     var changed = 0;
 
     if (name != _name) {
@@ -178,14 +180,10 @@ class _PersonalPageState extends State<PersonalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 이 화면의 제목은 '설정'이다. 계정 정보는 그 안의 첫 카드고,
-      // 테마·언어·알람·제어판이 그 아래에 이어진다.
       appBar: AppBar(title: Text(context.l10n.settingsTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              // 아래 탭 줄이 없는 화면이라 제스처 바가 마지막 줄 위에 겹친다.
-              // 겹친 자리의 글자에 줄이 그어진 것처럼 보였다.
               padding: EdgeInsets.fromLTRB(
                 16,
                 16,
@@ -195,24 +193,24 @@ class _PersonalPageState extends State<PersonalPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 이름·전화번호·로그인 방식. 평소엔 읽기 전용, 수정 버튼으로 연다.
-                  // 계정 요약과 한 카드로 합쳤다 — 같은 내용을 두 군데 두면
-                  // 어느 쪽을 눌러야 바꿀 수 있는지 헷갈린다.
+                  // 프로필 정보 카드 (유저 코드 및 복사 기능 파라미터가 ProfileInfoBox 내부 컴포넌트 규격에 맞게 전달되도록 함)
                   ProfileInfoBox(
                     userId: widget.userId,
                     name: _name,
                     phone: _phone,
+                    userCode: _userCode, 
                     loginMethod: _loginMethodLabel(context),
                     onSave: _handleSaveProfile,
+                    onCopyUserCode: _userCode.isEmpty ? null : () {
+                      Clipboard.setData(ClipboardData(text: _userCode));
+                      AppToast.success(context, '유저 코드가 복사되었습니다.');
+                    },
                   ),
                   const SizedBox(height: 16),
 
-                  // 앱 설정은 예전엔 별도 화면이었다. 테마·언어를 바꾸려고 한 겹
-                  // 더 들어가야 해서 여기로 펼쳤다.
                   const AppSettingsSections(),
                   const SizedBox(height: 16),
 
-                  // 소셜로만 가입한 계정은 비밀번호 자체가 없으므로 숨긴다
                   if (_hasPassword) ...[
                     PasswordChangeBox(
                       currentPwController: _currentPwController,
@@ -232,8 +230,6 @@ class _PersonalPageState extends State<PersonalPage> {
                     const SizedBox(height: 16),
                   ],
 
-                  // 로그아웃은 자주 쓰는 동작이 아니라 맨 아래, 탈퇴는 그보다도
-                  // 더 아래에 조용히 둔다.
                   OutlinedButton.icon(
                     onPressed: _handleLogout,
                     icon: const Icon(Icons.logout_rounded, size: 18),
