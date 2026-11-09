@@ -1111,9 +1111,21 @@ class ChartCanvasBox extends StatelessWidget {
   }
 
   // 차트 캔버스는 화면의 핵심 콘텐츠이므로 주변 설정 카드보다 한 단계 부각시킨다.
+  //
+  // 높이를 400으로 고정해 두면 태블릿에서는 화면에 비해 작아 보이고, 가로
+  // 모드에서는 세로 공간이 얼마 없는데도 그대로 400을 차지해 아래 필터·범례
+  // 박스가 화면 밖으로 밀려난다. 세로 모드는 화면 너비에, 가로 모드는 화면
+  // 높이에 비례해서 잡는다 — 둘 다 화면이 커지면 차트도 같이 커지되, 너무
+  // 작거나 과하게 커지지 않도록 clamp 로 막아 둔다.
   Widget _buildContainer(BuildContext context, {required Widget child}) {
+    final size = MediaQuery.sizeOf(context);
+    final isLandscape = MediaQuery.orientationOf(context) == Orientation.landscape;
+    final height = isLandscape
+        ? (size.height * 0.55).clamp(220.0, 420.0)
+        : (size.width * 0.9).clamp(280.0, 480.0);
+
     return Container(
-      height: 400,
+      height: height,
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(20),

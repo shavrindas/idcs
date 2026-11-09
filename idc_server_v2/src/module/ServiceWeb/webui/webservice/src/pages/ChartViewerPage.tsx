@@ -459,27 +459,38 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
     return null;
   })();
 
-  // 💡 [UI 핵심 수정] 최상위 컨테이너에 overflowY: 'auto' 적용
+  // 최상위 컨테이너: 세로는 넘치면 스크롤, 가로는 (혹시 더 못 줄어드는
+  // 내용이 있어도) 전체 페이지가 찢어지는 대신 이 안에서만 스크롤되게 한다.
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', gap: 12, boxSizing: 'border-box', padding: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', overflowX: 'auto', gap: 12, boxSizing: 'border-box', padding: 24 }}>
 
       {/* 상단: 차트 + 검색/스코핑 패널 (최소 높이 보장) */}
       <div style={{ display: 'flex', gap: 12, minHeight: 650, flexShrink: 0 }}>
 
-        {/* 왼쪽 차트 영역 */}
-        <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* 왼쪽 차트 영역
+            flex 아이템의 min-width 기본값은 'auto' — 안의 내용(버튼·셀렉트)
+            너비 아래로는 줄어들지 않는다. 그래서 화면을 확대하거나 창을
+            좁히면 이 줄이 줄어드는 대신 통째로 옆으로 넘쳐, 안에 있는
+            ECharts 가 '줄어든 진짜 공간'이 아니라 '넘친 채 유지되는 가짜
+            너비'를 보고 그려서 확대해도 반응하지 않는 것처럼 보였다.
+            minWidth: 0 을 주면 카드가 실제로 줄어들고, 그 안의 ResizeObserver
+            (echarts-for-react의 autoResize)가 그 변화를 그대로 받는다. */}
+        <div style={{ flex: 3, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <TopToolBar showInfo={showMainInfo} showGrid={showMainGrid} targetDate={targetDate} isChartLoading={isChartLoading} onCopy={handleCopySearchQuery} onToggleInfo={() => setShowMainInfo(!showMainInfo)} onToggleGrid={() => setShowMainGrid(!showMainGrid)} onOneHourView={applyOneHourView} onDateChange={setTargetDate} yBuffer={yBuffer} onYBufferChange={setYBuffer} />
-          <div className="card" style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, padding: 12 }}>
+          <div className="card" style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
             {emptyReason ? <ChartEmptyState reason={emptyReason} /> : <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />}
           </div>
           <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
-          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: 12 }}>
+          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
             {emptyReason ? <ChartEmptyState reason={emptyReason} compact /> : <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />}
           </div>
         </div>
 
-        {/* 오른쪽 패널 영역 */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* 오른쪽 패널 영역 — 내용(날짜칸·버튼)이 최소 너비를 가지므로 아예
+            줄이기보다 일정 너비 아래로는 줄지 않게 막아 둔다. flex: 3 쪽이
+            minWidth: 0 로 먼저 줄어드니 이 패널이 밀려 나는 대신 전체 줄이
+            자연스럽게 가로 스크롤 쪽으로 넘어간다. */}
+        <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <SmartOmniboxPanel input={omniboxInput} suggestions={omniboxSuggestions} isChartLoading={isChartLoading} activeIndex={omniboxActive} onActiveIndexChange={setOmniboxActive} onInputChange={setOmniboxInput} onSubmit={handleOmniboxSubmit} onSelect={handleOmniboxSelect} />
           <ScopingPanel mode={mode} scale={scale} facilities={facilities} rooms={rooms} selectedFacility={selectedFacility} selectedRoom={selectedRoom} isChartLoading={isChartLoading} onModeToggle={handleModeToggle} onScaleChange={setScale} onFacilityChange={setSelectedFacility} onRoomChange={setSelectedRoom} onQuickTime={handleQuickTimeSelect} onQuickDay={handleQuickDaySelect} />
           <PostViewerPanel selectedPostIds={selectedPostViewerIds} posts={posts} selectedGroupId={selectedGroupId} onHidePost={handleHidePost} />
@@ -488,7 +499,7 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
       </div>
 
       {/* 하단: 맵핑 활성화 + 블랙리스트 (내용에 따라 자동 확장) */}
-      <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 12, flexShrink: 0, flexWrap: 'wrap' }}>
         <MappingActivePanel groups={groups} allRoles={allRoles} roleColors={roleColors} selectedGroupId={selectedGroupId} selectedRoom={selectedRoom} isChartLoading={isChartLoading} checkedRoles={checkedRoles} activeGuidelines={activeGuidelines} invertedBools={invertedBools} openMenuRoleId={openMenuRoleId} onGroupChange={setSelectedGroupId} onRoleToggle={handleRoleToggle} onRolesToggle={handleRolesToggle} singleNumericMode={mode === 'EXTENT'} onMenuToggle={setOpenMenuRoleId} onColorChange={handleColorChange} onGuidelineToggle={handleGuidelineToggle} onInvertToggle={handleInvertToggle} isBoolRole={isBoolRole} />
         <BlacklistPanel hiddenPosts={hiddenPosts} onRestore={handleRestorePost} />
       </div>

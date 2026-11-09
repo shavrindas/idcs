@@ -13,6 +13,7 @@ import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/components/shared/app_toast.dart';
+import 'package:idcs/components/shared/time_format.dart';
 
 class MonitoringPage extends StatefulWidget {
   final String userId;
@@ -32,6 +33,11 @@ class _MonitoringPageState extends State<MonitoringPage> {
 
   /// 마지막으로 값이 들어온 시각. 요약 카드가 이 값으로 신선도를 보여준다.
   DateTime? _lastUpdate;
+
+  /// FServer가 연결되어 있지 않을 때 서버가 대신 보내주는, DB에 저장된
+  /// 마지막 계측 시각(실제 수신 시각이 아니다). null이 아니면 지금 보이는
+  /// 값은 실시간이 아니라 그 당시 스냅샷이라는 뜻이다.
+  String? _snapshotTimeLabel;
 
   /// '몇 초 전'이 멈춰 있지 않도록 주기적으로 다시 그린다.
   Timer? _freshnessTicker;
@@ -118,8 +124,21 @@ class _MonitoringPageState extends State<MonitoringPage> {
       }
       final Map<String, dynamic> parsedSJson = rawDatas;
 
+      // 서버가 라이브 캐시가 없을 때 DB 스냅샷을 대신 보내면 'live': false와
+      // 'snapshot_time'을 함께 싣는다. 그 값을 '방금 수신'으로 찍으면 통신이
+      // 끊긴 호실이 멀쩡해 보인다 — 그래서 _lastUpdate가 아니라 별도 자리에
+      // 원래 측정 시각 그대로 보여준다.
+      final bool isLive = parsedJson['live'] != false;
+
       setState(() {
-        _lastUpdate = DateTime.now();
+        if (isLive) {
+          _lastUpdate = DateTime.now();
+          _snapshotTimeLabel = null;
+        } else {
+          _lastUpdate = null;
+          final rawSnapshot = parsedJson['snapshot_time'];
+          _snapshotTimeLabel = rawSnapshot is String ? formatPostTime(rawSnapshot) : null;
+        }
         for (var entry in parsedSJson.entries) {
           // 키는 "호실.필드" 형태로 온다 (예: "23.temp_pv")
           final List<String> parts = entry.key.split('.');
@@ -244,6 +263,7 @@ class _MonitoringPageState extends State<MonitoringPage> {
                     currentTemp: realtempData['temp_pv'] ?? 'NA',
                     setpoint: realtempData['temp_sv'] ?? 'NA',
                     lastUpdate: _lastUpdate,
+                    snapshotTimeLabel: _snapshotTimeLabel,
                     view: view,
                   ),
                   const SizedBox(height: 16),

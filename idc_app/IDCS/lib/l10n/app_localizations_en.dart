@@ -1282,5 +1282,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String panelOfflineSnapshot(String date) {
+    return 'Not live — last reading $date';
+  }
+
+  @override
   String get alarmsNoneActive => 'No alarms running right now';
 }

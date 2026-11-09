@@ -1261,5 +1261,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String panelOfflineSnapshot(String date) {
+    return '실시간 아님 — 마지막 값 $date';
+  }
+
+  @override
   String get alarmsNoneActive => '지금 진행 중인 알람이 없습니다';
 }

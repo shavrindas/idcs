@@ -1,18 +1,120 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import text
 from pydantic import BaseModel
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 from src.module.CServer.controllers.sys_auth_controller import stream_bridge
 import json
 import asyncio
+import time
+from datetime import datetime
+from typing import Optional
 
-from src.config.database import get_db
+from src.config.database import get_db, AsyncSessionLocal
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
 from src.module.Core.models.User import User, UserRole
 
 router = APIRouter(prefix="/facilities", tags=["ServiceApp - Facility"])
+
+# Last-known-reading fallback for the live panel socket: no fac_server is
+# connected for every facility all the time (dev environments, a node that's
+# briefly offline), and the panel used to just sit on 'NA' forever with no
+# way to tell "never reported" apart from "reported 10 minutes ago". This
+# pulls the latest row per point straight from the hypertables, shaped like
+# the live 'datas' payload ("{room_id}.{role_name}": value) so the panel can
+# reuse its existing parsing unchanged.
+_SNAPSHOT_SOURCES = [
+    ("temperature_numerical_logs", "temp_mean"),
+    ("gear_numerical_logs", "gear_mean"),
+    ("equipment_static_logs", "setnum"),
+    ("bool_logs", "status_value"),
+]
+
+# 테이블 하나가 느려도 (예: 인덱스 상태가 다른 하이퍼테이블) 패널 전체가
+# 그 테이블만큼 멈추면 안 된다. 테이블마다 제 커넥션으로 따로 열어 동시에
+# 묻고, 이 시간 안에 못 끝내면 그 테이블만 조용히 비운다 — 틀린 값을 보여
+#주는 대신 그 항목만 '없음'으로 둔다.
+_SNAPSHOT_TABLE_TIMEOUT = 2.5
+
+def _format_snapshot_value(value) -> str:
+    # REAL 컬럼은 float4->float8 변환 잔여 오차 때문에 str()이 그대로
+    # '-21.219999313354492' 같은 긴 문자열을 내놓는다. 실시간 설비가 보내는
+    # 값은 항상 짧게 반올림돼 있어서, 패널 숫자판이 그 길이를 기준으로
+    # 그려져 있다 — 그대로 보내면 자릿수가 넘쳐 화면 밖으로 밀려난다.
+    if isinstance(value, bool):
+        return str(value)
+    if isinstance(value, float):
+        return f"{value:.2f}"
+    return str(value)
+
+async def _snapshot_from_table(table: str, value_col: str, role_ids: list) -> list:
+    async with AsyncSessionLocal() as db:
+        max_query = text(f"SELECT MAX(timestamp) FROM {table} WHERE role_id = ANY(:role_ids)")
+        table_latest = (await db.execute(max_query, {"role_ids": role_ids})).scalar()
+        if table_latest is None:
+            return []
+
+        # chart_controller.py의 방식을 그대로 따른다: 먼저 이 테이블에서
+        # role들의 가장 최근 시각을 구하고, 그 시각 기준 하루 안으로만
+        # 훑는다. 시간 경계 없이 'ORDER BY role_id, timestamp DESC'만
+        # 쓰면 하이퍼테이블 청크를 전부 훑어야 해서 느렸다 — role이 더
+        # 못 받아온 지 오래됐다면 (latest - 1일) 보다 전에 멈춰 있을
+        # 뿐이니, 그런 role은 이번 스냅샷에서 조용히 빠진다(=데이터 없음).
+        query = text(f"""
+            SELECT DISTINCT ON (role_id) role_id, {value_col} AS value, timestamp
+            FROM {table}
+            WHERE role_id = ANY(:role_ids)
+              AND timestamp >= (CAST(:table_latest AS timestamptz) - INTERVAL '1 day')
+              AND timestamp <= CAST(:table_latest AS timestamptz)
+            ORDER BY role_id, timestamp DESC
+        """)
+        rows = (await db.execute(query, {"role_ids": role_ids, "table_latest": table_latest})).fetchall()
+        return [(row.role_id, row.value, row.timestamp) for row in rows]
+
+async def _bounded_snapshot_from_table(table: str, value_col: str, role_ids: list) -> list:
+    try:
+        return await asyncio.wait_for(
+            _snapshot_from_table(table, value_col, role_ids), timeout=_SNAPSHOT_TABLE_TIMEOUT
+        )
+    except (asyncio.TimeoutError, Exception):
+        # DB 쪽 문제(타임아웃, 쿼리 실패)로 한 테이블을 못 읽어도 나머지
+        # 테이블의 값은 그대로 보여줘야 한다 — 패널 전체를 비우는 것보다
+        # 낫다.
+        return []
+
+async def _latest_snapshot_for_facility(facility_id: int, db: AsyncSession) -> tuple[dict, Optional[datetime]]:
+    # role_id를 먼저 가볍게 구해 둔 뒤 하이퍼테이블은 'role_id = ANY(...)'로만
+    # 찌른다. point_role_table과 직접 JOIN 하면 role_id 범위를 못 좁혀서
+    # (chart_controller.py가 쓰는 방식과 반대로) 하이퍼테이블 전체를 훑게
+    # 되어 느렸다.
+    role_query = text("""
+        SELECT id, room_id, role_name
+        FROM point_role_table
+        WHERE facility_id = :facility_id AND is_current = TRUE
+    """)
+    role_rows = (await db.execute(role_query, {"facility_id": facility_id})).fetchall()
+    if not role_rows:
+        return {}, None
+
+    role_info = {row.id: (row.room_id, row.role_name) for row in role_rows}
+    role_ids = list(role_info.keys())
+
+    results = await asyncio.gather(
+        *[_bounded_snapshot_from_table(table, value_col, role_ids) for table, value_col in _SNAPSHOT_SOURCES]
+    )
+
+    datas: dict = {}
+    latest_ts: Optional[datetime] = None
+    for rows in results:
+        for role_id, value, timestamp in rows:
+            room_id, role_name = role_info[role_id]
+            datas[f"{room_id}.{role_name}"] = _format_snapshot_value(value)
+            if latest_ts is None or timestamp > latest_ts:
+                latest_ts = timestamp
+
+    return datas, latest_ts
 
 class RegisterFacilityReq(BaseModel):
     access_code: str
@@ -113,6 +215,19 @@ async def app_facility_monitoring_ws(websocket: WebSocket, facility_id: int):
     # 접속 즉시 마지막 캐싱된 상태가 있다면 1회 전송
     if facility_id in stream_bridge.latest_data:
         await websocket.send_text(json.dumps(stream_bridge.latest_data[facility_id]))
+    else:
+        # 지금 이 시설에 연결된 FServer가 없는 경우: 메모리 캐시 대신 마지막
+        # 저장된 계측값을 DB에서 한 번 읽어 보낸다. 'live': False 로 표시해서
+        # 화면이 이 값을 '방금 들어온 값'으로 착각해 신선도를 잘못 표시하지
+        # 않게 한다 (패널은 live가 없거나 True일 때만 수신 시각을 지금으로 찍는다).
+        async with AsyncSessionLocal() as snapshot_db:
+            datas, latest_ts = await _latest_snapshot_for_facility(facility_id, snapshot_db)
+        if datas:
+            await websocket.send_text(json.dumps({
+                "datas": datas,
+                "live": False,
+                "snapshot_time": latest_ts.isoformat() if latest_ts else None,
+            }))
 
     try:
         while True:
@@ -121,6 +236,32 @@ async def app_facility_monitoring_ws(websocket: WebSocket, facility_id: int):
             await stream_bridge.send_command_to_fserver(facility_id, cmd_text)
     except WebSocketDisconnect:
         stream_bridge.client_Listeners[facility_id].discard(websocket)
+
+# data/get과 같은 '없으면 DB 스냅샷' 보강을 개괄(outget) 피드에도 쓴다 —
+# 전체 현황 화면과 홈 화면 위젯이 같은 소켓을 보므로, 여기도 비어 있으면
+# 위젯 카드가 전부 '—'로만 남는다. 다만 이 소켓은 1초마다 도는 루프라
+# data/get처럼 접속 시 한 번만 조회하면 안 되고(매번 다시 물으면 초당 DB
+# 왕복이 생긴다), 그렇다고 매초 다시 조회할 것도 아니라서 시설별로 잠깐
+# 캐시해 둔다.
+_OUTGET_FALLBACK_KEYWORDS = ["temp_pv", "temp_sv", "temp_comp", "deforest_def", "control_runsw", "emergency_emg", "emergency_cint", "emergency_high"]
+_OUTGET_FALLBACK_TTL = 60.0
+_outget_fallback_cache: dict = {}
+
+async def _outget_fallback_datas(facility_id: int) -> dict:
+    cached = _outget_fallback_cache.get(facility_id)
+    now = time.monotonic()
+    if cached and now - cached[1] < _OUTGET_FALLBACK_TTL:
+        return cached[0]
+
+    async with AsyncSessionLocal() as snapshot_db:
+        datas, _ = await _latest_snapshot_for_facility(facility_id, snapshot_db)
+
+    filtered = {
+        key: val for key, val in datas.items()
+        if any(keyword in key for keyword in _OUTGET_FALLBACK_KEYWORDS)
+    }
+    _outget_fallback_cache[facility_id] = (filtered, now)
+    return filtered
 
 '''개괄 모니터링 브로드캐스팅 용'''
 @router.websocket("/data/outget/{user_id}")
@@ -159,6 +300,14 @@ async def app_facility_monitoring_ws(websocket: WebSocket, user_id: int):
                                 
                     if filtered_datas:
                         await websocket.send_text(json.dumps({"facility_id": f_id, "datas": filtered_datas}))
+                else:
+                    # 이 시설에 연결된 FServer가 없음: DB 스냅샷으로 대신한다
+                    # (시설별로 60초 캐시, 매초 재조회하지 않는다).
+                    fallback_datas = await _outget_fallback_datas(f_id)
+                    if fallback_datas:
+                        await websocket.send_text(json.dumps({
+                            "facility_id": f_id, "datas": fallback_datas, "live": False,
+                        }))
 
             #연결상태 점검용
             try:
