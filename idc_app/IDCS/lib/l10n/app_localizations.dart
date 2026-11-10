@@ -2548,44 +2548,44 @@ abstract class AppLocalizations {
 
   /// No description provided for @profileUserCodeCopied.
   ///
-  /// In en, this message translates to:
-  /// **'User code copied.'**
+  /// In ko, this message translates to:
+  /// **'유저 코드가 복사되었습니다.'**
   String get profileUserCodeCopied;
 
   /// No description provided for @postDeleteConfirmTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Delete this post?'**
+  /// In ko, this message translates to:
+  /// **'게시글을 삭제하시겠습니까?'**
   String get postDeleteConfirmTitle;
 
   /// No description provided for @postDeleteConfirmBody.
   ///
-  /// In en, this message translates to:
-  /// **'A deleted post cannot be restored.'**
+  /// In ko, this message translates to:
+  /// **'삭제한 게시글은 되돌릴 수 없습니다.'**
   String get postDeleteConfirmBody;
 
   /// No description provided for @commentDeleteConfirmTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Delete this comment?'**
+  /// In ko, this message translates to:
+  /// **'댓글을 삭제하시겠습니까?'**
   String get commentDeleteConfirmTitle;
 
   /// No description provided for @commentDeleteConfirmBody.
   ///
-  /// In en, this message translates to:
-  /// **'A deleted comment cannot be restored.'**
+  /// In ko, this message translates to:
+  /// **'삭제한 댓글은 되돌릴 수 없습니다.'**
   String get commentDeleteConfirmBody;
 
   /// No description provided for @facilityUnlinkConfirmTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Unlink this facility?'**
+  /// In ko, this message translates to:
+  /// **'시설 연결을 해제하시겠습니까?'**
   String get facilityUnlinkConfirmTitle;
 
   /// No description provided for @facilityUnlinkConfirmBody.
   ///
-  /// In en, this message translates to:
-  /// **'You'll need the access code again to reconnect.'**
+  /// In ko, this message translates to:
+  /// **'연결을 해제하면 다시 연결하려면 접근 코드가 필요합니다.'**
   String get facilityUnlinkConfirmBody;
 }
 
