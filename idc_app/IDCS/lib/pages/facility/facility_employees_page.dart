@@ -98,36 +98,42 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
   Future<void> _showInviteDialog() async {
     final TextEditingController codeController = TextEditingController();
     final l10n = context.l10n;
+    final colors = context.colors;
 
     final bool? result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.employeesInviteDialogTitle, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: _DialogHeader(icon: Icons.person_add_alt_1_rounded, title: l10n.employeesInviteDialogTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.employeesInviteDialogBody, style: const TextStyle(fontSize: 13)),
-            const SizedBox(height: 14),
+            Text(l10n.employeesInviteDialogBody, style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4)),
+            const SizedBox(height: 16),
             TextField(
               controller: codeController,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
                 labelText: l10n.employeesUserCodeLabel,
-                prefixIcon: const Icon(Icons.qr_code_outlined),
+                prefixIcon: const Icon(Icons.qr_code_rounded),
                 isDense: true,
               ),
             ),
           ],
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
-          FilledButton(
+          FilledButton.icon(
             onPressed: () {
               if (codeController.text.trim().isNotEmpty) {
                 Navigator.pop(ctx, true);
               }
             },
-            child: Text(l10n.employeesInviteConfirm),
+            icon: const Icon(Icons.check_rounded, size: 18),
+            label: Text(l10n.employeesInviteConfirm),
           ),
         ],
       ),
@@ -155,13 +161,15 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.employeesRemoveDialogTitle),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: _DialogHeader(icon: Icons.person_remove_rounded, title: l10n.employeesRemoveDialogTitle, tone: _DialogTone.danger),
         content: Text(l10n.employeesRemoveDialogBody(name)),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: context.colors.error),
+            style: FilledButton.styleFrom(backgroundColor: context.colors.error),
             child: Text(l10n.employeesRemoveConfirm),
           ),
         ],
@@ -191,33 +199,39 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(l10n.employeesPermissionsDialogTitle(emp['name'])),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: _DialogHeader(icon: Icons.admin_panel_settings_rounded, title: l10n.employeesPermissionsDialogTitle(emp['name'])),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.employeesPermDevice),
+              _PermissionSwitchRow(
+                icon: Icons.settings_remote_rounded,
+                label: l10n.employeesPermDevice,
                 value: canDevice,
                 onChanged: (v) => setDialogState(() => canDevice = v),
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.employeesPermBoard),
+              _PermissionSwitchRow(
+                icon: Icons.dashboard_customize_rounded,
+                label: l10n.employeesPermBoard,
                 value: canBoard,
                 onChanged: (v) => setDialogState(() => canBoard = v),
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.employeesPermAlarm),
+              _PermissionSwitchRow(
+                icon: Icons.notifications_active_rounded,
+                label: l10n.employeesPermAlarm,
                 value: canAlarm,
                 onChanged: (v) => setDialogState(() => canAlarm = v),
               ),
             ],
           ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.actionCancel)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.actionSave)),
+            FilledButton.icon(
+              onPressed: () => Navigator.pop(ctx, true),
+              icon: const Icon(Icons.check_rounded, size: 18),
+              label: Text(l10n.actionSave),
+            ),
           ],
         ),
       ),
@@ -254,18 +268,35 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
           : (_loadError != null)
               ? _ErrorState(message: _loadError!, onRetry: _loadData)
               : (!_hasAccess)
-                  ? Center(
-                      child: Text(
-                        l10n.employeesAccessDenied,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: colors.textSecondary, fontSize: 14, height: 1.4),
-                      ),
-                    )
+                  ? _AccessDeniedState(message: l10n.employeesAccessDenied)
                   : Padding(
                       padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 80 + MediaQuery.of(context).padding.bottom),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // 헤더: 아이콘 + 인원 수 요약. 탭에 처음 들어왔을 때
+                          // '여기가 어떤 화면인지'가 글자 크기만으로도 읽혀야 한다.
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(9),
+                                decoration: BoxDecoration(
+                                  color: colors.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.groups_rounded, color: colors.primary, size: 20),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  l10n.employeesListTitle(_allEmployees.length),
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary, letterSpacing: -0.2),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
                           Row(
                             children: [
                               Expanded(
@@ -278,119 +309,49 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
                                     fillColor: colors.surface,
                                     filled: true,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide(color: colors.outline),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
                                       borderSide: BorderSide(color: colors.outline),
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              ElevatedButton.icon(
+                              const SizedBox(width: 10),
+                              FilledButton.icon(
                                 onPressed: _showInviteDialog,
                                 icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                                 label: Text(l10n.employeesAddButton),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(l10n.employeesListTitle(_filteredEmployees.length),
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary)),
-                                Text(l10n.employeesRemoveColumnLabel,
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary)),
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: 18),
 
                           Expanded(
                             child: _filteredEmployees.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      _allEmployees.isEmpty ? l10n.employeesEmptyState : l10n.employeesEmptySearchState,
-                                      style: TextStyle(color: colors.textSecondary, fontSize: 13),
-                                    ),
+                                ? _EmptyState(
+                                    message: _allEmployees.isEmpty ? l10n.employeesEmptyState : l10n.employeesEmptySearchState,
                                   )
                                 : ListView.separated(
                                     itemCount: _filteredEmployees.length,
-                                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                                     itemBuilder: (context, index) {
                                       final emp = _filteredEmployees[index];
                                       final bool isMe = emp['id'].toString() == widget.userId;
                                       final bool isUserAdmin = emp['is_user_admin'] == true;
 
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        decoration: BoxDecoration(
-                                          color: isUserAdmin ? colors.primary.withValues(alpha: 0.05) : colors.surface,
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: isUserAdmin ? colors.primary.withValues(alpha: 0.4) : colors.outline),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      Flexible(
-                                                        child: Text(
-                                                          emp['name'],
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow.ellipsis,
-                                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      if (isUserAdmin)
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                          decoration:
-                                                              BoxDecoration(color: colors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                                                          child: Text(l10n.employeesChiefAdminBadge,
-                                                              style: TextStyle(fontSize: 10, color: colors.primary, fontWeight: FontWeight.w600)),
-                                                        ),
-                                                      if (isMe)
-                                                        Container(
-                                                          margin: const EdgeInsets.only(left: 6),
-                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                          decoration: BoxDecoration(
-                                                              color: colors.textSecondary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                                                          child: Text(l10n.employeesMeBadge,
-                                                              style: TextStyle(fontSize: 10, color: colors.textSecondary, fontWeight: FontWeight.w600)),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(l10n.employeesIdEmailLabel(emp['id'].toString(), emp['email']),
-                                                      style: TextStyle(fontSize: 12, color: colors.textSecondary)),
-                                                ],
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.tune_rounded, size: 20),
-                                              color: colors.textSecondary,
-                                              tooltip: l10n.employeesPermissionsTooltip,
-                                              onPressed: () => _showPermissionsDialog(emp),
-                                            ),
-                                            if (!isUserAdmin)
-                                              IconButton(
-                                                icon: const Icon(Icons.close_rounded, size: 20),
-                                                color: colors.error,
-                                                tooltip: l10n.employeesRemoveTooltip,
-                                                onPressed: () => _handleRemove(emp['id'], emp['name']),
-                                              )
-                                          ],
-                                        ),
+                                      return _EmployeeCard(
+                                        emp: emp,
+                                        isMe: isMe,
+                                        isUserAdmin: isUserAdmin,
+                                        onPermissions: () => _showPermissionsDialog(emp),
+                                        onRemove: isUserAdmin ? null : () => _handleRemove(emp['id'], emp['name']),
                                       );
                                     },
                                   ),
@@ -398,6 +359,265 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
                         ],
                       ),
                     ),
+    );
+  }
+}
+
+enum _DialogTone { normal, danger }
+
+/// Dialog's own icon + title row. The default `AlertDialog.title` is plain
+/// text; giving each confirm/edit dialog the same small icon badge makes the
+/// dialogs read as one family instead of ad-hoc popups.
+class _DialogHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final _DialogTone tone;
+
+  const _DialogHeader({required this.icon, required this.title, this.tone = _DialogTone.normal});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final accent = tone == _DialogTone.danger ? colors.error : colors.primary;
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+          child: Icon(icon, color: accent, size: 18),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+}
+
+class _PermissionSwitchRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _PermissionSwitchRow({required this.icon, required this.label, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: value ? colors.primary.withValues(alpha: 0.12) : colors.outline.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, size: 17, color: value ? colors.primary : colors.textSecondary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+            ),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One row card for an employee. Carries its own avatar/initial, name,
+/// role badges and the permission/remove actions.
+class _EmployeeCard extends StatelessWidget {
+  final Map<String, dynamic> emp;
+  final bool isMe;
+  final bool isUserAdmin;
+  final VoidCallback onPermissions;
+  final VoidCallback? onRemove;
+
+  const _EmployeeCard({
+    required this.emp,
+    required this.isMe,
+    required this.isUserAdmin,
+    required this.onPermissions,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = context.l10n;
+    final String name = emp['name'].toString();
+    final String initial = name.isNotEmpty ? name.characters.first.toUpperCase() : '?';
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: colors.cardShadow,
+        border: isUserAdmin ? Border.all(color: colors.primary.withValues(alpha: 0.35)) : null,
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 21,
+            backgroundColor: isUserAdmin ? colors.primary.withValues(alpha: 0.15) : colors.outline.withValues(alpha: 0.3),
+            child: Text(
+              initial,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: isUserAdmin ? colors.primary : colors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    if (isUserAdmin)
+                      _Badge(
+                        label: l10n.employeesChiefAdminBadge,
+                        icon: Icons.workspace_premium_rounded,
+                        color: colors.primary,
+                      ),
+                    if (isMe) ...[
+                      const SizedBox(width: 4),
+                      _Badge(label: l10n.employeesMeBadge, color: colors.textSecondary),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  l10n.employeesIdEmailLabel(emp['id'].toString(), emp['email']),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.tune_rounded, size: 20),
+            color: colors.textSecondary,
+            tooltip: l10n.employeesPermissionsTooltip,
+            onPressed: onPermissions,
+          ),
+          if (onRemove != null)
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 20),
+              color: colors.error,
+              tooltip: l10n.employeesRemoveTooltip,
+              onPressed: onRemove,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final Color color;
+
+  const _Badge({required this.label, required this.color, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(6)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 3),
+          ],
+          Text(label, style: TextStyle(fontSize: 10.5, color: color, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+
+  const _EmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: colors.outline.withValues(alpha: 0.2), shape: BoxShape.circle),
+              child: Icon(Icons.group_off_rounded, color: colors.textSecondary, size: 30),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.textSecondary, fontSize: 13.5, height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AccessDeniedState extends StatelessWidget {
+  final String message;
+
+  const _AccessDeniedState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline_rounded, color: colors.textSecondary, size: 32),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.textSecondary, fontSize: 14, height: 1.4),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
