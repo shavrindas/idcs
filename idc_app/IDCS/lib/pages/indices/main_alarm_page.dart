@@ -24,7 +24,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // 💡 검색 대상 상태 변수 ('name', 'room', 'facility')
+  /// 검색 대상 상태 변수 ('name', 'room', 'facility').
   String _searchTarget = 'name';
 
   // 목록을 열었을 때 궁금한 것은 '지금 뭔가 울리고 있나'다. 끝난 알람 100여 건
@@ -56,7 +56,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        AppToast.error(context, context.l10n.permissionLoadFailed(describeApiError(context, e)));
+        AppToast.error(context, context.l10n.errorOccurred(describeApiError(context, e)));
       }
     } finally {
       if (mounted) {
@@ -73,7 +73,7 @@ class _MainAlarmPageState extends State<MainAlarmPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 💡 선택된 검색 기준(_searchTarget)별 필터링 조건
+    // 선택된 검색 기준(_searchTarget)별 필터링 조건
     final searchedAlarms = filterAlarmsByStatus(_alarms, _statusFilter).where((alarm) {
       final query = _searchQuery.toLowerCase();
       if (query.isEmpty) return true;

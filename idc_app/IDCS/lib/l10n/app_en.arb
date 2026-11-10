@@ -763,5 +763,9 @@
   "employeesPermAlarm": "Alarm management",
   "employeesPermissionsUpdated": "Permissions saved.",
   "actionRetry": "Retry",
-  "profileUserCodeCopied": "User code copied."
+  "profileUserCodeCopied": "User code copied.",
+  "postDeleteConfirmTitle": "Delete this post?",
+  "postDeleteConfirmBody": "A deleted post cannot be restored.",
+  "commentDeleteConfirmTitle": "Delete this comment?",
+  "commentDeleteConfirmBody": "A deleted comment cannot be restored."
 }
