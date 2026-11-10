@@ -1,184 +1,66 @@
-# Bu loyiha nima?
+# IDCS
 
-Bu — **muzlatgich omborlar** (sovutgich, cold storage) uchun kuzatuv tizimi. Ya'ni katta
-sovutgich omborlarda harorat, gaz bosimi, kompressor holati kabi narsalarni masofadan
-kuzatib turadigan va boshqaradigan dastur.
+냉동·냉장 창고의 온도, 가스 압력, 압축기 상태 등을 현장에서 실시간으로 수집하고,
+모바일 앱과 웹 콘솔을 통해 모니터링·제어할 수 있는 시스템이다.
 
-Oddiy tilda aytganda: omborda sensorlar (o'lchagichlar) turadi, ular haroratni o'lchab
-turadi, bu ma'lumot serverga yuboriladi, server uni saqlaydi, keyin siz uni telefon
-ilovasi yoki veb-sayt orqali ko'rasiz va kerak bo'lsa boshqarasiz (masalan sovutishni
-kuchaytirish).
-
----
-
-## Bu loyiha kimlar uchun?
-
-Uchta xil odam ishlatadi:
-
-1. **Ombor xodimlari** — telefon ilovasi orqali. Kunlik ishda haroratni tekshiradi,
-   muammo chiqsa signal (alarm) oladi, boshqa xodimlar bilan chat orqali gaplashadi,
-   hisobot (post) yozadi.
-2. **Administratorlar** — veb-sayt orqali. Qaysi ombor/xona/sensor borligini
-   sozlaydi, sensorlarga tushunarli nom beradi, grafiklarni guruhlaydi.
-3. **Tizim yaratuvchi jamoa (dasturchilar)** — hammasini qurayotgan va
-   rivojlantirayotgan jamoa. Siz ham shu jamoadasiz.
-
-Ya'ni bu — "ichki" dastur: tashqi mijozlar uchun emas, balki sovutgich ombor
-kompaniyasining o'z xodimlari va mijozlari (ombor egalari) ishlatishi uchun
-qurilgan.
-
----
-
-## Loyiha qismlari (5 ta bo'lim bor)
-
-Loyiha bitta katta papka ichida, lekin aslida 5 ta **mustaqil** kichik loyihadan iborat.
-Har birining o'z vazifasi bor:
-
-### 1. `idc_server` — Server (miya qismi)
-Bu — barcha ma'lumotlarni qabul qiluvchi, saqlaydigan va boshqa qismlarga beradigan
-markaziy dastur. Python tilida (FastAPI degan vosita bilan) yozilgan.
-
-O'xshatish: bu — restoranning **oshxonasi**. Hamma buyurtma shu yerga keladi, shu yerda
-tayyorlanadi.
-
-### 2. `idc_web` — Veb-sayt (kompyuter uchun boshqaruv paneli)
-Brauzerda ochiladigan sahifa. Admin va xodimlar shu orqali barcha omborlarni,
-xonalarni, grafiklarni ko'radi va boshqaradi. React degan texnologiyada yozilgan.
-
-O'xshatish: bu — restoranning **menejer kabineti**, hammasini yuqoridan kuzatib turadi.
-
-### 3. `idc_app` — Telefon ilovasi (Flutter)
-Xodimlar telefonda ishlatadigan ilova. Monitoring, chat, e'lonlar (board), signal
-(alarm) — hammasi shu yerda. **Siz aynan shu qism ustida ishlayapsiz** (`uiux` branch —
-dizaynni chiroyli va professional qilish).
-
-O'xshatish: bu — restoranning **ofitsiant qo'lidagi planshet**, u orqali tez-tez
-tekshirib turadi.
-
-### 4. `fac_server` va `DataIntercept` — Ombordagi kichik dastur
-Bular haqiqiy ombor ichida ishlaydigan dasturlar. Ular jismoniy sensorlarga (simlar,
-portlar orqali) ulanadi, ma'lumot o'qiydi va uni serverga (`idc_server`) yuboradi.
-Ikkalasi bir xil ishni qiladi, faqat sensorlarga ulanish usuli boshqacha (biri —
-to'g'ridan-to'g'ri kabel, ikkinchisi — internet orqali).
-
-O'xshatish: bu — oshxonaga mahsulot yetkazib beruvchi **yetkazib beruvchi**.
-
-### 5. `doker_list` — O'rnatish sozlamalari
-Bu kod emas, balki "hammasini serverga qanday joylashtirish kerak" degan
-sozlamalar to'plami (Docker degan vositadan foydalanadi).
-
----
-
-## Hammasi qanday ishlaydi (ma'lumot yo'li)
+## 데이터 흐름
 
 ```
-Ombordagi sensor (harorat o'lchagich)
-      ↓
-fac_server / DataIntercept  (ombordagi kichik dastur, ma'lumotni yig'adi)
-      ↓
-idc_server  (markaziy server, ma'lumotni saqlaydi)
-      ↓
-   ↙        ↘
-idc_web    idc_app
-(veb-sayt)  (telefon)
+현장 센서
+   │
+fac_server / DataIntercept   (창고 현장에서 센서 데이터 수집)
+   │
+idc_server_v2                (중앙 서버 — 데이터 저장 및 API 제공)
+   │                  │
+idc_app            웹 콘솔
+(모바일 앱)       (ServiceWeb webui)
 ```
 
-Ya'ni: sensor → ombordagi dastur → markaziy server → siz buni veb-saytda yoki
-telefon ilovasida ko'rasiz.
+## 사용자
 
----
+- **현장 직원** — 모바일 앱(`idc_app`)으로 모니터링, 차트 조회, 게시판, 채팅, 알람 확인.
+- **관리자** — 웹 콘솔로 시설/호실/센서 구성, 센서 매핑 및 이름 지정, 직원 권한 관리.
+- **개발팀** — 두 클라이언트가 공유하는 `idc_server_v2` 백엔드와 현장 수집기를 개발.
 
-## Qanday sahifalar bor va nima uchun?
+## 구성
 
-### 📱 Telefon ilovasi (`idc_app`)
-
-**Kirishdan oldingi sahifalar:**
-| Sahifa | Nima uchun |
+| 경로 | 설명 |
 |---|---|
-| Ochilish (Opening) | Ilova ochilganda birinchi ko'rinadigan logo ekrani |
-| Kirish (Login) | Email/parol bilan hisobga kirish |
-| Ro'yxatdan o'tish (Signup) | Yangi hisob ochish |
-| ID topish / Parol tiklash | Hisobni unutib qo'ysangiz tiklash |
+| `idc_server_v2` | FastAPI 백엔드. `Core`(공통 모델/DB), `CServer`(중앙 노드), `FServer`(시설 노드), `ServiceApp`(모바일 앱 API), `ServiceWeb`(웹 콘솔 API + React 프론트엔드)로 모듈이 나뉘며, 각 모듈은 환경 변수로 개별 활성화한다. |
+| `idc_app` | Flutter 모바일 앱. |
+| `fac_server` | 창고 현장 설치용 프로그램. 센서에 직접(케이블) 연결해 데이터를 읽어 중앙 서버로 전송. |
+| `DataIntercept` | `fac_server`와 같은 역할이나 네트워크(이더넷) 연결 방식을 사용하는 버전. |
+| `doker_list` | 운영 서버 배포용 Docker 설정 모음(DB, Nginx, Redis, 서버, 웹). |
+| `.legacy` | 이전 세대 서버/웹(`idc_server`, `idc_web`). 더 이상 개발하지 않으며 `idc_server_v2`로 대체됨. |
 
-**Kirgandan keyingi umumiy sahifalar** (hali qaysi omborni tanlamagan holatda):
-| Sahifa | Nima uchun |
-|---|---|
-| Bosh sahifa (Main Index) | Sizga bog'langan barcha omborlar ro'yxati — shu yerdan birini tanlaysiz |
-| Ombor qo'shish (Facility Register) | Yangi omborni kirish kodi bilan hisobingizga ulash |
-| Umumiy signal (Main Alarm) | Barcha omborlaringizdagi ogohlantirishlar bitta ro'yxatda |
-| Umumiy hisobotlar (Total Board) | Barcha omborlar bo'yicha yozilgan xabarlar |
-| Sozlamalar / Hisobni tahrirlash | Profil ma'lumotlarini o'zgartirish |
+## 기술 스택
 
-**Bitta omborni tanlagandan keyin** — pastda 5 ta doimiy tugma (bottom nav) chiqadi:
-| Sahifa | Nima uchun |
-|---|---|
-| Monitoring | Shu ombordagi xonalar ro'yxati; xonani tanlasangiz jonli harorat/holat va uzoqdan boshqarish tugmalari chiqadi |
-| Chart (Grafik) | Vaqt oralig'ini tanlab, harorat va boshqa ko'rsatkichlarni grafik shaklida ko'rish |
-| Hisobot (Board) | Shu omborga oid yozilgan xabarlar — yangi post yozish/o'qish/tahrirlash |
-| Messenger (Chat) | Shu ombor xodimlari o'rtasidagi chat xonalari |
-| Signal (Alarm) | Shu omborga oid ogohlantirishlar ro'yxati |
+- 백엔드: Python · FastAPI · PostgreSQL(TimescaleDB) · SQLAlchemy(async)
+- 웹 콘솔: React 19 · TypeScript · Vite · ECharts
+- 모바일 앱: Flutter · Dart
+- 현장 수집기: Python
 
-**Ichkariroq sahifalar** (ro'yxatdan bittasini bosganda ochiladi):
-| Sahifa | Nima uchun |
-|---|---|
-| Xona nazorat paneli | Bitta xonaning barcha ko'rsatkichlari + uzoqdan boshqarish tugmalari ("제어" belgili kartalar) |
-| Chat xonasi | Bitta suhbatning o'zi, ishtirokchilar ro'yxati bilan |
-| Post ko'rish/yozish/tahrirlash | Bitta xabarning to'liq matni va izohlar |
+## 서버 실행
 
-### 💻 Veb-sayt (`idc_web`)
+`idc_server_v2`는 모듈을 환경 변수로 켜고 끈다. 로컬에서 중앙+앱+웹을 한 번에 띄우는 예:
 
-Bu ko'proq **administrator** uchun mo'ljallangan:
-| Sahifa | Nima uchun |
-|---|---|
-| Kirish (Login) | Hammaga umumiy kirish sahifasi |
-| Bosh boshqaruv paneli (Main) | Admin uchun umumiy ko'rinish (hozircha oddiy, keyin kengayadi) |
-| Xarita/moslashtirish (Chart Mapping) | Qaysi sensorlar birgalikda bitta grafikda ko'rsatilishini sozlash |
-| Grafik ko'ruvchi (Chart Viewer) | Barcha foydalanuvchilar kira oladi — grafiklarni ko'rish |
-| Nomlash (Indexing) | Sensorlarga tushunarli ism va qisqa nom berish (masalan "H_COMP" o'rniga "Kompressor 1") |
-| Ombor/xona boshqaruvi (Facility Manager) | Eng katta boshqaruv sahifasi — yangi ombor, xona, sensor qo'shish/o'chirish/tahrirlash |
+```bash
+cd idc_server_v2
+ENABLE_CENTER_SERVER=true ENABLE_SERVICE_WEB=true ENABLE_SERVICE_APP=true \
+  uvicorn src.app:app --host 0.0.0.0 --port 8900
+```
 
----
+중앙 노드와 시설 노드를 분리해 띄우는 등의 시나리오는 `idc_server_v2/.testbat/`에
+예시 배치 파일이 있다.
 
-## Siz nima qilyapsiz?
+웹 콘솔 개발 서버:
 
-Siz `uiux` degan **branch** (bu — loyihaning alohida "nusxasi", asosiy kodga
-tegmasdan ishlash uchun) ustida ishlayapsiz. Vazifangiz: telefon ilovasi va
-veb-saytning **tashqi ko'rinishini** (dizayn, ranglar, tugmalar, joylashuv)
-zamonaviy va professional qilish. Backend (server) mantig'iga deyarli tegilmayapti
-— faqat "ko'rinish" o'zgaryapti.
+```bash
+cd idc_server_v2/src/module/ServiceWeb/webui/webservice
+npm run dev
+```
 
-`main` branch — bu asosiy, "ishlab turgan" versiya. Unga to'g'ridan-to'g'ri
-tegilmaydi, chunki xato ketsa hamma narsa buziladi. Shuning uchun alohida `uiux`
-branchda ishlanadi, keyin tekshirilib, faqat kerak bo'lganda asosiy versiyaga
-qo'shiladi.
+## 브랜치 전략
 
----
-
-## Ba'zi atamalar (tez-tez uchraydi)
-
-- **Backend / server** — ma'lumotni saqlaydigan va ishlov beradigan qism (ko'rinmaydi,
-  "orqa tomon").
-- **Frontend** — foydalanuvchi ko'radigan qism: veb-sayt yoki ilova ekranlari.
-- **API** — server bilan ilova/sayt o'rtasidagi "so'rov-javob" yo'li. Masalan ilova
-  "menga haroratlarni ber" deb so'raydi, server javob qaytaradi.
-- **Database (baza)** — barcha ma'lumotlar saqlanadigan katta jadval/ombor.
-- **WebSocket** — doimiy ochiq aloqa liniyasi, real vaqtda (jonli) ma'lumot kelib
-  turishi uchun ishlatiladi (masalan chat yoki jonli harorat ko'rsatkichi).
-- **Git branch** — loyihaning alohida "nusxasi", boshqalarga xalaqit bermasdan
-  o'zgartirish kiritish uchun.
-- **Commit** — qilingan o'zgarishni "saqlash nuqtasi" sifatida yozib qo'yish.
-- **Push** — o'z kompyuteringizdagi o'zgarishlarni GitHub'ga (internetga) yuklash.
-
----
-
-## Batafsil (texnik) ma'lumot kerak bo'lsa
-
-Loyihaning to'liq texnik tavsifi — qaysi papkada nima bor, qanday ishga tushiriladi
-— `CLAUDE.md` faylida yozilgan (shu papkaning ichida). Bu fayl ko'proq
-dasturchilar/AI yordamchi uchun batafsilroq yozilgan.
-
-## Bitiruv loyihasi hujjatlari kerak bo'lsa
-
-Universitet talab qiladigan rasmiy hujjatlar (시스템 정의서, 프로젝트관리계획서, 스프린트
-백로그 va h.k.) — har biri nima uchun ekanligi va IDCS uchun nima yozish kerakligi
-`BITIRUV_HUJJATLARI.md` faylida yozilgan.
+`main`은 운영 중인 기준 브랜치다. 기능·디자인 작업은 별도 브랜치에서 진행한 뒤
+검토를 거쳐 병합한다.
