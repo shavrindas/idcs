@@ -1172,18 +1172,6 @@ abstract class AppLocalizations {
   /// **'제어'**
   String get panelControlBadge;
 
-  /// No description provided for @panelInputHint.
-  ///
-  /// In ko, this message translates to:
-  /// **'입력'**
-  String get panelInputHint;
-
-  /// No description provided for @panelConfirm.
-  ///
-  /// In ko, this message translates to:
-  /// **'확인'**
-  String get panelConfirm;
-
   /// No description provided for @panelValueRequired.
   ///
   /// In ko, this message translates to:
@@ -2587,6 +2575,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A deleted comment cannot be restored.'**
   String get commentDeleteConfirmBody;
+
+  /// No description provided for @facilityUnlinkConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink this facility?'**
+  String get facilityUnlinkConfirmTitle;
+
+  /// No description provided for @facilityUnlinkConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You'll need the access code again to reconnect.'**
+  String get facilityUnlinkConfirmBody;
 }
 
 class _AppLocalizationsDelegate

@@ -104,7 +104,7 @@ class ChatRoomListBox extends StatelessWidget {
             ),
             title: Text(roomName, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: context.colors.textPrimary)),
             subtitle: Text(
-              room['last_message'],
+              room['last_message'] ?? '',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, color: context.colors.textSecondary),

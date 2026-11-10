@@ -14,7 +14,7 @@ export const Monogram: React.FC<{ size?: number }> = ({ size = 32 }) => (
       borderRadius: '50%',
       display: 'block',
       flexShrink: 0,
-      boxShadow: `0 ${size * 0.12}px ${size * 0.3}px -${size * 0.1}px rgba(46,107,239,0.4)`,
+      boxShadow: `0 ${size * 0.12}px ${size * 0.3}px -${size * 0.1}px color-mix(in srgb, var(--primary) 40%, transparent)`,
     }}
   />
 );

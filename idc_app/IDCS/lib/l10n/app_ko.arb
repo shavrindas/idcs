@@ -304,8 +304,6 @@
   },
   "roomPickerTitle": "호실 선택",
   "panelControlBadge": "제어",
-  "panelInputHint": "입력",
-  "panelConfirm": "확인",
   "panelValueRequired": "보낼 값을 먼저 입력하세요.",
   "panelNotConnected": "설비와 연결이 끊겨 있어 보낼 수 없습니다.",
   "panelCommandSent": "{item} 값을 보냈습니다. 설비가 반영하면 값이 바뀝니다.",
@@ -767,5 +765,7 @@
   "postDeleteConfirmTitle": "게시글을 삭제하시겠습니까?",
   "postDeleteConfirmBody": "삭제한 게시글은 되돌릴 수 없습니다.",
   "commentDeleteConfirmTitle": "댓글을 삭제하시겠습니까?",
-  "commentDeleteConfirmBody": "삭제한 댓글은 되돌릴 수 없습니다."
+  "commentDeleteConfirmBody": "삭제한 댓글은 되돌릴 수 없습니다.",
+  "facilityUnlinkConfirmTitle": "시설 연결을 해제하시겠습니까?",
+  "facilityUnlinkConfirmBody": "연결을 해제하면 다시 연결하려면 접근 코드가 필요합니다."
 }

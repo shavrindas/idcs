@@ -218,10 +218,12 @@ class ChatInputBox extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: Row(
               children: [
+                // File attachment isn't implemented yet; disabled rather than
+                // shown as tappable with no effect.
                 IconButton(
                   tooltip: context.l10n.chatAttach,
                   icon: Icon(Icons.add_circle_outline_rounded, color: context.colors.textSecondary),
-                  onPressed: () {},
+                  onPressed: null,
                 ),
                 Expanded(
                   child: TextField(
