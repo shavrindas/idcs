@@ -762,5 +762,6 @@
   "employeesPermBoard": "Board management",
   "employeesPermAlarm": "Alarm management",
   "employeesPermissionsUpdated": "Permissions saved.",
-  "actionRetry": "Retry"
+  "actionRetry": "Retry",
+  "profileUserCodeCopied": "User code copied."
 }

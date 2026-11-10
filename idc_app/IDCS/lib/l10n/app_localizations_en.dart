@@ -1383,4 +1383,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionRetry => 'Retry';
+
+  @override
+  String get profileUserCodeCopied => 'User code copied.';
 }

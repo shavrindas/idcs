@@ -10,6 +10,7 @@ import 'package:idcs/services/board/board_api_service.dart';
 import '../../services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/components/shared/app_toast.dart';
+import 'package:idcs/theme/app_theme.dart';
 
 class TotalBoardPage extends StatefulWidget {
   final String userId;
@@ -22,11 +23,14 @@ class TotalBoardPage extends StatefulWidget {
 class _TotalBoardPageState extends State<TotalBoardPage> {
   final TextEditingController _searchController = TextEditingController();
 
-  // 📌 1. 검색 필터 선택 상태값 추가
   String _selectedSearchType = 'all';
 
   List<PostModel> _posts = [];
   bool _isLoading = true;
+
+  /// Set when [_fetchPosts] fails, so an empty [_posts] list is shown as a
+  /// retryable error instead of the misleading "no posts" message.
+  String? _loadError;
   int _currentPage = 1;
   int _totalPages = 1;
   final int _limit = 10;
@@ -43,9 +47,11 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
     super.dispose();
   }
 
-  // 📌 2. BoardApiService 적용 및 검색 파라미터 전달
   Future<void> _fetchPosts() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final result = await BoardApiService.fetchIntegratedPosts(
         userId: widget.userId,
@@ -63,7 +69,9 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppToast.error(context, describeApiError(context, e));
+        final message = describeApiError(context, e);
+        AppToast.error(context, message);
+        setState(() => _loadError = message);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -93,7 +101,6 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 📌 3. 필수 전달 인자 누락 에러 수정 부분
             BoardSearchBox(
               searchController: _searchController,
               selectedSearchType: _selectedSearchType,
@@ -105,15 +112,37 @@ class _TotalBoardPageState extends State<TotalBoardPage> {
             ),
             const SizedBox(height: 16),
 
-            // Box #2 & #3
-            BoardListAndPagingBox(
-              posts: _posts,
-              isLoading: _isLoading,
-              currentPage: _currentPage,
-              totalPages: _totalPages,
-              onPageChanged: _handlePageChange,
-              onPostTapped: _handlePostTapped,
-            ),
+            if (!_isLoading && _loadError != null && _posts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        context.l10n.errorOccurred(_loadError!),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _fetchPosts,
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: Text(context.l10n.actionRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              BoardListAndPagingBox(
+                posts: _posts,
+                isLoading: _isLoading,
+                currentPage: _currentPage,
+                totalPages: _totalPages,
+                onPageChanged: _handlePageChange,
+                onPostTapped: _handlePostTapped,
+              ),
           ],
         ),
       ),

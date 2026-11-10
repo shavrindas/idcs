@@ -103,31 +103,47 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
   // 핸들러들
   const handleCreateFacility = async () => {
     if (!newFac.name || !newFac.access_code) return alert('시설명과 접근 코드는 필수입니다.');
-    await apiService.createFacilityAdmin(user.id, newFac);
-    alert('시설이 추가되었습니다.');
-    setNewFac({ name: '', access_code: '', start_date: '', end_date: '' });
-    loadFacilities();
+    try {
+      await apiService.createFacilityAdmin(user.id, newFac);
+      alert('시설이 추가되었습니다.');
+      setNewFac({ name: '', access_code: '', start_date: '', end_date: '' });
+      loadFacilities();
+    } catch (e: any) {
+      alert(e.message || '시설 생성 실패');
+    }
   };
 
   const handleUpdateFacility = async () => {
     if (!editFac) return;
-    await apiService.updateFacilityAdmin(editFac.id, editFac);
-    alert('시설 정보가 수정되었습니다.');
-    loadFacilities();
+    try {
+      await apiService.updateFacilityAdmin(editFac.id, editFac);
+      alert('시설 정보가 수정되었습니다.');
+      loadFacilities();
+    } catch (e: any) {
+      alert(e.message || '시설 수정 실패');
+    }
   };
 
   const handleCreateRoom = async () => {
     if (!selectedFacility || !newRoomName) return alert('호실명을 입력하세요.');
-    await apiService.createRoomAdmin(Number(selectedFacility), { name: newRoomName });
-    setNewRoomName('');
-    loadRoomsAndUsers(Number(selectedFacility));
+    try {
+      await apiService.createRoomAdmin(Number(selectedFacility), { name: newRoomName });
+      setNewRoomName('');
+      loadRoomsAndUsers(Number(selectedFacility));
+    } catch (e: any) {
+      alert(e.message || '호실 생성 실패');
+    }
   };
 
   const handleUpdateRoom = async () => {
     if (!selectedRoom) return;
-    await apiService.updateRoomAdmin(selectedRoom.id, selectedRoom);
-    alert('호실 정보 수정 완료');
-    loadRoomsAndUsers(Number(selectedFacility));
+    try {
+      await apiService.updateRoomAdmin(selectedRoom.id, selectedRoom);
+      alert('호실 정보 수정 완료');
+      loadRoomsAndUsers(Number(selectedFacility));
+    } catch (e: any) {
+      alert(e.message || '호실 수정 실패');
+    }
   };
 
   const handleDeleteRoom = async (roomId: number) => {
@@ -169,9 +185,13 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
 
   const handleDeleteRole = async (roleId: number, roomId: number) => {
     if (!window.confirm('포인트 롤을 삭제하시겠습니까?')) return;
-    await apiService.deletePointRoleAdmin(roleId);
-    if (selectedRole?.role_id === roleId) setSelectedRole(null);
-    loadRolesForRoom(roomId);
+    try {
+      await apiService.deletePointRoleAdmin(roleId);
+      if (selectedRole?.role_id === roleId) setSelectedRole(null);
+      loadRolesForRoom(roomId);
+    } catch (e: any) {
+      alert(e.message || '삭제 실패');
+    }
   };
 
   return (
@@ -309,7 +329,7 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
                             <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>({role.role_name})</span>
                           </div>
                           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: role.is_current ? '#2fae66' : 'var(--error)' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: role.is_current ? 'var(--success)' : 'var(--error)' }}>
                               {role.is_current ? 'Active' : 'Expired'}
                             </span>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.role_id, r.id); }} style={{ background: 'transparent', border: 'none', color: 'var(--error)', cursor: 'pointer', fontSize: 12 }}>✕</button>
@@ -348,7 +368,7 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', flex: 1, minHeight: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
                 <span className="label">선택 포인트롤 수정</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: selectedRole.is_current ? '#2fae66' : 'var(--error)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: selectedRole.is_current ? 'var(--success)' : 'var(--error)' }}>
                   {selectedRole.is_current ? '운영 중 (Active)' : '만료/숨김 (Inactive)'}
                 </span>
               </div>
