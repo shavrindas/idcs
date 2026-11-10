@@ -16,6 +16,7 @@ SCALE_MAPPING = {
     "1m": "1 minute",
     "5m": "5 minutes",
     "10m": "10 minutes",
+    "30m": "30 minutes",
     "1h": "1 hour"
 }
 
