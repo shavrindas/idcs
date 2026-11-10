@@ -13,6 +13,27 @@ type Employee = {
   can_manage_alarm?: boolean;
 };
 
+const Avatar: React.FC<{ name: string; highlight?: boolean }> = ({ name, highlight }) => (
+  <div
+    style={{
+      width: 38,
+      height: 38,
+      borderRadius: '50%',
+      flexShrink: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 14,
+      fontWeight: 800,
+      background: highlight ? 'var(--primary-bg)' : 'var(--bg)',
+      color: highlight ? 'var(--primary)' : 'var(--text-secondary)',
+      border: highlight ? '1px solid var(--primary-light)' : '1px solid var(--border)',
+    }}
+  >
+    {name.trim().charAt(0).toUpperCase() || '?'}
+  </div>
+);
+
 export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) => {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [selectedFacilityId, setSelectedFacilityId] = useState<number | ''>('');
@@ -130,32 +151,51 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     return 0;
   });
 
+  const selectedFacility = facilities.find(f => f.id === selectedFacilityId);
+
   return (
-    <div style={{ padding: 24, maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16, boxSizing: 'border-box' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.3 }}>직원 관리</h1>
+    <div style={{ padding: 24, maxWidth: 820, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16, boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div
+          style={{
+            width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--primary-bg)', color: 'var(--primary)', fontSize: 18,
+          }}
+        >
+          👥
+        </div>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.3 }}>직원 관리</h1>
+          {selectedFacility && (
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{selectedFacility.name}</p>
+          )}
+        </div>
+      </div>
 
       {isAdmin && (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <span className="label">시설 선택</span>
-          <select
-            className="input"
-            value={selectedFacilityId}
-            onChange={e => handleFacilitySelect(e.target.value ? Number(e.target.value) : '')}
-          >
-            <option value="">시설을 선택하세요</option>
-            {facilities.map(f => (
-              <option key={f.id} value={f.id}>{f.name}</option>
-            ))}
-          </select>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span className="label">시설 선택</span>
+            <select
+              className="input"
+              value={selectedFacilityId}
+              onChange={e => handleFacilitySelect(e.target.value ? Number(e.target.value) : '')}
+            >
+              <option value="">시설을 선택하세요</option>
+              {facilities.map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
 
           {selectedFacilityId !== '' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span className="label" style={{ flexShrink: 0 }}>수석 관리자</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <span className="label">수석 관리자</span>
               <select
                 className="input"
                 value={userAdminId || ''}
                 onChange={e => handleSetUserAdmin(e.target.value ? Number(e.target.value) : null)}
-                style={{ flex: 1 }}
               >
                 <option value="">지정 안 함</option>
                 {employees.map(emp => (
@@ -171,14 +211,14 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
         <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>불러오는 중…</p>
       ) : selectedFacilityId !== '' && (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input
               type="text"
               className="input"
               placeholder="직원 이름 검색..."
               value={searchKeyword}
               onChange={e => setSearchKeyword(e.target.value)}
-              style={{ flex: 1 }}
+              style={{ flex: '1 1 160px' }}
             />
             <input
               type="text"
@@ -186,34 +226,58 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
               placeholder="신규 직원 코드 입력"
               value={newUserCode}
               onChange={e => setNewUserCode(e.target.value)}
-              style={{ width: 180 }}
+              style={{ flex: '0 1 180px' }}
             />
-            <button className="btn btn-primary" onClick={handleInvite}>직원 추가</button>
+            <button className="btn btn-primary" onClick={handleInvite} style={{ flexShrink: 0 }}>
+              + 직원 추가
+            </button>
           </div>
 
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, color: 'var(--text-secondary)', fontSize: 13 }}>
-              <span>시설 직원 ({sortedEmployees.length})</span>
-              <span>해제</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span className="label">시설 직원 ({sortedEmployees.length})</span>
+              {sortedEmployees.length > 0 && <span className="label" style={{ paddingRight: 4 }}>해제</span>}
             </div>
 
             {loadingEmployees ? (
               <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>불러오는 중…</p>
+            ) : sortedEmployees.length === 0 ? (
+              <div
+                style={{
+                  textAlign: 'center', padding: '32px 16px', color: 'var(--text-secondary)', fontSize: 13,
+                  border: '1px dashed var(--border)', borderRadius: 12,
+                }}
+              >
+                {searchKeyword ? '검색 결과가 없습니다.' : '등록된 직원이 없습니다.'}
+              </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {sortedEmployees.map(emp => {
                   const isUserAdmin = emp.id === userAdminId;
                   return (
-                    <div key={emp.id} className="card" style={{
-                      display: 'flex', flexDirection: 'column', gap: 8,
-                      padding: '10px 16px',
-                      borderColor: isUserAdmin ? 'var(--primary)' : 'var(--border)',
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                          {isUserAdmin && <span className="chip">수석 관리자</span>}
-                          <span style={{ fontSize: 15, fontWeight: 700 }}>{emp.name}</span>
-                          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>({emp.email})</span>
+                    <div
+                      key={emp.id}
+                      style={{
+                        display: 'flex', flexDirection: 'column', gap: 10,
+                        padding: '14px 16px',
+                        borderRadius: 14,
+                        background: 'var(--surface)',
+                        border: `1px solid ${isUserAdmin ? 'var(--primary-light)' : 'var(--border)'}`,
+                        boxShadow: 'var(--shadow)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                          <Avatar name={emp.name} highlight={isUserAdmin} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 15, fontWeight: 700 }}>{emp.name}</span>
+                              {isUserAdmin && <span className="chip">★ 수석 관리자</span>}
+                            </div>
+                            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                              ID: {emp.id} · {emp.email}
+                            </span>
+                          </div>
                         </div>
 
                         {!isUserAdmin && (
@@ -221,14 +285,14 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
                             onClick={() => handleRemove(emp.id, emp.name)}
                             className="btn btn-ghost"
                             title="직원 해제"
-                            style={{ color: 'var(--error)', padding: '4px 8px' }}
+                            style={{ color: 'var(--error)', padding: '4px 8px', flexShrink: 0 }}
                           >
                             ✕
                           </button>
                         )}
                       </div>
 
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingLeft: 50 }}>
                         <button
                           className={`btn btn-toggle btn-sm ${emp.can_control_device ? 'on' : ''}`}
                           onClick={() => handleTogglePermission(emp, 'can_control_device')}
@@ -251,11 +315,6 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
                     </div>
                   );
                 })}
-                {sortedEmployees.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-secondary)', fontSize: 13 }}>
-                    {searchKeyword ? '검색 결과가 없습니다.' : '등록된 직원이 없습니다.'}
-                  </div>
-                )}
               </div>
             )}
           </div>
