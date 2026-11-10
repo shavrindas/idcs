@@ -1362,4 +1362,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get profileUserCodeCopied => '유저 코드가 복사되었습니다.';
+
+  @override
+  String get postDeleteConfirmTitle => '게시글을 삭제하시겠습니까?';
+
+  @override
+  String get postDeleteConfirmBody => '삭제한 게시글은 되돌릴 수 없습니다.';
+
+  @override
+  String get commentDeleteConfirmTitle => '댓글을 삭제하시겠습니까?';
+
+  @override
+  String get commentDeleteConfirmBody => '삭제한 댓글은 되돌릴 수 없습니다.';
 }

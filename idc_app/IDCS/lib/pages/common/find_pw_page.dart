@@ -81,8 +81,7 @@ class _FindPwPageState extends State<FindPwPage> {
       final res = await AuthApiService.requestPasswordCode(email);
       setState(() {
         _jwtToken = res['token'];
-        // 개발용 콘솔에만 찍히도록 백엔드에서 준 dev_code 표시 가능 (테스트용)
-        _box1Message = res['message'] + " (Test Code: ${res['dev_code']})";
+        _box1Message = res['message'];
         _currentStep = 2; // Box 2 열기
       });
       _startTimer();

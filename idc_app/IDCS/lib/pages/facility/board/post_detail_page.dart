@@ -90,6 +90,19 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   Future<void> _handleDeletePost() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.postDeleteConfirmTitle),
+        content: Text(context.l10n.postDeleteConfirmBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(context.l10n.actionCancel)),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(context.l10n.actionDelete)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       await BoardApiService.deletePost(postId: widget.postId, userId: widget.userId);
       if (mounted) {
@@ -123,6 +136,19 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   Future<void> _handleDeleteComment(int commentId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.commentDeleteConfirmTitle),
+        content: Text(context.l10n.commentDeleteConfirmBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(context.l10n.actionCancel)),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(context.l10n.actionDelete)),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       await BoardApiService.deleteComment(commentId: commentId, userId: widget.userId);
       _fetchPostDetail();

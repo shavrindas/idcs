@@ -30,6 +30,11 @@ class _PostEditPageState extends State<PostEditPage> {
   final List<int> _newImageIds = [];
   bool _isLoading = true;
 
+  /// Set when [_fetchOriginalPost] fails, so the page shows a retryable
+  /// error instead of spinning forever (the editor never initializes
+  /// without the original post, so [_quillController] stays null).
+  String? _loadError;
+
   /// 불러온 그대로의 내용. 사용자가 실제로 손댔는지 가리는 기준이다.
   String _originalTitle = '';
   String _originalBody = '';
@@ -48,6 +53,10 @@ class _PostEditPageState extends State<PostEditPage> {
   }
 
   Future<void> _fetchOriginalPost() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final decoded = await BoardApiService.fetchPostDetail(
         postId: widget.postId,
@@ -62,10 +71,9 @@ class _PostEditPageState extends State<PostEditPage> {
       _originalBody = _quillController?.document.toPlainText() ?? '';
     } catch (e) {
       if (mounted) {
-        AppToast.error(
-          context,
-          context.l10n.postSourceLoadFailed(describeApiError(context, e)),
-        );
+        final message = describeApiError(context, e);
+        AppToast.error(context, context.l10n.postSourceLoadFailed(message));
+        setState(() => _loadError = message);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -188,8 +196,33 @@ class _PostEditPageState extends State<PostEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _quillController == null) {
+    if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_quillController == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(context.l10n.postEditTitle)),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _loadError != null
+                    ? context.l10n.errorOccurred(_loadError!)
+                    : context.l10n.dataUnavailable,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _fetchOriginalPost,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(context.l10n.actionRetry),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return PopScope(

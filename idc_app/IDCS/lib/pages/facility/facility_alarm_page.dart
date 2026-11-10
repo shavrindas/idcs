@@ -25,7 +25,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // 💡 검색 필터 기준 상태 변수 추가 ('name' 또는 'room')
+  /// 검색 필터 기준 ('name' 또는 'room').
   String _searchTarget = 'name';
 
   // 목록을 열었을 때 궁금한 것은 '지금 뭔가 울리고 있나'다. 끝난 알람 100여 건
@@ -57,7 +57,7 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
       });
     } catch (e) {
       if (mounted) {
-        AppToast.error(context, context.l10n.permissionLoadFailed(describeApiError(context, e)));
+        AppToast.error(context, context.l10n.errorOccurred(describeApiError(context, e)));
       }
     } finally {
       if (mounted) {

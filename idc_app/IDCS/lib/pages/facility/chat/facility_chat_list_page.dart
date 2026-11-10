@@ -27,6 +27,10 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
   bool _isLoading = true;
   List<dynamic> _rooms = [];
 
+  /// Set when [_fetchRooms] fails, so an empty [_rooms] list is shown as a
+  /// retryable error instead of the misleading "no chat rooms" message.
+  String? _loadError;
+
   /// 방이 하나뿐일 때 그 방으로 한 번 넘어갔는지.
   bool _jumped = false;
 
@@ -37,7 +41,10 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
   }
 
   Future<void> _fetchRooms() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final res = await ChatApiService.getChatRooms(
         int.parse(widget.facilityId),
@@ -51,7 +58,11 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
         _maybeOpenOnlyRoom();
       }
     } catch (e) {
-      if (mounted) AppToast.error(context, describeApiError(context, e));
+      if (mounted) {
+        final message = describeApiError(context, e);
+        AppToast.error(context, message);
+        setState(() => _loadError = message);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -180,24 +191,47 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                     ChatRoomControlBox(onCreateGroup: _showCreateGroupDialog),
                     const SizedBox(height: 16),
                   ],
-                  ChatRoomListBox(
-                    rooms: _rooms,
-                    // 방 이름은 이 목록이 이미 들고 있다. 상세가 다시 묻지
-                    // 않도록 같이 넘긴다.
-                    onRoomTapped: (roomId) {
-                      final room = _rooms.firstWhere(
-                        (r) => r['room_id'] == roomId,
-                        orElse: () => const <String, dynamic>{},
-                      );
-                      context
-                          .push(
-                            '/chat_room/${widget.userId}/$roomId',
-                            extra: room['room_name'],
-                          )
-                          .then((_) => _fetchRooms());
-                    },
-                    onRoomLongPressed: _handleRoomLongPress,
-                  ),
+                  if (_loadError != null && _rooms.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              context.l10n.errorOccurred(_loadError!),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _fetchRooms,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: Text(context.l10n.actionRetry),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ChatRoomListBox(
+                      rooms: _rooms,
+                      // 방 이름은 이 목록이 이미 들고 있다. 상세가 다시 묻지
+                      // 않도록 같이 넘긴다.
+                      onRoomTapped: (roomId) {
+                        final room = _rooms.firstWhere(
+                          (r) => r['room_id'] == roomId,
+                          orElse: () => const <String, dynamic>{},
+                        );
+                        context
+                            .push(
+                              '/chat_room/${widget.userId}/$roomId',
+                              extra: room['room_name'],
+                            )
+                            .then((_) => _fetchRooms());
+                      },
+                      onRoomLongPressed: _handleRoomLongPress,
+                    ),
                 ],
               ),
             ),

@@ -83,7 +83,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
       final pastMessages = await ChatApiService.getRoomMessages(widget.roomId, widget.userId, keyword: keyword);
       if (mounted) setState(() => _messages = pastMessages);
     } catch (e) {
-      // 에러 로직 생략
+      if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
       if (mounted) setState(() => _isLoadingHistory = false);
     }

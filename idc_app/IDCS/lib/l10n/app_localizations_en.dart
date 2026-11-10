@@ -1386,4 +1386,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileUserCodeCopied => 'User code copied.';
+
+  @override
+  String get postDeleteConfirmTitle => 'Delete this post?';
+
+  @override
+  String get postDeleteConfirmBody => 'A deleted post cannot be restored.';
+
+  @override
+  String get commentDeleteConfirmTitle => 'Delete this comment?';
+
+  @override
+  String get commentDeleteConfirmBody => 'A deleted comment cannot be restored.';
 }

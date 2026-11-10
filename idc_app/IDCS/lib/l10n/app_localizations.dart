@@ -2563,6 +2563,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User code copied.'**
   String get profileUserCodeCopied;
+
+  /// No description provided for @postDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this post?'**
+  String get postDeleteConfirmTitle;
+
+  /// No description provided for @postDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A deleted post cannot be restored.'**
+  String get postDeleteConfirmBody;
+
+  /// No description provided for @commentDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this comment?'**
+  String get commentDeleteConfirmTitle;
+
+  /// No description provided for @commentDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A deleted comment cannot be restored.'**
+  String get commentDeleteConfirmBody;
 }
 
 class _AppLocalizationsDelegate
