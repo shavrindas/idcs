@@ -582,12 +582,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get panelControlBadge => '제어';
 
   @override
-  String get panelInputHint => '입력';
-
-  @override
-  String get panelConfirm => '확인';
-
-  @override
   String get panelValueRequired => '보낼 값을 먼저 입력하세요.';
 
   @override
@@ -1374,4 +1368,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commentDeleteConfirmBody => '삭제한 댓글은 되돌릴 수 없습니다.';
+
+  @override
+  String get facilityUnlinkConfirmTitle => '시설 연결을 해제하시겠습니까?';
+
+  @override
+  String get facilityUnlinkConfirmBody => '연결을 해제하면 다시 연결하려면 접근 코드가 필요합니다.';
 }

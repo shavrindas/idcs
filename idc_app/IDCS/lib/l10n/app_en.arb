@@ -304,8 +304,6 @@
   },
   "roomPickerTitle": "Choose a room",
   "panelControlBadge": "Control",
-  "panelInputHint": "Value",
-  "panelConfirm": "Set",
   "panelValueRequired": "Enter a value first.",
   "panelNotConnected": "Not connected to the equipment — nothing was sent.",
   "panelCommandSent": "Sent to {item}. The reading will change once the equipment applies it.",
@@ -767,5 +765,7 @@
   "postDeleteConfirmTitle": "Delete this post?",
   "postDeleteConfirmBody": "A deleted post cannot be restored.",
   "commentDeleteConfirmTitle": "Delete this comment?",
-  "commentDeleteConfirmBody": "A deleted comment cannot be restored."
+  "commentDeleteConfirmBody": "A deleted comment cannot be restored.",
+  "facilityUnlinkConfirmTitle": "Unlink this facility?",
+  "facilityUnlinkConfirmBody": "You'll need the access code again to reconnect."
 }

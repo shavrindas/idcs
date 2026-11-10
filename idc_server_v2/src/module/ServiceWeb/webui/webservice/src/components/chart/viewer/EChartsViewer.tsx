@@ -17,7 +17,7 @@ interface Props {
   onChartClick?: (type: 'post' | 'alarm', id: number | number[]) => void;
   onDataZoomPan?: (startVal: number, endVal: number) => void;
   loadedRange?: { start: number; end: number } | null;
-  // 💡 [신규] 반전된 상태를 출력할 BOOL 롤 ID 목록
+  /** 반전된 상태를 출력할 BOOL 롤 ID 목록. */
   invertedBools?: number[];
   /** y축 위아래로 둘 여백. 'auto' 는 구간 폭의 10%, 숫자는 그 값만큼, 0은 딱 맞춤. */
   yBuffer?: number | 'auto';
@@ -236,7 +236,6 @@ export const SubChartViewer: React.FC<Props> = ({ datasets, roleColors, showInfo
      
 
     (datasets || []).forEach((ds, index) => {
-      // 💡 [신규] 반전 설정 여부 확인
       const isInverted = invertedBools.includes(ds.role_id);
 
       const mappedData = (ds.data || [])

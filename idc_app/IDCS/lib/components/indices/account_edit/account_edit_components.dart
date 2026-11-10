@@ -297,7 +297,7 @@ class _PasswordChangeBoxState extends State<PasswordChangeBox> {
   }
 }
 
-/// 계정 탈퇴 박스. 되돌릴 수 없는 동작이라 다른 카드와 분리해 경고색으로 표시한다.
+/// Generic titled card wrapper reused by the edit sections above.
 class _EditCard extends StatelessWidget {
   final String title;
   final Widget child;

@@ -17,15 +17,6 @@ interface Props {
 
 // 명칭 및 약어 Fallback 헬퍼 함수
 type Language = 'ko' | 'en';
-// -------------- 구버전 
-// const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
-//   const roleName = roleInfo?.role_name || (fallbackId ? `Role ${fallbackId}` : '');
-//   const roleLabel = roleInfo ? (roleInfo.display_name || roleInfo.role_name) : `Role ${fallbackId}`;
-//   const badgeLabel = roleInfo ? (roleInfo.short_name || roleInfo.role_name) : `${fallbackId}`;
-
-//   return { roleName, roleLabel, badgeLabel };
-// };
-// -------------- 신버전
 const getRoleLabels = (roleInfo?: Role, fallbackId?: number, lang: Language = 'ko') => {
   const fallbackLabel = fallbackId ? `Role ${fallbackId}` : '';
   const fallbackBadge = fallbackId ? `${fallbackId}` : '';
@@ -181,7 +172,7 @@ export const RightPanel: React.FC<Props> = ({
       </div>
 
       <button onClick={onSaveGroup} className="btn btn-primary" style={{ height: 44 }}>
-        {selectedGroupId === 'new' ? '등록하기' : '수정하기 (Backend 연결 요망)'}
+        {selectedGroupId === 'new' ? '등록하기' : '수정하기 (준비 중)'}
       </button>
     </div>
   );

@@ -105,7 +105,20 @@ class FacilityListEditBox extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton(
-                    onPressed: () => onUnlink(fac['id']),
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: Text(context.l10n.facilityUnlinkConfirmTitle),
+                          content: Text(context.l10n.facilityUnlinkConfirmBody),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(context.l10n.actionCancel)),
+                            TextButton(onPressed: () => Navigator.pop(dialogContext, true), child: Text(context.l10n.facilityUnlink)),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) onUnlink(fac['id']);
+                    },
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 44),
                       foregroundColor: context.colors.error,
