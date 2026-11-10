@@ -135,21 +135,13 @@ class RoomGrid extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () => onRoomPressed(roomId),
-                child: Container(
-                  decoration: BoxDecoration(
-                    // Only faults get an outline; a drifting card is already tinted and
-                    // the extra yellow ring read as a rendering glitch.
-                    border: status.condition == RoomCondition.fault
-                        ? Border.all(color: accent.withValues(alpha: 0.55), width: 1.2)
-                        : null,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-                          child: Column(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+                        child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
@@ -251,7 +243,6 @@ class RoomGrid extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
           );
         },
       ),
