@@ -1391,11 +1391,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commentDeleteConfirmTitle => 'Delete this comment?';
 
   @override
-  String get commentDeleteConfirmBody => 'A deleted comment cannot be restored.';
+  String get commentDeleteConfirmBody =>
+      'A deleted comment cannot be restored.';
 
   @override
   String get facilityUnlinkConfirmTitle => 'Unlink this facility?';
 
   @override
-  String get facilityUnlinkConfirmBody => "You'll need the access code again to reconnect.";
+  String get facilityUnlinkConfirmBody =>
+      'You\'ll need the access code again to reconnect.';
 }
