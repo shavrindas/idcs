@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 클립보드 사용을 위해 추가
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/indices/account_edit/account_edit_components.dart';
 import 'package:idcs/components/indices/settings/settings_sections.dart';
@@ -29,7 +29,7 @@ class _PersonalPageState extends State<PersonalPage> {
 
   String _name = '';
   String _phone = '';
-  String _userCode = ''; // 👈 유저 코드 상태 추가
+  String _userCode = '';
 
 
   /// 소셜로만 가입한 계정은 비밀번호가 없어 변경 UI를 숨긴다.
@@ -203,7 +203,7 @@ class _PersonalPageState extends State<PersonalPage> {
                     onSave: _handleSaveProfile,
                     onCopyUserCode: _userCode.isEmpty ? null : () {
                       Clipboard.setData(ClipboardData(text: _userCode));
-                      AppToast.success(context, '유저 코드가 복사되었습니다.');
+                      AppToast.success(context, context.l10n.profileUserCodeCopied);
                     },
                   ),
                   const SizedBox(height: 16),

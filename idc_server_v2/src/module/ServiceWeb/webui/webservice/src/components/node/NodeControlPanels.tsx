@@ -94,8 +94,8 @@ export const NodeListTable: React.FC<TableProps> = ({ nodes, onRefresh, onEdit, 
                 <span
                   className="chip"
                   style={{
-                    background: isOnline ? 'rgba(29, 135, 90, 0.12)' : 'var(--bg)',
-                    color: isOnline ? '#1d875a' : 'var(--text-secondary)',
+                    background: isOnline ? 'color-mix(in srgb, var(--success) 12%, transparent)' : 'var(--bg)',
+                    color: isOnline ? 'var(--success)' : 'var(--text-secondary)',
                   }}
                 >
                   {node.status}

@@ -107,7 +107,7 @@ export const MainPage: React.FC<{ user: SessionUser }> = ({ user }) => {
         <div className="card" style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
           <span style={{ fontSize: 13 }}>
             백엔드 상태:{' '}
-            <strong style={{ color: syncOk ? '#1d875a' : 'var(--error)' }}>
+            <strong style={{ color: syncOk ? 'var(--success)' : 'var(--error)' }}>
               {syncOk ? '정상 연결됨' : '연결 끊김'}
             </strong>{' '}
             <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>({lastSync})</span>

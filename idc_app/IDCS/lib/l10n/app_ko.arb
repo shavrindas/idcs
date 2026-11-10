@@ -762,5 +762,6 @@
   "employeesPermBoard": "게시판 관리",
   "employeesPermAlarm": "알람 관리",
   "employeesPermissionsUpdated": "권한이 저장되었습니다.",
-  "actionRetry": "다시 시도"
+  "actionRetry": "다시 시도",
+  "profileUserCodeCopied": "유저 코드가 복사되었습니다."
 }

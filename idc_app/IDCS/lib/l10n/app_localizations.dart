@@ -2557,6 +2557,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'다시 시도'**
   String get actionRetry;
+
+  /// No description provided for @profileUserCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'User code copied.'**
+  String get profileUserCodeCopied;
 }
 
 class _AppLocalizationsDelegate

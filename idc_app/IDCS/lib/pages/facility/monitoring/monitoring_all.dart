@@ -60,6 +60,10 @@ class _MonitoringAllState extends State<MonitoringAll> {
 
   bool _isLoading = true;
 
+  /// Set when [_load] fails, so an empty [_facilities] list is shown as a
+  /// retryable error instead of the misleading "no facilities" message.
+  String? _loadError;
+
   /// 관리자는 웹 콘솔에서 시설을 관리하므로 코드 등록 버튼을 내보내지 않는다.
   bool _isAdmin = false;
 
@@ -94,7 +98,10 @@ class _MonitoringAllState extends State<MonitoringAll> {
   }
 
   Future<void> _load() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final role = await UserApiService.getUserRole(widget.userId);
       final facilities = await FacilityApiService.getFacilities(widget.userId);
@@ -149,7 +156,9 @@ class _MonitoringAllState extends State<MonitoringAll> {
       _maybeOpenOnlyFacility(facilities);
     } catch (e) {
       if (!mounted) return;
-      AppToast.error(context, describeApiError(context, e));
+      final message = describeApiError(context, e);
+      AppToast.error(context, message);
+      setState(() => _loadError = message);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -311,14 +320,33 @@ class _MonitoringAllState extends State<MonitoringAll> {
                   ),
                   Expanded(
                     child: facilities.isEmpty
-                        ? Center(
-                            child: Text(
-                              _query.isEmpty
-                                  ? context.l10n.overviewNoFacilities
-                                  : context.l10n.searchNoResults,
-                              style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
-                            ),
-                          )
+                        ? (_loadError != null
+                            ? Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      context.l10n.errorOccurred(_loadError!),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    OutlinedButton.icon(
+                                      onPressed: _load,
+                                      icon: const Icon(Icons.refresh_rounded, size: 18),
+                                      label: Text(context.l10n.actionRetry),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  _query.isEmpty
+                                      ? context.l10n.overviewNoFacilities
+                                      : context.l10n.searchNoResults,
+                                  style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+                                ),
+                              ))
                         : RefreshIndicator(
                             onRefresh: _load,
                             // 시설이 늘어나면 아래로 이어진다.
