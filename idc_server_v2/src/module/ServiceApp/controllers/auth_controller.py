@@ -91,24 +91,6 @@ def hash_code(code: str) -> str:
     return hashlib.sha256(code.encode()).hexdigest()
 
 # --- Endpoints ---
-@router.post("/signup/general", status_code=status.HTTP_201_CREATED)
-async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == user_in.email))
-    if result.scalars().first():
-        raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
-
-    new_user = User(
-        email=user_in.email,
-        password=user_in.password,
-        name=user_in.name,
-        phone_number=user_in.phone_number,
-        role=UserRole.USER 
-    )
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
-    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id}
-
 @router.post("/signup/social", status_code=status.HTTP_201_CREATED)
 async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depends(get_db)):
     if user_in.provider not in ["google", "apple"]:
@@ -234,3 +216,14 @@ async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(ge
     await db.commit()
     await db.refresh(new_user)
     return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id, "user_code": code}
+
+@router.delete("/withdraw", status_code=status.HTTP_200_OK)
+async def withdraw(req: WithdrawRequest, db: AsyncSession = Depends(get_db)):
+    """[앱 전용] 회원 탈퇴. 관련 시설/채팅/연동 정보는 외래 키 설정에 따라 함께 정리된다."""
+    user = (await db.execute(select(User).where(User.id == req.user_id))).scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    await db.delete(user)
+    await db.commit()
+    return {"message": "회원 탈퇴가 완료되었습니다."}
