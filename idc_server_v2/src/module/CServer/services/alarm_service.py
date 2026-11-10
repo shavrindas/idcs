@@ -221,3 +221,44 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
                 await msg.send_multicast_fcm(tokens, facility_name + "이상 발생", mapped_name)
             else:
                 await msg.send_multicast_fcm(tokens, facility_name + "이상 발생", f"{k}")
+
+async def facility_disconn_alert(facility_list: list[int], db: AsyncSession):
+    if not facility_list:
+        return
+
+    for f_id in facility_list:
+        # 1. 서브쿼리로 해당 시설에 매핑된 user_id 목록 추출
+        subquery_user_ids = (
+            select(FacilityUser.user_id)
+            .where(FacilityUser.facility_id == f_id)
+        )
+
+        # 2. 해당 유저들이거나 혹은 ADMIN인 유저들의 FCM 토큰 조회
+        stmt_token = (
+            select(UserFcmToken.fcm_token)
+            .join(User, User.id == UserFcmToken.user_id)
+            .where(
+                or_(
+                    UserFcmToken.user_id.in_(subquery_user_ids),
+                    User.role == UserRole.ADMIN
+                )
+            )
+            .distinct()
+        )
+        
+        result = await db.execute(stmt_token)
+        allresult = result.scalars().all()
+
+        # 3. 시설 이름 조회 쿼리
+        stmt_name = select(Facility.name).where(Facility.id == f_id)
+        f_nameres = await db.execute(stmt_name)
+        f_name = f_nameres.scalars().first() or f"ID: {f_id}"
+
+        # 4. 조회된 토큰들을 리스트로 모아서 멀티캐스트 알림 전송
+        tokens = [t for t in allresult if t]
+        if tokens:
+            await msg.send_multicast_fcm(
+                tokens, 
+                f"시설[{f_name}] 연결 단절", 
+                f"{f_name} 통신 이상"
+            )

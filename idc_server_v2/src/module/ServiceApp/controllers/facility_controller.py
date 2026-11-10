@@ -158,6 +158,45 @@ async def get_user_facilities(user_id: int, db: AsyncSession = Depends(get_db)):
         ]
     }
 
+@router.get("/{room_id}/room_roles")
+async def get_facility_roles(room_id: int, db: AsyncSession = Depends(get_db)):
+    '''해당 호실의 포인트 롤 목록 확인'''
+    result = await db.execute(select(PointRole)
+                              .where(PointRole.room_id == room_id))
+
+    roles = result.scalars().all()
+
+    if not roles:
+        raise HTTPException(status_code=404, detail="호실에 배정된 역할을 찾을 수 없습니다.")
+
+    return {
+        "roles": [
+            {"id": r.id, "facility_id": r.facility_id, "role_name": r.role_name}
+            for r in roles
+        ]
+    }
+
+@router.get("/{room_id}/room_roles_meta")
+async def get_facility_roles(room_id: int, db: AsyncSession = Depends(get_db)):
+    '''해당 호실의 포인트 롤 목록 확인'''
+    stmt = (
+        select(PointRole, PointRoleMetadata)
+        .outerjoin(PointRoleMetadata, PointRole.id == PointRoleMetadata.role_id) # 👈 inner join 대신 outerjoin 사용
+        .where(PointRole.room_id == room_id)
+    )
+    result = await db.execute(stmt)
+
+    roles = result.all()
+
+    if not roles:
+        raise HTTPException(status_code=404, detail="호실에 배정된 역할을 찾을 수 없습니다.")
+
+    return {
+        "roles": [
+            {"id": r.id, "facility_id": r.facility_id, "role_name": r.role_name, "display_name": m.display_name if m else None, "short_name": m.short_name if m else None}
+            for r, m in roles
+        ]
+    }
 
 @router.post("/{user_id}/register")
 async def register_facility(user_id: int, req: RegisterFacilityReq, db: AsyncSession = Depends(get_db)):
