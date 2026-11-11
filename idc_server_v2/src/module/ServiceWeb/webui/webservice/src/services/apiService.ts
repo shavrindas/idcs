@@ -266,4 +266,14 @@ export const apiService = {
     if (!res.ok) throw new Error((await res.json()).detail || '권한 수정 실패');
     return res.json();
   },
+
+  updateMaxUsersWeb: async (facId: number, userId: number, maxUsers: number) => {
+    const res = await fetch(`${BASE_URL}/facility-manager/facility/${facId}/max-users?user_id=${userId}`, {
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ max_users: maxUsers })
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || '최대 인원 수정 실패');
+    return res.json();
+  },
 };

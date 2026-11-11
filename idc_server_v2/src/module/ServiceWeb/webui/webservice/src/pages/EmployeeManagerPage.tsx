@@ -40,7 +40,10 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [userAdminId, setUserAdminId] = useState<number | null>(null);
-  const [maxUsers, setMaxUsers] = useState<number>(5); // [추가] 최대 할당 계정 수 (기본값 5)
+  
+  // 최대 할당 계정 수 상태
+  const [maxUsers, setMaxUsers] = useState<number>(5); 
+  const [inputMaxUsers, setInputMaxUsers] = useState<number | ''>(''); // Admin 입력창 동기화용
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [newUserCode, setNewUserCode] = useState('');
@@ -79,6 +82,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
       setEmployees([]);
       setUserAdminId(null);
       setMaxUsers(5);
+      setInputMaxUsers('');
     }
   };
 
@@ -88,7 +92,8 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
       const res = await apiService.getFacilityEmployeesWeb(facId, user.id);
       setEmployees(res.employees || []);
       setUserAdminId(res.user_admin_id);
-      setMaxUsers(res.max_users ?? 5); // [추가] API에서 최대 계정 수 반영
+      setMaxUsers(res.max_users ?? 5); 
+      setInputMaxUsers(res.max_users ?? 5); // 서버 값으로 입력창 동기화
     } catch (e: any) {
       alert(e.message || '직원 목록을 불러오지 못했습니다.');
       setEmployees([]);
@@ -97,7 +102,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     }
   };
 
-  // 일반 직원 수(정원 카운트 대상) 계산: ADMIN, DEVELOPER를 제외한 인원
+  // 일반 직원 수 계산: ADMIN, DEVELOPER를 제외한 인원 (정원 카운트 대상)
   const regularEmployeeCount = employees.filter(
     emp => emp.role !== 'ADMIN' && emp.role !== 'DEVELOPER'
   ).length;
@@ -139,6 +144,27 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     }
   };
 
+  // [신규] 최대 인원 변경 핸들러
+  const handleUpdateMaxUsers = async () => {
+    if (!selectedFacilityId || inputMaxUsers === '' || inputMaxUsers < 1) return;
+    
+    // 정원 축소 시 경고창 띄우기
+    if (Number(inputMaxUsers) < regularEmployeeCount) {
+      if (!window.confirm(`현재 인원(${regularEmployeeCount}명)보다 정원을 적게 설정하면 초과된 직원이 무작위로 방출됩니다. 계속하시겠습니까?`)) {
+        return;
+      }
+    }
+
+    try {
+      // apiService 에 updateMaxUsersWeb 가 선언되어 있어야 합니다.
+      await apiService.updateMaxUsersWeb(Number(selectedFacilityId), user.id, Number(inputMaxUsers));
+      alert('최대 할당 인원이 변경되었습니다.');
+      fetchEmployees(Number(selectedFacilityId));
+    } catch (e: any) {
+      alert(e.message || '인원 변경에 실패했습니다.');
+    }
+  };
+
   const handleTogglePermission = async (
     emp: Employee,
     field: 'can_control_device' | 'can_manage_board' | 'can_manage_alarm'
@@ -157,7 +183,6 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     }
   };
 
-  // 렌더링용 리스트 가공 (검색 필터링 및 user_admin 상단 고정)
   const filteredEmployees = employees.filter(emp =>
     emp.name.toLowerCase().includes(searchKeyword.toLowerCase())
   );
@@ -206,18 +231,40 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
           </div>
 
           {selectedFacilityId !== '' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span className="label">수석 관리자</span>
-              <select
-                className="input"
-                value={userAdminId || ''}
-                onChange={e => handleSetUserAdmin(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">지정 안 함</option>
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>{emp.name} (ID: {emp.id})</option>
-                ))}
-              </select>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                <span className="label">수석 관리자</span>
+                <select
+                  className="input"
+                  value={userAdminId || ''}
+                  onChange={e => handleSetUserAdmin(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">지정 안 함</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name} (ID: {emp.id})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* [신규] 최대 할당 인원 수정 UI */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 220 }}>
+                <span className="label">최대 할당 인원</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="number"
+                    min="1"
+                    className="input"
+                    value={inputMaxUsers}
+                    onChange={e => setInputMaxUsers(e.target.value === '' ? '' : Number(e.target.value))}
+                    style={{ flex: 1 }}
+                  />
+                  <button className="btn btn-primary" onClick={handleUpdateMaxUsers}>
+                    적용
+                  </button>
+                </div>
+              </div>
+
             </div>
           )}
         </div>
@@ -227,7 +274,6 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
         <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>불러오는 중…</p>
       ) : selectedFacilityId !== '' && (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* 직원 초대 및 검색 바 */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input
               type="text"
@@ -258,12 +304,11 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* 상단 인원 수 및 해제 헤더 영역 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, color: 'var(--text-secondary)', fontSize: 13, borderBottom: '1px solid var(--border)' }}>
               <span>
                 시설 직원 리스트 (
                 <strong style={{ color: isFull ? 'var(--error)' : 'var(--primary)' }}>
-                  {sortedEmployees.length}
+                  {regularEmployeeCount}
                 </strong>
                 {' '}/ {maxUsers} 명)
                 {isFull && <span style={{ color: 'var(--error)', marginLeft: 8, fontSize: 12 }}>※ 정원 초과</span>}
