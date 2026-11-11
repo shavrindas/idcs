@@ -40,6 +40,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [userAdminId, setUserAdminId] = useState<number | null>(null);
+  const [maxUsers, setMaxUsers] = useState<number>(5); // [추가] 최대 할당 계정 수 (기본값 5)
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [newUserCode, setNewUserCode] = useState('');
@@ -56,11 +57,9 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
   const loadAccessibleFacilities = async () => {
     setLoadingFacilities(true);
     try {
-      // API에서 내가 속한(또는 조회 가능한) 시설 목록을 가져옵니다.
       const res = await apiService.getUserFacilities(user.id);
       setFacilities(res.facilities || []);
 
-      // user_admin이라면 본인 시설을 바로 선택하도록 처리
       if (!isAdmin && res.facilities?.length > 0) {
         handleFacilitySelect(res.facilities[0].id);
       }
@@ -79,6 +78,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     } else {
       setEmployees([]);
       setUserAdminId(null);
+      setMaxUsers(5);
     }
   };
 
@@ -88,6 +88,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
       const res = await apiService.getFacilityEmployeesWeb(facId, user.id);
       setEmployees(res.employees || []);
       setUserAdminId(res.user_admin_id);
+      setMaxUsers(res.max_users ?? 5); // [추가] API에서 최대 계정 수 반영
     } catch (e: any) {
       alert(e.message || '직원 목록을 불러오지 못했습니다.');
       setEmployees([]);
@@ -96,15 +97,26 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     }
   };
 
+  // 일반 직원 수(정원 카운트 대상) 계산: ADMIN, DEVELOPER를 제외한 인원
+  const regularEmployeeCount = employees.filter(
+    emp => emp.role !== 'ADMIN' && emp.role !== 'DEVELOPER'
+  ).length;
+
+  const isFull = regularEmployeeCount >= maxUsers;
+
   const handleInvite = async () => {
     if (!selectedFacilityId || !newUserCode.trim()) return;
+    if (isFull) {
+      return alert(`최대 할당 인원(${maxUsers}명)에 도달하여 더 이상 직원을 추가할 수 없습니다.`);
+    }
+
     try {
       await apiService.inviteEmployeeWeb(Number(selectedFacilityId), user.id, newUserCode.trim());
       alert('직원이 추가되었습니다.');
       setNewUserCode('');
       fetchEmployees(Number(selectedFacilityId));
     } catch (e: any) {
-      alert(e.message);
+      alert(e.message || '직원 추가 실패');
     }
   };
 
@@ -114,7 +126,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
       await apiService.removeEmployeeWeb(Number(selectedFacilityId), targetUserId, user.id);
       fetchEmployees(Number(selectedFacilityId));
     } catch (e: any) {
-      alert(e.message);
+      alert(e.message || '직원 해제 실패');
     }
   };
 
@@ -123,13 +135,15 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
       await apiService.setUserAdminWeb(Number(selectedFacilityId), user.id, targetAdminId);
       fetchEmployees(Number(selectedFacilityId));
     } catch (e: any) {
-      alert(e.message);
+      alert(e.message || '수석 관리자 변경 실패');
     }
   };
 
-  const handleTogglePermission = async (emp: Employee, field: 'can_control_device' | 'can_manage_board' | 'can_manage_alarm') => {
+  const handleTogglePermission = async (
+    emp: Employee,
+    field: 'can_control_device' | 'can_manage_board' | 'can_manage_alarm'
+  ) => {
     const next = { ...emp, [field]: !emp[field] };
-    // 응답을 기다리지 않고 먼저 반영 — 실패하면 아래서 되돌린다.
     setEmployees(prev => prev.map(e => (e.id === emp.id ? next : e)));
     try {
       await apiService.updateEmployeePermissionsWeb(Number(selectedFacilityId), user.id, emp.id, {
@@ -144,7 +158,9 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
   };
 
   // 렌더링용 리스트 가공 (검색 필터링 및 user_admin 상단 고정)
-  const filteredEmployees = employees.filter(emp => emp.name.toLowerCase().includes(searchKeyword.toLowerCase()));
+  const filteredEmployees = employees.filter(emp =>
+    emp.name.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
     if (a.id === userAdminId) return -1;
     if (b.id === userAdminId) return 1;
@@ -211,6 +227,7 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
         <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>불러오는 중…</p>
       ) : selectedFacilityId !== '' && (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* 직원 초대 및 검색 바 */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input
               type="text"
@@ -223,20 +240,35 @@ export const EmployeeManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
             <input
               type="text"
               className="input"
-              placeholder="신규 직원 코드 입력"
+              placeholder={isFull ? '정원 초과로 추가 불가' : '신규 직원 코드 입력'}
               value={newUserCode}
               onChange={e => setNewUserCode(e.target.value)}
+              disabled={isFull}
               style={{ flex: '0 1 180px' }}
             />
-            <button className="btn btn-primary" onClick={handleInvite} style={{ flexShrink: 0 }}>
+            <button
+              className="btn btn-primary"
+              onClick={handleInvite}
+              disabled={isFull || !newUserCode.trim()}
+              title={isFull ? '최대 인원에 도달했습니다.' : undefined}
+              style={{ flexShrink: 0, opacity: isFull ? 0.6 : 1 }}
+            >
               + 직원 추가
             </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span className="label">시설 직원 ({sortedEmployees.length})</span>
-              {sortedEmployees.length > 0 && <span className="label" style={{ paddingRight: 4 }}>해제</span>}
+            {/* 상단 인원 수 및 해제 헤더 영역 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, color: 'var(--text-secondary)', fontSize: 13, borderBottom: '1px solid var(--border)' }}>
+              <span>
+                시설 직원 리스트 (
+                <strong style={{ color: isFull ? 'var(--error)' : 'var(--primary)' }}>
+                  {sortedEmployees.length}
+                </strong>
+                {' '}/ {maxUsers} 명)
+                {isFull && <span style={{ color: 'var(--error)', marginLeft: 8, fontSize: 12 }}>※ 정원 초과</span>}
+              </span>
+              {sortedEmployees.length > 0 && <span style={{ paddingRight: 4 }}>직원 해제</span>}
             </div>
 
             {loadingEmployees ? (
