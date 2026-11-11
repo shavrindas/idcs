@@ -49,8 +49,9 @@ class Facility(Base):
     name = Column(String(255), nullable=False)
     access_code = Column(String(50), unique=True, nullable=False, index=True)
 
-    # [신규] 시설당 1명 존재하는 수석 어드민 ID (Nullable 허용)
+    
     user_admin_id = Column(Integer, ForeignKey("user_table.id", ondelete="SET NULL"), nullable=True)
+    max_users = Column(Integer, nullable=False, default=5, server_default="5")
 
     is_active = Column(Boolean, nullable=False, default=True)
     start_date = Column(Date, nullable=True)

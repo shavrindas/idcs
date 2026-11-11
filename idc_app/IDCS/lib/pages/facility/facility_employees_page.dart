@@ -20,6 +20,7 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allEmployees = [];
   List<dynamic> _filteredEmployees = [];
+  int _maxUsers = 5; // [추가] 시설 최대 계정 수 (기본값 5)
   bool _isLoading = true;
   bool _hasAccess = false;
   // 목록 자체를 못 불러왔을 때만 채운다 — 권한 없음과는 다른 상태라 별도로 둔다.
@@ -47,7 +48,15 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
       final userRole = await UserApiService.getUserRole(widget.userId);
       final isSystemAdmin = (userRole == 'ADMIN' || userRole == 'DEVELOPER');
 
-      final employees = await FacilityApiService.getFacilityEmployees(widget.facilityId, widget.userId);
+      // [수정] Map 전체를 받아 employees 리스트와 max_users 분리
+      final responseData = await FacilityApiService.getFacilityEmployees(widget.facilityId, widget.userId);
+      
+      final employees = (responseData is Map<String, dynamic>)
+          ? (responseData['employees'] as List<dynamic>? ?? [])
+          : (responseData as List<dynamic>? ?? []);
+      final maxUsers = (responseData is Map<String, dynamic>)
+          ? (responseData['max_users'] as int? ?? 5)
+          : 5;
 
       bool isUserAdmin = false;
       if (!isSystemAdmin) {
@@ -64,6 +73,7 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
       if (mounted) {
         setState(() {
           _allEmployees = employees;
+          _maxUsers = maxUsers; // [추가]
           _hasAccess = canAccess;
         });
         _applySearch();
@@ -96,6 +106,17 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
   }
 
   Future<void> _showInviteDialog() async {
+    // 일반 직원 인원 수 검사 (ADMIN/DEVELOPER 제외)
+    final regularCount = _allEmployees.where((emp) {
+      final role = emp['role']?.toString();
+      return role != 'ADMIN' && role != 'DEVELOPER';
+    }).length;
+
+    if (regularCount >= _maxUsers) {
+      AppToast.error(context, "최대 할당 인원($_maxUsers명)에 도달하여 추가할 수 없습니다.");
+      return;
+    }
+
     final TextEditingController codeController = TextEditingController();
     final l10n = context.l10n;
     final colors = context.colors;
@@ -274,8 +295,7 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // 헤더: 아이콘 + 인원 수 요약. 탭에 처음 들어왔을 때
-                          // '여기가 어떤 화면인지'가 글자 크기만으로도 읽혀야 한다.
+                          // 헤더
                           Row(
                             children: [
                               Container(
@@ -297,6 +317,7 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
                           ),
                           const SizedBox(height: 16),
 
+                          // 검색 및 직원 추가 버튼
                           Row(
                             children: [
                               Expanded(
@@ -333,6 +354,24 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
                           ),
                           const SizedBox(height: 18),
 
+                          // [수정] 현재/최대 인원 및 해제 헤더 영역
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "시설 직원 (${_filteredEmployees.length} / $_maxUsers명)",
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary),
+                                ),
+                                Text(
+                                  "해제", 
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+
                           Expanded(
                             child: _filteredEmployees.isEmpty
                                 ? _EmptyState(
@@ -365,9 +404,6 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
 
 enum _DialogTone { normal, danger }
 
-/// Dialog's own icon + title row. The default `AlertDialog.title` is plain
-/// text; giving each confirm/edit dialog the same small icon badge makes the
-/// dialogs read as one family instead of ad-hoc popups.
 class _DialogHeader extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -433,8 +469,6 @@ class _PermissionSwitchRow extends StatelessWidget {
   }
 }
 
-/// One row card for an employee. Carries its own avatar/initial, name,
-/// role badges and the permission/remove actions.
 class _EmployeeCard extends StatelessWidget {
   final Map<String, dynamic> emp;
   final bool isMe;

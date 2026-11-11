@@ -51,19 +51,18 @@ class FacilityApiService {
     }
   }
 
-  static Future<List<dynamic>> getFacilityEmployees(String facilityId, String userId) async {
+  static Future> getFacilityEmployees(String facilityId, String userId) async {
     final url = Uri.parse('$_baseUrl/$facilityId/employees?user_id=$userId');
     final response = await ApiClient.get(url);
     
     if (response.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      return data['employees'] ?? [];
+      return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
       Map<String, dynamic> errorData = {};
       try {
         errorData = jsonDecode(utf8.decode(response.bodyBytes));
       } catch (_) {}
-      throw ApiException.rejected(errorData); // 상세 에러 전달
+      throw ApiException.rejected(errorData);
     }
   }
 
