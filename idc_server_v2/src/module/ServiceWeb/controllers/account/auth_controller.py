@@ -11,12 +11,21 @@ import jwt
 import os
 import hashlib
 import random
+import secrets
+import string
 from datetime import datetime, timedelta, timezone
 
 from src.config.database import get_db
 from src.module.Core.models.User import User, ExternalProvider, UserRole
 
 router = APIRouter(prefix="/auth", tags=["ServiceApp - Auth"])
+
+
+def generate_user_code() -> str:
+    """직원 초대 등에 쓰는 사람이 직접 불러주기 쉬운 짧은 코드. 알파벳 2자 + 숫자 4자."""
+    letters = ''.join(secrets.choice(string.ascii_uppercase) for _ in range(2))
+    digits = ''.join(secrets.choice(string.digits) for _ in range(4))
+    return letters + digits
 
 SECRET_KEY = "idcool_secret_key_v1" 
 ALGORITHM = "HS256"
@@ -104,17 +113,22 @@ async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(ge
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
 
+    code = generate_user_code()
+    while (await db.execute(select(User).where(User.user_code == code))).scalars().first():
+        code = generate_user_code()
+
     new_user = User(
         email=user_in.email,
         password=user_in.password,
         name=user_in.name,
         phone_number=user_in.phone_number,
-        role=UserRole.USER 
+        role=UserRole.USER,
+        user_code=code,
     )
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
-    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id}
+    return {"message": "일반 계정이 성공적으로 생성되었습니다.", "user_id": new_user.id, "user_code": code}
 
 @router.post("/signup/social", status_code=status.HTTP_201_CREATED)
 async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depends(get_db)):
@@ -124,9 +138,13 @@ async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depen
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
 
+    code = generate_user_code()
+    while (await db.execute(select(User).where(User.user_code == code))).scalars().first():
+        code = generate_user_code()
+
     new_user = User(
         email=user_in.email, password=None, name=user_in.name,
-        phone_number=user_in.phone_number, role=UserRole.USER
+        phone_number=user_in.phone_number, role=UserRole.USER, user_code=code
     )
     db.add(new_user)
     await db.commit()
@@ -257,11 +275,16 @@ async def signup_google(req: SignupGoogleRequest, db: AsyncSession = Depends(get
     if existing_user:
         raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
 
+    code = generate_user_code()
+    while (await db.execute(select(User).where(User.user_code == code))).scalars().first():
+        code = generate_user_code()
+
     new_user = User(
         email=email,
         password=None,
         name=info.get("name") or (email.split("@")[0] if email else "구글 사용자"),
         role=UserRole.USER,
+        user_code=code,
     )
     db.add(new_user)
     await db.commit()

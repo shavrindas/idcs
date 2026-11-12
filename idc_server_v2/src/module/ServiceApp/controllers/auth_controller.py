@@ -99,9 +99,13 @@ async def create_social_user(user_in: SocialUserCreate, db: AsyncSession = Depen
     if result.scalars().first():
         raise HTTPException(status_code=400, detail="이미 이메일로 가입된 내역이 있습니다. 일반 로그인 후 연동해주세요.")
 
+    code = generate_user_code()
+    while (await db.execute(select(User).where(User.user_code == code))).scalars().first():
+        code = generate_user_code()
+
     new_user = User(
         email=user_in.email, password=None, name=user_in.name,
-        phone_number=user_in.phone_number, role=UserRole.USER
+        phone_number=user_in.phone_number, role=UserRole.USER, user_code=code
     )
     db.add(new_user)
     await db.commit()
@@ -190,8 +194,10 @@ async def get_user_profile(user_id: int, db: AsyncSession = Depends(get_db)):
 
 
 def generate_user_code() -> str:
-    alphabet = string.ascii_uppercase + string.digits
-    return ''.join(secrets.choice(alphabet) for _ in range(8))
+    """직원 초대 등에 쓰는 사람이 직접 불러주기 쉬운 짧은 코드. 알파벳 2자 + 숫자 4자."""
+    letters = ''.join(secrets.choice(string.ascii_uppercase) for _ in range(2))
+    digits = ''.join(secrets.choice(string.digits) for _ in range(4))
+    return letters + digits
 
 @router.post("/signup/general", status_code=status.HTTP_201_CREATED)
 async def create_general_user(user_in: UserCreate, db: AsyncSession = Depends(get_db)):

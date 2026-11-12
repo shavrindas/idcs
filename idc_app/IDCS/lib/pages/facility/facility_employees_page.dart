@@ -22,6 +22,9 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
   List<dynamic> _filteredEmployees = [];
   bool _isLoading = true;
   bool _hasAccess = false;
+  // 시설마다 다른 최대 인원 수. 백엔드가 아직 안 내려주는 경우(앱 쪽 엔드포인트가
+  // 따라잡기 전)엔 null로 두고, 그때는 인원 수만 보여준다.
+  int? _maxUsers;
   // 목록 자체를 못 불러왔을 때만 채운다 — 권한 없음과는 다른 상태라 별도로 둔다.
   String? _loadError;
 
@@ -47,7 +50,9 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
       final userRole = await UserApiService.getUserRole(widget.userId);
       final isSystemAdmin = (userRole == 'ADMIN' || userRole == 'DEVELOPER');
 
-      final employees = await FacilityApiService.getFacilityEmployees(widget.facilityId, widget.userId);
+      final responseData = await FacilityApiService.getFacilityEmployees(widget.facilityId, widget.userId);
+      final employees = (responseData['employees'] as List<dynamic>?) ?? [];
+      final maxUsers = responseData['max_users'] as int?;
 
       bool isUserAdmin = false;
       if (!isSystemAdmin) {
@@ -64,6 +69,7 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
       if (mounted) {
         setState(() {
           _allEmployees = employees;
+          _maxUsers = maxUsers;
           _hasAccess = canAccess;
         });
         _applySearch();
@@ -289,7 +295,9 @@ class _FacilityEmployeesPageState extends State<FacilityEmployeesPage> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  l10n.employeesListTitle(_allEmployees.length),
+                                  _maxUsers != null
+                                      ? '${l10n.employeesListTitle(_allEmployees.length)} / $_maxUsers'
+                                      : l10n.employeesListTitle(_allEmployees.length),
                                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary, letterSpacing: -0.2),
                                 ),
                               ),

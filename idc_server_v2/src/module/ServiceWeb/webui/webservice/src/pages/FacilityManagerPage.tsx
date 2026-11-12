@@ -17,8 +17,14 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
   const [selectedRole, setSelectedRole] = useState<any | null>(null);
   const [editFac, setEditFac] = useState<any>(null);
 
-  // 생성 폼 상태
-  const [newFac, setNewFac] = useState({ name: '', access_code: '', start_date: '', end_date: '' });
+  // 생성 폼 상태 (max_users 기본값 5 적용)
+  const [newFac, setNewFac] = useState({ 
+    name: '', 
+    access_code: '', 
+    start_date: '', 
+    end_date: '',
+    max_users: 5 
+  });
   const [newRoomName, setNewRoomName] = useState('');
   const [newRole, setNewRole] = useState({
     role_name: '', display_name: '', short_name: '', data_type: 'TEMP',
@@ -55,7 +61,16 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     setExpandedRoomIds([]);
     setRoomRolesMap({});
     const target = facilities.find(f => f.id === facId);
-    setEditFac(target ? { ...target, start_date: target.start_date || '', end_date: target.end_date || '' } : null);
+    setEditFac(
+      target 
+        ? { 
+            ...target, 
+            start_date: target.start_date || '', 
+            end_date: target.end_date || '',
+            max_users: target.max_users ?? 5 
+          } 
+        : null
+    );
     if (facId) loadRoomsAndUsers(facId);
     else { setRooms([]); setUsers([]); }
   };
@@ -106,7 +121,7 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
     try {
       await apiService.createFacilityAdmin(user.id, newFac);
       alert('시설이 추가되었습니다.');
-      setNewFac({ name: '', access_code: '', start_date: '', end_date: '' });
+      setNewFac({ name: '', access_code: '', start_date: '', end_date: '', max_users: 5 });
       loadFacilities();
     } catch (e: any) {
       alert(e.message || '시설 생성 실패');
@@ -225,7 +240,6 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
       </div>
 
       {/* 2. 시설/호실/포인트롤 매니저 3단 레이아웃 */}
-      {/* 세 패널의 최소 너비 합이 창 너비보다 커지면 전체 페이지 대신 이 영역만 가로 스크롤되도록 함 */}
       <div style={{ display: 'flex', gap: 12, flex: 1, minHeight: 0, overflowX: 'auto' }}>
 
         {/* [1열] 시설 관리 패널 */}
@@ -250,6 +264,16 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
               <input type="date" value={editFac.start_date || ''} onChange={e => setEditFac({ ...editFac, start_date: e.target.value })} className="input" style={{ height: 36 }} />
               <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>(계약-숨김) 종료일</label>
               <input type="date" value={editFac.end_date || ''} onChange={e => setEditFac({ ...editFac, end_date: e.target.value })} className="input" style={{ height: 36 }} />
+              
+              {/* 시설 갱신: 할당 가능 최대 계정 수 입력 필드 */}
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>할당 가능 최대 계정 수 (Admin 제외)</label>
+              <input 
+                type="number" min="1" 
+                value={editFac.max_users || 5} 
+                onChange={e => setEditFac({ ...editFac, max_users: Number(e.target.value) })} 
+                className="input" style={{ height: 36 }} 
+              />
+              
               <button onClick={handleUpdateFacility} className="btn btn-primary" style={{ marginTop: 2 }}>시설 갱신</button>
             </div>
           ) : (
@@ -259,11 +283,23 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
               <input type="text" placeholder="접근 코드" value={newFac.access_code} onChange={e => setNewFac({ ...newFac, access_code: e.target.value })} className="input" style={{ height: 36 }} />
               <input type="date" value={newFac.start_date} onChange={e => setNewFac({ ...newFac, start_date: e.target.value })} className="input" style={{ height: 36 }} />
               <input type="date" value={newFac.end_date} onChange={e => setNewFac({ ...newFac, end_date: e.target.value })} className="input" style={{ height: 36 }} />
+              
+              {/* 신규 등록: 할당 가능 최대 계정 수 입력 필드 */}
+              <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>할당 가능 최대 계정 수</label>
+              <input 
+                type="number" min="1" 
+                value={newFac.max_users || 5} 
+                onChange={e => setNewFac({ ...newFac, max_users: Number(e.target.value) })} 
+                className="input" style={{ height: 36 }} 
+              />
+              
               <button onClick={handleCreateFacility} className="btn btn-primary" style={{ marginTop: 2 }}>시설 생성</button>
             </div>
           )}
 
-          <h5 style={{ margin: '6px 0 0 0', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>소속 유저 ({users.length}명)</h5>
+          <h5 style={{ margin: '6px 0 0 0', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)' }}>
+            소속 유저 ({users.length}명{editFac?.max_users ? ` / 최대 ${editFac.max_users}명` : ''})
+          </h5>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: 'var(--bg)', borderRadius: 10, padding: 8, fontSize: 12, border: '1px solid var(--border)' }}>
             {users.map(u => (
               <div key={u.id} style={{ borderBottom: '1px solid var(--border)', padding: '4px 0' }}>
@@ -381,20 +417,20 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
               <input type="text" placeholder="목표 수치 (target_value)" value={selectedRole.target_value || ''} onChange={e => setSelectedRole({ ...selectedRole, target_value: e.target.value })} className="input" style={{ height: 36 }} />
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <input
-                    type="text"
-                    placeholder="하한 (low_limit)"
-                    value={selectedRole.target_low_limit || ''}
-                    onChange={e => setSelectedRole({ ...selectedRole, target_low_limit: e.target.value })}
-                    className="input"
-                    style={{ flex: 1, minWidth: 0, height: 36 }}
+                  type="text"
+                  placeholder="하한 (low_limit)"
+                  value={selectedRole.target_low_limit || ''}
+                  onChange={e => setSelectedRole({ ...selectedRole, target_low_limit: e.target.value })}
+                  className="input"
+                  style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
                 <input
-                    type="text"
-                    placeholder="상한 (high_limit)"
-                    value={selectedRole.target_high_limit || ''}
-                    onChange={e => setSelectedRole({ ...selectedRole, target_high_limit: e.target.value })}
-                    className="input"
-                    style={{ flex: 1, minWidth: 0, height: 36 }}
+                  type="text"
+                  placeholder="상한 (high_limit)"
+                  value={selectedRole.target_high_limit || ''}
+                  onChange={e => setSelectedRole({ ...selectedRole, target_high_limit: e.target.value })}
+                  className="input"
+                  style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
               </div>
               <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>적용 시작 일시 (valid_from)</label>
@@ -418,22 +454,22 @@ export const FacilityManagerPage: React.FC<{ user: SessionUser }> = ({ user }) =
               <input type="text" placeholder="목표 수치 (target_value)" value={newRole.target_value} onChange={e => setNewRole({ ...newRole, target_value: e.target.value })} disabled={!selectedRoom} className="input" style={{ height: 36 }} />
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 <input
-                    type="text"
-                    placeholder="하한 수치"
-                    value={newRole.target_low_limit}
-                    onChange={e => setNewRole({ ...newRole, target_low_limit: e.target.value })}
-                    disabled={!selectedRoom}
-                    className="input"
-                    style={{ flex: 1, minWidth: 0, height: 36 }}
+                  type="text"
+                  placeholder="하한 수치"
+                  value={newRole.target_low_limit}
+                  onChange={e => setNewRole({ ...newRole, target_low_limit: e.target.value })}
+                  disabled={!selectedRoom}
+                  className="input"
+                  style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
                 <input
-                    type="text"
-                    placeholder="상한 수치"
-                    value={newRole.target_high_limit}
-                    onChange={e => setNewRole({ ...newRole, target_high_limit: e.target.value })}
-                    disabled={!selectedRoom}
-                    className="input"
-                    style={{ flex: 1, minWidth: 0, height: 36 }}
+                  type="text"
+                  placeholder="상한 수치"
+                  value={newRole.target_high_limit}
+                  onChange={e => setNewRole({ ...newRole, target_high_limit: e.target.value })}
+                  disabled={!selectedRoom}
+                  className="input"
+                  style={{ flex: 1, minWidth: 0, height: 36 }}
                 />
               </div>
               <label style={{ fontSize: 11, color: 'var(--text-secondary)' }}>적용 시작 일시 (valid_from)</label>

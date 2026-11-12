@@ -7,22 +7,24 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import date, datetime
 from src.config.database import get_db
-
 from src.module.ServiceWeb.controllers.facility.scope import visible_facility_ids, get_user_or_404
 from src.module.Core.models.User import User, UserRole
 from src.module.Core.models.Facility import Facility, FacilityUser
 from src.module.Core.models.Chat import ChatRoom, ChatParticipant, ChatRoomType
-
+import random
 
 router = APIRouter(prefix="/facility-manager", tags=["ServiceWeb - Facility Manager"])
 
 
+class UpdateMaxUsersReq(BaseModel):
+    max_users: int
 
 class FacilityCreateReq(BaseModel):
     name: str
     access_code: str
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+    max_users: Optional[int] = 5
 
 class FacilityUpdateReq(BaseModel):
     name: str
@@ -30,7 +32,8 @@ class FacilityUpdateReq(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     is_active: Optional[bool] = True
-
+    max_users: Optional[int] = 5
+    
 class RoomCreateReq(BaseModel):
     name: str
 
@@ -71,11 +74,12 @@ def _parse_dt(dt_str: Optional[str]) -> Optional[datetime]:
 async def get_all_facilities_admin(user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
     allowed = await visible_facility_ids(db, user_id)
     if allowed is None:
-        q = text("SELECT id, name, access_code, is_active, start_date, end_date FROM facilities_table ORDER BY id ASC")
+        # [수정] max_users 포함
+        q = text("SELECT id, name, access_code, is_active, start_date, end_date, max_users, user_admin_id FROM facilities_table ORDER BY id ASC")
         rows = (await db.execute(q)).fetchall()
     else:
         q = text("""
-            SELECT id, name, access_code, is_active, start_date, end_date FROM facilities_table
+            SELECT id, name, access_code, is_active, start_date, end_date, max_users, user_admin_id FROM facilities_table
             WHERE id = ANY(:ids) ORDER BY id ASC
         """)
         rows = (await db.execute(q, {"ids": list(allowed)})).fetchall()
@@ -107,13 +111,51 @@ async def create_facility_admin(req: FacilityCreateReq, user_id: int = Query(...
 async def update_facility_admin(facility_id: int, req: FacilityUpdateReq, db: AsyncSession = Depends(get_db)):
     q = text("""
         UPDATE facilities_table
-        SET name = :name, access_code = :access_code, start_date = :start_date, end_date = :end_date
+        SET name = :name, access_code = :access_code, start_date = :start_date, end_date = :end_date, max_users = :max_users
         WHERE id = :id
     """)
     await db.execute(q, {
         "id": facility_id, "name": req.name, "access_code": req.access_code,
-        "start_date": _parse_date(req.start_date), "end_date": _parse_date(req.end_date)
+        "start_date": _parse_date(req.start_date), "end_date": _parse_date(req.end_date),
+        "max_users": req.max_users
     })
+    
+    # [인원 감축 시 임의 방출 로직 시작]
+    # 1. ADMIN, DEVELOPER를 제외한 현재 시설 직원 수 파악
+    user_q = text("""
+        SELECT u.id FROM facility_users fu
+        JOIN user_table u ON fu.user_id = u.id
+        WHERE fu.facility_id = :fid AND u.role NOT IN ('ADMIN', 'DEVELOPER')
+    """)
+    current_users = (await db.execute(user_q, {"fid": facility_id})).fetchall()
+    current_count = len(current_users)
+    
+    if current_count > req.max_users:
+        excess = current_count - req.max_users
+        
+        # 2. user_admin_id 파악 (방출 대상에서 제외하기 위함)
+        fac_q = text("SELECT user_admin_id FROM facilities_table WHERE id = :fid")
+        fac_info = (await db.execute(fac_q, {"fid": facility_id})).fetchone()
+        user_admin_id = fac_info.user_admin_id if fac_info else None
+        
+        removable_ids = [r.id for r in current_users if r.id != user_admin_id]
+        
+        if removable_ids:
+            # 3. 방출 대상 무작위(Random) 선정
+            to_remove = random.sample(removable_ids, min(excess, len(removable_ids)))
+            
+            # 시설에서 매핑 삭제
+            await db.execute(text("DELETE FROM facility_users WHERE facility_id = :fid AND user_id = ANY(:uids)"), 
+                             {"fid": facility_id, "uids": to_remove})
+            
+            # 공식 채팅방에서도 삭제
+            chat_q = text("SELECT room_id FROM chatrooms WHERE facility_id = :fid AND type = 'FACILITY'")
+            chat_room = (await db.execute(chat_q, {"fid": facility_id})).fetchone()
+            if chat_room:
+                await db.execute(text("DELETE FROM chatparticipants WHERE room_id = :rid AND user_id = ANY(:uids)"), 
+                                 {"rid": chat_room.room_id, "uids": to_remove})
+    # [인원 감축 완료]
+    
     await db.commit()
     return {"status": "success"}
 
@@ -270,35 +312,56 @@ async def invite_user_by_code(facility_id: int, req: InviteUserReq, user_id: int
 
 
 @router.get("/facility/{facility_id}/employees")
-async def get_facility_employees_web(facility_id: int, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
-    
-    actor = await get_user_or_404(db, user_id)
+async def get_facility_employees(
+    facility_id: int, 
+    user_id: int = Query(...), 
+    db: AsyncSession = Depends(get_db)
+):
+    # 시설 및 권한 확인
     facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
     if not facility:
         raise HTTPException(status_code=404, detail="시설을 찾을 수 없습니다.")
 
+    actor = await get_user_or_404(db, user_id)
+    # 시스템 관리자(ADMIN, DEVELOPER) 또는 해당 시설의 user_admin_id인지 확인
     is_admin = actor.role in [UserRole.ADMIN, UserRole.DEVELOPER]
-    is_user_admin = (facility.user_admin_id == user_id)
-    
-    if not is_admin and not is_user_admin:
-        raise HTTPException(status_code=403, detail="권한이 없습니다.")
+    if not is_admin and facility.user_admin_id != user_id:
+        # 소속 유저 확인
+        fac_user = (await db.execute(
+            select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == user_id)
+        )).scalars().first()
+        if not fac_user:
+            raise HTTPException(status_code=403, detail="시설 접근 권한이 없습니다.")
 
-    q = text("""
-        SELECT u.id, u.name, u.email, u.user_code, u.role,
-               fu.can_control_device, fu.can_manage_board, fu.can_manage_alarm
-        FROM facility_users fu
-        JOIN user_table u ON fu.user_id = u.id
-        WHERE fu.facility_id = :fid
-          AND u.role NOT IN ('ADMIN', 'DEVELOPER')
-    """)
-    rows = (await db.execute(q, {"fid": facility_id})).fetchall()
+    # 직원 목록 쿼리
+    query = (
+        select(User, FacilityUser)
+        .join(FacilityUser, User.id == FacilityUser.user_id)
+        .where(FacilityUser.facility_id == facility_id)
+    )
+    result = (await db.execute(query)).all()
 
+    employees_data = []
+    for user_obj, fu in result:
+        employees_data.append({
+            "id": user_obj.id,
+            "name": user_obj.name,
+            "email": user_obj.email,
+            "role": user_obj.role.value if hasattr(user_obj.role, "value") else user_obj.role,
+            "is_user_admin": facility.user_admin_id == user_obj.id,
+            "can_control_device": fu.can_control_device,
+            "can_manage_board": fu.can_manage_board,
+            "can_manage_alarm": fu.can_manage_alarm,
+        })
+
+    # 반드시 'employees' 키와 'max_users' 키가 포함된 JSON Map 형태로 반환
     return {
         "status": "success",
+        "facility_id": facility_id,
         "user_admin_id": facility.user_admin_id,
-        "employees": [dict(r._mapping) for r in rows]
+        "max_users": facility.max_users if hasattr(facility, "max_users") and facility.max_users else 5,
+        "employees": employees_data
     }
-
 class EmployeePermissionReq(BaseModel):
     can_control_device: bool
     can_manage_board: bool
@@ -328,11 +391,17 @@ async def update_employee_permissions_web(facility_id: int, target_user_id: int,
     return {"status": "success"}
 
 @router.post("/facility/{facility_id}/employee")
-async def invite_employee_web(facility_id: int, req: InviteEmployeeReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+async def invite_employee_web(
+    facility_id: int, 
+    req: InviteEmployeeReq, 
+    user_id: int = Query(...), 
+    db: AsyncSession = Depends(get_db)
+):
     actor = await get_user_or_404(db, user_id)
     facility = (await db.execute(select(Facility).where(Facility.id == facility_id))).scalars().first()
     
-    if not facility: raise HTTPException(status_code=404, detail="시설 없음")
+    if not facility: 
+        raise HTTPException(status_code=404, detail="시설 없음")
     if actor.role not in [UserRole.ADMIN, UserRole.DEVELOPER] and facility.user_admin_id != user_id:
         raise HTTPException(status_code=403, detail="초대 권한이 없습니다.")
 
@@ -340,20 +409,45 @@ async def invite_employee_web(facility_id: int, req: InviteEmployeeReq, user_id:
     if not target_user:
         raise HTTPException(status_code=404, detail="유효하지 않은 유저 코드입니다.")
 
-    exist = (await db.execute(select(FacilityUser).where(FacilityUser.facility_id == facility_id, FacilityUser.user_id == target_user.id))).scalars().first()
+    exist = (await db.execute(
+        select(FacilityUser).where(
+            FacilityUser.facility_id == facility_id, 
+            FacilityUser.user_id == target_user.id
+        )
+    )).scalars().first()
     if exist:
         raise HTTPException(status_code=400, detail="이미 시설에 등록된 직원입니다.")
+
+    # 대상 유저가 관리자/개발자가 아닐 때만 계정 수 제한 체크
+    if target_user.role not in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        user_q = text("""
+            SELECT COUNT(u.id) FROM facility_users fu
+            JOIN user_table u ON fu.user_id = u.id
+            WHERE fu.facility_id = :fid AND u.role NOT IN ('ADMIN', 'DEVELOPER')
+        """)
+        current_count = (await db.execute(user_q, {"fid": facility_id})).scalar() or 0
+
+        if facility.max_users is not None and current_count >= facility.max_users:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"더 이상 유저를 추가할 수 없습니다. (최대 {facility.max_users}명)"
+            )
 
     # 매핑 및 채팅방 자동 등록
     db.add(FacilityUser(facility_id=facility_id, user_id=target_user.id))
     
-    chat_room = (await db.execute(select(ChatRoom).where(ChatRoom.facility_id == facility_id, ChatRoom.type == ChatRoomType.FACILITY))).scalars().first()
+    chat_room = (await db.execute(
+        select(ChatRoom).where(
+            ChatRoom.facility_id == facility_id, 
+            ChatRoom.type == ChatRoomType.FACILITY
+        )
+    )).scalars().first()
+    
     if chat_room:
         db.add(ChatParticipant(room_id=chat_room.room_id, user_id=target_user.id))
 
     await db.commit()
     return {"status": "success", "message": f"'{target_user.name}' 직원이 추가되었습니다."}
-
 
 @router.delete("/facility/{facility_id}/employee/{target_user_id}")
 async def remove_employee_web(facility_id: int, target_user_id: int, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
@@ -403,3 +497,50 @@ async def set_user_admin_web(facility_id: int, req: SetUserAdminReq, user_id: in
     facility.user_admin_id = req.user_admin_id
     await db.commit()
     return {"status": "success"}
+
+@router.put("/facility/{facility_id}/max-users")
+async def update_facility_max_users(facility_id: int, req: UpdateMaxUsersReq, user_id: int = Query(...), db: AsyncSession = Depends(get_db)):
+    """[Admin 전용] 특정 시설의 최대 직원 수 변경 및 정원 축소 시 초과 인원 무작위 방출"""
+    actor = await get_user_or_404(db, user_id)
+    if actor.role not in [UserRole.ADMIN, UserRole.DEVELOPER]:
+        raise HTTPException(status_code=403, detail="최대 인원 설정은 최고 관리자(Admin)만 가능합니다.")
+
+    # 1. 정원 업데이트
+    await db.execute(text("UPDATE facilities_table SET max_users = :mu WHERE id = :fid"), 
+                     {"mu": req.max_users, "fid": facility_id})
+
+    # 2. 현재 인원 조회 (ADMIN/DEVELOPER 제외)
+    user_q = text("""
+        SELECT u.id FROM facility_users fu
+        JOIN user_table u ON fu.user_id = u.id
+        WHERE fu.facility_id = :fid AND u.role NOT IN ('ADMIN', 'DEVELOPER')
+    """)
+    current_users = (await db.execute(user_q, {"fid": facility_id})).fetchall()
+    
+    # 3. 정원 초과 시 방출 로직 수행
+    if len(current_users) > req.max_users:
+        excess = len(current_users) - req.max_users
+        
+        fac_q = text("SELECT user_admin_id FROM facilities_table WHERE id = :fid")
+        fac_info = (await db.execute(fac_q, {"fid": facility_id})).fetchone()
+        user_admin_id = fac_info.user_admin_id if fac_info else None
+        
+        # 수석 어드민(user_admin)은 방출 대상에서 제외
+        removable_ids = [r.id for r in current_users if r.id != user_admin_id]
+        
+        if removable_ids:
+            # 초과 인원만큼 무작위 솎아내기
+            to_remove = random.sample(removable_ids, min(excess, len(removable_ids)))
+            
+            await db.execute(text("DELETE FROM facility_users WHERE facility_id = :fid AND user_id = ANY(:uids)"), 
+                             {"fid": facility_id, "uids": to_remove})
+            
+            # 채팅방 자동 퇴장
+            chat_q = text("SELECT room_id FROM chatrooms WHERE facility_id = :fid AND type = 'FACILITY'")
+            chat_room = (await db.execute(chat_q, {"fid": facility_id})).fetchone()
+            if chat_room:
+                await db.execute(text("DELETE FROM chatparticipants WHERE room_id = :rid AND user_id = ANY(:uids)"), 
+                                 {"rid": chat_room.room_id, "uids": to_remove})
+
+    await db.commit()
+    return {"status": "success", "message": "정원 설정이 완료되었습니다."}
