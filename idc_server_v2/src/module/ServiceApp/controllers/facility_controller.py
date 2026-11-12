@@ -14,6 +14,7 @@ from typing import Optional
 
 from src.config.database import get_db, AsyncSessionLocal
 from src.module.Core.models.Facility import Facility, FacilityUser, FacilityRoom
+from src.module.Core.models.Monitoring import PointRole, PointRoleMetadata
 from src.module.Core.models.User import User, UserRole
 from sqlalchemy import text
 from src.module.Core.models.Chat import ChatRoom, ChatParticipant, ChatRoomType

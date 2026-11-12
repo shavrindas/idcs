@@ -6,13 +6,13 @@ from sqlalchemy import or_
 from fastapi import Depends
 from src.config.database import get_db
 from src.module.Core.models.User import UserFcmToken, User, UserRole
-from src.module.Core.models.Facility import FacilityUser, Facility
-from src.module.Core.models.Monitoring import PointRole, Alarm
+from src.module.Core.models.Facility import FacilityUser, Facility, FacilityRoom
+from src.module.Core.models.Monitoring import PointRole, Alarm, PointRoleMetadata
 import time
 from datetime import datetime, timedelta, timezone
 import src.config.firebase as msg
-import src.module.CServer.services.alarm_map_service as AMM
 import json
+import asyncio
 
 #캐시 시간
 CACHE_TTL = 300
@@ -54,10 +54,12 @@ async def scan_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
     if not cache_entry or (now - cache_entry["updated_at"] > CACHE_TTL):
         async for db in get_db():
             role_result = await db.execute(
-                select(PointRole).where(PointRole.facility_id == facility_id)
+                    select(PointRole, PointRoleMetadata)
+                    .outerjoin(PointRoleMetadata, PointRole.id == PointRoleMetadata.role_id)
+                    .where(PointRole.facility_id == facility_id)
             )
             role_cache[facility_id] = {
-                "roles": role_result.scalars().all(),
+                "roles": role_result.all(),
                 "updated_at": now
             }
             #print(f"[DB 갱신] Facility {facility_id} PointRole 캐시 업데이트 완료")
@@ -101,6 +103,8 @@ async def scan_roles_asc_name(facility_id: int, db: AsyncSession = Depends(get_d
     roles = role_cache[cache_key]["roles"]
     return roles
 
+alarm_triggered: Dict = {}
+
 async def check_roles(facility_id: int, data_dict: dict, roles):
     if isinstance(data_dict, str):
         try:
@@ -117,7 +121,7 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
     async for db in get_db():
         candidate_alarms = []
         # 1. 알람 대상 조건 검사 및 발생 대상 선별
-        for role in roles:
+        for role, meta in roles:
             for k, v in data_dict.items():
                 if role.role_name in k and str(role.room_id) in k:
                     # 설비는 ON/OFF/NA 같은 문자열도 함께 올려보낸다. 숫자로
@@ -129,20 +133,21 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
                     if val is None:
                         continue
 
+                    target = _as_number(role.target_value)
                     low_limit = _as_number(role.target_low_limit)
                     high_limit = _as_number(role.target_high_limit)
+                    target = 0 if target is None else target
                     low_limit = float('-inf') if low_limit is None else low_limit
                     high_limit = float('inf') if high_limit is None else high_limit
-
-                    is_out_of_bounds = val <= low_limit or val >= high_limit
                     
+                    is_out_of_bounds = val <= target + low_limit or val >= target + high_limit
                     if is_out_of_bounds:
-                        candidate_alarms.append((k, role))
+                        candidate_alarms.append((k, role, meta))
 
         # 2. 이상이 발생한 항목이 있을 때만 단 1번의 DB 쿼리로 기존 알람들 조회 (In-Memory 매핑)
         if candidate_alarms:
             # 검사할 알람명 목록 추출
-            candidate_names = [AMM.Maped.get(k, k) for k, _ in candidate_alarms]
+            candidate_names = [k for k, _, _ in candidate_alarms]
 
             # IN 쿼리로 한 번에 조회
             stmt = select(Alarm).where(Alarm.alarm_name.in_(candidate_names))
@@ -150,20 +155,18 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
     
             # {alarm_name: Alarm 객체} 형태의 딕셔너리로 변환
             existing_alarms = {a.alarm_name: a for a in result.scalars().all()}
-
             now_utc = datetime.now(timezone.utc)
 
             # 3. end_time이 지나지 않은(진행 중인) 알람 필터링
-            for k, role in candidate_alarms:
-                am_name = AMM.Maped.get(k, k)
-                mapping = existing_alarms.get(am_name)
+            for k, role, meta in candidate_alarms:
+                mapping = existing_alarms.get(k)
 
                 # 이미 활성화되어 진행 중인 알람이면 제외
                 if mapping and mapping.end_time and (mapping.end_time >= now_utc):
                     continue
 
                 # 신규 발생 대상에 추가
-                triggered_alarms.append((k, role))
+                triggered_alarms.append((k, role, meta))
 
         # 2. 발생 대상이 있을 경우: DB에 Alarm 기록 저장 & FCM 토큰 조회
         # 관리자는 조건과 관계 없이 가능하게 해야 함
@@ -174,25 +177,7 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
             if fetched_name:
                 facility_name = fetched_name
 
-            now_time = datetime.now(timezone.utc)
-            
-            # 2-1. DB에 신규 Alarm 인스턴스 기록
-            for k, role in triggered_alarms:
-                am_name = AMM.Maped.get(k, k)
-                
-                new_alarm = Alarm(
-                    role_id=role.id,                         # matching PointRole의 PK ID
-                    alarm_name=am_name,                      # 알람명
-                    severity=getattr(role, 'severity', 'a'), # role에 설정된 severity 사용 (기본값 'a')
-                    timestamp=now_time,                      # 발생 시간
-                    is_triggered=True,                       # 알람 발동 상태
-                    reset_timeout_interval=timedelta(hours=24), # 기본 리셋 타임아웃
-                    end_time=now_time + timedelta(hours=24)  # end_time 기본 24시간 지정 예시
-                )
-                db.add(new_alarm)
-            
-            # DB 변경사항 적용
-            await db.commit()
+            now_time = datetime.now()
 
             # 2-2. FCM 토큰 1회 조회 (JOIN)
             stmt_token = (
@@ -211,16 +196,75 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
             tokens = list(res_token.scalars().all())
 
         break # get_db() 생성기 1회 수행 후 탈출
-    
-    # 3. FCM 푸시 알림 전송
-    if tokens and triggered_alarms:
+
+    #알람 스레시홀드 시작하기
+    for k, role, meta in triggered_alarms:
+        if k not in alarm_triggered:
+            alarm_triggered[k] = (datetime.now(), tokens, facility_name, meta.display_name if meta else None, role)
+
+    triggered_keys = {k for k, _, _ in triggered_alarms}
+
+    # 2. 알람이 없으면 스레시홀드 없애기
+    for k in list(alarm_triggered.keys()):
+        if k not in triggered_keys:
+            del alarm_triggered[k]
+
+    print(triggered_keys)
+
+    '''if tokens and triggered_alarms:
         print("알람 발생 : ", [k for k, _ in triggered_alarms])
-        for k, _ in triggered_alarms:
-            mapped_name = AMM.Maped.get(k)
+        for k, r in triggered_alarms:
+            mapped_name = r.display_name
             if mapped_name:
                 await msg.send_multicast_fcm(tokens, facility_name + "이상 발생", mapped_name)
             else:
-                await msg.send_multicast_fcm(tokens, facility_name + "이상 발생", f"{k}")
+                await msg.send_multicast_fcm(tokens, facility_name + "이상 발생", f"{k}")'''
+
+async def alarm_threshold_monitoring():
+    while True:
+        # 3. FCM 푸시 알림 전송
+        for k, t in alarm_triggered.items():
+            now_time = datetime.now()
+            if t[0] + timedelta(minutes=1) <= now_time:
+                mapped_name = t[3]
+                if mapped_name == "이상":
+                    mapped_name = "총괄 이상 발생"
+                async for db in get_db():
+                    try:
+                        stmt = select(FacilityRoom.name).where(FacilityRoom.id == t[4].room_id)
+                        facility_res = await db.execute(stmt)
+                        fetched_name = facility_res.scalar_one_or_none()
+                        if fetched_name:
+                            room_name = fetched_name
+                        
+                        # 1. FCM 푸시 알림 전송 예외 처리
+                        if mapped_name:
+                            await msg.send_multicast_fcm(t[1], f"{t[2]}/{room_name} 이상 발생", mapped_name)
+                        else:
+                            await msg.send_multicast_fcm(t[1], f"{t[2]}/{room_name} 이상 발생", f"{k}")
+                        print(f"FCM 알림 전송 성공: {k}")
+                    except Exception as fcm_err:
+                        print(f"FCM 전송 실패 [알람: {k}]: {fcm_err}")
+                    
+                    try:
+                        new_alarm = Alarm(
+                            role_id=t[4].id,                         # matching PointRole의 PK ID
+                            alarm_name=k,                      # 알람명
+                            severity=getattr(t[4], 'severity', 'a'), # role에 설정된 severity 사용 (기본값 'a')
+                            timestamp=now_time,                      # 발생 시간
+                            is_triggered=True,                       # 알람 발동 상태
+                            reset_timeout_interval=timedelta(hours=24), # 기본 리셋 타임아웃
+                            end_time=now_time + timedelta(hours=24)  # end_time 기본 24시간 지정 예시
+                        )
+                        db.add(new_alarm)
+                        await db.commit()
+                    except Exception as fcm_err:
+                        print(f"알람 풀링 실패 [알람: {k}]: {fcm_err}")
+                    
+                    break
+            
+
+        await asyncio.sleep(5)
 
 async def facility_disconn_alert(facility_list: list[int], db: AsyncSession):
     if not facility_list:
