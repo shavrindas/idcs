@@ -13,7 +13,7 @@ interface DebugConfig {
   user_pass?: string;
 }
 
-export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLogin }) => {
+export const LoginPage: React.FC<{ onLogin: (userData: any, expiryPolicy?: string) => void }> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDevTools, setShowDevTools] = useState(false);
@@ -47,7 +47,7 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
       role: loginRes.role,
     };
 
-    onLogin(user);
+    onLogin(user, loginRes.expiry_policy);
 
     if (user.role === 'ADMIN' || user.role === 'DEVELOPER') {
       navigate('/main');
@@ -56,10 +56,12 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
     }
   };
 
+  // 로그인 유지 여부를 물어보는 체크박스는 없다 — 콘솔을 쓰는 사람에게는
+  // 매번 다시 로그인하는 쪽이 더 귀찮으므로, 늘 "로그인 유지"로 요청한다.
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await finishLogin(await apiService.login(email, password), email);
+      await finishLogin(await apiService.login(email, password, true), email);
     } catch (error: any) {
       alert(error.message || '로그인 실패');
     }
@@ -69,11 +71,11 @@ export const LoginPage: React.FC<{ onLogin: (userData: any) => void }> = ({ onLo
     try {
       let res;
       try {
-        res = await apiService.loginGoogle(credential);
+        res = await apiService.loginGoogle(credential, true);
       } catch (error: any) {
         // 연동된 계정이 없을 때만(404) 같은 credential으로 가입을 시도한다.
         if (error.status !== 404) throw error;
-        res = await apiService.signupGoogle(credential);
+        res = await apiService.signupGoogle(credential, true);
       }
       await finishLogin(res, res.email ?? '');
     } catch (error: any) {

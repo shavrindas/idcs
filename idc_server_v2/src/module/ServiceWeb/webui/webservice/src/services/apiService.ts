@@ -31,13 +31,13 @@ export const apiService = {
    * 구글 로그인. Google 이 서명한 ID 토큰(credential)을 그대로 넘기고,
    * 진짜인지는 서버가 확인한다.
    */
-  loginGoogle: async (credential: string) => {
+  loginGoogle: async (credential: string, keepLogin: boolean = false) => {
     let res: Response;
     try {
       res = await fetch(`${BASE_URL}/auth/login/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ credential, keep_login: keepLogin }),
         signal: AbortSignal.timeout(8000),
       });
     } catch {
@@ -55,13 +55,13 @@ export const apiService = {
    * 구글 가입. loginGoogle이 404(연동된 계정 없음)를 돌려줬을 때만 호출해서,
    * 같은 credential으로 계정을 만들고 바로 로그인 상태로 돌려준다.
    */
-  signupGoogle: async (credential: string) => {
+  signupGoogle: async (credential: string, keepLogin: boolean = false) => {
     let res: Response;
     try {
       res = await fetch(`${BASE_URL}/auth/signup/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ credential, keep_login: keepLogin }),
         signal: AbortSignal.timeout(8000),
       });
     } catch {
