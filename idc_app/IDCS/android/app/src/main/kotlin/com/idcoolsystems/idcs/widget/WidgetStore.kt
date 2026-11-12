@@ -208,7 +208,5 @@ object WidgetStore {
         val ids = widgetIds(context)
         if (ids.isEmpty()) return
         RoomWidgetProvider.render(context, manager, ids)
-        @Suppress("DEPRECATION")
-        manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_grid)
     }
 }

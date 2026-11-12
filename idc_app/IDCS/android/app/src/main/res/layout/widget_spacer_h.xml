@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 격자 칸 사이 가로 여백. 위젯에는 plain View/Space를 못 쓰므로
+     (인플레이트 허용 목록에 없음) 빈 FrameLayout으로 대신한다. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="6dp"
+    android:layout_height="match_parent" />
