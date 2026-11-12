@@ -2546,6 +2546,12 @@ abstract class AppLocalizations {
   /// **'다시 시도'**
   String get actionRetry;
 
+  /// No description provided for @actionCopy.
+  ///
+  /// In ko, this message translates to:
+  /// **'복사'**
+  String get actionCopy;
+
   /// No description provided for @profileUserCodeCopied.
   ///
   /// In ko, this message translates to:

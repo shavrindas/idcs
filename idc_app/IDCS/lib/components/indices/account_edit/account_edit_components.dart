@@ -128,6 +128,21 @@ class _ProfileInfoBoxState extends State<ProfileInfoBox> {
         // 이미 로그인한 사용자에게 '연동하기'를 권하는 대신, 지금 어떤 방식으로
         // 로그인하는지만 알려준다.
         _InfoRow(icon: Icons.login_rounded, label: context.l10n.loginMethod, value: widget.loginMethod),
+        if (widget.userCode != null && widget.userCode!.isNotEmpty)
+          _InfoRow(
+            icon: Icons.qr_code_rounded,
+            label: context.l10n.employeesUserCodeLabel,
+            value: widget.userCode!,
+            trailing: widget.onCopyUserCode == null
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    tooltip: context.l10n.actionCopy,
+                    onPressed: widget.onCopyUserCode,
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+          ),
       ],
     );
   }
@@ -169,8 +184,9 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final Widget? trailing;
 
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow({required this.icon, required this.label, required this.value, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +207,7 @@ class _InfoRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          ?trailing,
         ],
       ),
     );

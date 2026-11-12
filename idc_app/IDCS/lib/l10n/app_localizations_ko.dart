@@ -1355,6 +1355,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get actionRetry => '다시 시도';
 
   @override
+  String get actionCopy => '복사';
+
+  @override
   String get profileUserCodeCopied => '유저 코드가 복사되었습니다.';
 
   @override
