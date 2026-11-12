@@ -53,7 +53,16 @@ class TemperatureReadout extends StatelessWidget {
 
     // Top-aligned: the °C sits up by the top of the digits like a superscript,
     // as on a panel readout, and the minus is placed at mid-height by padding.
-    return Row(
+    //
+    // The row below is a fixed font size, so on a narrow card (small phones,
+    // or a dense grid layout) a wide reading like "-123.4" can need more
+    // width than the card has — without this, that overflows past the
+    // card's edge instead of staying inside it. FittedBox scales the whole
+    // row down to fit the width it's given, and leaves it alone otherwise.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: Row(
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -99,6 +108,7 @@ class TemperatureReadout extends StatelessWidget {
           ),
         const SizedBox(width: trailingGap),
       ],
+      ),
     );
   }
 }

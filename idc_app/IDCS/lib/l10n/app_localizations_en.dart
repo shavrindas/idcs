@@ -1379,6 +1379,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionRetry => 'Retry';
 
   @override
+  String get actionCopy => 'Copy';
+
+  @override
   String get profileUserCodeCopied => 'User code copied.';
 
   @override
