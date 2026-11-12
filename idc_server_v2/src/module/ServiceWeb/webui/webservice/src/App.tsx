@@ -19,8 +19,8 @@ function App() {
   const [user, setUser] = useState<SessionUser | null>(loadSession);
   const [isUserAdminAnywhere, setIsUserAdminAnywhere] = useState(false);
 
-  const handleLogin = (next: SessionUser) => {
-    saveSession(next);
+  const handleLogin = (next: SessionUser, expiryPolicy?: string) => {
+    saveSession(next, expiryPolicy);
     setUser(next);
   };
 
