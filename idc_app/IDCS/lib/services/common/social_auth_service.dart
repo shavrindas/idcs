@@ -55,9 +55,8 @@ class SocialAuthService {
       try {
         if (!_isGoogleInitialized) {
           await googleSignIn.initialize(
-            // TODO: GCP에서 발급받은 유형의 클라이언트 ID
-            // 근데 IDCool 용으로 아니면 설민님 계정으로
-            serverClientId: '415636031627-asr8rncpbq4c5jkn3r44d0u65cf64lvb.apps.googleusercontent.com',
+            // idcs-project-e7dc3 (google-services.json과 같은 프로젝트)의 Web client.
+            serverClientId: '970517964763-nebrmk50o25aca6kqe8dcbhvp8bgonk6.apps.googleusercontent.com',
           );
           _isGoogleInitialized = true;
         }
