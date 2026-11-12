@@ -2,8 +2,9 @@
 <!-- 위젯 안 호실 카드 한 칸. 앱 카드와 같은 순서: 이름 → 온도 → 설정값·Δ → 상태 띠 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/item_root"
-    android:layout_width="match_parent"
+    android:layout_width="0dp"
     android:layout_height="wrap_content"
+    android:layout_weight="1"
     android:background="@drawable/widget_card_bg"
     android:orientation="vertical">
 

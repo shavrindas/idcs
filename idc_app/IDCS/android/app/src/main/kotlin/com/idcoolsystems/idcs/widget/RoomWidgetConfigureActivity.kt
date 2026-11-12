@@ -187,8 +187,6 @@ class RoomWidgetConfigureActivity : Activity() {
 
         val manager = AppWidgetManager.getInstance(this)
         RoomWidgetProvider.render(this, manager, intArrayOf(widgetId))
-        @Suppress("DEPRECATION")
-        manager.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_grid)
 
         setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
         finish()

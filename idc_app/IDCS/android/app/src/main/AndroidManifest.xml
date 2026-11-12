@@ -71,10 +71,6 @@
                 android:resource="@xml/room_widget_info"/>
         </receiver>
         <service
-            android:name=".widget.RoomWidgetService"
-            android:exported="false"
-            android:permission="android.permission.BIND_REMOTEVIEWS"/>
-        <service
             android:name=".widget.LiveWidgetService"
             android:exported="false"
             android:foregroundServiceType="specialUse">

@@ -68,17 +68,15 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <!-- listSelector 를 지운다: 안 지우면 launcher 가 칸을 누를 때마다 자기
-             테마의 하이라이트(기종에 따라 노란/주황색 포커스 사각형)를 덧그린다. -->
-        <GridView
-            android:id="@+id/widget_grid"
+        <!-- 칸 수만큼 열을 가진 GridView 대신, 행을 코드에서 직접 쌓는다 — 마지막
+             줄이 칸 수를 못 채울 때 그 줄의 칸을 넓혀 빈자리 없이 채우기 위해서다
+             (GridView는 칸 폭이 고정이라 그렇게 할 수 없다). ScrollView는 위젯에서
+             인플레이트가 금지된 뷰라 못 쓴다 — 칸 수가 최대 12라 안 쓰고도 된다. -->
+        <LinearLayout
+            android:id="@+id/widget_rows"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:drawSelectorOnTop="false"
-            android:horizontalSpacing="6dp"
-            android:listSelector="@android:color/transparent"
-            android:numColumns="2"
-            android:verticalSpacing="6dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
         <TextView
             android:id="@+id/widget_empty"
