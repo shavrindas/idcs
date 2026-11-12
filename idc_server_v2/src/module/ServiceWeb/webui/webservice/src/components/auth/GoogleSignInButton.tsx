@@ -11,7 +11,7 @@ import React, { useEffect, useRef, useState } from 'react';
  */
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  '970517964763-nebrmk50o25aca6kqe8dcbhvp8bgonk6.apps.googleusercontent.com';
+  '415636031627-asr8rncpbq4c5jkn3r44d0u65cf64lvb.apps.googleusercontent.com';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
 

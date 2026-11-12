@@ -2,10 +2,16 @@
 # 경로 : src/module/Core/models/Monitoring.py
 # 명세 : 포인트 역할, 각종 계측 로그 및 알람 관련 데이터 모델 정의
 # ===============================================================
+import enum
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, REAL, Interval, 
+    Column, Integer, String, Boolean, DateTime, REAL, Interval, Enum,
     ForeignKey, UniqueConstraint, Index, CHAR, func
 )
+
+class RoleType(str, enum.Enum):
+    TEMP = "TEMP"
+    BOOL = "BOOL"
+    STATIC = "STATIC"
 
 from sqlalchemy.orm import relationship
 from src.config.database import Base
@@ -37,6 +43,19 @@ class PointRole(Base):
             postgresql_where=(is_current == True)
         ),
     )
+
+class PointRoleMetadata(Base):
+    __tablename__ = "point_role_metadata"
+
+    role_id = Column(Integer, ForeignKey("point_role_table.id"), primary_key=True, nullable=False)
+    anydata = Column(Boolean, nullable=False)
+    data_type = Column(Enum(RoleType, name="data_type"), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+    display_name = Column(String(255), nullable=True)
+    short_name = Column(String(255), nullable=True)
+
+    # Relationship
+    role = relationship("PointRole")
 
 
 # ---------------------------------------------------------------

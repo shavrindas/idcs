@@ -3,7 +3,6 @@
 # 명세 : User 계정 및 권한(Role) 관련 데이터 모델 정의
 # ===============================================================
 import enum
-
 from sqlalchemy import Column, Integer, String, Enum, DateTime, func, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from src.config.database import Base
