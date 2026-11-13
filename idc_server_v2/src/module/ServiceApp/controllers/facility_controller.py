@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import text
+from sqlalchemy import text, update
 from pydantic import BaseModel
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
@@ -194,10 +194,44 @@ async def get_facility_roles(room_id: int, db: AsyncSession = Depends(get_db)):
 
     return {
         "roles": [
-            {"id": r.id, "facility_id": r.facility_id, "role_name": r.role_name, "display_name": m.display_name if m else None, "short_name": m.short_name if m else None}
+            {"id": r.id, "facility_id": r.facility_id, "role_name": r.role_name, "target_value": r.target_value, "target_low_limit": r.target_low_limit, "target_high_limit": r.target_high_limit, "is_current": r.is_current, "display_name": m.display_name if m else None, "short_name": m.short_name if m else None}
             for r, m in roles
         ]
     }
+
+class ToggleIsCurrentReq(BaseModel):
+    role_id: int
+    val: bool
+
+@router.post("/toggle_is_current")
+async def toggle_is_current(req: ToggleIsCurrentReq, db: AsyncSession = Depends(get_db)):
+    try:
+        # 1. 전달받은 특정 role_id로 레코드 조회
+        result = await db.execute(
+            select(PointRole).where(PointRole.id == req.role_id)
+        )
+        target_role = result.scalars().first()
+        
+        if not target_role:
+            raise HTTPException(status_code=404, detail="해당 포인트 롤을 찾을 수 없습니다.")
+
+        # 2. 요청받은 val 값으로 특정 항목만 독립적으로 변경
+        target_role.is_current = req.val
+        
+        await db.commit()
+        await db.refresh(target_role)
+
+        return {
+            "success": True,
+            "message": f"is_current가 {target_role.is_current}로 변경되었습니다.",
+            "id": target_role.id,
+            "is_current": target_role.is_current
+        }
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"토글 처리 중 오류 발생: {str(e)}")
+
 
 @router.post("/{user_id}/register")
 async def register_facility(user_id: int, req: RegisterFacilityReq, db: AsyncSession = Depends(get_db)):

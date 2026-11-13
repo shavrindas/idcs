@@ -20,6 +20,7 @@ CACHE_TTL = 300
 role_cache: dict[int, list] = {}
 
 def invalidate_role_cache(facility_id: int):
+    role_cache.pop(facility_id, None)
     role_cache.pop(f"{facility_id}_list", None)
     role_cache.pop(f"{facility_id}_dict", None)
 
@@ -57,6 +58,7 @@ async def scan_roles(facility_id: int, db: AsyncSession = Depends(get_db)):
                     select(PointRole, PointRoleMetadata)
                     .outerjoin(PointRoleMetadata, PointRole.id == PointRoleMetadata.role_id)
                     .where(PointRole.facility_id == facility_id)
+                    .where(PointRole.is_current == True)
             )
             role_cache[facility_id] = {
                 "roles": role_result.all(),
@@ -141,6 +143,7 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
                     high_limit = float('inf') if high_limit is None else high_limit
                     
                     is_out_of_bounds = val <= target + low_limit or val >= target + high_limit
+
                     if is_out_of_bounds:
                         candidate_alarms.append((k, role, meta))
 
@@ -209,8 +212,6 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
         if k not in triggered_keys:
             del alarm_triggered[k]
 
-    print(triggered_keys)
-
     '''if tokens and triggered_alarms:
         print("알람 발생 : ", [k for k, _ in triggered_alarms])
         for k, r in triggered_alarms:
@@ -222,47 +223,49 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
 
 async def alarm_threshold_monitoring():
     while True:
-        # 3. FCM 푸시 알림 전송
-        for k, t in alarm_triggered.items():
-            now_time = datetime.now()
-            if t[0] + timedelta(minutes=1) <= now_time:
-                mapped_name = t[3]
-                if mapped_name == "이상":
-                    mapped_name = "총괄 이상 발생"
-                async for db in get_db():
-                    try:
-                        stmt = select(FacilityRoom.name).where(FacilityRoom.id == t[4].room_id)
-                        facility_res = await db.execute(stmt)
-                        fetched_name = facility_res.scalar_one_or_none()
-                        if fetched_name:
-                            room_name = fetched_name
+        try:
+            # 3. FCM 푸시 알림 전송
+            for k, t in list(alarm_triggered.items()):
+                now_time = datetime.now()
+                if t[0] + timedelta(minutes=1) <= now_time:
+                    mapped_name = t[3]
+                    if mapped_name == "이상":
+                        mapped_name = "총괄 이상 발생"
+                    async for db in get_db():
+                        try:
+                            stmt = select(FacilityRoom.name).where(FacilityRoom.id == t[4].room_id)
+                            facility_res = await db.execute(stmt)
+                            fetched_name = facility_res.scalar_one_or_none()
+                            if fetched_name:
+                                room_name = fetched_name
+                            
+                            # 1. FCM 푸시 알림 전송 예외 처리
+                            if mapped_name:
+                                await msg.send_multicast_fcm(t[1], f"{t[2]}/{room_name} 이상 발생", mapped_name)
+                            else:
+                                await msg.send_multicast_fcm(t[1], f"{t[2]}/{room_name} 이상 발생", f"{k}")
+                            print(f"FCM 알림 전송 성공: {k}")
+                        except Exception as fcm_err:
+                            print(f"FCM 전송 실패 [알람: {k}]: {fcm_err}")
                         
-                        # 1. FCM 푸시 알림 전송 예외 처리
-                        if mapped_name:
-                            await msg.send_multicast_fcm(t[1], f"{t[2]}/{room_name} 이상 발생", mapped_name)
-                        else:
-                            await msg.send_multicast_fcm(t[1], f"{t[2]}/{room_name} 이상 발생", f"{k}")
-                        print(f"FCM 알림 전송 성공: {k}")
-                    except Exception as fcm_err:
-                        print(f"FCM 전송 실패 [알람: {k}]: {fcm_err}")
-                    
-                    try:
-                        new_alarm = Alarm(
-                            role_id=t[4].id,                         # matching PointRole의 PK ID
-                            alarm_name=k,                      # 알람명
-                            severity=getattr(t[4], 'severity', 'a'), # role에 설정된 severity 사용 (기본값 'a')
-                            timestamp=now_time,                      # 발생 시간
-                            is_triggered=True,                       # 알람 발동 상태
-                            reset_timeout_interval=timedelta(hours=24), # 기본 리셋 타임아웃
-                            end_time=now_time + timedelta(hours=24)  # end_time 기본 24시간 지정 예시
-                        )
-                        db.add(new_alarm)
-                        await db.commit()
-                    except Exception as fcm_err:
-                        print(f"알람 풀링 실패 [알람: {k}]: {fcm_err}")
-                    
-                    break
-            
+                        try:
+                            new_alarm = Alarm(
+                                role_id=t[4].id,                         # matching PointRole의 PK ID
+                                alarm_name=k,                      # 알람명
+                                severity=getattr(t[4], 'severity', 'a'), # role에 설정된 severity 사용 (기본값 'a')
+                                timestamp=now_time,                      # 발생 시간
+                                is_triggered=True,                       # 알람 발동 상태
+                                reset_timeout_interval=timedelta(hours=24), # 기본 리셋 타임아웃
+                                end_time=now_time + timedelta(hours=24)  # end_time 기본 24시간 지정 예시
+                            )
+                            db.add(new_alarm)
+                            await db.commit()
+                        except Exception as fcm_err:
+                            print(f"알람 풀링 실패 [알람: {k}]: {fcm_err}")
+                        
+                        break
+        except Exception as loop_err:
+            print(f"모니터링 루프 에러 발생: {loop_err}")
 
         await asyncio.sleep(5)
 

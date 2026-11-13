@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'api_client.dart';
 import '../../main.dart';
 
@@ -63,19 +64,35 @@ class FacilityApiService {
     }
   }
 
-  static Future<List<dynamic>> getFacilityEmployees(String facilityId, String userId) async {
+  //시설 포인트롤 알람 토글
+  static Future<String> toggleIsCurrent(String roleId, bool val) async {
+    final url = Uri.parse('$_baseUrl/toggle_is_current');
+    final response = await ApiClient.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'role_id': roleId, 'val': val}),
+    );
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (response.statusCode == 200) return data['message'];
+    throw ApiException.rejected(data);
+  }
+
+  // ---------------------------------------------------------
+  // 직원 관리 API
+  // ---------------------------------------------------------
+
+  static Future getFacilityEmployees(String facilityId, String userId) async {
     final url = Uri.parse('$_baseUrl/$facilityId/employees?user_id=$userId');
     final response = await ApiClient.get(url);
-    
+
     if (response.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      return data['employees'] ?? [];
+      return jsonDecode(utf8.decode(response.bodyBytes));
     } else {
       Map<String, dynamic> errorData = {};
       try {
         errorData = jsonDecode(utf8.decode(response.bodyBytes));
       } catch (_) {}
-      throw ApiException.rejected(errorData); // 상세 에러 전달
+      throw ApiException.rejected(errorData);
     }
   }
 
@@ -91,7 +108,6 @@ class FacilityApiService {
     throw ApiException.rejected(data);
   }
 
-  // 해제 로직 에러 파싱 강화
   static Future<String> removeEmployee(String facilityId, String userId, int targetUserId) async {
     final url = Uri.parse('$_baseUrl/$facilityId/remove-employee/$targetUserId?user_id=$userId');
     final response = await ApiClient.delete(url);
@@ -100,15 +116,14 @@ class FacilityApiService {
     throw ApiException.rejected(data);
   }
 
-  // 직원 권한(기기 제어 / 게시판 / 알람 관리) 수정
   static Future<void> updateEmployeePermissions(
-    String facilityId,
-    String userId,
-    int targetUserId, {
-    required bool canControlDevice,
-    required bool canManageBoard,
-    required bool canManageAlarm,
-  }) async {
+      String facilityId,
+      String userId,
+      int targetUserId, {
+        required bool canControlDevice,
+        required bool canManageBoard,
+        required bool canManageAlarm,
+      }) async {
     final url = Uri.parse('$_baseUrl/$facilityId/employee/$targetUserId/permissions?user_id=$userId');
     final response = await ApiClient.put(
       url,

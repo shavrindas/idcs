@@ -3,8 +3,10 @@ import 'package:idcs/components/indices/main_alarm/facility_alarm_components.dar
 import 'package:idcs/components/shared/alarm_row.dart';
 import 'package:idcs/components/shared/skeleton.dart';
 import 'package:idcs/services/common/alarm/alarm_api_service.dart';
+import 'package:idcs/services/common/facility_api_service.dart';
 import 'package:idcs/theme/app_theme.dart';
-import '../../services/common/api_client.dart';
+import 'package:idcs/components/facility/monitoring/alarm_control_panel.dart';
+import 'package:idcs/services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/components/shared/app_toast.dart';
 
@@ -28,14 +30,13 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
   /// 검색 필터 기준 ('name' 또는 'room').
   String _searchTarget = 'name';
 
-  // 목록을 열었을 때 궁금한 것은 '지금 뭔가 울리고 있나'다. 끝난 알람 100여 건
-  // 사이에서 그 답을 찾게 두지 않는다.
   AlarmStatusFilter _statusFilter = AlarmStatusFilter.active;
   bool _grouped = true;
 
   @override
   void initState() {
     super.initState();
+    _loadPointRoles();
     _fetchUserData();
   }
 
@@ -68,159 +69,284 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
     }
   }
 
-  /// 가장 최근에 끝난 몇 건. '진행중'이 비었을 때만 쓴다.
+  List<ParentNode> _treeNodes = [];
+  bool _isTreeLoading = true;
+
+  Future<void> _loadPointRoles() async {
+    setState(() {
+      _isTreeLoading = true;
+    });
+
+    try {
+      final rooms = await FacilityApiService.getFacilityRooms(widget.facilityId);
+      List<ParentNode> loadedParents = [];
+
+      for (var room in rooms) {
+        final roomId = room["id"];
+        if (roomId == null) continue;
+
+        // 방 이름 (부모 타이틀) 추출 - room_name 혹은 name 필드 활용
+        final roomName = room["room_name"]?.toString() ?? room["name"]?.toString() ?? '알 수 없는 구역';
+
+        final roles = await FacilityApiService.getFacilityPointRoleMeta(roomId.toString());
+        List<ChildNode> loadedChildren = [];
+
+        for (var r in roles) {
+          if (r is! Map) continue;
+
+          final roleName = r["role_name"]?.toString();
+          if (roleName == null || roleName.trim().isEmpty) {
+            continue;
+          }
+          final roleId = r["id"]?.toString();
+          if (roleId == null || roleId.trim().isEmpty) {
+            continue;
+          }
+
+          final displayName = r["display_name"]?.toString() ?? '';
+          final shortName = r["short_name"]?.toString() ?? '';
+          final target = r["target_value"]?.toString().trim() ?? '';
+          final low = r["target_low_limit"]?.toString().trim() ?? '';
+          final high = r["target_high_limit"]?.toString().trim() ?? '';
+
+          debugPrint("add $roleName : $low");
+          debugPrint("add $roleName : $high");
+
+          // 조건에 맞으면 건너뛰기
+          if (target.isEmpty && low.isEmpty && high.isEmpty) {
+            continue;
+          }
+
+          bool isActive = r["is_current"];
+
+          loadedChildren.add(
+            ChildNode(
+              roleId: roleId,
+              roleName: roleName,
+              displayName: displayName.isNotEmpty ? displayName : roleName,
+              shortName: shortName,
+              target: target,
+              isActive: isActive,
+              onTap: () {},
+              onToggle: (value) async {
+                try {
+                  await FacilityApiService.toggleIsCurrent(roleId, value);
+
+                  setState(() {
+                    for (var parent in _treeNodes) {
+                      for (var child in parent.children) {
+                        if (child.roleId == roleId) {
+                          child.isActive = value;
+                        }
+                      }
+                    }
+                  });
+
+                } catch (e) {
+                  debugPrint("토글 실패: $e");
+                  AppToast.error(context, "상태 변경에 실패했습니다.");
+                }
+              },
+            ),
+          );
+        }
+
+        // 자식 포인트가 존재하는 방만 부모 목록에 추가
+        if (loadedChildren.isNotEmpty) {
+          loadedParents.add(
+            ParentNode(
+              parentName: roomName,
+              children: loadedChildren,
+            ),
+          );
+        }
+      }
+
+      // ★ [핵심 수정 부분] 가공된 데이터를 상태 변수에 대입하여 화면을 갱신합니다!
+      setState(() {
+        _treeNodes = loadedParents;
+      });
+
+    } catch (e, stackTrace) {
+      debugPrint("포인트 롤 로드 중 에러 발생: $e");
+      debugPrint("스택 트레이스: $stackTrace");
+    } finally {
+      setState(() {
+        _isTreeLoading = false;
+      });
+    }
+  }
+
   List<GroupedAlarm> get _recentlyEnded =>
       groupAlarms(_alarms.where((a) => !isAlarmActive(a)).toList()).take(4).toList();
 
   @override
   Widget build(BuildContext context) {
-    final searchedAlarms = filterAlarmsByStatus(_alarms, _statusFilter).where((alarm) {
-      final query = _searchQuery.toLowerCase();
-      if (query.isEmpty) return true;
-
-      if (_searchTarget == 'room') {
-        final room = (alarm['room_name'] ?? '').toString().toLowerCase();
-        return room.contains(query);
-      } else {
-        return alarmNameMatches(context, alarm, query);
-      }
-    }).toList();
-
-    // 묶어서 보기가 꺼져 있으면 건마다 count 1로 그대로 보여준다.
-    final displayAlarms = _grouped
-        ? groupAlarms(searchedAlarms)
-        : searchedAlarms.map((a) => GroupedAlarm([a])).toList();
-
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.navAlarm)),
-      body: _isLoading
-          ? const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 검색창은 실제로 가로를 다 쓰고, 칩 줄은 아니다.
-                  SizedBox(width: double.infinity, child: SkeletonBox(height: 48, radius: 14)),
-                  SizedBox(height: 14),
-                  SkeletonBox(width: 250, height: 34, radius: 9),
-                  SizedBox(height: 18),
-                  SizedBox(width: double.infinity, child: AlarmListSkeleton()),
-                ],
-              ),
-            )
-          // 알람 목록에는 당겨서 새로고침이 없었다. 이 화면을 여는 이유가
-          // "방금 뭐 울렸나"인데, 다시 보려면 탭을 나갔다 들어와야 했다.
-          : RefreshIndicator(
+    // 탭 컨트롤러를 사용하여 2개의 탭(예: 알람 내역 탭 / 다른 화면 탭)을 관리합니다.
+    return DefaultTabController(
+      length: 2, // 탭 개수 (필요에 따라 늘릴 수 있습니다)
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.l10n.navAlarm),
+          // AppBar 하단에 탭바 배치
+          bottom: TabBar(
+            tabs: const [
+              Tab(text: '알람 목록'), // 첫 번째 탭 캡션
+              Tab(text: '알람 설정'), // 두 번째 탭 캡션 (원하시는 이름으로 변경 가능)
+            ],
+            labelColor: context.colors.textPrimary,
+            unselectedLabelColor: context.colors.textSecondary,
+            indicatorColor: context.colors.primary,
+          ),
+        ),
+        body: _isLoading
+            ? const Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: double.infinity, child: SkeletonBox(height: 48, radius: 14)),
+              SizedBox(height: 14),
+              SkeletonBox(width: 250, height: 34, radius: 9),
+              SizedBox(height: 18),
+              SizedBox(width: double.infinity, child: AlarmListSkeleton()),
+            ],
+          ),
+        )
+            : TabBarView(
+          children: [
+            // --- [첫 번째 탭: 기존 알람 목록 화면] ---
+            RefreshIndicator(
               onRefresh: _fetchUserData,
               child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // 검색창과 드롭다운을 가로 배치
-                        Row(
-                          children: [
-                            // 1. 검색 입력창
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: InputDecoration(
-                                  // 선택된 필터 기준에 따라 힌트 문구 변경
-                                  hintText: _searchTarget == 'name' ? context.l10n.alarmSearchByAlarmOrRoom : context.l10n.alarmSearchByRoom,
-                                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                                  suffixIcon: _searchQuery.isNotEmpty
-                                      ? IconButton(
-                                        tooltip: context.l10n.actionSearchClear,
-                                          icon: const Icon(Icons.clear_rounded, size: 20),
-                                          onPressed: () {
-                                            setState(() {
-                                              _searchController.clear();
-                                              _searchQuery = '';
-                                            });
-                                          },
-                                        )
-                                      : null,
-                                  isDense: true,
-                                ),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _searchQuery = value;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // 2. 오른쪽 필터 선택 드롭다운
-                            Container(
-                              height: 52,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: context.colors.surface,
-                                boxShadow: context.colors.cardShadow,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _searchTarget,
-                                  icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
-                                  isDense: true,
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: 'name',
-                                      child: Text(context.l10n.alarmFieldName, style: TextStyle(fontSize: 14)),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'room',
-                                      child: Text(context.l10n.alarmFieldRoomId, style: TextStyle(fontSize: 14)),
-                                    ),
-                                  ],
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  decoration: InputDecoration(
+                                    hintText: _searchTarget == 'name' ? context.l10n.alarmSearchByAlarmOrRoom : context.l10n.alarmSearchByRoom,
+                                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                                    suffixIcon: _searchQuery.isNotEmpty
+                                        ? IconButton(
+                                      tooltip: context.l10n.actionSearchClear,
+                                      icon: const Icon(Icons.clear_rounded, size: 20),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    )
+                                        : null,
+                                    isDense: true,
+                                  ),
                                   onChanged: (value) {
-                                    if (value != null) {
-                                      setState(() {
-                                        _searchTarget = value;
-                                      });
-                                    }
+                                    setState(() {
+                                      _searchQuery = value;
+                                    });
                                   },
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        AlarmFilterBar(
-                          counts: {
-                            AlarmStatusFilter.all: _alarms.length,
-                            AlarmStatusFilter.active: _alarms.where(isAlarmActive).length,
-                            AlarmStatusFilter.ended: _alarms.where((a) => !isAlarmActive(a)).length,
-                          },
-                          statusFilter: _statusFilter,
-                          onStatusChanged: (val) => setState(() => _statusFilter = val),
-                          grouped: _grouped,
-                          onGroupedChanged: (val) => setState(() => _grouped = val),
-                        ),
-                      ],
+                              const SizedBox(width: 8),
+                              Container(
+                                height: 52,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: context.colors.surface,
+                                  boxShadow: context.colors.cardShadow,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _searchTarget,
+                                    icon: Icon(Icons.expand_more_rounded, size: 20, color: context.colors.textSecondary),
+                                    isDense: true,
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: 'name',
+                                        child: Text(context.l10n.alarmFieldName, style: TextStyle(fontSize: 14)),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'room',
+                                        child: Text(context.l10n.alarmFieldRoomId, style: TextStyle(fontSize: 14)),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      if (value != null) {
+                                        setState(() {
+                                          _searchTarget = value;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          AlarmFilterBar(
+                            counts: {
+                              AlarmStatusFilter.all: _alarms.length,
+                              AlarmStatusFilter.active: _alarms.where(isAlarmActive).length,
+                              AlarmStatusFilter.ended: _alarms.where((a) => !isAlarmActive(a)).length,
+                            },
+                            statusFilter: _statusFilter,
+                            onStatusChanged: (val) => setState(() => _statusFilter = val),
+                            grouped: _grouped,
+                            onGroupedChanged: (val) => setState(() => _grouped = val),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // 3. 필터링된 알람 데이터 전달
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.of(context).padding.bottom),
-                  sliver: FacilityAlarmBox(
-                    alarms: displayAlarms,
-                    isSearching: _searchQuery.isNotEmpty,
-                    showingActiveOnly: _statusFilter == AlarmStatusFilter.active,
-                    recentlyEnded: _recentlyEnded,
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + MediaQuery.of(context).padding.bottom),
+                    sliver: FacilityAlarmBox(
+                      alarms: _grouped ? groupAlarms(
+                        filterAlarmsByStatus(_alarms, _statusFilter).where((alarm) {
+                          final query = _searchQuery.toLowerCase();
+                          if (query.isEmpty) return true;
+                          if (_searchTarget == 'room') {
+                            return (alarm['room_name'] ?? '').toString().toLowerCase().contains(query);
+                          } else {
+                            return alarmNameMatches(context, alarm, query);
+                          }
+                        }).toList(),
+                      ) : filterAlarmsByStatus(_alarms, _statusFilter).where((alarm) {
+                        final query = _searchQuery.toLowerCase();
+                        if (query.isEmpty) return true;
+                        if (_searchTarget == 'room') {
+                          return (alarm['room_name'] ?? '').toString().toLowerCase().contains(query);
+                        } else {
+                          return alarmNameMatches(context, alarm, query);
+                        }
+                      }).map((a) => GroupedAlarm([a])).toList(),
+                      isSearching: _searchQuery.isNotEmpty,
+                      showingActiveOnly: _statusFilter == AlarmStatusFilter.active,
+                      recentlyEnded: _recentlyEnded,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            ),
+
+            // --- [두 번째 탭: 누르면 전환되는 새로운 화면/컨텐츠] ---
+            FacilityTreeViewTab(
+              parentNodes: _treeNodes,
+              isLoading: _isTreeLoading,
+            )
+          ],
+        ),
+      ),
     );
   }
 }
