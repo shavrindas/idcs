@@ -107,6 +107,22 @@ async def create_chart_group(req: GroupCreateReq, db: AsyncSession = Depends(get
         await db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete("/group/{group_id}")
+async def delete_chart_group(group_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        await db.execute(text("DELETE FROM chart_group_mapping WHERE group_id = :group_id"), {"group_id": group_id})
+        result = await db.execute(text("DELETE FROM chart_group_table WHERE id = :group_id"), {"group_id": group_id})
+        if result.rowcount == 0:
+            await db.rollback()
+            raise HTTPException(status_code=404, detail="그룹을 찾을 수 없습니다.")
+        await db.commit()
+        return {"status": "success", "message": "그룹 삭제 완료"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/groups/{facility_id}/{room_id}")
 async def get_chart_groups(facility_id: int, room_id: int, db: AsyncSession = Depends(get_db)):
     query = text("""

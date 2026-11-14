@@ -94,6 +94,17 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
     if (roleData) addRole(JSON.parse(roleData));
   };
 
+  const removeRole = (roleId: number) => setDroppedRoles((prev) => prev.filter((r) => r.role_id !== roleId));
+
+  // 오른쪽에서 왼쪽으로 다시 끌어다 놓으면 뺀다 — 넣는 쪽(왼쪽→오른쪽
+  // 드래그)만 되고 되돌리는 쪽은 안 돼서, 잘못 넣은 걸 빼려면 더블클릭이나
+  // ✕ 를 찾아야 했다. 끌어다 놓는 동작 자체를 그대로 되돌릴 수 있어야 한다.
+  const onDropToRemove = (e: React.DragEvent) => {
+    e.preventDefault();
+    const roleId = e.dataTransfer.getData('text/role-id');
+    if (roleId) removeRole(Number(roleId));
+  };
+
   const handleReorderRoles = (sourceIndex: number, targetIndex: number) => {
     if (sourceIndex === targetIndex) return;
     const updated = [...droppedRoles];
@@ -122,6 +133,20 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    if (selectedGroupId === 'new') return;
+    const target = existingGroups.find((g) => g.group_id === selectedGroupId);
+    if (!target || !window.confirm(`"${target.group_name}" 그룹을 삭제하시겠습니까?`)) return;
+
+    try {
+      await apiService.deleteChartGroup(selectedGroupId);
+      resetGroupForm();
+      if (selectedRoom) handleRoomChange(selectedRoom);
+    } catch {
+      alert('삭제 실패');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flex: 1, minHeight: 0, height: '100%', gap: 12, padding: 24, boxSizing: 'border-box' }}>
       <LeftPanel
@@ -136,6 +161,7 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
         onRoomChange={handleRoomChange}
         onDragStart={onDragStart}
         onAddRole={addRole}
+        onDropToRemove={onDropToRemove}
       />
       <RightPanel
         existingGroups={existingGroups}
@@ -146,9 +172,10 @@ export const ChartMappingPage: React.FC<Props> = ({ user }) => {
         onGroupNameChange={setGroupName}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        onRemoveRole={(id) => setDroppedRoles((prev) => prev.filter((r) => r.role_id !== id))}
+        onRemoveRole={removeRole}
         onReorderRoles={handleReorderRoles}
         onSaveGroup={handleSaveGroup}
+        onDeleteGroup={handleDeleteGroup}
       />
     </div>
   );

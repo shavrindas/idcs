@@ -13,6 +13,8 @@ interface Props {
   onRoomChange: (id: number) => void;
   onDragStart: (e: React.DragEvent, role: Role) => void;
   onAddRole: (role: Role) => void;
+  /** 오른쪽에서 여기로 끌어다 놓으면 그 롤을 뺀다. */
+  onDropToRemove: (e: React.DragEvent) => void;
 }
 
 const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
@@ -35,6 +37,7 @@ export const LeftPanel: React.FC<Props> = ({
   onRoomChange,
   onDragStart,
   onAddRole,
+  onDropToRemove,
 }) => {
   const visibleRoom0Roles = room0Roles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
@@ -96,6 +99,8 @@ export const LeftPanel: React.FC<Props> = ({
       <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 12 }}>
         {/* 0호실 (공용) 영역 */}
         <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDropToRemove}
           style={{
             border: '1px solid var(--border)',
             borderRadius: 12,
@@ -111,6 +116,8 @@ export const LeftPanel: React.FC<Props> = ({
 
         {/* 개별 호실 영역 */}
         <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDropToRemove}
           style={{
             border: '1px solid var(--border)',
             borderRadius: 12,

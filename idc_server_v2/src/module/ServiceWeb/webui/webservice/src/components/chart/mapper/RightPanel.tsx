@@ -13,6 +13,7 @@ interface Props {
   onRemoveRole: (roleId: number) => void;
   onReorderRoles: (sourceIndex: number, targetIndex: number) => void;
   onSaveGroup: () => void;
+  onDeleteGroup: () => void;
 }
 
 // 명칭 및 약어 Fallback 헬퍼 함수
@@ -52,11 +53,16 @@ export const RightPanel: React.FC<Props> = ({
   onRemoveRole,
   onReorderRoles,
   onSaveGroup,
+  onDeleteGroup,
 }) => {
-  // 내부 항목 간 순서 변경 드래그 시작
-  const handleItemDragStart = (e: React.DragEvent, index: number) => {
+  // 내부 항목 간 순서 변경 드래그 시작.
+  // text/role-id 도 같이 실어 둔다 — 왼쪽 패널로 끌어다 놓아 빼는 동작은
+  // 순서 바꾸기가 아니라 '이 롤을 치워라' 이므로, 인덱스가 아니라 롤
+  // 자체를 식별할 수 있어야 한다.
+  const handleItemDragStart = (e: React.DragEvent, index: number, roleId: number) => {
     e.stopPropagation();
     e.dataTransfer.setData('text/reorder-index', String(index));
+    e.dataTransfer.setData('text/role-id', String(roleId));
   };
 
   // 내부 항목 드롭 시 위치 교환 또는 외부 드롭 처리
@@ -90,18 +96,30 @@ export const RightPanel: React.FC<Props> = ({
           gap: 10,
         }}
       >
-        <select
-          value={selectedGroupId}
-          onChange={(e) => onGroupSelect(e.target.value)}
-          className="input"
-        >
-          <option value="new">+ 새로운 그룹 추가하기</option>
-          {existingGroups.map((g) => (
-            <option key={g.group_id} value={g.group_id}>
-              [불러오기] {g.group_name}
-            </option>
-          ))}
-        </select>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <select
+            value={selectedGroupId}
+            onChange={(e) => onGroupSelect(e.target.value)}
+            className="input"
+            style={{ flex: 1 }}
+          >
+            <option value="new">+ 새로운 그룹 추가하기</option>
+            {existingGroups.map((g) => (
+              <option key={g.group_id} value={g.group_id}>
+                [불러오기] {g.group_name}
+              </option>
+            ))}
+          </select>
+          {/* 추가는 되는데 지우는 길이 없었다 — 잘못 만든 그룹을 치울 손잡이.
+              btn-sm 을 쓰지 않는다 — 그러면 높이(32px)가 옆 select(.input,
+              42px)보다 작아져 한 줄인데 키가 어긋나 보였다. 기본 .btn 높이
+              (40px)가 거의 맞아떨어진다. */}
+          {selectedGroupId !== 'new' && (
+            <button onClick={onDeleteGroup} className="btn btn-danger" title="이 그룹을 삭제합니다">
+              삭제
+            </button>
+          )}
+        </div>
         <input
           type="text"
           placeholder="새 그룹 명칭 입력"
@@ -135,7 +153,7 @@ export const RightPanel: React.FC<Props> = ({
             <div
               key={role.role_id}
               draggable
-              onDragStart={(e) => handleItemDragStart(e, idx)}
+              onDragStart={(e) => handleItemDragStart(e, idx, role.role_id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleItemDrop(e, idx)}
               onDoubleClick={() => onRemoveRole(role.role_id)}

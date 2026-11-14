@@ -17,7 +17,6 @@ interface Props {
 /** y축 위아래 여백 선택지. '자동' 은 구간 폭의 10%. */
 const Y_BUFFER_OPTIONS: { value: number | 'auto'; label: string }[] = [
   { value: 'auto', label: '자동' },
-  { value: 0, label: '없음' },
   { value: 10, label: '±10' },
   { value: 50, label: '±50' },
   { value: 100, label: '±100' },

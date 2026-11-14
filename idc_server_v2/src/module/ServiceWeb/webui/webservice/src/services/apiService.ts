@@ -116,6 +116,11 @@ export const apiService = {
     });
     return res.json();
   },
+  deleteChartGroup: async (groupId: number) => {
+    const res = await fetch(`${BASE_URL}/chart-mapping/group/${groupId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('그룹을 삭제하지 못했습니다.');
+    return res.json();
+  },
   getHistoricalData: async (facilityId: number, roomId: number, groupId: number | '', scale: string, startTime: string, endTime: string, roleIds: number[]) => {
     let url = `${BASE_URL}/chart/${facilityId}/${roomId}?scale=${scale}&start_time=${encodeURIComponent(startTime)}&end_time=${encodeURIComponent(endTime)}&role_ids=${roleIds.join(',')}`;
     if (groupId !== '') url += `&group_id=${groupId}`;
