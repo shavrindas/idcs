@@ -97,11 +97,14 @@ export const LeftPanel: React.FC<Props> = ({
       </select>
 
       <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 12 }}>
-        {/* 0호실 (공용) 영역 */}
+        {/* 0호실 (공용) 영역 — 화면에서만 뺀다. 드래그로 넣는 기능 자체는
+            그대로 두고(visibleRoom0Roles, droppedRoleIds 필터링 등) 자리만
+            개별 호실 쪽에 내준다. */}
         <div
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDropToRemove}
           style={{
+            display: 'none',
             border: '1px solid var(--border)',
             borderRadius: 12,
             flex: 1,
