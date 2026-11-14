@@ -193,23 +193,31 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
     const needles = Array.from(new Set([...words, squashed].map(w => w.toLowerCase()).filter(Boolean)));
     if (needles.length === 0) { setOmniboxSuggestions([]); return; }
 
-    const hit = (name: string) => {
+    // '냉동' 하나로는 냉동 1·2·3호가 전부 걸린다 — 그래서 가장 길게(제일
+    // 구체적으로) 맞아떨어진 쪽을 1순위로 둔다. '냉동 3호' 라고 정확히
+    // 적었으면 '냉동3호' 전체가 걸리는 쪽이 '냉동'만 걸리는 쪽보다 앞에
+    // 와야, 그 줄이 고대로 지워지고 입력이 끝까지 비워진다.
+    const matchLen = (name: string) => {
       const flat = name.replace(/\s+/g, '').toLowerCase();
-      return needles.some(n => flat.includes(n.replace(/\s+/g, '')));
+      return needles.reduce((best, n) => {
+        const needle = n.replace(/\s+/g, '');
+        return flat.includes(needle) ? Math.max(best, needle.length) : best;
+      }, 0);
     };
 
     const sugs: any[] = [];
-    facilities.forEach(f => { if (hit(f.name)) sugs.push({ type: 'facility', id: f.id, name: f.name, label: `${f.name} (시설)` }); });
+    facilities.forEach(f => { const m = matchLen(f.name); if (m > 0) sugs.push({ type: 'facility', id: f.id, name: f.name, label: `${f.name} (시설)`, matchLen: m }); });
     if (selectedFacility) {
-      rooms.forEach(r => { if (hit(r.name)) sugs.push({ type: 'room', id: r.id, name: r.name, label: `${r.name} (호실)` }); });
+      rooms.forEach(r => { const m = matchLen(r.name); if (m > 0) sugs.push({ type: 'room', id: r.id, name: r.name, label: `${r.name} (호실)`, matchLen: m }); });
     }
     if (selectedRoom) {
-      groups.forEach(g => { if (hit(g.group_name)) sugs.push({ type: 'group', id: g.group_id, name: g.group_name, label: `${g.group_name} (맵핑)` }); });
+      groups.forEach(g => { const m = matchLen(g.group_name); if (m > 0) sugs.push({ type: 'group', id: g.group_id, name: g.group_name, label: `${g.group_name} (맵핑)`, matchLen: m }); });
     }
 
-    // 시설 → 호실 → 맵핑 순으로, 같은 종류끼리는 짧은 이름이 먼저.
+    // 시설 → 호실 → 맵핑 순으로, 같은 종류끼리는 더 구체적으로(길게) 맞은
+    // 쪽이 먼저, 그다음은 짧은 이름이 먼저.
     const order = { facility: 0, room: 1, group: 2 } as Record<string, number>;
-    sugs.sort((a, b) => (order[a.type] - order[b.type]) || (a.name.length - b.name.length));
+    sugs.sort((a, b) => (order[a.type] - order[b.type]) || (b.matchLen - a.matchLen) || (a.name.length - b.name.length));
     setOmniboxSuggestions(sugs);
     setOmniboxActive(0);
   }, [omniboxInput, facilities, rooms, groups, selectedFacility, selectedRoom]);
@@ -226,6 +234,14 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
     setOmniboxActive(0);
   };
 
+  // 붙여넣은 문장 하나에 시설과 호실이 함께 들어 있으면('다온인터내셔널
+  // 냉동 1호'), 시설을 고른 바로 뒤에는 호실 목록이 아직 서버에서 오는
+  // 중이라 한 번의 엔터로 끝까지 못 간다. 그렇다고 엔터를 여러 번 누르게
+  // 하면 '붙여넣고 엔터'가 아니라 '붙여넣고 엔터·엔터·엔터'가 된다.
+  // 이 경우에만 — 아직 처리할 이름이 남아 있을 때만 — 다음 목록이 뜨는
+  // 즉시 이어서 자동으로 적용한다.
+  const pendingOmniboxChain = useRef(false);
+
   const handleOmniboxSubmit = () => {
     const { date, dateChanged, timeChanged, remaining } = extractDateTime(omniboxInput, new Date(targetDate));
     if (dateChanged || timeChanged) setTargetDate(getLocalDatetimeString(date));
@@ -233,11 +249,22 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
     // 이름이 남아 있으면 지금 고른 줄을 적용한다. 날짜만 적은 경우에는 날짜만
     // 반영하고 입력을 비운다.
     if (remaining.replace(/\s+/g, '') && omniboxSuggestions.length > 0) {
-      handleOmniboxSelect(omniboxSuggestions[Math.min(omniboxActive, omniboxSuggestions.length - 1)]);
+      const chosen = omniboxSuggestions[Math.min(omniboxActive, omniboxSuggestions.length - 1)];
+      handleOmniboxSelect(chosen);
+      pendingOmniboxChain.current = !!removeName(remaining, chosen.name).replace(/\s+/g, '');
     } else {
       setOmniboxInput('');
+      pendingOmniboxChain.current = false;
     }
   };
+
+  useEffect(() => {
+    if (pendingOmniboxChain.current && omniboxSuggestions.length > 0) {
+      pendingOmniboxChain.current = false;
+      handleOmniboxSubmit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [omniboxSuggestions]);
 
   const fetchAndMergeChunk = async (fetchStartMs: number, fetchEndMs: number, direction: 'replace' | 'append' | 'prepend') => {
     if (!selectedFacility || !selectedRoom || checkedRoles.length === 0) return;
