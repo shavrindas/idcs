@@ -2,7 +2,7 @@
 from typing import Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_
+from sqlalchemy import or_, update
 from fastapi import Depends
 from src.config.database import get_db
 from src.module.Core.models.User import UserFcmToken, User, UserRole
@@ -147,17 +147,20 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
                     if is_out_of_bounds:
                         candidate_alarms.append((k, role, meta))
 
-        # 2. 이상이 발생한 항목이 있을 때만 단 1번의 DB 쿼리로 기존 알람들 조회 (In-Memory 매핑)
+        stmt = select(Alarm).where(Alarm.is_triggered == True)
+        result = await db.execute(stmt)
+
+        existing_alarms = {a.alarm_name: a for a in result.scalars().all()}
+
+        disenabled_alarm = set([k for k in list(existing_alarms.keys())])
+
         if candidate_alarms:
             # 검사할 알람명 목록 추출
-            candidate_names = [k for k, _, _ in candidate_alarms]
+            candidate_names = set([k for k, _, _ in candidate_alarms])
 
-            # IN 쿼리로 한 번에 조회
-            stmt = select(Alarm).where(Alarm.alarm_name.in_(candidate_names))
-            result = await db.execute(stmt)
+            disenabled_alarm -= candidate_names
     
             # {alarm_name: Alarm 객체} 형태의 딕셔너리로 변환
-            existing_alarms = {a.alarm_name: a for a in result.scalars().all()}
             now_utc = datetime.now(timezone.utc)
 
             # 3. end_time이 지나지 않은(진행 중인) 알람 필터링
@@ -165,11 +168,23 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
                 mapping = existing_alarms.get(k)
 
                 # 이미 활성화되어 진행 중인 알람이면 제외
-                if mapping and mapping.end_time and (mapping.end_time >= now_utc):
+                if mapping and mapping.timestamp and (mapping.timestamp + timedelta(hours=24) >= now_utc):
                     continue
 
                 # 신규 발생 대상에 추가
                 triggered_alarms.append((k, role, meta))
+
+        stmt = (
+            update(Alarm)
+            .where(Alarm.alarm_name.in_(disenabled_alarm))
+            .values(
+                is_triggered=False,
+                end_time=datetime.now()  # 또는 한국 시간 기준이라면 datetime.now() 등 사용
+            )
+        )
+
+        await db.execute(stmt)
+        await db.commit()
 
         # 2. 발생 대상이 있을 경우: DB에 Alarm 기록 저장 & FCM 토큰 조회
         # 관리자는 조건과 관계 없이 가능하게 해야 함
@@ -256,7 +271,7 @@ async def alarm_threshold_monitoring():
                                 timestamp=now_time,                      # 발생 시간
                                 is_triggered=True,                       # 알람 발동 상태
                                 reset_timeout_interval=timedelta(hours=24), # 기본 리셋 타임아웃
-                                end_time=now_time + timedelta(hours=24)  # end_time 기본 24시간 지정 예시
+                                end_time=None  # end_time 기본 24시간 지정 예시
                             )
                             db.add(new_alarm)
                             await db.commit()
