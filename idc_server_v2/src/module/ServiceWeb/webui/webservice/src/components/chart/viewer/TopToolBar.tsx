@@ -87,15 +87,20 @@ export const TopToolBar: React.FC<Props> = ({ showInfo, showGrid, targetDate, is
           onChange={(e) => onDateChange(e.target.value)}
           disabled={isChartLoading}
           className="input"
-          style={{ height: 32, width: 190 }}
+          style={{ height: 32, width: 230 }}
         />
       </div>
-      <button onClick={onCopy} title="지금 보고 있는 시점을 스마트 검색에 붙여 넣을 수 있는 문장으로 복사합니다" className="btn btn-ghost btn-sm">
+      <button
+        onClick={onCopy}
+        title="지금 보고 있는 시점을 스마트 검색에 붙여 넣을 수 있는 문장으로 복사합니다"
+        aria-label="시점 복사"
+        className="btn btn-ghost btn-sm"
+        style={{ padding: '0 8px' }}
+      >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="9" y="9" width="12" height="12" rx="2" />
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </svg>
-        시점 복사
       </button>
     </div>
   </div>
