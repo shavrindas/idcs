@@ -64,8 +64,9 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
 
   const [showMainInfo, setShowMainInfo] = useState<boolean>(true);
   const [showMainGrid, setShowMainGrid] = useState<boolean>(true);
-  const [showSubInfo, setShowSubInfo] = useState<boolean>(false); 
+  const [showSubInfo, setShowSubInfo] = useState<boolean>(false);
   const [showSubGrid, setShowSubGrid] = useState<boolean>(true);
+  const [isSubCollapsed, setIsSubCollapsed] = useState<boolean>(false);
 
   const [openMenuRoleId, setOpenMenuRoleId] = useState<number | null>(null);
   const [activeGuidelines, setActiveGuidelines] = useState<number[]>([]);
@@ -484,10 +485,12 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
           <div className="card" style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
             {emptyReason ? <ChartEmptyState reason={emptyReason} /> : <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />}
           </div>
-          <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
-          <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
-            {emptyReason ? <ChartEmptyState reason={emptyReason} compact /> : <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />}
-          </div>
+          <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} isCollapsed={isSubCollapsed} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onToggleCollapsed={() => setIsSubCollapsed(!isSubCollapsed)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
+          {!isSubCollapsed && (
+            <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
+              {emptyReason ? <ChartEmptyState reason={emptyReason} compact /> : <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />}
+            </div>
+          )}
         </div>
 
         {/* 오른쪽 패널 영역 — 내용(날짜칸·버튼)이 최소 너비를 가지므로 아예
