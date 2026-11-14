@@ -18,20 +18,31 @@ interface Props {
 }
 
 /**
- * 모드 이름이 그대로 단추에 적혀 있었다 — '현재 모드: DEFAULT (토글)'.
- * DEFAULT 와 EXTENT 가 무엇인지는 코드를 봐야 알 수 있고, 게다가 '토글' 이라
- * 지금 어느 쪽인지는 알려 줘도 누르면 어디로 가는지는 알려 주지 않는다.
- *
- * 실제로 둘을 가르는 것은 '한 번에 몇 가지를, 얼마나 긴 기간으로 보는가' 다.
- * 그래서 두 칸을 나란히 두고 하는 일로 적는다. 지금 어느 쪽인지도, 다른 쪽이
- * 무엇인지도 한눈에 보인다.
+ * 다른 화면(맵핑 요약 등)에서도 '다중 항목 보기' · '단일 항목 보기' 로
+ * 부르는 그 구분이다 — 이름을 맞춰 둔다.
  */
-const MODE_CHOICES: { value: ChartMode; label: string; hint: string }[] = [
-  { value: 'DEFAULT', label: '여러 항목', hint: '여러 수치를 한 차트에 겹쳐 봅니다. 기간은 짧습니다.' },
-  { value: 'EXTENT', label: '길게 하나', hint: '수치 하나만 고르는 대신 훨씬 긴 기간을 봅니다.' },
+const MODE_CHOICES: { value: ChartMode; label: string }[] = [
+  { value: 'DEFAULT', label: '다중 항목' },
+  { value: 'EXTENT', label: '단일 항목' },
 ];
 
-export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, selectedFacility, selectedRoom, isChartLoading, onModeToggle, onScaleChange, onFacilityChange, onRoomChange, onQuickTime, onQuickDay }) => (
+/** 1시간·3시간 ⋯ 1주 — 항상 3열 2행으로 고정한다. flex-wrap 은 칸 너비에
+ *  따라 2+2+2 나 5+1 처럼 줄이 들쭉날쭉해질 수 있어, grid 로 줄 수를 못박는다. */
+const QUICK_TIME_CHOICES: { label: string; h: number }[] = [
+  { label: '1H', h: 1 }, { label: '3H', h: 3 }, { label: '6H', h: 6 },
+  { label: '12H', h: 12 }, { label: '1D', h: 24 }, { label: '1W', h: 24 * 7 },
+];
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, selectedFacility, selectedRoom, isChartLoading, onModeToggle, onScaleChange, onFacilityChange, onRoomChange, onQuickTime, onQuickDay }) => {
+  // 어느 걸 눌렀는지 — 버튼 자체는 '그 순간 그 동작을 실행'할 뿐 차트가
+  // 지금 그 구간을 보고 있다는 보장은 없지만, 방금 누른 게 어느 것인지도
+  // 안 보이면 눌렀는지조차 알 길이 없었다. 마지막으로 누른 것만 표시한다.
+  const [activeQuickTime, setActiveQuickTime] = React.useState<number | null>(null);
+  const [activeQuickDay, setActiveQuickDay] = React.useState<number | null>(null);
+
+  return (
   <div className="card" style={{ padding: 15, display: 'flex', flexDirection: 'column', gap: 12 }}>
     <h4 style={{ textAlign: 'center', fontSize: 14 }}>조회 범위 설정</h4>
 
@@ -57,7 +68,7 @@ export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, 
     <div style={{ height: 1, background: 'var(--border)' }} />
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="label">보는 방식</span>
+      <span className="label">표시 형식</span>
       <div style={{ display: 'flex', gap: 6 }}>
         {MODE_CHOICES.map(choice => (
           <button
@@ -65,7 +76,6 @@ export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, 
             onClick={() => { if (choice.value !== mode) onModeToggle(); }}
             disabled={isChartLoading}
             aria-pressed={choice.value === mode}
-            title={choice.hint}
             className={`btn btn-sm btn-toggle${choice.value === mode ? ' on' : ''}`}
             style={{ flex: 1 }}
           >
@@ -73,54 +83,54 @@ export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, 
           </button>
         ))}
       </div>
-      <p style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-        {MODE_CHOICES.find(c => c.value === mode)?.hint}
-      </p>
     </div>
 
-    {/* 점 간격과 '지금부터 거슬러' 도 나란히 둔다 — 버튼 여섯·일곱 개짜리
-        줄이었던 것을 드롭다운으로 줄인 데 이어, 세로 칸 하나를 더 아낀다.
-        드롭다운 동작(지금부터 거슬러·요일)은 누르면 바로 실행되는 '동작'이라
-        선택값을 따로 쥐고 있을 필요가 없고, 고른 뒤 다시 안내 문구로
-        돌아간다. */}
-    <div style={{ display: 'flex', gap: 10 }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-        <span className="label">점 간격</span>
-        <select value={scale} onChange={e => onScaleChange(e.target.value as ChartScale)} disabled={isChartLoading} className="input">
-          <option value="1m">1분마다</option><option value="5m">5분마다</option><option value="10m">10분마다</option><option value="30m">30분마다</option><option value="1h">1시간마다</option>
-        </select>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-        <span className="label">지금부터 거슬러</span>
-        <select
-          value=""
-          onChange={e => { if (e.target.value) onQuickTime(Number(e.target.value)); }}
-          disabled={isChartLoading}
-          className="input"
-        >
-          <option value="">기간을 고르세요</option>
-          <option value="1">1시간</option>
-          <option value="3">3시간</option>
-          <option value="6">6시간</option>
-          <option value="12">12시간</option>
-          <option value="24">1일</option>
-          <option value={24 * 7}>1주</option>
-        </select>
-      </div>
-    </div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="label">가장 가까운 요일로</span>
-      <select
-        value=""
-        onChange={e => { if (e.target.value !== '') onQuickDay(Number(e.target.value)); }}
-        disabled={isChartLoading}
-        className="input"
-      >
-        <option value="">요일을 고르세요</option>
-        {['일', '월', '화', '수', '목', '금', '토'].map((dayStr, idx) => (
-          <option key={dayStr} value={idx}>{dayStr}요일</option>
-        ))}
+      <span className="label">점 간격</span>
+      <select value={scale} onChange={e => onScaleChange(e.target.value as ChartScale)} disabled={isChartLoading} className="input">
+        <option value="1m">1분마다</option><option value="5m">5분마다</option><option value="10m">10분마다</option><option value="30m">30분마다</option><option value="1h">1시간마다</option>
       </select>
     </div>
+
+    {/* 최근 시각 — 항상 3열 2행. 칸이 좁아져도 6개가 한 줄에 몰리거나
+        5+1 처럼 어색하게 쪼개지지 않는다. */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span className="label">최근 시각</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+        {QUICK_TIME_CHOICES.map(btn => (
+          <button
+            key={btn.label}
+            onClick={() => { setActiveQuickTime(btn.h); onQuickTime(btn.h); }}
+            disabled={isChartLoading}
+            aria-pressed={activeQuickTime === btn.h}
+            className={`btn btn-toggle btn-sm${activeQuickTime === btn.h ? ' on' : ''}`}
+            style={{ padding: '0 4px' }}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* 최근 요일 — 일곱 개를 한 줄에 그대로 둔다. 간격과 안쪽 여백을 줄여
+        칸 너비 안에서 줄바꿈 없이 들어가게 한다. */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span className="label">최근 요일</span>
+      <div style={{ display: 'flex', gap: 3 }}>
+        {WEEKDAYS.map((dayStr, idx) => (
+          <button
+            key={dayStr}
+            onClick={() => { setActiveQuickDay(idx); onQuickDay(idx); }}
+            disabled={isChartLoading}
+            aria-pressed={activeQuickDay === idx}
+            className={`btn btn-toggle btn-sm${activeQuickDay === idx ? ' on' : ''}`}
+            style={{ flex: 1, minWidth: 0, padding: 0 }}
+          >
+            {dayStr}
+          </button>
+        ))}
+      </div>
+    </div>
   </div>
-);
+  );
+};

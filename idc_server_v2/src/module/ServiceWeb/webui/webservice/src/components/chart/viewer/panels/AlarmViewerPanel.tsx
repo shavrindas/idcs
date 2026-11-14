@@ -24,14 +24,10 @@ export const AlarmViewerPanel: React.FC<Props> = ({ selectedAlarmIds, alarms, al
           const role = allRoles.find(r => r.role_id === alarm.role_id);
           return (
             <div key={alarmId} style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
-              <h5 style={{ color: 'var(--error)', margin: '0 0 5px 0', fontSize: 13 }}>{alarm.alarm_name}</h5>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 4px 0' }}>
+              <h5 style={{ color: 'var(--error)', margin: '0 0 5px 0', fontSize: 13 }}>
                 {role?.display_name || role?.role_name || `role #${alarm.role_id}`}
-              </p>
+              </h5>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>{formatAlarmTime(alarm.timestamp)}</p>
-              {alarm.severity != null && (
-                <span className="chip" style={{ alignSelf: 'flex-start', marginTop: 6 }}>{alarm.severity}</span>
-              )}
             </div>
           );
         })}
