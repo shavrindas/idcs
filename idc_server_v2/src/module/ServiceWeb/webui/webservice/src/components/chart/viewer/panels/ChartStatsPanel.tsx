@@ -61,6 +61,9 @@ export const ChartStatsPanel: React.FC<Props> = ({ datasets, roleColors }) => {
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <h4 style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>구간 요약</h4>
+      {/* 여기서 따로 스크롤을 만들지 않는다 — 길어진 만큼은 오른쪽 패널을
+          거쳐 페이지 전체 스크롤 하나로 처리된다(왼쪽 차트 열은 고정
+          높이라 영향을 받지 않는다). */}
       {stats.map(s => (
         <div key={s.roleId} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />

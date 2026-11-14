@@ -143,7 +143,7 @@ export const MappingActivePanel: React.FC<Props> = ({ groups, allRoles, roleColo
   const openOn = openIds.filter(id => checkedRoles.includes(id)).length;
 
   return (
-    <div className="card" style={{ flex: 3, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="card" style={{ flexShrink: 0, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <h4 style={{ fontSize: 14, margin: 0 }}>맵핑 그룹</h4>
         <select value={selectedGroupId} onChange={e => onGroupChange(e.target.value ? Number(e.target.value) : '')} disabled={!selectedRoom || groups.length === 0 || isChartLoading} className="input" style={{ width: 200 }}>
