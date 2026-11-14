@@ -35,20 +35,23 @@ export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, 
   <div className="card" style={{ padding: 15, display: 'flex', flexDirection: 'column', gap: 12 }}>
     <h4 style={{ textAlign: 'center', fontSize: 14 }}>조회 범위 설정</h4>
 
-    {/* 고르는 차례대로 — 시설, 그 다음 호실. 위에 둬야 먼저 눈에 든다. */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="label">시설</span>
-      <select value={selectedFacility} onChange={e => onFacilityChange(e.target.value ? Number(e.target.value) : '')} disabled={isChartLoading} className="input">
-        <option value="">시설을 고르세요</option>
-        {facilities.map(fac => <option key={fac.id} value={fac.id}>{fac.name}</option>)}
-      </select>
-    </div>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="label">호실</span>
-      <select value={selectedRoom} onChange={e => onRoomChange(e.target.value ? Number(e.target.value) : '')} disabled={!selectedFacility || isChartLoading} className="input">
-        <option value="">{selectedFacility ? '호실을 고르세요' : '시설을 먼저 고르세요'}</option>
-        {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-      </select>
+    {/* 고르는 차례대로 — 시설, 그 다음 호실. 나란히 둬도 순서는 왼쪽에서
+        오른쪽으로 그대로 읽힌다. 세로로 쌓느라 쓰던 칸 하나를 아낀다. */}
+    <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+        <span className="label">시설</span>
+        <select value={selectedFacility} onChange={e => onFacilityChange(e.target.value ? Number(e.target.value) : '')} disabled={isChartLoading} className="input">
+          <option value="">시설을 고르세요</option>
+          {facilities.map(fac => <option key={fac.id} value={fac.id}>{fac.name}</option>)}
+        </select>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+        <span className="label">호실</span>
+        <select value={selectedRoom} onChange={e => onRoomChange(e.target.value ? Number(e.target.value) : '')} disabled={!selectedFacility || isChartLoading} className="input">
+          <option value="">{selectedFacility ? '호실을 고르세요' : '시설을 먼저 고르세요'}</option>
+          {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
+        </select>
+      </div>
     </div>
 
     <div style={{ height: 1, background: 'var(--border)' }} />
@@ -75,28 +78,49 @@ export const ScopingPanel: React.FC<Props> = ({ mode, scale, facilities, rooms, 
       </p>
     </div>
 
+    {/* 점 간격과 '지금부터 거슬러' 도 나란히 둔다 — 버튼 여섯·일곱 개짜리
+        줄이었던 것을 드롭다운으로 줄인 데 이어, 세로 칸 하나를 더 아낀다.
+        드롭다운 동작(지금부터 거슬러·요일)은 누르면 바로 실행되는 '동작'이라
+        선택값을 따로 쥐고 있을 필요가 없고, 고른 뒤 다시 안내 문구로
+        돌아간다. */}
+    <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+        <span className="label">점 간격</span>
+        <select value={scale} onChange={e => onScaleChange(e.target.value as ChartScale)} disabled={isChartLoading} className="input">
+          <option value="1m">1분마다</option><option value="5m">5분마다</option><option value="10m">10분마다</option><option value="30m">30분마다</option><option value="1h">1시간마다</option>
+        </select>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+        <span className="label">지금부터 거슬러</span>
+        <select
+          value=""
+          onChange={e => { if (e.target.value) onQuickTime(Number(e.target.value)); }}
+          disabled={isChartLoading}
+          className="input"
+        >
+          <option value="">기간을 고르세요</option>
+          <option value="1">1시간</option>
+          <option value="3">3시간</option>
+          <option value="6">6시간</option>
+          <option value="12">12시간</option>
+          <option value="24">1일</option>
+          <option value={24 * 7}>1주</option>
+        </select>
+      </div>
+    </div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="label">점 간격</span>
-      <select value={scale} onChange={e => onScaleChange(e.target.value as ChartScale)} disabled={isChartLoading} className="input">
-        <option value="1m">1분마다</option><option value="5m">5분마다</option><option value="10m">10분마다</option><option value="30m">30분마다</option><option value="1h">1시간마다</option>
-      </select>
-    </div>
-
-    <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 10 }}>
-      <div className="label" style={{ marginBottom: 8 }}>지금부터 거슬러</div>
-      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-        {[{ label: '1H', h: 1 }, { label: '3H', h: 3 }, { label: '6H', h: 6 }, { label: '12H', h: 12 }, { label: '1D', h: 24 }, { label: '1W', h: 24 * 7 }].map(btn => (
-          <button key={btn.label} onClick={() => onQuickTime(btn.h)} disabled={isChartLoading} className="btn btn-ghost btn-sm" style={{ flex: 1 }}>{btn.label}</button>
-        ))}
-      </div>
-    </div>
-    <div style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 10 }}>
-      <div className="label" style={{ marginBottom: 8 }}>가장 가까운 요일로</div>
-      <div style={{ display: 'flex', gap: 5 }}>
+      <span className="label">가장 가까운 요일로</span>
+      <select
+        value=""
+        onChange={e => { if (e.target.value !== '') onQuickDay(Number(e.target.value)); }}
+        disabled={isChartLoading}
+        className="input"
+      >
+        <option value="">요일을 고르세요</option>
         {['일', '월', '화', '수', '목', '금', '토'].map((dayStr, idx) => (
-          <button key={dayStr} onClick={() => onQuickDay(idx)} disabled={isChartLoading} className="btn btn-ghost btn-sm" style={{ flex: 1 }}>{dayStr}</button>
+          <option key={dayStr} value={idx}>{dayStr}요일</option>
         ))}
-      </div>
+      </select>
     </div>
   </div>
 );
