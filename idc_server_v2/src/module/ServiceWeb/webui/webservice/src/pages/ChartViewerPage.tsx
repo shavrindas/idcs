@@ -64,8 +64,9 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
 
   const [showMainInfo, setShowMainInfo] = useState<boolean>(true);
   const [showMainGrid, setShowMainGrid] = useState<boolean>(true);
-  const [showSubInfo, setShowSubInfo] = useState<boolean>(false); 
+  const [showSubInfo, setShowSubInfo] = useState<boolean>(false);
   const [showSubGrid, setShowSubGrid] = useState<boolean>(true);
+  const [isSubCollapsed, setIsSubCollapsed] = useState<boolean>(false);
 
   const [openMenuRoleId, setOpenMenuRoleId] = useState<number | null>(null);
   const [activeGuidelines, setActiveGuidelines] = useState<number[]>([]);
@@ -468,10 +469,16 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', overflowX: 'auto', gap: 12, boxSizing: 'border-box', padding: 24 }}>
 
-      {/* 상단: 차트 + 검색/스코핑 패널 (최소 높이 보장) */}
-      <div style={{ display: 'flex', gap: 12, minHeight: 650, flexShrink: 0 }}>
+      {/* 상단: 차트 + 검색/스코핑 패널.
+          2행 2열 그리드로 짠다 — 왼쪽(차트)과 오른쪽(패널)을 그냥 나란히만
+          두면 각자 내용 길이가 달라서 중간에 끝나는 지점이 어긋나 눈에
+          거슬렸다. 그리드는 "같은 행에 있는 두 칸은 더 긴 쪽에 맞춰 같이
+          늘어난다" — 그래서 메인 차트 쪽 끝이 스마트 검색+조회 범위 설정
+          쪽 끝과, 서브 차트+맵핑 쪽 끝이 포스트+알람+통계 쪽 끝과 각각
+          맞아떨어진다. */}
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gridTemplateRows: 'auto auto', gap: 12 }}>
 
-        {/* 왼쪽 차트 영역
+        {/* 1행 1열 — 메인 차트.
             flex 아이템의 min-width 기본값은 'auto' — 안의 내용(버튼·셀렉트)
             너비 아래로는 줄어들지 않는다. 그래서 화면을 확대하거나 창을
             좁히면 이 줄이 줄어드는 대신 통째로 옆으로 넘쳐, 안에 있는
@@ -479,34 +486,42 @@ export const ChartViewerPage: React.FC<Props> = ({ user }) => {
             너비'를 보고 그려서 확대해도 반응하지 않는 것처럼 보였다.
             minWidth: 0 을 주면 카드가 실제로 줄어들고, 그 안의 ResizeObserver
             (echarts-for-react의 autoResize)가 그 변화를 그대로 받는다. */}
-        <div style={{ flex: 3, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ gridColumn: 1, gridRow: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <TopToolBar showInfo={showMainInfo} showGrid={showMainGrid} targetDate={targetDate} isChartLoading={isChartLoading} onCopy={handleCopySearchQuery} onToggleInfo={() => setShowMainInfo(!showMainInfo)} onToggleGrid={() => setShowMainGrid(!showMainGrid)} onOneHourView={applyOneHourView} onDateChange={setTargetDate} yBuffer={yBuffer} onYBufferChange={setYBuffer} />
-          <div className="card" style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
-            {emptyReason ? <ChartEmptyState reason={emptyReason} /> : <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />}
-          </div>
-          <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
           <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
-            {emptyReason ? <ChartEmptyState reason={emptyReason} compact /> : <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />}
+            {emptyReason ? <ChartEmptyState reason={emptyReason} /> : <MainChartViewer echartsRef={mainChartRef} datasets={mainDataSets} roleColors={roleColors} showInfo={showMainInfo} showGrid={showMainGrid} activeGuidelines={activeGuidelines} isLoading={isChartLoading} posts={posts} alarms={alarms} onChartClick={handleChartClick} loadedRange={loadedRangeState} onDataZoomPan={handleZoomCapture} yBuffer={yBuffer} />}
           </div>
         </div>
 
-        {/* 오른쪽 패널 영역 — 내용(날짜칸·버튼)이 최소 너비를 가지므로 아예
-            줄이기보다 일정 너비 아래로는 줄지 않게 막아 둔다. flex: 3 쪽이
-            minWidth: 0 로 먼저 줄어드니 이 패널이 밀려 나는 대신 전체 줄이
-            자연스럽게 가로 스크롤 쪽으로 넘어간다. */}
-        <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {/* 1행 2열 — 스마트 검색 + 조회 범위 설정. 이 둘의 세로 길이가
+            1행의 높이를 정하고, 왼쪽 메인 차트가 거기 맞춰 늘어난다. */}
+        <div style={{ gridColumn: 2, gridRow: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <SmartOmniboxPanel input={omniboxInput} suggestions={omniboxSuggestions} isChartLoading={isChartLoading} activeIndex={omniboxActive} onActiveIndexChange={setOmniboxActive} onInputChange={setOmniboxInput} onSubmit={handleOmniboxSubmit} onSelect={handleOmniboxSelect} />
           <ScopingPanel mode={mode} scale={scale} facilities={facilities} rooms={rooms} selectedFacility={selectedFacility} selectedRoom={selectedRoom} isChartLoading={isChartLoading} onModeToggle={handleModeToggle} onScaleChange={setScale} onFacilityChange={setSelectedFacility} onRoomChange={setSelectedRoom} onQuickTime={handleQuickTimeSelect} onQuickDay={handleQuickDaySelect} />
+        </div>
+
+        {/* 2행 1열 — 서브 차트 + 맵핑 활성화.
+            블랙리스트는 기능은 두고 화면에서만 뺀다(display:none). */}
+        <div style={{ gridColumn: 1, gridRow: 2, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <LowerToolBar showInfo={showSubInfo} showGrid={showSubGrid} isCollapsed={isSubCollapsed} onToggleInfo={() => setShowSubInfo(!showSubInfo)} onToggleGrid={() => setShowSubGrid(!showSubGrid)} onToggleCollapsed={() => setIsSubCollapsed(!isSubCollapsed)} onSyncTop={() => syncChartDataZoom(mainChartRef, subChartRef)} onSyncSub={() => syncChartDataZoom(subChartRef, mainChartRef)} />
+          {!isSubCollapsed && (
+            <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0, padding: 12 }}>
+              {emptyReason ? <ChartEmptyState reason={emptyReason} compact /> : <SubChartViewer echartsRef={subChartRef} datasets={subDataSets} roleColors={roleColors} showInfo={showSubInfo} showGrid={showSubGrid} isLoading={isChartLoading} posts={posts} alarms={alarms} invertedBools={invertedBools} loadedRange={loadedRangeState} />}
+            </div>
+          )}
+          <MappingActivePanel groups={groups} allRoles={allRoles} roleColors={roleColors} selectedGroupId={selectedGroupId} selectedRoom={selectedRoom} isChartLoading={isChartLoading} checkedRoles={checkedRoles} activeGuidelines={activeGuidelines} invertedBools={invertedBools} openMenuRoleId={openMenuRoleId} onGroupChange={setSelectedGroupId} onRoleToggle={handleRoleToggle} onRolesToggle={handleRolesToggle} singleNumericMode={mode === 'EXTENT'} onMenuToggle={setOpenMenuRoleId} onColorChange={handleColorChange} onGuidelineToggle={handleGuidelineToggle} onInvertToggle={handleInvertToggle} isBoolRole={isBoolRole} />
+          <div style={{ display: 'none' }}>
+            <BlacklistPanel hiddenPosts={hiddenPosts} onRestore={handleRestorePost} />
+          </div>
+        </div>
+
+        {/* 2행 2열 — 소요기록/알람 뷰어 + 구간 요약. 이 칸의 길이가 2행의
+            높이를 정하고, 왼쪽 서브 차트+맵핑이 거기 맞춰 늘어난다. */}
+        <div style={{ gridColumn: 2, gridRow: 2, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <PostViewerPanel selectedPostIds={selectedPostViewerIds} posts={posts} selectedGroupId={selectedGroupId} onHidePost={handleHidePost} />
           <AlarmViewerPanel selectedAlarmIds={selectedAlarmViewerIds} alarms={alarms} allRoles={allRoles} />
           <ChartStatsPanel datasets={mainDataSets} roleColors={roleColors} />
         </div>
-      </div>
-
-      {/* 하단: 맵핑 활성화 + 블랙리스트 (내용에 따라 자동 확장) */}
-      <div style={{ display: 'flex', gap: 12, flexShrink: 0, flexWrap: 'wrap' }}>
-        <MappingActivePanel groups={groups} allRoles={allRoles} roleColors={roleColors} selectedGroupId={selectedGroupId} selectedRoom={selectedRoom} isChartLoading={isChartLoading} checkedRoles={checkedRoles} activeGuidelines={activeGuidelines} invertedBools={invertedBools} openMenuRoleId={openMenuRoleId} onGroupChange={setSelectedGroupId} onRoleToggle={handleRoleToggle} onRolesToggle={handleRolesToggle} singleNumericMode={mode === 'EXTENT'} onMenuToggle={setOpenMenuRoleId} onColorChange={handleColorChange} onGuidelineToggle={handleGuidelineToggle} onInvertToggle={handleInvertToggle} isBoolRole={isBoolRole} />
-        <BlacklistPanel hiddenPosts={hiddenPosts} onRestore={handleRestorePost} />
       </div>
 
     </div>

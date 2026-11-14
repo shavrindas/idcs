@@ -13,6 +13,8 @@ interface Props {
   onRoomChange: (id: number) => void;
   onDragStart: (e: React.DragEvent, role: Role) => void;
   onAddRole: (role: Role) => void;
+  /** 오른쪽에서 여기로 끌어다 놓으면 그 롤을 뺀다. */
+  onDropToRemove: (e: React.DragEvent) => void;
 }
 
 const getRoleLabels = (roleInfo?: Role, fallbackId?: number) => {
@@ -35,6 +37,7 @@ export const LeftPanel: React.FC<Props> = ({
   onRoomChange,
   onDragStart,
   onAddRole,
+  onDropToRemove,
 }) => {
   const visibleRoom0Roles = room0Roles.filter(
     (role) => !droppedRoleIds.includes(role.role_id)
@@ -94,9 +97,14 @@ export const LeftPanel: React.FC<Props> = ({
       </select>
 
       <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 12 }}>
-        {/* 0호실 (공용) 영역 */}
+        {/* 0호실 (공용) 영역 — 화면에서만 뺀다. 드래그로 넣는 기능 자체는
+            그대로 두고(visibleRoom0Roles, droppedRoleIds 필터링 등) 자리만
+            개별 호실 쪽에 내준다. */}
         <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDropToRemove}
           style={{
+            display: 'none',
             border: '1px solid var(--border)',
             borderRadius: 12,
             flex: 1,
@@ -111,6 +119,8 @@ export const LeftPanel: React.FC<Props> = ({
 
         {/* 개별 호실 영역 */}
         <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDropToRemove}
           style={{
             border: '1px solid var(--border)',
             borderRadius: 12,
