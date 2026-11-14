@@ -147,7 +147,14 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
                     if is_out_of_bounds:
                         candidate_alarms.append((k, role, meta))
 
-        stmt = select(Alarm).where(Alarm.is_triggered == True)
+        stmt = (
+            select(Alarm)
+            .join(Alarm.role)
+            .where(
+                Alarm.is_triggered == True,
+                PointRole.facility_id == facility_id  # 원하는 퍼실리티 ID
+            )
+        )
         result = await db.execute(stmt)
 
         existing_alarms = {a.alarm_name: a for a in result.scalars().all()}
