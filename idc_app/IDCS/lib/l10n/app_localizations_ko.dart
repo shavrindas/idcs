@@ -465,10 +465,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chartApply => '적용';
 
   @override
-  String get chartGroups => '데이터 그룹';
+  String get chartGroups => '온도 항목';
 
   @override
-  String get chartNoGroups => '등록된 그룹이 없습니다.';
+  String get chartNoGroups => '이 호실에 온도 센서가 없습니다.';
 
   @override
   String get chartPickManually => '직접 선택';
@@ -567,7 +567,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String groupLoadFailed(String message) {
-    return '그룹 로드 오류: $message';
+    return '측정 항목 로드 오류: $message';
   }
 
   @override

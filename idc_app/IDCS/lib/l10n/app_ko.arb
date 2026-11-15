@@ -205,8 +205,8 @@
   "chartRange7d": "최근 7일",
   "chartRange15d": "최근 15일",
   "chartApply": "적용",
-  "chartGroups": "데이터 그룹",
-  "chartNoGroups": "등록된 그룹이 없습니다.",
+  "chartGroups": "온도 항목",
+  "chartNoGroups": "이 호실에 온도 센서가 없습니다.",
   "chartPickManually": "직접 선택",
   "chartPickItems": "표시할 항목을 고르세요",
   "chartGroupItems": "이 그룹에 묶인 항목",
@@ -286,7 +286,7 @@
       }
     }
   },
-  "groupLoadFailed": "그룹 로드 오류: {message}",
+  "groupLoadFailed": "측정 항목 로드 오류: {message}",
   "@groupLoadFailed": {
     "placeholders": {
       "message": {

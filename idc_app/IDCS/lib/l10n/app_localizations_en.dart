@@ -476,10 +476,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartApply => 'Apply';
 
   @override
-  String get chartGroups => 'Data groups';
+  String get chartGroups => 'Temperature points';
 
   @override
-  String get chartNoGroups => 'No groups defined.';
+  String get chartNoGroups => 'This room has no temperature sensors.';
 
   @override
   String get chartPickManually => 'Pick manually';
@@ -578,7 +578,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String groupLoadFailed(String message) {
-    return 'Could not load groups: $message';
+    return 'Could not load points: $message';
   }
 
   @override

@@ -35,18 +35,17 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   /// 서버 포인트 롤의 상·하한이 비어 있는 동안 차트 기준선을 그리는 데 쓴다.
   Map<String, RoleLimit> _manualLimits = {};
 
-  // 3. 데이터 포인트 선택 상태
-  int? _selectedGroupId;
-  List<Map<String, dynamic>> _availableGroups = []; // _allGroups 변수도 불필요하여 제거
-
-  /// 호실의 전체 포인트 롤. 그룹에 어떤 항목이 묶여 있는지 이름으로 보여주는 데 쓴다.
+  /// 호실의 전체 포인트 롤.
+  ///
+  /// 맵핑 그룹(웹 어드민이 만든 시설-호실-포인트롤 묶음)은 앱에서는 쓰지
+  /// 않는다 — 온도가 아닌 제어·설정 롤까지 섞여 들어와 "기록 없음" 항목만
+  /// 늘어나던 문제가 있었다. 앱은 그 호실의 [temp_] 로 시작하는 롤만 걸러
+  /// 쓴다.
   List<dynamic> _roles = [];
 
-  /// 실제로 차트에 그릴 롤. 그룹을 고르면 채워지고, 개별로 끄고 켤 수 있다.
+  /// 실제로 차트에 그릴 롤. 온도 롤 중 읽을 수 있는 개수까지 자동으로 채워지고,
+  /// 개별로 끄고 켤 수 있다.
   Set<int> _visibleRoleIds = {};
-
-  /// 그룹과 무관하게 항목을 직접 고르는 모드.
-  bool _directMode = false;
 
   // 4. 차트 렌더링 상태
   bool _isLoading = false;
@@ -78,7 +77,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       });
 
       if (_selectedRoomId != null) {
-        await _loadGroupsAndChart();
+        await _loadRolesAndChart();
       } else {
         setState(() => _isLoading = false);
       }
@@ -90,44 +89,33 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
     }
   }
 
-  // 1단계: 전체 그룹 목록 조회 (타입 필터링 제거)
-  Future<void> _loadGroupsAndChart() async {
+  /// role_name이 "temp_"로 시작하는 롤만 걸러낸다 — 앱 차트가 보여줄 대상은
+  /// 이것뿐이다.
+  List<dynamic> get _tempRoles => _roles
+      .where((r) => (r['role_name']?.toString() ?? '').toLowerCase().startsWith('temp_'))
+      .toList();
+
+  Set<int> _tempRoleIds() => _tempRoles
+      .map((r) => r['role_id'] is int ? r['role_id'] as int : int.tryParse(r['role_id'].toString()))
+      .whereType<int>()
+      .toSet();
+
+  // 1단계: 호실의 포인트 롤 조회 후 온도 롤만 추려 자동 선택
+  Future<void> _loadRolesAndChart() async {
     final int? roomId = _selectedRoomId;
     if (roomId == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // 웹 어드민에서 생성된 그룹 리스트와, 호실의 전체 포인트 롤을 함께 불러온다.
-      // 그룹 API는 role_id만 주기 때문에 이름을 보여주려면 롤 목록이 필요하다.
       final facilityId = int.parse(widget.facilityId);
-      final results = await Future.wait([
-        ChartApiService.getChartGroups(facilityId, roomId),
-        ChartApiService.getPointRoles(facilityId, roomId),
-      ]);
+      final roles = await ChartApiService.getPointRoles(facilityId, roomId);
 
       if (mounted) {
         setState(() {
-          // 필터링 없이 바로 화면에 렌더링할 그룹 목록에 할당
-          _availableGroups = List<Map<String, dynamic>>.from(results[0]);
-          _roles = results[1];
-
-          // 선택된 그룹이 없거나 기존 선택 그룹이 삭제된 경우, 첫 번째 그룹 자동 선택
-          bool shouldResetGroup = _selectedGroupId == null ||
-              !_availableGroups.any((g) => g['group_id'] == _selectedGroupId);
-
-          if (shouldResetGroup && _availableGroups.isNotEmpty) {
-            _selectedGroupId = _availableGroups.first['group_id'];
-          } else if (_availableGroups.isEmpty) {
-            _selectedGroupId = null;
-          }
-
-          // 직접 선택 모드였다면 보고 있던 항목을 그대로 둔다 — 호실이 바뀌어
-          // 없어진 롤만 떨어진다. 그룹 모드면 그룹의 항목을 읽을 수 있는
-          // 개수까지만 켠다.
-          _visibleRoleIds = _directMode
-              ? _visibleRoleIds.intersection(_allRoleIds())
-              : _cappedAuto(_roleIdsOfGroup(_selectedGroupId));
+          _roles = roles;
+          // 읽을 수 있는 개수까지만 온도 롤을 자동으로 켠다.
+          _visibleRoleIds = _cappedAuto(_tempRoleIds());
         });
 
         if (_visibleRoleIds.isNotEmpty) {
@@ -146,11 +134,6 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
       }
     }
   }
-
-  Set<int> _allRoleIds() => _roles
-      .map((r) => r['role_id'] is int ? r['role_id'] as int : int.tryParse(r['role_id'].toString()))
-      .whereType<int>()
-      .toSet();
 
   /// 자동 선택에서 먼저 집을 항목.
   ///
@@ -204,26 +187,6 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             ? e.$2['role_id'] as int
             : int.parse(e.$2['role_id'].toString()))
         .toSet();
-  }
-
-  Set<int> _roleIdsOfGroup(int? groupId) {
-    final group = _availableGroups.where((g) => g['group_id'] == groupId).firstOrNull;
-    return (group?['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
-  }
-
-  void _selectGroup(int groupId) {
-    setState(() {
-      _directMode = false;
-      _selectedGroupId = groupId;
-      _visibleRoleIds = _cappedAuto(_roleIdsOfGroup(groupId));
-    });
-    _fetchChartData();
-  }
-
-  void _enterDirectMode() {
-    // 호실의 모든 항목을 한꺼번에 켜면(42개까지 나온다) 눈금 범위가 뭉개져 차트를 읽을 수 없다.
-    // 그래서 보고 있던 선택을 그대로 두고, 목록만 전체로 펼친다.
-    setState(() => _directMode = true);
   }
 
   void _toggleRole(int roleId, bool visible) {
@@ -338,8 +301,8 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
                   _selectedRoomId = roomId;
                   _chartData = null;
                 });
-                // 호실이 바뀌면 그 호실에 등록된 그룹부터 다시 불러와야 한다.
-                _loadGroupsAndChart();
+                // 호실이 바뀌면 그 호실의 롤부터 다시 불러와야 한다.
+                _loadRolesAndChart();
               },
             ),
             const SizedBox(height: 16),
@@ -356,12 +319,7 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             const SizedBox(height: 16),
 
             ChartSeriesBox(
-              availableGroups: _availableGroups,
-              selectedGroupId: _selectedGroupId,
-              onGroupSelected: _selectGroup,
-              directMode: _directMode,
-              onDirectModeSelected: _enterDirectMode,
-              roles: _roles,
+              roles: _tempRoles,
               visibleRoleIds: _visibleRoleIds,
               onRoleToggled: _toggleRole,
             ),

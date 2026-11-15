@@ -205,8 +205,8 @@
   "chartRange7d": "Last 7 days",
   "chartRange15d": "Last 15 days",
   "chartApply": "Apply",
-  "chartGroups": "Data groups",
-  "chartNoGroups": "No groups defined.",
+  "chartGroups": "Temperature points",
+  "chartNoGroups": "This room has no temperature sensors.",
   "chartPickManually": "Pick manually",
   "chartPickItems": "Choose what to plot",
   "chartGroupItems": "Points in this group",
@@ -286,7 +286,7 @@
       }
     }
   },
-  "groupLoadFailed": "Could not load groups: {message}",
+  "groupLoadFailed": "Could not load points: {message}",
   "@groupLoadFailed": {
     "placeholders": {
       "message": {
