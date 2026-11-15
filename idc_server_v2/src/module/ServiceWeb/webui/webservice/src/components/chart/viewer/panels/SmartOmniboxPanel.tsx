@@ -61,9 +61,11 @@ export const SmartOmniboxPanel: React.FC<Props> = ({ input, suggestions, isChart
         </div>
       )}
     </div>
-    <div style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' }}>
-      {suggestions.length > 0 ? '↑↓ 로 고르고 엔터' : '엔터키 입력 시 자동 파싱 적용'}
-    </div>
+    {suggestions.length > 0 && (
+      <div style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' }}>
+        ↑↓ 로 고르고 엔터
+      </div>
+    )}
   </div>
   );
 };
