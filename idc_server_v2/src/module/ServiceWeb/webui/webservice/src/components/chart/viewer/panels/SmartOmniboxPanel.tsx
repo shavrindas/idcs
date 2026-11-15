@@ -35,7 +35,7 @@ export const SmartOmniboxPanel: React.FC<Props> = ({ input, suggestions, isChart
 
   return (
   <div className="card" style={{ padding: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
-    <h4 style={{ textAlign: 'center', fontSize: 14 }}>스마트 검색</h4>
+    <h4 style={{ textAlign: 'center', fontSize: 14 }}>시점 검색</h4>
     <div style={{ position: 'relative' }}>
       <input
         type="text" value={input} onChange={e => onInputChange(e.target.value)}

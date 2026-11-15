@@ -977,13 +977,13 @@ abstract class AppLocalizations {
   /// No description provided for @chartGroups.
   ///
   /// In ko, this message translates to:
-  /// **'데이터 그룹'**
+  /// **'온도 항목'**
   String get chartGroups;
 
   /// No description provided for @chartNoGroups.
   ///
   /// In ko, this message translates to:
-  /// **'등록된 그룹이 없습니다.'**
+  /// **'이 호실에 온도 센서가 없습니다.'**
   String get chartNoGroups;
 
   /// No description provided for @chartPickManually.
@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupLoadFailed.
   ///
   /// In ko, this message translates to:
-  /// **'그룹 로드 오류: {message}'**
+  /// **'측정 항목 로드 오류: {message}'**
   String groupLoadFailed(String message);
 
   /// No description provided for @chartFailed.

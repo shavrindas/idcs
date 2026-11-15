@@ -183,30 +183,21 @@ class ChartFilterBox extends StatelessWidget {
 }
 
 /// Box #2: 데이터 포인트(시리즈) 선택 박스
+///
+/// 맵핑 그룹(웹 어드민이 시설-호실-포인트롤을 묶어 만든 것)은 여기서 쓰지
+/// 않는다 — 그룹에는 온도가 아닌 제어·설정 롤까지 섞여 들어와 "기록 없음"
+/// 항목만 늘어났다. 이 박스는 호출한 쪽이 이미 [temp_] 접두사로 걸러 준
+/// 온도 롤만 받아, 그중 무엇을 그릴지 켜고 끄는 역할만 한다.
 class ChartSeriesBox extends StatefulWidget {
-  final List<Map<String, dynamic>>
-  availableGroups; // 이제 개별 role이 아닌 Group 리스트를 받습니다.
-  final int? selectedGroupId; // 라디오 버튼처럼 단일 선택으로 변경 (차트 하나당 한 그룹)
-  final Function(int) onGroupSelected;
-
-  /// 그룹과 상관없이 호실의 항목을 직접 고르는 모드.
-  final bool directMode;
-  final VoidCallback onDirectModeSelected;
-
-  /// 호실에 등록된 전체 포인트 롤. 그룹 API는 이름을 주지 않아 따로 받아 맞춘다.
+  /// 호실의 온도(temp_) 포인트 롤만. 이름을 보여주려면 받아야 한다.
   final List<dynamic> roles;
 
-  /// 지금 차트에 그릴 롤. 그룹을 고르면 그룹의 롤로 채워지고, 여기서 개별로 끄고 켤 수 있다.
+  /// 지금 차트에 그릴 롤. 읽을 수 있는 개수까지 자동으로 채워지고, 여기서 개별로 끄고 켤 수 있다.
   final Set<int> visibleRoleIds;
   final Function(int, bool) onRoleToggled;
 
   const ChartSeriesBox({
     super.key,
-    required this.availableGroups,
-    required this.selectedGroupId,
-    required this.onGroupSelected,
-    required this.directMode,
-    required this.onDirectModeSelected,
     required this.roles,
     required this.visibleRoleIds,
     required this.onRoleToggled,
@@ -234,46 +225,15 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
       ? role['role_id']
       : int.tryParse(role['role_id'].toString());
 
-  /// 체크박스로 보여줄 항목. 그룹 모드면 그룹에 묶인 것만, 직접 선택이면 전체.
-  List<dynamic> get _shownRoles {
-    if (widget.directMode) return widget.roles;
-
-    final group = widget.availableGroups
-        .where((g) => g['group_id'] == widget.selectedGroupId)
-        .firstOrNull;
-    if (group == null) return const [];
-
-    final groupRoleIds =
-        (group['role_ids'] as List?)?.whereType<int>().toSet() ?? <int>{};
-    return widget.roles
-        .where((r) => groupRoleIds.contains(_roleId(r)))
-        .toList();
-  }
-
   /// 접었을 때 제목 옆에 붙는 한 줄. 지금 무엇을 보고 있는지 알려 준다.
   String _summary(BuildContext context) {
     final l10n = context.l10n;
-    if (widget.directMode) {
-      return l10n.chartSeriesSummary(
-        l10n.chartPickManually,
-        widget.visibleRoleIds.length,
-      );
-    }
-
-    final group = widget.availableGroups
-        .where((g) => g['group_id'] == widget.selectedGroupId)
-        .firstOrNull;
-    if (group == null) return l10n.chartNoGroups;
-
-    return l10n.chartSeriesSummary(
-      group['group_name']?.toString() ?? l10n.noName,
-      widget.visibleRoleIds.length,
-    );
+    return l10n.chartSeriesSummary(l10n.chartGroups, widget.visibleRoleIds.length);
   }
 
   @override
   Widget build(BuildContext context) {
-    final shown = _shownRoles;
+    final shown = widget.roles;
 
     return _SectionCard(
       title: context.l10n.chartGroups,
@@ -288,7 +248,7 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (widget.availableGroups.isEmpty && !widget.directMode)
+                if (shown.isEmpty)
                   Padding(
                     padding: EdgeInsets.only(bottom: 8),
                     child: Text(
@@ -299,38 +259,9 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
                       ),
                     ),
                   ),
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: [
-                    ...widget.availableGroups.map((group) {
-                      final isSelected =
-                          !widget.directMode &&
-                          widget.selectedGroupId == group['group_id'];
-                      return _chip(
-                        context,
-                        label: group['group_name'],
-                        selected: isSelected,
-                        onSelected: () =>
-                            widget.onGroupSelected(group['group_id']),
-                      );
-                    }),
-                    _chip(
-                      context,
-                      label: context.l10n.chartPickManually,
-                      selected: widget.directMode,
-                      onSelected: widget.onDirectModeSelected,
-                    ),
-                  ],
-                ),
                 if (shown.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Divider(height: 1, color: context.colors.outline),
-                  const SizedBox(height: 10),
                   Text(
-                    widget.directMode
-                        ? context.l10n.chartPickItems
-                        : context.l10n.chartGroupItems,
+                    context.l10n.chartPickItems,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -430,33 +361,6 @@ class _ChartSeriesBoxState extends State<ChartSeriesBox> {
         color: checked ? context.colors.primary : context.colors.outline,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-    );
-  }
-
-  Widget _chip(
-    BuildContext context, {
-    required String label,
-    required bool selected,
-    required VoidCallback onSelected,
-  }) {
-    return ChoiceChip(
-      showCheckmark: false,
-      label: Text(label),
-      selected: selected,
-      onSelected: (val) {
-        if (val) onSelected();
-      },
-      labelStyle: TextStyle(
-        color: selected ? context.colors.onPrimary : context.colors.textPrimary,
-        fontWeight: FontWeight.w600,
-        fontSize: 13,
-      ),
-      selectedColor: context.colors.primary,
-      backgroundColor: context.colors.background,
-      side: BorderSide(
-        color: selected ? context.colors.primary : context.colors.outline,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     );
   }
 }
