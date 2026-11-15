@@ -60,7 +60,7 @@ class RoomStatus {
   /// temp_pv 롤에는 상·하한이 비어 있어서 온도 알람이 한 번도 뜬 적이 없다.
   /// 그게 채워지기 전까지도 화면은 "뭔가 이상하다"를 보여줄 수 있어야 하므로,
   /// 설정값과의 차이로 자체 판단한다.
-  static const double driftThreshold = 2.0;
+  static const double driftThreshold = 5.0;
 
   /// 설비가 보내는 참/거짓. "ON"/"OFF" 로도, "1"/"0" 으로도, "0.0" 처럼
   /// 소수로도 온다(temp_comp 가 그렇다). 알 수 없는 값이면 null —
