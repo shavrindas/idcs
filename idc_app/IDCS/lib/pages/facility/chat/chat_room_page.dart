@@ -1,6 +1,7 @@
 // 경로: lib/pages/facility/chat/chat_room_page.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/services/chat/chat_api_service.dart';
@@ -102,7 +103,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     if (text.isEmpty) return;
 
     // 답장 여부에 따라 parent_message_id 포함
-    final payload = {
+    // (payload 가 String 값으로만 초기화되면 Dart 가 Map<String, String> 으로
+    // 추론해 버려서, 아래에서 int 인 message_id 를 넣는 순간 런타임에 조용히
+    // 터진다 — 답장이 "눌러도 아무 반응 없음"으로 보이던 원인이었다)
+    final payload = <String, dynamic>{
       "type": "TEXT",
       "content": text,
     };
@@ -127,6 +131,80 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         if (!mounted) return;
         AppToast.error(context, describeApiError(context, e));
       }
+    } else if (action == 'edit') {
+      _handleEditMessage(msg);
+    } else if (action == 'delete') {
+      _handleDeleteMessage(msg);
+    }
+  }
+
+  Future<void> _handleEditMessage(Map<String, dynamic> msg) async {
+    final controller = TextEditingController(text: msg['content']);
+    final newContent = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.chatEditMessageTitle),
+        content: TextField(controller: controller, autofocus: true, maxLines: 4),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(dialogContext.l10n.actionCancel)),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(dialogContext.l10n.actionSave),
+          ),
+        ],
+      ),
+    );
+    if (newContent == null || newContent.isEmpty || !mounted) return;
+
+    try {
+      await ChatApiService.editMessage(msg['message_id'], widget.userId, newContent);
+      _loadMessages();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
+    }
+  }
+
+  Future<void> _handleDeleteMessage(Map<String, dynamic> msg) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(dialogContext.l10n.chatDeleteMessageConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: Text(dialogContext.l10n.actionCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: dialogContext.colors.error),
+            child: Text(dialogContext.l10n.actionDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ChatApiService.deleteMessage(msg['message_id'], widget.userId);
+      _loadMessages();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
+    }
+  }
+
+  Future<void> _handleImageAttach() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked == null || !mounted) return;
+
+    try {
+      final imageUrl = await ChatApiService.uploadChatImage(
+        roomId: widget.roomId,
+        bytes: await picked.readAsBytes(),
+        filename: picked.name,
+      );
+      _wsService.send(jsonEncode({"type": "IMAGE", "content": imageUrl}));
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
     }
   }
 
@@ -216,6 +294,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
             replyingTo: _replyingTo,
             onSend: _sendMessage,
             onCancelReply: () => setState(() => _replyingTo = null),
+            onAttach: _handleImageAttach,
           ),
           const SafeArea(child: SizedBox.shrink()),
         ],

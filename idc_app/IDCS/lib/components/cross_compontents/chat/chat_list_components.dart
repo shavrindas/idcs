@@ -40,8 +40,15 @@ class ChatRoomListBox extends StatelessWidget {
   final List<dynamic> rooms;
   final Function(int) onRoomTapped;
   final Function(int) onRoomLongPressed;
+  final Function(int) onFavoriteToggled;
 
-  const ChatRoomListBox({super.key, required this.rooms, required this.onRoomTapped, required this.onRoomLongPressed});
+  const ChatRoomListBox({
+    super.key,
+    required this.rooms,
+    required this.onRoomTapped,
+    required this.onRoomLongPressed,
+    required this.onFavoriteToggled,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -109,13 +116,27 @@ class ChatRoomListBox extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
             ),
-            trailing: room['unread_count'] > 0
-                ? CircleAvatar(
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (room['unread_count'] > 0) ...[
+                  CircleAvatar(
                     radius: 13,
                     backgroundColor: context.colors.error,
                     child: Text('${room['unread_count']}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                  )
-                : null,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                IconButton(
+                  tooltip: room['is_favorite'] == true ? context.l10n.chatFavoriteRemove : context.l10n.chatFavoriteAdd,
+                  icon: Icon(
+                    room['is_favorite'] == true ? Icons.star_rounded : Icons.star_border_rounded,
+                    color: room['is_favorite'] == true ? Colors.amber : context.colors.textSecondary,
+                  ),
+                  onPressed: () => onFavoriteToggled(room['room_id']),
+                ),
+              ],
+            ),
             onTap: () => onRoomTapped(room['room_id']),
             onLongPress: () => onRoomLongPressed(room['room_id']),
           );

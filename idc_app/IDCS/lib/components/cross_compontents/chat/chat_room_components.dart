@@ -73,7 +73,7 @@ class ChatMessageListBox extends StatelessWidget {
             alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
             child: GestureDetector(
               onLongPressStart: (details) {
-                _showMessageMenu(context, details.globalPosition, msg);
+                _showMessageMenu(context, details.globalPosition, msg, isMine);
               },
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
@@ -127,10 +127,22 @@ class ChatMessageListBox extends StatelessWidget {
                               if (isPinned) Icon(Icons.push_pin_rounded, size: 13, color: isMine ? context.colors.onPrimary : context.colors.error),
                               if (isPinned) const SizedBox(width: 4),
                               Flexible(
-                                child: Text(
-                                  msg['content'],
-                                  style: TextStyle(fontSize: 14, color: isMine ? context.colors.onPrimary : context.colors.textPrimary),
-                                ),
+                                child: msg['message_type'] == 'IMAGE'
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          msg['content'],
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => Icon(
+                                            Icons.broken_image_outlined,
+                                            color: isMine ? context.colors.onPrimary : context.colors.textSecondary,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        msg['content'],
+                                        style: TextStyle(fontSize: 14, color: isMine ? context.colors.onPrimary : context.colors.textPrimary),
+                                      ),
                               ),
                             ],
                           ),
@@ -154,15 +166,17 @@ class ChatMessageListBox extends StatelessWidget {
     );
   }
 
-  void _showMessageMenu(BuildContext context, Offset position, Map<String, dynamic> msg) {
+  void _showMessageMenu(BuildContext context, Offset position, Map<String, dynamic> msg, bool isMine) {
+    // 수정/삭제는 본인 글에서만 의미가 있다 — 남의 글에는 눌러도 안 되는
+    // 버튼을 아예 안 보여주는 편이 "눌렀는데 비활성" 보다 낫다.
     showMenu(
       context: context,
       position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
       items: [
         PopupMenuItem(value: 'reply', child: Row(children: [Icon(Icons.reply_rounded, size: 18), SizedBox(width: 8), Text(context.l10n.chatReply)])),
         PopupMenuItem(value: 'pin', child: Row(children: [Icon(Icons.push_pin_outlined, size: 18), SizedBox(width: 8), Text(context.l10n.chatPinToggle)])),
-        PopupMenuItem(value: 'edit', enabled: false, child: Row(children: [Icon(Icons.edit_outlined, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text(context.l10n.actionEdit, style: TextStyle(color: context.colors.textSecondary))])),
-        PopupMenuItem(value: 'delete', enabled: false, child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: context.colors.textSecondary), const SizedBox(width: 8), Text(context.l10n.actionDelete, style: TextStyle(color: context.colors.textSecondary))])),
+        if (isMine) PopupMenuItem(value: 'edit', child: Row(children: [const Icon(Icons.edit_outlined, size: 18), const SizedBox(width: 8), Text(context.l10n.actionEdit)])),
+        if (isMine) PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: context.colors.error), const SizedBox(width: 8), Text(context.l10n.actionDelete, style: TextStyle(color: context.colors.error))])),
       ],
     ).then((value) {
       if (value != null) onAction(msg, value);
@@ -176,8 +190,9 @@ class ChatInputBox extends StatelessWidget {
   final Map<String, dynamic>? replyingTo;
   final VoidCallback onSend;
   final VoidCallback onCancelReply;
+  final VoidCallback onAttach;
 
-  const ChatInputBox({super.key, required this.controller, required this.replyingTo, required this.onSend, required this.onCancelReply});
+  const ChatInputBox({super.key, required this.controller, required this.replyingTo, required this.onSend, required this.onCancelReply, required this.onAttach});
 
   @override
   Widget build(BuildContext context) {
@@ -218,12 +233,10 @@ class ChatInputBox extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: Row(
               children: [
-                // File attachment isn't implemented yet; disabled rather than
-                // shown as tappable with no effect.
                 IconButton(
                   tooltip: context.l10n.chatAttach,
-                  icon: Icon(Icons.add_circle_outline_rounded, color: context.colors.textSecondary),
-                  onPressed: null,
+                  icon: Icon(Icons.add_circle_outline_rounded, color: context.colors.primary),
+                  onPressed: onAttach,
                 ),
                 Expanded(
                   child: TextField(

@@ -3,22 +3,36 @@
 # 명세 : 메신저 채팅방 관리 및 웹소켓 통신 컨트롤러
 # ===============================================================
 import json
+import os
+import uuid
+from datetime import datetime
+from io import BytesIO
 from typing import List, Dict, Optional
+from PIL import Image
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, status, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from src.config.database import get_db
 from src.module.Core.models.User import UserRole, User
-from src.module.Core.models.Chat import ChatParticipant, Message, MessageType, ChatRoomType, ChatRoom, MessagePin
+from src.module.Core.models.Chat import ChatParticipant, Message, MessageType, ChatRoomType, ChatRoom, MessagePin, MessageFav
 from sqlalchemy.future import select
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
+
+# 채팅 첨부 이미지. 게시판(board_controller)과 같은 정책 — 너무 큰 원본을
+# 그대로 저장하면 느려지니 1920px 기준으로 줄인다.
+UPLOAD_ROOT = "uploads/chat"
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
+MAX_IMAGE_SIDE = 1920
 
 # --- [Pydantic Schemas] ---
 class GroupChatCreateReq(BaseModel):
     room_name: str
     user_ids: List[int]
+
+class EditMessageReq(BaseModel):
+    content: str
 
 # --- [웹소켓 매니저] ---
 class ConnectionManager:
@@ -73,7 +87,10 @@ async def get_chat_rooms(facility_id: int, user_id: int, db: AsyncSession = Depe
                    FROM chatparticipants cp2
                    JOIN facility_users fu ON cp2.user_id = fu.user_id
                    WHERE cp2.room_id = cr.room_id AND cp2.user_id != :user_id AND fu.facility_id = :facility_id
-               ) as other_user_in_facility
+               ) as other_user_in_facility,
+               (
+                   SELECT COUNT(*) FROM messages_fav mf WHERE mf.room_id = cr.room_id AND mf.user_id = :user_id
+               ) as is_favorite
         FROM chatrooms cr
         JOIN chatparticipants cp ON cr.room_id = cp.room_id
         WHERE cp.user_id = :user_id
@@ -98,6 +115,12 @@ async def get_chat_rooms(facility_id: int, user_id: int, db: AsyncSession = Depe
         elif r.type == 'GROUP':
             priority = 5 # (4는 즐겨찾기 용도로 비워둠)
 
+        is_favorite = r.is_favorite > 0
+        # 즐겨찾기한 방은 4순위로 끌어올린다 — 단, 이미 1~3순위(시설방/관리자
+        # 방)보다 더 중요하게 취급되던 방을 즐겨찾기 때문에 밀어내지는 않는다.
+        if is_favorite and priority > 4:
+            priority = 4
+
         room_name_display = r.room_name
         if r.type == 'DIRECT' and not room_name_display:
             room_name_display = "1:1 채팅방"
@@ -109,6 +132,7 @@ async def get_chat_rooms(facility_id: int, user_id: int, db: AsyncSession = Depe
             "last_message": r.last_message or "메시지가 없습니다.",
             "unread_count": r.unread_count,
             "sort_priority": priority,
+            "is_favorite": is_favorite,
             "last_message_time": str(r.last_message_time) if r.last_message_time else ""
         })
 
@@ -179,11 +203,94 @@ async def toggle_pin_message(room_id: int, message_id: int, user_id: int, db: As
         await db.commit()
         return {"status": "success", "message": "메시지 고정이 해제되었습니다."}
     else:
-        # 새 고정
-        new_pin = MessagePin(message_id=message_id)
+        # 새 고정. room_id 와 user_id 는 NOT NULL 컬럼이라 빠뜨리면
+        # IntegrityError 로 500 이 난다 — 고정이 "눌러도 안 됨"으로 보이던 원인.
+        new_pin = MessagePin(room_id=room_id, message_id=message_id, user_id=user_id)
         db.add(new_pin)
         await db.commit()
         return {"status": "success", "message": "메시지가 고정되었습니다."}
+
+@router.post("/room/{room_id}/favorite")
+async def toggle_favorite_room(room_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """채팅방 즐겨찾기 토글"""
+    fav_res = await db.execute(select(MessageFav).where(MessageFav.room_id == room_id, MessageFav.user_id == user_id))
+    fav = fav_res.scalars().first()
+
+    if fav:
+        await db.delete(fav)
+        await db.commit()
+        return {"status": "success", "is_favorite": False, "message": "즐겨찾기가 해제되었습니다."}
+    else:
+        new_fav = MessageFav(room_id=room_id, user_id=user_id)
+        db.add(new_fav)
+        await db.commit()
+        return {"status": "success", "is_favorite": True, "message": "즐겨찾기에 추가되었습니다."}
+
+@router.put("/message/{message_id}")
+async def edit_message(message_id: int, req: EditMessageReq, user_id: int, db: AsyncSession = Depends(get_db)):
+    """메시지 내용 수정 (본인 글만)"""
+    msg_res = await db.execute(select(Message).where(Message.message_id == message_id))
+    msg = msg_res.scalars().first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="메시지를 찾을 수 없습니다.")
+    if msg.user_id != user_id:
+        raise HTTPException(status_code=403, detail="본인이 작성한 메시지만 수정할 수 있습니다.")
+
+    msg.content = req.content
+    await db.commit()
+    return {"status": "success", "message": "메시지가 수정되었습니다."}
+
+@router.delete("/message/{message_id}")
+async def delete_message(message_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    """메시지 삭제 (본인 글, 또는 관리자는 누구든)"""
+    msg_res = await db.execute(select(Message).where(Message.message_id == message_id))
+    msg = msg_res.scalars().first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="메시지를 찾을 수 없습니다.")
+
+    if msg.user_id != user_id:
+        user_res = await db.execute(select(User).where(User.id == user_id))
+        user = user_res.scalars().first()
+        is_admin = user and user.role in [UserRole.ADMIN, UserRole.DEVELOPER]
+        if not is_admin:
+            raise HTTPException(status_code=403, detail="본인이 작성한 메시지만 삭제할 수 있습니다.")
+
+    await db.delete(msg)
+    await db.commit()
+    return {"status": "success", "message": "메시지가 삭제되었습니다."}
+
+@router.post("/room/{room_id}/image/upload")
+async def upload_chat_image(room_id: int, request: Request, file: UploadFile = File(...)):
+    """채팅 이미지 업로드. 저장 후 절대 URL 을 돌려주면, 그 URL 을 IMAGE 메시지의
+    content 로 웹소켓에 실어 보낸다 (board_controller 의 이미지 업로드와 같은 방식)."""
+    contents = await file.read()
+    if len(contents) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="이미지 용량이 너무 큽니다 (최대 10MB).")
+
+    try:
+        image = Image.open(BytesIO(contents))
+        image.load()
+    except Exception:
+        raise HTTPException(status_code=400, detail="이미지 파일을 열 수 없습니다.")
+
+    if image.width > MAX_IMAGE_SIDE or image.height > MAX_IMAGE_SIDE:
+        ratio = min(MAX_IMAGE_SIDE / image.width, MAX_IMAGE_SIDE / image.height)
+        image = image.resize((int(image.width * ratio), int(image.height * ratio)), Image.LANCZOS)
+
+    ext = (file.filename.rsplit(".", 1)[-1] if file.filename and "." in file.filename else "jpg").lower()
+    if image.mode in ("RGBA", "P") and ext in ("jpg", "jpeg"):
+        image = image.convert("RGB")
+
+    today = datetime.now()
+    save_dir = os.path.join(UPLOAD_ROOT, f"{today:%Y}", f"{today:%m}", f"{today:%d}")
+    os.makedirs(save_dir, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    save_path = os.path.join(save_dir, filename)
+    image.save(save_path)
+
+    relative_url = f"/{save_path.replace(os.sep, '/')}"
+    image_url = str(request.base_url).rstrip("/") + relative_url
+    return {"status": "success", "image_url": image_url}
 
 @router.get("/room/{room_id}/participants")
 async def get_chat_participants(room_id: int, db: AsyncSession = Depends(get_db)):

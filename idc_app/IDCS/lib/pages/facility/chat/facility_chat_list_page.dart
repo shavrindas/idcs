@@ -142,6 +142,16 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
     }
   }
 
+  Future<void> _handleFavoriteToggle(int roomId) async {
+    try {
+      await ChatApiService.toggleFavoriteRoom(roomId, widget.userId);
+      _fetchRooms(); // 정렬 순서가 바뀌므로 목록을 다시 받아온다.
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
+    }
+  }
+
   void _handleRoomLongPress(int roomId) {
     showModalBottomSheet(
       context: context,
@@ -231,6 +241,7 @@ class _FacilityChatListPageState extends State<FacilityChatListPage> {
                             .then((_) => _fetchRooms());
                       },
                       onRoomLongPressed: _handleRoomLongPress,
+                      onFavoriteToggled: _handleFavoriteToggle,
                     ),
                 ],
               ),
