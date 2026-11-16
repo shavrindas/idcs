@@ -106,6 +106,14 @@ class ChatApiService {
     throw ApiException.rejected(decoded);
   }
 
+  /// 상단 고정 배너용 — 이 방에서 고정된 메시지 전체.
+  static Future<List<dynamic>> getPinnedMessages(int roomId) async {
+    final url = Uri.parse('$_baseUrl/room/$roomId/pinned');
+    final response = await ApiClient.get(url);
+    if (response.statusCode == 200) return jsonDecode(utf8.decode(response.bodyBytes))['pinned'];
+    throw ApiException.rejected();
+  }
+
   static Future<List<dynamic>> getParticipants(int roomId) async {
     final url = Uri.parse('$_baseUrl/room/$roomId/participants');
     final response = await ApiClient.get(url);

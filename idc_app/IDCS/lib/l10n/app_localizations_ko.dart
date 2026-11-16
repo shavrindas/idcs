@@ -1010,6 +1010,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get chatFavoriteRemove => '즐겨찾기 해제';
 
   @override
+  String get chatPinnedImageLabel => '사진';
+
+  @override
+  String get chatUnpin => '고정 해제';
+
+  @override
   String get chatMessageEdited => '(수정됨)';
 
   @override

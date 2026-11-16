@@ -1922,6 +1922,18 @@ abstract class AppLocalizations {
   /// **'즐겨찾기 해제'**
   String get chatFavoriteRemove;
 
+  /// No description provided for @chatPinnedImageLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진'**
+  String get chatPinnedImageLabel;
+
+  /// No description provided for @chatUnpin.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정 해제'**
+  String get chatUnpin;
+
   /// No description provided for @chatMessageEdited.
   ///
   /// In ko, this message translates to:

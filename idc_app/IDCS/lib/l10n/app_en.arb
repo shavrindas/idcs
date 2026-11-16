@@ -539,6 +539,8 @@
   "chatPinToggle": "Pin",
   "chatFavoriteAdd": "Add to favorites",
   "chatFavoriteRemove": "Remove from favorites",
+  "chatPinnedImageLabel": "Photo",
+  "chatUnpin": "Unpin",
   "chatMessageEdited": "(edited)",
   "chatEditMessageTitle": "Edit message",
   "chatDeleteMessageConfirm": "Delete this message?",
