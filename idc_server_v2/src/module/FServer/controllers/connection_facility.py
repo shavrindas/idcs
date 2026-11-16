@@ -9,7 +9,7 @@ import re
 from src.module.Mapper.categories import et_category as CT
 from src.module.Mapper.categories import DataFormat as Formats
 import threading
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 import math
 import json
 from typing import Dict
@@ -308,7 +308,11 @@ class Ethernet:
     
                 print(f"✅ [{current_time_str} - 1분 통계 집계 완료]\n")
     
-                json_ready_data["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # UTC 기준으로 찍는다. 로컬(KST) 시각을 그대로 보내면, 받는 쪽에서
+                # 이 문자열을 timezone-aware 컬럼에 그대로 저장할 때 "UTC 19:30"으로
+                # 잘못 기록되어(실제 UTC보다 9시간 앞섬) 방금 들어온 값이 9시간
+                # 전 값처럼 보이는 원인이 된다.
+                json_ready_data["time"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     
                 json_string = json.dumps(json_ready_data, ensure_ascii=False)
 

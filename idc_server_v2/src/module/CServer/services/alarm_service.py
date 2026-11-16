@@ -185,7 +185,7 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
             .where(Alarm.alarm_name.in_(disenabled_alarm))
             .values(
                 is_triggered=False,
-                end_time=datetime.now()  # 또는 한국 시간 기준이라면 datetime.now() 등 사용
+                end_time=datetime.now(timezone.utc)  # timezone-aware 컬럼이라 naive now()를 넣으면 9시간 어긋난다
             )
         )
 
@@ -226,7 +226,7 @@ async def check_roles(facility_id: int, data_dict: dict, roles):
     #알람 스레시홀드 시작하기
     for k, role, meta in triggered_alarms:
         if k not in alarm_triggered[facility_id]:
-            alarm_triggered[facility_id][k] = (datetime.now(), tokens, facility_name, meta.display_name if meta else None, role)
+            alarm_triggered[facility_id][k] = (datetime.now(timezone.utc), tokens, facility_name, meta.display_name if meta else None, role)
 
     triggered_keys = {k for k, _, _ in triggered_alarms}
 
@@ -250,7 +250,7 @@ async def alarm_threshold_monitoring():
             # 3. FCM 푸시 알림 전송
             for v in list(alarm_triggered.values()):
                 for k, t in list(v.items()):
-                    now_time = datetime.now()
+                    now_time = datetime.now(timezone.utc)
                     if t[0] + timedelta(minutes=1) <= now_time:
                         mapped_name = t[3]
                         if mapped_name == "이상":

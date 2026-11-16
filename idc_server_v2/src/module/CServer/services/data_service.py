@@ -25,7 +25,10 @@ async def facility_log_check(data_dict: dict, facility_id: int):
         #print(roles)
         #print(f"현재시간: {datetime.strptime(data_dict["time"], "%Y-%m-%d %H:%M:%S")}")
 
-        dt_object = datetime.strptime(data_dict["time"], "%Y-%m-%d %H:%M:%S")
+        # FServer가 보내는 "time"은 UTC 기준 문자열(시간대 표시 없음)이다. naive로
+        # 파싱한 채로 timezone-aware 컬럼에 저장하면 세션 시간대에 따라 다르게
+        # 해석될 수 있으므로, 여기서 명시적으로 UTC를 붙여 모호함을 없앤다.
+        dt_object = datetime.strptime(data_dict["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
         for datakey, labled_dict in data_dict.items():
             try:
