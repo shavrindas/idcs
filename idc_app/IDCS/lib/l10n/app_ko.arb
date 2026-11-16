@@ -539,6 +539,8 @@
   "chatPinToggle": "고정 토글",
   "chatFavoriteAdd": "즐겨찾기 추가",
   "chatFavoriteRemove": "즐겨찾기 해제",
+  "chatPinnedImageLabel": "사진",
+  "chatUnpin": "고정 해제",
   "chatMessageEdited": "(수정됨)",
   "chatEditMessageTitle": "메시지 수정",
   "chatDeleteMessageConfirm": "이 메시지를 삭제할까요?",

@@ -37,6 +37,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   List<dynamic> _messages = [];
   List<dynamic> _participants = [];
+  List<dynamic> _pinnedMessages = []; // 상단 고정 배너 — 스크롤과 무관하게 계속 보여준다
   Map<String, dynamic>? _replyingTo; // 답장 대상 메시지 저장
 
   /// 보낸 사람 id -> 이름. 메시지 API 는 user_id 만 주기 때문에, 참여자 목록에서
@@ -60,6 +61,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
           if (p['id'] is int && p['name'] != null) p['id'] as int: p['name'].toString(),
       };
       await _loadMessages();
+      await _loadPinnedMessages();
     } catch (e) {
       if (mounted) AppToast.error(context, describeApiError(context, e));
     } finally {
@@ -76,6 +78,26 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         ChatApiService.markAsRead(widget.roomId, widget.userId);
       }
     });
+  }
+
+  Future<void> _loadPinnedMessages() async {
+    try {
+      final pinned = await ChatApiService.getPinnedMessages(widget.roomId);
+      if (mounted) setState(() => _pinnedMessages = pinned);
+    } catch (e) {
+      // 배너는 보조 정보라 실패해도 채팅 자체는 계속 쓸 수 있어야 한다 —
+      // 토스트로 막지 않고 조용히 비워 둔다.
+    }
+  }
+
+  Future<void> _togglePin(int messageId) async {
+    try {
+      await ChatApiService.togglePinMessage(widget.roomId, messageId, widget.userId);
+      await Future.wait([_loadMessages(), _loadPinnedMessages()]);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.error(context, describeApiError(context, e));
+    }
   }
 
   Future<void> _loadMessages({String keyword = ""}) async {
@@ -123,14 +145,7 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
     if (action == 'reply') {
       setState(() => _replyingTo = msg);
     } else if (action == 'pin') {
-      try {
-        await ChatApiService.togglePinMessage(widget.roomId, msg['message_id'], widget.userId);
-        _loadMessages(); // 상태 리프레시
-      } catch (e) {
-        // The await above may have outlived this screen.
-        if (!mounted) return;
-        AppToast.error(context, describeApiError(context, e));
-      }
+      _togglePin(msg['message_id']);
     } else if (action == 'edit') {
       _handleEditMessage(msg);
     } else if (action == 'delete') {
@@ -279,6 +294,11 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         children: [
           // 앱바가 'Chat', 그 아래 상자가 'Chat 5' 라 제목이 두 줄로 겹쳐 있었다.
           // 방 이름을 앱바에 올리고 상자는 걷어냈다 — 대화가 보이는 높이가 늘었다.
+          ChatPinnedBannerBox(
+            pinnedMessages: _pinnedMessages,
+            senderNames: _senderNames,
+            onUnpin: _togglePin,
+          ),
           Expanded(
             child: _isLoadingHistory
                 ? const Center(child: CircularProgressIndicator())

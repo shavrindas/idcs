@@ -33,6 +33,77 @@ class ChatRoomHeaderBox extends StatelessWidget {
   }
 }
 
+/// Box #1-2: 상단 고정 메시지 배너. 메시지 목록과 별개 위젯이라 스크롤해도
+/// 화면 위쪽에 그대로 남아 있는다 — 고정한 메시지를 찾으려고 위로 스크롤해
+/// 올라갈 필요가 없게 하려는 목적이다.
+class ChatPinnedBannerBox extends StatelessWidget {
+  final List<dynamic> pinnedMessages;
+  final Map<int, String> senderNames;
+  final void Function(int messageId) onUnpin;
+
+  const ChatPinnedBannerBox({
+    super.key,
+    required this.pinnedMessages,
+    required this.onUnpin,
+    this.senderNames = const {},
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (pinnedMessages.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 160),
+      decoration: BoxDecoration(
+        color: context.colors.primary.withValues(alpha: 0.06),
+        border: Border(bottom: BorderSide(color: context.colors.outline)),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        itemCount: pinnedMessages.length,
+        separatorBuilder: (_, _) => Divider(height: 1, color: context.colors.outline),
+        itemBuilder: (context, index) {
+          final msg = pinnedMessages[index];
+          final sender = senderNames[msg['user_id']] ?? '#${msg['user_id']}';
+          final isImage = msg['message_type'] == 'IMAGE';
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Row(
+              children: [
+                Icon(Icons.push_pin_rounded, size: 15, color: context.colors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(sender, style: TextStyle(fontSize: 11, color: context.colors.textSecondary)),
+                      Text(
+                        isImage ? context.l10n.chatPinnedImageLabel : (msg['content']?.toString() ?? ''),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.textPrimary),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: context.l10n.chatUnpin,
+                  icon: Icon(Icons.close_rounded, size: 16, color: context.colors.textSecondary),
+                  onPressed: () => onUnpin(msg['message_id']),
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 /// Box #2: 메시지 리스트 박스 (답장 UI 및 고정 아이콘 추가)
 class ChatMessageListBox extends StatelessWidget {
   final List<dynamic> messages;
