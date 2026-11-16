@@ -67,12 +67,10 @@ class FacilityTreeViewTab extends StatelessWidget {
       itemBuilder: (context, parentIndex) {
         final parent = parentNodes[parentIndex];
 
-        // 꺼진 항목은 목록을 접어도 무엇이 꺼져 있는지 알 수 있어야 한다 —
-        // 그러지 않으면 매번 펼쳐 봐야만 확인할 수 있었다.
-        final offNames = parent.children
-            .where((c) => !c.isActive)
-            .map((c) => c.displayName.isNotEmpty ? c.displayName : c.roleName)
-            .join(', ');
+        // 꺼진 항목은 목록을 접어도 바로 켤 수 있어야 한다 — 이름만 보여주면
+        // 결국 펼쳐서 같은 스위치를 다시 찾아야 했다. 꺼진 항목만 토글과
+        // 함께 이 카드(헤더) 안에 미리 꺼내 둔다.
+        final offChildren = parent.children.where((c) => !c.isActive).toList();
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -100,11 +98,44 @@ class FacilityTreeViewTab extends StatelessWidget {
                   color: context.colors.textPrimary,
                 ),
               ),
-              subtitle: offNames.isEmpty
+              subtitle: offChildren.isEmpty
                   ? null
-                  : Text(
-                      '꺼짐: $offNames',
-                      style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final child in offChildren)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: context.colors.textSecondary.withValues(alpha: 0.5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    child.displayName.isNotEmpty ? child.displayName : child.roleName,
+                                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Transform.scale(
+                                  scale: 0.75,
+                                  child: Switch(
+                                    value: child.isActive,
+                                    onChanged: (bool value) => child.onToggle(value),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
               children: parent.children.map((child) {
                 return Container(
