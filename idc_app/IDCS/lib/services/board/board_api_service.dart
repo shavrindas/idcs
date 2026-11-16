@@ -111,11 +111,13 @@ class BoardApiService {
       }),
     );
 
+    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
     if (response.statusCode == 200) {
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       return decoded['post_id'];
     }
-    throw ApiException.rejected();
+    // 서버가 돌려준 실제 사유(detail)를 그대로 넘긴다 — 안 그러면 뭐가 잘못됐는지
+    // 전혀 알 수 없는 "요청을 처리하지 못했습니다" 한 줄만 남는다.
+    throw ApiException.rejected(decoded);
   }
 
   /// 5. 게시글 수정
@@ -138,7 +140,11 @@ class BoardApiService {
     );
 
     if (response.statusCode != 200) {
-      throw ApiException.rejected();
+      Map<String, dynamic>? decoded;
+      try {
+        decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      } catch (_) {}
+      throw ApiException.rejected(decoded);
     }
   }
 

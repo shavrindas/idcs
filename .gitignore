@@ -55,3 +55,6 @@ testdata2.py
 testdata.py
 
 merge.txt
+
+# 게시글 첨부 이미지 (로컬 저장, 사용자 업로드 파일이라 커밋하지 않는다)
+idc_server_v2/uploads/

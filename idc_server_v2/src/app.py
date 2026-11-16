@@ -58,9 +58,16 @@ app.add_middleware(
 # ===============================================================
 # ─── 파이어베이스 서비스 ───
 # ===============================================================
+_FIREBASE_CRED_PATH = "src/config/idcs-project-e7dc3-firebase-adminsdk-fbsvc-5370b4b83e.json" # 다운받은 키 경로
+
 if not firebase_admin._apps:
-    cred = credentials.Certificate("src/config/idcs-project-e7dc3-firebase-adminsdk-fbsvc-5370b4b83e.json") # 다운받은 키 경로
-    firebase_admin.initialize_app(cred)
+    if os.path.exists(_FIREBASE_CRED_PATH):
+        cred = credentials.Certificate(_FIREBASE_CRED_PATH)
+        firebase_admin.initialize_app(cred)
+    else:
+        # 로컬 개발 환경엔 이 비밀 키 파일이 없을 수 있다 — 그 경우 서버 전체가
+        # 뜨지 못하는 대신, 푸시 알림만 꺼진 채로 나머지 기능은 그대로 돌게 한다.
+        print(f"LOG[STARTUP] : Firebase credential not found at {_FIREBASE_CRED_PATH} — push notifications disabled.")
 
 
 app.include_router(api_router, prefix="/api/v1")
@@ -76,3 +83,7 @@ WEBUI_DIST_DIR = os.path.join(
 )
 if os.path.exists(WEBUI_DIST_DIR):
     app.mount("/webui", StaticFiles(directory=WEBUI_DIST_DIR, html=True), name="webui")
+
+# 게시글 첨부 이미지 (board_controller의 /board/image/upload 가 여기에 저장한다).
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
