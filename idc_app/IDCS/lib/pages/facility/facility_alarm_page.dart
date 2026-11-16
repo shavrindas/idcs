@@ -9,6 +9,7 @@ import 'package:idcs/components/facility/monitoring/alarm_control_panel.dart';
 import 'package:idcs/services/common/api_client.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/components/shared/app_toast.dart';
+import 'package:idcs/services/common/user_api_service.dart';
 
 class FacilityAlarmPage extends StatefulWidget {
   final String userId;
@@ -33,11 +34,32 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
   AlarmStatusFilter _statusFilter = AlarmStatusFilter.active;
   bool _grouped = true;
 
+  /// 일반 유저는 알람 설정(토글)을 건드리지 못해야 하므로, 그 탭 자체를
+  /// admin/시설 담당자(user_admin)에게만 보여준다. 로딩이 끝나기 전까지는
+  /// 숨겨 둔다 — 늦게 켜면 이미 그려진 TabController 길이와 어긋난다.
+  bool _canManageAlarmSettings = false;
+
   @override
   void initState() {
     super.initState();
     _loadPointRoles();
     _fetchUserData();
+  }
+
+  Future<bool> _loadCanManageAlarmSettings() async {
+    try {
+      final facilities = await FacilityApiService.getFacilities(widget.userId);
+      final match = facilities.firstWhere(
+        (f) => f['id'].toString() == widget.facilityId,
+        orElse: () => null,
+      );
+      final role = await UserApiService.getUserRole(widget.userId);
+      final isAdmin = role == 'ADMIN' || role == 'DEVELOPER';
+      final isUserAdmin = match != null && match['user_admin_id']?.toString() == widget.userId;
+      return isAdmin || isUserAdmin;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -52,9 +74,13 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
     });
 
     try {
-      final alarms = await AlarmApiService.getFacilitiesAlarms(widget.facilityId);
+      final results = await Future.wait([
+        AlarmApiService.getFacilitiesAlarms(widget.facilityId),
+        _loadCanManageAlarmSettings(),
+      ]);
       setState(() {
-        _alarms = alarms;
+        _alarms = results[0] as List<dynamic>;
+        _canManageAlarmSettings = results[1] as bool;
       });
     } catch (e) {
       if (mounted) {
@@ -182,17 +208,19 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 탭 컨트롤러를 사용하여 2개의 탭(예: 알람 내역 탭 / 다른 화면 탭)을 관리합니다.
+    // 탭 컨트롤러를 사용하여 탭(알람 내역 / 알람 설정)을 관리합니다.
+    // 알람 설정(토글)은 admin·user_admin만 건드릴 수 있어야 하므로, 일반
+    // 유저에게는 그 탭 자체를 보여주지 않는다.
     return DefaultTabController(
-      length: 2, // 탭 개수 (필요에 따라 늘릴 수 있습니다)
+      length: _canManageAlarmSettings ? 2 : 1,
       child: Scaffold(
         appBar: AppBar(
           title: Text(context.l10n.navAlarm),
           // AppBar 하단에 탭바 배치
           bottom: TabBar(
-            tabs: const [
-              Tab(text: '알람 목록'), // 첫 번째 탭 캡션
-              Tab(text: '알람 설정'), // 두 번째 탭 캡션 (원하시는 이름으로 변경 가능)
+            tabs: [
+              const Tab(text: '알람 목록'), // 첫 번째 탭 캡션
+              if (_canManageAlarmSettings) const Tab(text: '알람 설정'),
             ],
             labelColor: context.colors.textPrimary,
             unselectedLabelColor: context.colors.textSecondary,
@@ -340,10 +368,11 @@ class _FacilityAlarmPageState extends State<FacilityAlarmPage> {
             ),
 
             // --- [두 번째 탭: 누르면 전환되는 새로운 화면/컨텐츠] ---
-            FacilityTreeViewTab(
-              parentNodes: _treeNodes,
-              isLoading: _isTreeLoading,
-            )
+            if (_canManageAlarmSettings)
+              FacilityTreeViewTab(
+                parentNodes: _treeNodes,
+                isLoading: _isTreeLoading,
+              ),
           ],
         ),
       ),
