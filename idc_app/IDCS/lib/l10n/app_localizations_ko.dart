@@ -367,6 +367,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get alarmRecentlyEnded => '최근 종료된 알람';
 
   @override
+  String alarmRecentOccurrences(int count) {
+    return '최근 $count개';
+  }
+
+  @override
   String get alarmStatusAll => '전체';
 
   @override
@@ -997,6 +1002,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get chatPinToggle => '고정 토글';
+
+  @override
+  String get chatFavoriteAdd => '즐겨찾기 추가';
+
+  @override
+  String get chatFavoriteRemove => '즐겨찾기 해제';
+
+  @override
+  String get chatMessageEdited => '(수정됨)';
+
+  @override
+  String get chatEditMessageTitle => '메시지 수정';
+
+  @override
+  String get chatDeleteMessageConfirm => '이 메시지를 삭제할까요?';
 
   @override
   String chatReplyingTo(String text) {

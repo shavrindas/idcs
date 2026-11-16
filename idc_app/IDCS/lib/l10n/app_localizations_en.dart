@@ -378,6 +378,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alarmRecentlyEnded => 'Recently ended';
 
   @override
+  String alarmRecentOccurrences(int count) {
+    return 'Last $count';
+  }
+
+  @override
   String get alarmStatusAll => 'All';
 
   @override
@@ -1014,6 +1019,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatPinToggle => 'Pin';
+
+  @override
+  String get chatFavoriteAdd => 'Add to favorites';
+
+  @override
+  String get chatFavoriteRemove => 'Remove from favorites';
+
+  @override
+  String get chatMessageEdited => '(edited)';
+
+  @override
+  String get chatEditMessageTitle => 'Edit message';
+
+  @override
+  String get chatDeleteMessageConfirm => 'Delete this message?';
 
   @override
   String chatReplyingTo(String text) {

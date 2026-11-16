@@ -73,18 +73,16 @@ class FacilityAlarmBox extends StatelessWidget {
       );
     }
 
+    // 같은 호실에서 여러 알람이 따로따로 카드로 흩어지면 호실 상태를 한눈에
+    // 읽기 어렵다. 호실 단위로 한 번 더 묶어서 보여준다.
+    final roomGroups = groupAlarmsByRoom(context, alarms);
+
     // 알람은 계속 쌓이므로 화면에 보이는 만큼만 만드는 Sliver 목록을 쓴다.
     return SliverList.separated(
-      itemCount: alarms.length,
+      itemCount: roomGroups.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final group = alarms[index];
-
-        return GroupedAlarmTile(
-          group: group,
-          title: alarmDisplayName(context, group.alarm['alarm_name']),
-          subtitle: group.alarm['room_name'] ?? context.l10n.roomNameMissing,
-        );
+        return RoomGroupedAlarmTile(room: roomGroups[index]);
       },
     );
   }

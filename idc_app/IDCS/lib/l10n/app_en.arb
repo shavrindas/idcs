@@ -144,6 +144,14 @@
   "alarmFieldRoom": "Room",
   "alarmFieldFacility": "Facility",
   "alarmRecentlyEnded": "Recently ended",
+  "alarmRecentOccurrences": "Last {count}",
+  "@alarmRecentOccurrences": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "alarmStatusAll": "All",
   "alarmStatusActive": "Active",
   "alarmStatusEnded": "Ended",
@@ -529,6 +537,11 @@
   "chatNoMessages": "No messages yet.",
   "chatReply": "Reply",
   "chatPinToggle": "Pin",
+  "chatFavoriteAdd": "Add to favorites",
+  "chatFavoriteRemove": "Remove from favorites",
+  "chatMessageEdited": "(edited)",
+  "chatEditMessageTitle": "Edit message",
+  "chatDeleteMessageConfirm": "Delete this message?",
   "chatReplyingTo": "Replying to: {text}",
   "@chatReplyingTo": {
     "placeholders": {

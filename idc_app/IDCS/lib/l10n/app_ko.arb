@@ -144,6 +144,14 @@
   "alarmFieldRoom": "룸 이름",
   "alarmFieldFacility": "시설 이름",
   "alarmRecentlyEnded": "최근 종료된 알람",
+  "alarmRecentOccurrences": "최근 {count}개",
+  "@alarmRecentOccurrences": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "alarmStatusAll": "전체",
   "alarmStatusActive": "진행중",
   "alarmStatusEnded": "종료",
@@ -529,6 +537,11 @@
   "chatNoMessages": "메시지가 없습니다.",
   "chatReply": "답장",
   "chatPinToggle": "고정 토글",
+  "chatFavoriteAdd": "즐겨찾기 추가",
+  "chatFavoriteRemove": "즐겨찾기 해제",
+  "chatMessageEdited": "(수정됨)",
+  "chatEditMessageTitle": "메시지 수정",
+  "chatDeleteMessageConfirm": "이 메시지를 삭제할까요?",
   "chatReplyingTo": "답장: {text}",
   "@chatReplyingTo": {
     "placeholders": {

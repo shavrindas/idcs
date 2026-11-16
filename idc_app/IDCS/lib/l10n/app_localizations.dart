@@ -794,6 +794,12 @@ abstract class AppLocalizations {
   /// **'최근 종료된 알람'**
   String get alarmRecentlyEnded;
 
+  /// No description provided for @alarmRecentOccurrences.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 {count}개'**
+  String alarmRecentOccurrences(int count);
+
   /// No description provided for @alarmStatusAll.
   ///
   /// In ko, this message translates to:
@@ -1903,6 +1909,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'고정 토글'**
   String get chatPinToggle;
+
+  /// No description provided for @chatFavoriteAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'즐겨찾기 추가'**
+  String get chatFavoriteAdd;
+
+  /// No description provided for @chatFavoriteRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'즐겨찾기 해제'**
+  String get chatFavoriteRemove;
+
+  /// No description provided for @chatMessageEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'(수정됨)'**
+  String get chatMessageEdited;
+
+  /// No description provided for @chatEditMessageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지 수정'**
+  String get chatEditMessageTitle;
+
+  /// No description provided for @chatDeleteMessageConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 메시지를 삭제할까요?'**
+  String get chatDeleteMessageConfirm;
 
   /// No description provided for @chatReplyingTo.
   ///

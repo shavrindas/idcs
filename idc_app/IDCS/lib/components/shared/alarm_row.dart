@@ -52,6 +52,39 @@ List<GroupedAlarm> groupAlarms(List<dynamic> alarms) {
   return order.map((key) => GroupedAlarm(groups[key]!)).toList();
 }
 
+/// 한 호실 안에서 발생한 알람 종류들을 묶은 결과.
+/// [alarmGroups]는 최신순이며, 대표(가장 최근)는 첫 번째다.
+class RoomAlarmGroup {
+  final String roomName;
+  final List<GroupedAlarm> alarmGroups;
+
+  const RoomAlarmGroup(this.roomName, this.alarmGroups);
+
+  GroupedAlarm get representative => alarmGroups.first;
+
+  /// 이 호실에서 발생한 알람 종류 수 (반복 발생 건수가 아니라 종류 수).
+  int get alarmTypeCount => alarmGroups.length;
+}
+
+/// 이미 (role_id+알람명)으로 묶인 목록을 호실 단위로 한 번 더 묶는다.
+/// 같은 호실에서 여러 종류의 알람이 함께 울릴 때, 호실마다 따로 카드가
+/// 뜨는 대신 하나의 호실 카드 아래에 모아 보여주기 위해서다.
+List<RoomAlarmGroup> groupAlarmsByRoom(BuildContext context, List<GroupedAlarm> groups) {
+  final Map<String, List<GroupedAlarm>> byRoom = {};
+  final List<String> order = [];
+
+  for (final group in groups) {
+    final room = (group.alarm['room_name'] as String?) ?? context.l10n.roomNameMissing;
+    if (!byRoom.containsKey(room)) {
+      byRoom[room] = [];
+      order.add(room);
+    }
+    byRoom[room]!.add(group);
+  }
+
+  return order.map((room) => RoomAlarmGroup(room, byRoom[room]!)).toList();
+}
+
 /// 알람이 아직 진행 중인지 판단한다.
 /// DB의 severity는 point_role_table에 해당 컬럼이 없어 항상 'a'로 저장되므로
 /// 구분에 쓸 수 없다. 대신 services/alarm.py와 같은 기준(end_time 경과 여부)을 쓴다.
@@ -178,12 +211,14 @@ class AlarmRow extends StatelessWidget {
                                 ],
                               ],
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              subtitle,
-                              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            if (subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(
+                                subtitle,
+                                style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -216,6 +251,273 @@ class AlarmRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 한 호실의 알람들을 묶은 카드. 카드는 호실당 딱 하나뿐이다 — 안쪽에
+/// 알람 종류를 펼쳐도 또 다른 카드(그림자·테두리)가 생기지 않고, 같은
+/// 카드 안의 목록 줄로만 늘어난다. 종류를 또 펼치면 발생 시각 목록이 그
+/// 안에서 한 번 더 들여써진다.
+///
+/// 처음엔 알람 종류 카드를 그대로 재사용해 겹쳐 넣었더니, 상자 안에 상자가
+/// 반복돼 호실 하나를 보는데 똑같이 생긴 카드가 3겹으로 쌓여 보였다. 또한
+/// 호실의 "종류 수" 배지와 알람 하나의 "반복 횟수" 배지가 똑같이 "×N"으로
+/// 찍혀 있어 뭘 세고 있는 배지인지 헷갈렸다 — 종류 수는 색이 다른 "N종류"
+/// 글자 배지로, 반복 횟수만 기존의 빨간 "×N"으로 구분한다.
+class RoomGroupedAlarmTile extends StatefulWidget {
+  final RoomAlarmGroup room;
+  final void Function(dynamic alarm)? onAlarmTap;
+
+  const RoomGroupedAlarmTile({super.key, required this.room, this.onAlarmTap});
+
+  @override
+  State<RoomGroupedAlarmTile> createState() => _RoomGroupedAlarmTileState();
+}
+
+class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final room = widget.room;
+    final representative = room.representative;
+    final hasMultipleTypes = room.alarmTypeCount > 1;
+    final active = isAlarmActive(representative.alarm);
+    final accent = active ? context.colors.error : context.colors.textSecondary.withValues(alpha: 0.4);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), boxShadow: context.colors.cardShadow),
+      child: Material(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              onTap: hasMultipleTypes
+                  ? () => setState(() => _expanded = !_expanded)
+                  : (widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(representative.alarm)),
+              child: Stack(
+                children: [
+                  Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      room.roomName,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: context.colors.textPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (hasMultipleTypes) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: context.colors.textSecondary.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        '×${room.alarmTypeCount}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: context.colors.textSecondary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              // 펼친 다음엔 바로 아래에 같은 알람 이름이 또 나오니, 접혀
+                              // 있을 때만 미리보기로 보여준다.
+                              if (!_expanded) ...[
+                                const SizedBox(height: 3),
+                                Text(
+                                  alarmDisplayName(context, representative.alarm['alarm_name']),
+                                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              formatAlarmTime(representative.alarm['timestamp']?.toString() ?? ''),
+                              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                            ),
+                          ],
+                        ),
+                        if (hasMultipleTypes)
+                          Icon(
+                            _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                            size: 20,
+                            color: context.colors.textSecondary,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_expanded)
+              Padding(
+                padding: const EdgeInsets.only(left: 17, right: 14, bottom: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Divider(height: 1, color: context.colors.outline),
+                    for (final group in room.alarmGroups)
+                      _AlarmTypeRow(group: group, onAlarmTap: widget.onAlarmTap),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 호실 카드 안에서 알람 종류 하나를 나타내는 줄. 그 자체로는 카드가 아니라
+/// 구분선으로만 나뉜 목록 행이다 — 반복 발생 건수가 있으면 눌러서 바로
+/// 아래에 발생 시각 목록을 펼친다.
+class _AlarmTypeRow extends StatefulWidget {
+  final GroupedAlarm group;
+  final void Function(dynamic alarm)? onAlarmTap;
+
+  const _AlarmTypeRow({required this.group, this.onAlarmTap});
+
+  @override
+  State<_AlarmTypeRow> createState() => _AlarmTypeRowState();
+}
+
+class _AlarmTypeRowState extends State<_AlarmTypeRow> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final group = widget.group;
+    final isRepeated = group.count > 1;
+    final active = isAlarmActive(group.alarm);
+    final color = active ? context.colors.error : context.colors.textSecondary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: isRepeated
+              ? () => setState(() => _expanded = !_expanded)
+              : (widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(group.alarm)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          alarmDisplayName(context, group.alarm['alarm_name']),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.colors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      formatAlarmTime(group.alarm['timestamp']?.toString() ?? ''),
+                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                    ),
+                  ],
+                ),
+                if (isRepeated) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    size: 18,
+                    color: context.colors.textSecondary,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        if (_expanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 16, bottom: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 같은 알람이 수십 번 반복된 경우도 있어, 전부 펼치면 목록이
+                // 끝없이 길어진다. 최근 5건만 보여주고, 잘려 있다는 것을 알 수
+                // 있게 표시한다.
+                if (group.members.length > _maxOccurrences)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.history_rounded, size: 13, color: context.colors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          context.l10n.alarmRecentOccurrences(_maxOccurrences),
+                          style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                for (final (i, alarm) in group.members.take(_maxOccurrences).indexed)
+                  _OccurrenceRow(alarm: alarm, isLatest: i == 0, onTap: widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(alarm)),
+              ],
+            ),
+          ),
+        Divider(height: 1, color: context.colors.outline),
+      ],
     );
   }
 }
@@ -271,12 +573,35 @@ class _GroupedAlarmTileState extends State<GroupedAlarmTile> {
           Padding(
             padding: const EdgeInsets.only(left: 14, top: 6),
             child: Column(
-              children: group.members
-                  .map((alarm) => _OccurrenceRow(
-                        alarm: alarm,
-                        onTap: widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(alarm),
-                      ))
-                  .toList(),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 같은 알람이 수십 번 반복된 경우도 있어, 전부 펼치면 목록이
+                // 끝없이 길어진다. 최근 5건만 보여주고, 잘려 있다는 것을 알 수
+                // 있게 표시한다.
+                if (group.members.length > _maxOccurrences)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.history_rounded, size: 13, color: context.colors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          context.l10n.alarmRecentOccurrences(_maxOccurrences),
+                          style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                for (final (i, alarm) in group.members.take(_maxOccurrences).indexed)
+                  _OccurrenceRow(
+                    alarm: alarm,
+                    // 맨 위(가장 최근) 한 건만 꽉 찬 점으로, 나머지는 테두리만
+                    // 있는 점으로 그려 "지금 상태"와 "지난 반복"을 구분한다.
+                    isLatest: i == 0,
+                    onTap: widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(alarm),
+                  ),
+              ],
             ),
           ),
       ],
@@ -284,12 +609,18 @@ class _GroupedAlarmTileState extends State<GroupedAlarmTile> {
   }
 }
 
+/// 한 알람 종류를 펼쳤을 때 보여줄 발생 건 상한.
+const int _maxOccurrences = 5;
+
 /// 펼쳤을 때 보이는 개별 발생 건 한 줄.
 class _OccurrenceRow extends StatelessWidget {
   final dynamic alarm;
+
+  /// 목록에서 맨 위(가장 최근) 건인지. 꽉 찬 점과 테두리만 있는 점을 가른다.
+  final bool isLatest;
   final VoidCallback? onTap;
 
-  const _OccurrenceRow({required this.alarm, this.onTap});
+  const _OccurrenceRow({required this.alarm, this.isLatest = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -306,7 +637,11 @@ class _OccurrenceRow extends StatelessWidget {
             Container(
               width: 5,
               height: 5,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: isLatest ? color : Colors.transparent,
+                shape: BoxShape.circle,
+                border: isLatest ? null : Border.all(color: color, width: 1),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
