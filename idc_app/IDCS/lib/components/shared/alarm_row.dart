@@ -269,7 +269,16 @@ class RoomGroupedAlarmTile extends StatefulWidget {
   final RoomAlarmGroup room;
   final void Function(dynamic alarm)? onAlarmTap;
 
-  const RoomGroupedAlarmTile({super.key, required this.room, this.onAlarmTap});
+  /// '×N' 종류 수 배지를 보여줄지. '진행중' 필터에서만 의미가 있다 —
+  /// 전체/종료 목록에서는 이미 끝난 알람까지 섞여 세어지므로 오해를 준다.
+  final bool showTypeCountBadge;
+
+  const RoomGroupedAlarmTile({
+    super.key,
+    required this.room,
+    this.onAlarmTap,
+    this.showTypeCountBadge = true,
+  });
 
   @override
   State<RoomGroupedAlarmTile> createState() => _RoomGroupedAlarmTileState();
@@ -323,7 +332,7 @@ class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  if (hasMultipleTypes) ...[
+                                  if (hasMultipleTypes && widget.showTypeCountBadge) ...[
                                     const SizedBox(width: 6),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

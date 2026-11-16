@@ -82,7 +82,7 @@ class FacilityAlarmBox extends StatelessWidget {
       itemCount: roomGroups.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        return RoomGroupedAlarmTile(room: roomGroups[index]);
+        return RoomGroupedAlarmTile(room: roomGroups[index], showTypeCountBadge: showingActiveOnly);
       },
     );
   }
