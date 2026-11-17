@@ -16,11 +16,16 @@ from datetime import datetime, timedelta, timezone
 
 from src.config.database import get_db
 from src.module.Core.models.User import User, ExternalProvider, UserRole
+from src.module.Core.email_service import send_email
 
 router = APIRouter(prefix="/auth", tags=["ServiceApp - Auth"])
 
-SECRET_KEY = "idcool_secret_key_v1" 
+SECRET_KEY = "idcool_secret_key_v1"
 ALGORITHM = "HS256"
+
+# 비밀번호 재설정: 1차 코드 토큰, 2차 재설정 토큰 각각의 유효시간.
+PASSWORD_CODE_EXPIRE_MINUTES = 5
+PASSWORD_RESET_EXPIRE_MINUTES = 10
 
 # --- Schemas ---
 class UserCreate(BaseModel):
@@ -168,6 +173,75 @@ async def check_account_existence(req: CheckAccountRequest, db: AsyncSession = D
         provider_names = ", ".join([p.provider for p in providers])
         return {"exists": True, "message": f"해당 이메일은 {provider_names} 소셜 계정으로 연동되어 있습니다."}
     return {"exists": True, "message": "해당 이메일은 일반 계정으로 가입되어 있습니다."}
+
+@router.post("/password/request-code", status_code=status.HTTP_200_OK)
+async def request_password_code(req: PasswordRequestCode, db: AsyncSession = Depends(get_db)):
+    """[Box #1] 가입된 이메일로 6자리 인증코드 발송. 코드 자체는 저장하지 않고,
+    해시만 JWT 안에 담아 돌려준다 — 서버가 상태를 들고 있지 않아도 된다."""
+    result = await db.execute(select(User).where(User.email == req.email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="가입되지 않은 이메일입니다.")
+
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    expire = datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_CODE_EXPIRE_MINUTES)
+    token = jwt.encode(
+        {"email": req.email, "code_hash": hash_code(code), "type": "pw_code", "exp": expire},
+        SECRET_KEY, algorithm=ALGORITHM,
+    )
+
+    send_email(
+        req.email,
+        "[IDCool Systems] 비밀번호 재설정 인증코드",
+        f"인증코드: {code}\n{PASSWORD_CODE_EXPIRE_MINUTES}분 안에 입력해 주세요.",
+    )
+    return {"token": token, "message": "인증코드를 이메일로 보냈습니다."}
+
+@router.post("/password/verify-code", status_code=status.HTTP_200_OK)
+async def verify_password_code(req: PasswordVerifyCode):
+    """[Box #2] 코드 확인. 맞으면 실제 비밀번호 변경에 쓸 별도 토큰을 새로 발급한다
+    — 1차 토큰은 코드 검증에만 쓰이고, 그 후로는 더 쓰이지 않는다."""
+    try:
+        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="인증코드가 만료되었습니다. 다시 요청해 주세요.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="유효하지 않은 요청입니다.")
+
+    if payload.get("type") != "pw_code":
+        raise HTTPException(status_code=400, detail="유효하지 않은 요청입니다.")
+    if hash_code(req.code) != payload.get("code_hash"):
+        raise HTTPException(status_code=400, detail="인증코드가 일치하지 않습니다.")
+
+    expire = datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_RESET_EXPIRE_MINUTES)
+    reset_token = jwt.encode(
+        {"email": payload["email"], "type": "pw_reset", "exp": expire},
+        SECRET_KEY, algorithm=ALGORITHM,
+    )
+    return {"reset_token": reset_token, "message": "인증이 완료되었습니다."}
+
+@router.post("/password/reset", status_code=status.HTTP_200_OK)
+async def reset_password(req: PasswordReset, db: AsyncSession = Depends(get_db)):
+    """[Box #3] 새 비밀번호 저장. reset_token은 코드 검증을 거쳐야만 발급되므로,
+    이 단계에서 이메일을 다시 확인할 필요는 없다."""
+    try:
+        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="요청이 만료되었습니다. 처음부터 다시 시도해 주세요.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="유효하지 않은 요청입니다.")
+
+    if payload.get("type") != "pw_reset":
+        raise HTTPException(status_code=400, detail="유효하지 않은 요청입니다.")
+
+    result = await db.execute(select(User).where(User.email == payload["email"]))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    user.password = req.new_password
+    await db.commit()
+    return {"message": "비밀번호가 변경되었습니다."}
 
 @router.get("/{user_id}/role", status_code=status.HTTP_200_OK)
 async def get_user_role(user_id: int, db: AsyncSession = Depends(get_db)):
