@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/responsive.dart';
 import 'package:idcs/components/shared/time_format.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
@@ -180,7 +181,7 @@ class AlarmRow extends StatelessWidget {
               children: [
                 Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
                 Padding(
-                  padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
+                  padding: EdgeInsets.only(left: context.scale(17), right: context.scale(14), top: context.scale(12), bottom: context.scale(12)),
                   child: Row(
                     children: [
                       Expanded(
@@ -193,7 +194,7 @@ class AlarmRow extends StatelessWidget {
                                   child: Text(
                                     title,
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: context.scale(14),
                                       fontWeight: FontWeight.w700,
                                       color: context.colors.textPrimary,
                                     ),
@@ -201,16 +202,16 @@ class AlarmRow extends StatelessWidget {
                                   ),
                                 ),
                                 if (count > 1 && showCountBadge) ...[
-                                  const SizedBox(width: 6),
+                                  SizedBox(width: context.scale(6)),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: EdgeInsets.symmetric(horizontal: context.scale(6), vertical: context.scale(2)),
                                     decoration: BoxDecoration(
                                       color: accent.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       '×$count',
-                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                                      style: TextStyle(fontSize: context.scale(12), fontWeight: FontWeight.w700, color: accent),
                                     ),
                                   ),
                                 ],
@@ -220,32 +221,32 @@ class AlarmRow extends StatelessWidget {
                               const SizedBox(height: 3),
                               Text(
                                 subtitle,
-                                style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: context.scale(8)),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             isActive ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                            style: TextStyle(fontSize: context.scale(12), fontWeight: FontWeight.w700, color: accent),
                           ),
                           if (timestamp.isNotEmpty) ...[
                             const SizedBox(height: 3),
-                            Text(timestamp, style: TextStyle(fontSize: 12, color: context.colors.textSecondary)),
+                            Text(timestamp, style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary)),
                           ],
                         ],
                       ),
                       if (isExpandable)
                         Icon(
                           isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                          size: 20,
+                          size: context.scale(20),
                           color: context.colors.textSecondary,
                         ),
                     ],
@@ -317,7 +318,7 @@ class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
                 children: [
                   Positioned(left: 0, top: 0, bottom: 0, width: 3, child: ColoredBox(color: accent)),
                   Padding(
-                    padding: const EdgeInsets.only(left: 17, right: 14, top: 12, bottom: 12),
+                    padding: EdgeInsets.only(left: context.scale(17), right: context.scale(14), top: context.scale(12), bottom: context.scale(12)),
                     child: Row(
                       children: [
                         Expanded(
@@ -330,7 +331,7 @@ class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
                                     child: Text(
                                       room.roomName,
                                       style: TextStyle(
-                                        fontSize: 15,
+                                        fontSize: context.scale(15),
                                         fontWeight: FontWeight.w700,
                                         color: context.colors.textPrimary,
                                       ),
@@ -338,9 +339,9 @@ class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
                                     ),
                                   ),
                                   if (hasMultipleTypes && widget.showTypeCountBadge) ...[
-                                    const SizedBox(width: 6),
+                                    SizedBox(width: context.scale(6)),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: EdgeInsets.symmetric(horizontal: context.scale(6), vertical: context.scale(2)),
                                       decoration: BoxDecoration(
                                         color: context.colors.textSecondary.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(6),
@@ -348,7 +349,7 @@ class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
                                       child: Text(
                                         '×${room.alarmTypeCount}',
                                         style: TextStyle(
-                                          fontSize: 11,
+                                          fontSize: context.scale(11),
                                           fontWeight: FontWeight.w700,
                                           color: context.colors.textSecondary,
                                         ),
@@ -363,33 +364,33 @@ class _RoomGroupedAlarmTileState extends State<RoomGroupedAlarmTile> {
                                 const SizedBox(height: 3),
                                 Text(
                                   alarmDisplayName(context, representative.alarm['alarm_name']),
-                                  style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                  style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: context.scale(8)),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent),
+                              style: TextStyle(fontSize: context.scale(12), fontWeight: FontWeight.w700, color: accent),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               formatAlarmTime(representative.alarm['timestamp']?.toString() ?? ''),
-                              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                              style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary),
                             ),
                           ],
                         ),
                         if (hasMultipleTypes)
                           Icon(
                             _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                            size: 20,
+                            size: context.scale(20),
                             color: context.colors.textSecondary,
                           ),
                       ],
@@ -448,15 +449,15 @@ class _AlarmTypeRowState extends State<_AlarmTypeRow> {
               ? () => setState(() => _expanded = !_expanded)
               : (widget.onAlarmTap == null ? null : () => widget.onAlarmTap!(group.alarm)),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: EdgeInsets.symmetric(vertical: context.scale(10)),
             child: Row(
               children: [
                 Container(
-                  width: 6,
-                  height: 6,
+                  width: context.scale(6),
+                  height: context.scale(6),
                   decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: context.scale(10)),
                 Expanded(
                   child: Row(
                     children: [
@@ -464,7 +465,7 @@ class _AlarmTypeRowState extends State<_AlarmTypeRow> {
                         child: Text(
                           alarmDisplayName(context, group.alarm['alarm_name']),
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: context.scale(13),
                             fontWeight: FontWeight.w600,
                             color: context.colors.textPrimary,
                           ),
@@ -474,18 +475,18 @@ class _AlarmTypeRowState extends State<_AlarmTypeRow> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: context.scale(8)),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+                      style: TextStyle(fontSize: context.scale(11), fontWeight: FontWeight.w700, color: color),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       formatAlarmTime(group.alarm['timestamp']?.toString() ?? ''),
-                      style: TextStyle(fontSize: 11, color: context.colors.textSecondary),
+                      style: TextStyle(fontSize: context.scale(11), color: context.colors.textSecondary),
                     ),
                   ],
                 ),
@@ -493,7 +494,7 @@ class _AlarmTypeRowState extends State<_AlarmTypeRow> {
                   const SizedBox(width: 4),
                   Icon(
                     _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                    size: 18,
+                    size: context.scale(18),
                     color: context.colors.textSecondary,
                   ),
                 ],
@@ -650,28 +651,28 @@ class _OccurrenceRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: context.scale(10), vertical: context.scale(8)),
         child: Row(
           children: [
             Container(
-              width: 5,
-              height: 5,
+              width: context.scale(5),
+              height: context.scale(5),
               decoration: BoxDecoration(
                 color: isLatest ? color : Colors.transparent,
                 shape: BoxShape.circle,
                 border: isLatest ? null : Border.all(color: color, width: 1),
               ),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: context.scale(10)),
             Expanded(
               child: Text(
                 formatAlarmTime(alarm['timestamp']?.toString() ?? ''),
-                style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary),
               ),
             ),
             Text(
               active ? context.l10n.alarmStatusActive : context.l10n.alarmStatusEnded,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+              style: TextStyle(fontSize: context.scale(12), fontWeight: FontWeight.w600, color: color),
             ),
           ],
         ),
@@ -721,7 +722,7 @@ class AlarmFilterBar extends StatelessWidget {
           children: [
             Text(
               context.l10n.alarmGroupToggle,
-              style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+              style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary),
             ),
             const SizedBox(width: 4),
             Transform.scale(
@@ -747,7 +748,7 @@ class AlarmFilterBar extends StatelessWidget {
       showCheckmark: false,
       onSelected: (_) => onStatusChanged(value),
       labelStyle: TextStyle(
-        fontSize: 12,
+        fontSize: context.scale(12),
         fontWeight: FontWeight.w600,
         color: selected ? context.colors.onPrimary : context.colors.textPrimary,
       ),
@@ -782,7 +783,7 @@ class EmptyListState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: EdgeInsets.symmetric(vertical: context.scale(32)),
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -793,7 +794,7 @@ class EmptyListState extends StatelessWidget {
           Icon(
             good ? Icons.verified_rounded : icon,
             color: good ? context.colors.success : context.colors.textSecondary.withValues(alpha: 0.6),
-            size: good ? 32 : 28,
+            size: good ? context.scale(32) : context.scale(28),
           ),
           const SizedBox(height: 8),
           Text(
@@ -801,7 +802,7 @@ class EmptyListState extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: good ? context.colors.textPrimary : context.colors.textSecondary,
-              fontSize: good ? 14 : 13,
+              fontSize: good ? context.scale(14) : context.scale(13),
               fontWeight: good ? FontWeight.w700 : FontWeight.w400,
             ),
           ),

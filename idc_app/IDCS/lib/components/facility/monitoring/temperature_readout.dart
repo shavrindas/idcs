@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/responsive.dart';
 
 /// The big current-temperature line on a room card.
 ///
@@ -83,7 +84,7 @@ class TemperatureReadout extends StatelessWidget {
         Text(
           value == null ? '—' : value.abs().toStringAsFixed(1),
           style: TextStyle(
-            fontSize: 25,
+            fontSize: context.scale(25),
             height: 1,
             fontWeight: FontWeight.w700,
             color: color,
@@ -100,7 +101,7 @@ class TemperatureReadout extends StatelessWidget {
             child: Text(
               context.l10n.unitCelsius,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: context.scale(11),
                 fontWeight: FontWeight.w700,
                 color: context.colors.textSecondary,
               ),

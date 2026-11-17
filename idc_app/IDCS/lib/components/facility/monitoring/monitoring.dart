@@ -5,6 +5,7 @@ import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/motion.dart';
+import 'package:idcs/theme/responsive.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 /// 한 묶음의 값을 보여 주는 카드.
@@ -52,8 +53,8 @@ class _MonitoringCardState extends State<MonitoringCard> {
     final expanded = !widget.collapsible || _open;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      padding: const EdgeInsets.all(16.0),
+      margin: EdgeInsets.only(bottom: context.scale(16.0)),
+      padding: EdgeInsets.all(context.scale(16.0)),
       decoration: BoxDecoration(
         // Letting the backdrop show through is the whole point of the opacity
         // setting; at 1.0 this is the solid card the panel has always had.
@@ -73,13 +74,13 @@ class _MonitoringCardState extends State<MonitoringCard> {
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3),
+                style: TextStyle(fontSize: context.scale(13), fontWeight: FontWeight.w700, color: context.colors.textSecondary, letterSpacing: 0.3),
               ),
               if (widget.collapsible) ...[
-                const SizedBox(width: 6),
+                SizedBox(width: context.scale(6)),
                 Text(
                   '${fields.length}',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.textSecondary.withValues(alpha: 0.7)),
+                  style: TextStyle(fontSize: context.scale(12), fontWeight: FontWeight.w600, color: context.colors.textSecondary.withValues(alpha: 0.7)),
                 ),
               ],
               // 배지를 달던 자리다. 쓸 수 있는 다섯 줄을 맨 위 '조작' 카드에
@@ -90,7 +91,7 @@ class _MonitoringCardState extends State<MonitoringCard> {
                 const Spacer(),
                 Icon(
                   expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                  size: 20,
+                  size: context.scale(20),
                   color: context.colors.textSecondary,
                 ),
               ],
@@ -191,31 +192,54 @@ class _EditableRowItem extends StatelessWidget {
     };
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: TextFormField(
-        key: ValueKey(shown), // 실시간 값이 변할 때 텍스트 업데이트
-        initialValue: shown,
-        readOnly: true,
-        style: TextStyle(
-          // Only the reading scales; the label stays put so the row keeps
-          // its shape as the numbers grow. 뜻을 적은 '말'은 예외다 —
-          // 숫자 크기 설정은 제어판 숫자용이고, 말까지 키우면 '운전 중'
-          // 같은 긴 낱말이 칸을 넘어 잘린다.
-          fontSize: isOn == null ? view.valueFontSize : 15,
-          fontWeight: isOn == null ? FontWeight.w600 : FontWeight.w700,
-          color: toneColor,
-          fontFamily: useLed ? MonitoringViewSettings.ledFontFamily : null,
-          // DSEG7 is a fixed seven-segment grid, so a little tracking
-          // keeps the digits from reading as one block.
-          letterSpacing: useLed ? 1 : null,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-          fillColor: context.colors.background,
-        ),
+      padding: EdgeInsets.only(bottom: context.scale(8.0)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 이름이 접힌 라벨로 떠 있으면 글자가 너무 작아 안 읽힌다. 왼쪽에
+          // 제 크기로 박아 두면 그럴 일이 없다.
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: context.scale(14),
+                fontWeight: FontWeight.w600,
+                color: context.colors.textSecondary,
+              ),
+            ),
+          ),
+          SizedBox(width: context.scale(10)),
+          Expanded(
+            flex: 2,
+            child: TextFormField(
+              key: ValueKey(shown), // 실시간 값이 변할 때 텍스트 업데이트
+              initialValue: shown,
+              readOnly: true,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                // Only the reading scales; the label stays put so the row keeps
+                // its shape as the numbers grow. 뜻을 적은 '말'은 예외다 —
+                // 숫자 크기 설정은 제어판 숫자용이고, 말까지 키우면 '운전 중'
+                // 같은 긴 낱말이 칸을 넘어 잘린다.
+                fontSize: isOn == null ? view.valueFontSize : context.scale(15),
+                fontWeight: isOn == null ? FontWeight.w600 : FontWeight.w700,
+                color: toneColor,
+                fontFamily: useLed ? MonitoringViewSettings.ledFontFamily : null,
+                // DSEG7 is a fixed seven-segment grid, so a little tracking
+                // keeps the digits from reading as one block.
+                letterSpacing: useLed ? 1 : null,
+              ),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: context.scale(12.0), vertical: context.scale(12.0)),
+                fillColor: context.colors.background,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

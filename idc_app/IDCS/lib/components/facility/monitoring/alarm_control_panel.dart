@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/responsive.dart';
 
 // 1. 데이터 모델 정의 (부모와 자식 구조)
 class ParentNode {
@@ -93,7 +94,7 @@ class FacilityTreeViewTab extends StatelessWidget {
               title: Text(
                 parent.parentName,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: context.scale(15),
                   fontWeight: FontWeight.bold,
                   color: context.colors.textPrimary,
                 ),
@@ -121,7 +122,7 @@ class FacilityTreeViewTab extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     child.displayName.isNotEmpty ? child.displayName : child.roleName,
-                                    style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
+                                    style: TextStyle(fontSize: context.scale(12), color: context.colors.textSecondary),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -154,7 +155,7 @@ class FacilityTreeViewTab extends StatelessWidget {
                     title: Text(
                       child.displayName, // 메인으로 보여줄 이름 (예: 한글 명칭 등)
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: context.scale(14),
                         fontWeight: FontWeight.w600,
                         color: context.colors.textPrimary,
                       ),

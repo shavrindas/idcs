@@ -481,24 +481,24 @@ class _OverviewSummaryBand extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
+                    width: context.scale(8),
+                    height: context.scale(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: filled ? color : null,
                       border: filled ? null : Border.all(color: color, width: 1.5),
                     ),
                   ),
-                  const SizedBox(width: 5),
+                  SizedBox(width: context.scale(5)),
                   Text(
                     label,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colors.textSecondary),
+                    style: TextStyle(fontSize: context.scale(12), fontWeight: FontWeight.w600, color: colors.textSecondary),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: context.scale(4)),
                   Text(
                     '$count',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: context.scale(13),
                       fontWeight: FontWeight.w800,
                       color: count > 0 && filled && color != colors.success ? color : colors.textPrimary,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -556,10 +556,12 @@ class _FacilitySectionState extends State<_FacilitySection> {
           // 태블릿에서는 폰처럼 2칸만 채우면 카드가 쓸데없이 커지고 줄마다
           // 빈자리만 늘어난다.
           crossAxisCount: context.gridColumns(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          // 표시등 두 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.
-          childAspectRatio: 1.46,
+          crossAxisSpacing: context.scale(10),
+          mainAxisSpacing: context.scale(10),
+          // 표시등 두 줄까지 들어가는 높이. 더 납작하게 두면 잘린다. 태블릿은
+          // 칸이 넓어진 만큼 세로도 더 줘야 큰 글자·숫자가 들어갈 자리가
+          // 생긴다.
+          childAspectRatio: context.isTablet ? 1.15 : 1.46,
         ),
         itemCount: rooms.length,
         itemBuilder: (context, index) {
@@ -617,7 +619,7 @@ class _FacilitySectionState extends State<_FacilitySection> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: context.scale(15),
                             fontWeight: FontWeight.w800,
                             color: colors.textPrimary,
                           ),
@@ -625,24 +627,24 @@ class _FacilitySectionState extends State<_FacilitySection> {
                       ),
                       // 누를 수 있는 줄이라는 표시. 이 줄이 시설 안으로 가는
                       // 유일한 입구라 눈에 띄어야 한다.
-                      Icon(Icons.chevron_right_rounded, size: 19, color: colors.textSecondary),
+                      Icon(Icons.chevron_right_rounded, size: context.scale(19), color: colors.textSecondary),
                       const Spacer(),
                       if (attention > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          padding: EdgeInsets.symmetric(horizontal: context.scale(7), vertical: context.scale(2)),
                           decoration: BoxDecoration(
                             color: colors.error.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '$attention',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: colors.error),
+                            style: TextStyle(fontSize: context.scale(11), fontWeight: FontWeight.w800, color: colors.error),
                           ),
                         )
                       else if (rooms.isNotEmpty)
                         Text(
                           context.l10n.overviewRoomCount(rooms.length),
-                          style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                          style: TextStyle(fontSize: context.scale(12), color: colors.textSecondary),
                         ),
                     ],
                   ),
@@ -762,7 +764,7 @@ class _OverviewRoomCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+                  padding: EdgeInsets.fromLTRB(context.scale(10), context.scale(8), context.scale(10), context.scale(6)),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -774,7 +776,7 @@ class _OverviewRoomCard extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: context.scale(13),
                                   fontWeight: FontWeight.w700,
                                   color: colors.textPrimary,
                                 ),
@@ -783,7 +785,7 @@ class _OverviewRoomCard extends StatelessWidget {
                             // 빨간 카드가 왜 빨간지는 숫자로 말해 준다.
                             if (status.faultCount > 0)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                padding: EdgeInsets.symmetric(horizontal: context.scale(6), vertical: context.scale(1)),
                                 decoration: BoxDecoration(
                                   color: colors.error.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(5),
@@ -791,7 +793,7 @@ class _OverviewRoomCard extends StatelessWidget {
                                 child: Text(
                                   '${status.faultCount}',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: context.scale(11),
                                     fontWeight: FontWeight.w800,
                                     color: colors.error,
                                   ),
@@ -814,17 +816,17 @@ class _OverviewRoomCard extends StatelessWidget {
                               Text(
                                 '${l10n.roomSetpointShort} ${status.setpoint!.toStringAsFixed(1)}',
                                 style: TextStyle(
-                                  fontSize: 10.5,
+                                  fontSize: context.scale(10.5),
                                   fontWeight: FontWeight.w600,
                                   color: colors.textSecondary,
                                 ),
                               ),
                             if (deviation != null) ...[
-                              const SizedBox(width: 6),
+                              SizedBox(width: context.scale(6)),
                               Text(
                                 'Δ ${deviation >= 0 ? '+' : ''}${deviation.toStringAsFixed(1)}',
                                 style: TextStyle(
-                                  fontSize: 10.5,
+                                  fontSize: context.scale(10.5),
                                   fontWeight: FontWeight.w800,
                                   color: status.condition == RoomCondition.drifting
                                       ? colors.warning

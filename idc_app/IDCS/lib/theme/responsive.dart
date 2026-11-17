@@ -23,8 +23,9 @@ extension ResponsiveContext on BuildContext {
 
   bool get isTablet => screenSize != ScreenSize.phone;
 
-  /// 카드 그리드 한 줄의 칸 수. 폰 2 / 태블릿 3 / 큰 화면(가로모드 태블릿 등) 4.
-  int gridColumns({int phone = 2, int tablet = 3, int desktop = 4}) {
+  /// 카드 그리드 한 줄의 칸 수. 칸을 너무 늘리면 카드 하나하나가 좁아져
+  /// 오히려 더 작아 보인다 — 태블릿은 폰보다 한 칸만 더 둔다.
+  int gridColumns({int phone = 2, int tablet = 2, int desktop = 3}) {
     switch (screenSize) {
       case ScreenSize.phone:
         return phone;
@@ -34,4 +35,20 @@ extension ResponsiveContext on BuildContext {
         return desktop;
     }
   }
+
+  /// 칸 수를 늘리는 것만으로는 카드 하나하나가 그대로 작게 남는다. 글자·숫자·
+  /// 여백을 같이 키워야 카드가 "커 보인다" — 태블릿 화면을 실제로 채운다.
+  double get uiScale {
+    switch (screenSize) {
+      case ScreenSize.phone:
+        return 1.0;
+      case ScreenSize.tablet:
+        return 1.4;
+      case ScreenSize.desktop:
+        return 1.6;
+    }
+  }
+
+  /// 글자 크기·여백·아이콘 크기 등을 화면 크기에 맞춰 키운다.
+  double scale(double base) => base * uiScale;
 }
