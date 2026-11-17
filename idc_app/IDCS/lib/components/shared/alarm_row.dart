@@ -142,6 +142,10 @@ class AlarmRow extends StatelessWidget {
   final bool isExpandable;
   final bool isExpanded;
 
+  /// '×N' 배지를 보여줄지. '진행중'이 아닌 목록(전체/종료)에서는 이미 끝난
+  /// 건까지 세어진 숫자라 "지금 N번째"처럼 오해를 주므로 숨긴다.
+  final bool showCountBadge;
+
   const AlarmRow({
     super.key,
     required this.title,
@@ -152,6 +156,7 @@ class AlarmRow extends StatelessWidget {
     this.onTap,
     this.isExpandable = false,
     this.isExpanded = false,
+    this.showCountBadge = true,
   });
 
   @override
@@ -195,7 +200,7 @@ class AlarmRow extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (count > 1) ...[
+                                if (count > 1 && showCountBadge) ...[
                                   const SizedBox(width: 6),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -542,12 +547,16 @@ class GroupedAlarmTile extends StatefulWidget {
   /// 개별 건을 눌렀을 때 동작. 묶이지 않은 단일 알람의 탭에도 쓰인다.
   final void Function(dynamic alarm)? onAlarmTap;
 
+  /// '×N' 배지를 보여줄지. 자세한 이유는 [AlarmRow.showCountBadge] 참고.
+  final bool showCountBadge;
+
   const GroupedAlarmTile({
     super.key,
     required this.group,
     required this.title,
     required this.subtitle,
     this.onAlarmTap,
+    this.showCountBadge = true,
   });
 
   @override
@@ -573,6 +582,7 @@ class _GroupedAlarmTileState extends State<GroupedAlarmTile> {
           count: group.count,
           isExpandable: isGrouped,
           isExpanded: _expanded,
+          showCountBadge: widget.showCountBadge,
           // 묶인 행은 펼치기/접기, 단일 행은 원래 동작을 그대로 한다.
           onTap: isGrouped
               ? () => setState(() => _expanded = !_expanded)

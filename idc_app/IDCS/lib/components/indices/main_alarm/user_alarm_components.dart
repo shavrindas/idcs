@@ -51,6 +51,7 @@ class UserAlarmBox extends StatelessWidget {
           title: alarmDisplayName(context, representative['alarm_name']),
           subtitle:
               '${representative['facility_name'] ?? context.l10n.facilityNameMissing} · ${representative['room_name'] ?? context.l10n.roomNameMissing}',
+          showCountBadge: showingActiveOnly,
           onAlarmTap: (alarm) {
             final facilityId = alarm['facility_id'] is int
                 ? alarm['facility_id']
