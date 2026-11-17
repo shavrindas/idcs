@@ -9,6 +9,7 @@ import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/responsive.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 
@@ -95,8 +96,8 @@ class RoomGrid extends StatelessWidget {
       builder: (context, view, _) => GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: context.gridColumns(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           // 표시등 한 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.

@@ -23,6 +23,7 @@ import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/responsive.dart';
 
 /// 맡은 시설이 여럿인 사람을 위한 화면.
 ///
@@ -551,8 +552,10 @@ class _FacilitySectionState extends State<_FacilitySection> {
   Widget _grid(List<dynamic> rooms) => GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          // 태블릿에서는 폰처럼 2칸만 채우면 카드가 쓸데없이 커지고 줄마다
+          // 빈자리만 늘어난다.
+          crossAxisCount: context.gridColumns(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           // 표시등 두 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.
