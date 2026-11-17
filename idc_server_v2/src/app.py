@@ -1,3 +1,11 @@
+import os
+from dotenv import load_dotenv
+
+# uvicorn --env-file로 이미 넣어준 값(테스트용 .runbat/.testbat 시나리오)은 덮어쓰지 않고,
+# 거기 없는 값(SMTP_* 등)만 idc_server_v2/.env에서 보충한다. 아래 config/모델 import들이
+# os.getenv()를 import 시점에 바로 읽으므로, 그보다 먼저 실행돼야 한다.
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,7 +13,6 @@ from contextlib import asynccontextmanager
 from src.config.database import engine
 from src.module.Core.models.User import User, ExternalProvider
 from src.module.Core.models.Facility import Facility, FacilityRoom, FacilityUser
-import os
 import asyncio
 import firebase_admin
 from firebase_admin import credentials
