@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 
 from src.config.database import get_db
 from src.module.Core.models.User import User, ExternalProvider, UserRole
-from src.module.Core.email_service import send_email
+from src.module.Core.email_service import send_email, build_verification_code_email
 
 router = APIRouter(prefix="/auth", tags=["ServiceApp - Auth"])
 
@@ -194,6 +194,7 @@ async def request_password_code(req: PasswordRequestCode, db: AsyncSession = Dep
         req.email,
         "[IDCool Systems] 비밀번호 재설정 인증코드",
         f"인증코드: {code}\n{PASSWORD_CODE_EXPIRE_MINUTES}분 안에 입력해 주세요.",
+        html_body=build_verification_code_email(code, PASSWORD_CODE_EXPIRE_MINUTES),
     )
     return {"token": token, "message": "인증코드를 이메일로 보냈습니다."}
 
