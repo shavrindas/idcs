@@ -97,7 +97,8 @@ class RoomGrid extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: context.gridColumns(),
+          // 개괄 화면과 같은 세로/가로 칸 수 규칙을 쓴다(설정 → 그리드 보기).
+          crossAxisCount: context.gridColumns(extended: view.extendedGrid),
           crossAxisSpacing: context.scale(10),
           mainAxisSpacing: context.scale(10),
           // 표시등 한 줄까지 들어가는 높이. 더 납작하게 두면 잘린다. 태블릿은
@@ -143,7 +144,7 @@ class RoomGrid extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(context.scale(10), context.scale(8), context.scale(10), context.scale(6)),
+                        padding: EdgeInsets.fromLTRB(context.scale(10), context.scale(6), context.scale(10), context.scale(4)),
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

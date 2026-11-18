@@ -25,12 +25,22 @@ class MonitoringViewSettings {
   /// reading stands apart from the setpoint and lamps around it.
   final bool tempDividers;
 
+  /// 태블릿 호실 격자의 칸 수를 한 단계 더 늘릴지 (기본 세로 2·가로 3 →
+  /// 확장 세로 3·가로 4). 칸이 늘수록 카드가 작아져 한 화면에 더 들어가고,
+  /// 스크롤이 줄어든다.
+  final bool extendedGrid;
+
+  /// 시설을 눕혔을 때 나오는 호실 관측 화면이 혼자서 다음 호실로 넘어갈지.
+  final bool autoSlide;
+
   const MonitoringViewSettings({
     this.panelOpacity = 1.0,
     this.valueFontScale = 1.0,
     this.ledDigits = true,
     this.snow = true,
     this.tempDividers = true,
+    this.extendedGrid = false,
+    this.autoSlide = false,
   });
 
   /// 카드를 얼마나 비칠 수 있게 할지의 한계.
@@ -67,6 +77,8 @@ class MonitoringViewSettings {
   static const _kLedDigits = 'panel_led_digits';
   static const _kSnow = 'app_snowfall';
   static const _kTempDividers = 'card_temp_dividers';
+  static const _kExtendedGrid = 'room_grid_extended';
+  static const _kAutoSlide = 'room_watch_auto_slide';
 
   /// Value text size after the user's scale is applied.
   double get valueFontSize => baseValueFontSize * valueFontScale;
@@ -77,6 +89,8 @@ class MonitoringViewSettings {
     bool? ledDigits,
     bool? snow,
     bool? tempDividers,
+    bool? extendedGrid,
+    bool? autoSlide,
   }) {
     return MonitoringViewSettings(
       panelOpacity: panelOpacity ?? this.panelOpacity,
@@ -84,6 +98,8 @@ class MonitoringViewSettings {
       ledDigits: ledDigits ?? this.ledDigits,
       snow: snow ?? this.snow,
       tempDividers: tempDividers ?? this.tempDividers,
+      extendedGrid: extendedGrid ?? this.extendedGrid,
+      autoSlide: autoSlide ?? this.autoSlide,
     );
   }
 
@@ -98,6 +114,8 @@ class MonitoringViewSettings {
       ledDigits: prefs.getBool(_kLedDigits) ?? true,
       snow: prefs.getBool(_kSnow) ?? true,
       tempDividers: prefs.getBool(_kTempDividers) ?? true,
+      extendedGrid: prefs.getBool(_kExtendedGrid) ?? false,
+      autoSlide: prefs.getBool(_kAutoSlide) ?? false,
     );
   }
 
@@ -108,6 +126,8 @@ class MonitoringViewSettings {
     await prefs.setBool(_kLedDigits, ledDigits);
     await prefs.setBool(_kSnow, snow);
     await prefs.setBool(_kTempDividers, tempDividers);
+    await prefs.setBool(_kExtendedGrid, extendedGrid);
+    await prefs.setBool(_kAutoSlide, autoSlide);
   }
 }
 

@@ -74,6 +74,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Draw a line above and below the current temperature on room cards.';
 
   @override
+  String get gridDensity => 'Grid view';
+
+  @override
+  String get gridDensityNote =>
+      'Columns in the room card grid. Applies separately for portrait/landscape on tablets.';
+
+  @override
+  String get gridDensityDefault => 'Default (portrait 2 · landscape 3)';
+
+  @override
+  String get gridDensityExtended => 'Extended (portrait 3 · landscape 4)';
+
+  @override
   String get settingsHomeWidget => 'Home-screen widget';
 
   @override

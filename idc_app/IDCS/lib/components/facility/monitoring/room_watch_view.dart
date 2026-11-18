@@ -2,6 +2,8 @@
 // 경로: lib/components/facility/monitoring/room_watch_view.dart
 // 명세: 화면을 눕히면 나오는 한 호실 전용 관측 화면 (가로, 읽기 전용)
 // ===============================================================
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:idcs/components/facility/monitoring/device_labels.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
@@ -49,10 +51,52 @@ class _RoomWatchPagerState extends State<RoomWatchPager> {
   late final PageController _controller = PageController();
   int _index = 0;
 
+  /// 한 호실에 머무는 시간. 읽는 데 걸리는 시간을 주면서도 지켜보는
+  /// 자리라는 뜻에 맞게 너무 길게 두지 않는다.
+  static const Duration _interval = Duration(seconds: 6);
+
+  bool _autoSlide = MonitoringViewController.settings.value.autoSlide;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_autoSlide) _startTimer();
+  }
+
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_interval, (_) {
+      if (widget.rooms.isEmpty) return;
+      // 마지막 호실에서는 처음으로 돌아간다 — 지켜보는 동안 계속 돌아야
+      // 혼자서 켜 두는 자리라는 뜻에 맞다.
+      final next = _index + 1 >= widget.rooms.length ? 0 : _index + 1;
+      _controller.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _toggleAutoSlide() {
+    final next = !_autoSlide;
+    setState(() => _autoSlide = next);
+    if (next) {
+      _startTimer();
+    } else {
+      _timer?.cancel();
+    }
+    MonitoringViewController.set(
+      MonitoringViewController.settings.value.copyWith(autoSlide: next),
+    );
   }
 
   void _step(int delta) {
@@ -96,6 +140,8 @@ class _RoomWatchPagerState extends State<RoomWatchPager> {
           index: i,
           total: widget.rooms.length,
           onStep: _step,
+          autoSlide: _autoSlide,
+          onToggleAutoSlide: _toggleAutoSlide,
         );
       },
     );
@@ -136,6 +182,8 @@ class _RoomWatchPage extends StatelessWidget {
   final int index;
   final int total;
   final void Function(int delta) onStep;
+  final bool autoSlide;
+  final VoidCallback onToggleAutoSlide;
 
   const _RoomWatchPage({
     required this.name,
@@ -145,6 +193,8 @@ class _RoomWatchPage extends StatelessWidget {
     required this.index,
     required this.total,
     required this.onStep,
+    required this.autoSlide,
+    required this.onToggleAutoSlide,
   });
 
   String _statusWord(BuildContext context) => switch (status.condition) {
@@ -306,6 +356,15 @@ class _RoomWatchPage extends StatelessWidget {
               enabled: index < total - 1,
               onPressed: () => onStep(1),
             ),
+            const SizedBox(width: 6),
+            // 켜 두면 손대지 않아도 다음 호실로 넘어간다 — 세워 둔 폰을
+            // 한동안 그대로 지켜보기만 할 때 쓴다.
+            _StepButton(
+              icon: autoSlide ? Icons.pause_circle_outline_rounded : Icons.play_circle_outline_rounded,
+              enabled: true,
+              accent: autoSlide ? accent : null,
+              onPressed: onToggleAutoSlide,
+            ),
           ],
         ),
       ],
@@ -354,7 +413,15 @@ class _StepButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onPressed;
 
-  const _StepButton({required this.icon, required this.enabled, required this.onPressed});
+  /// 눌려 있는 상태를 나타내는 색. 자동 슬라이드 토글이 켜졌을 때만 쓴다.
+  final Color? accent;
+
+  const _StepButton({
+    required this.icon,
+    required this.enabled,
+    required this.onPressed,
+    this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -370,7 +437,9 @@ class _StepButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 22,
-            color: enabled ? colors.textPrimary : colors.textSecondary.withValues(alpha: 0.35),
+            color: !enabled
+                ? colors.textSecondary.withValues(alpha: 0.35)
+                : accent ?? colors.textPrimary,
           ),
         ),
       ),

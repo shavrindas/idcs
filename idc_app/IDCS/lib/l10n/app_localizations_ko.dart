@@ -72,6 +72,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get panelTempDividersNote => '호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.';
 
   @override
+  String get gridDensity => '그리드 보기';
+
+  @override
+  String get gridDensityNote => '호실 카드 격자의 칸 수입니다. 태블릿에서 세로/가로로 각각 적용됩니다.';
+
+  @override
+  String get gridDensityDefault => '기본 (세로 2 · 가로 3)';
+
+  @override
+  String get gridDensityExtended => '확장 (세로 3 · 가로 4)';
+
+  @override
   String get settingsHomeWidget => '홈 화면 위젯';
 
   @override

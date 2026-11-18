@@ -27,6 +27,48 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
   String _currentScale = '5m';
   String _currentTimeRange = '1d';
 
+  /// 두 손가락으로 집으면 조회 기간이 바뀌는 단계. 짧고 촘촘한 쪽에서
+  /// 길고 거친 쪽으로 — 확대(손가락을 벌림)하면 앞으로, 축소(손가락을
+  /// 모음)하면 뒤로 간다. 필터 박스의 드롭다운과 같은 값만 쓴다.
+  static const List<(String range, String scale)> _zoomLevels = [
+    ('1h', '5m'),
+    ('12h', '10m'),
+    ('1d', '30m'),
+    ('7d', '1h'),
+    ('15d', '1h'),
+  ];
+
+  /// 확대·축소가 시작될 때의 손가락 사이 거리 비율. 1.0에서 벌어지면
+  /// 커지고 모이면 작아진다 — 매 프레임이 아니라 손을 뗄 때 한 번만 본다.
+  double _pinchScale = 1.0;
+
+  int get _zoomIndex {
+    final i = _zoomLevels.indexWhere((z) => z.$1 == _currentTimeRange);
+    return i == -1 ? 2 : i;
+  }
+
+  void _handlePinchZoom() {
+    // 평소 한 손가락 스크롤·터치도 onScale을 타지만 배율은 늘 1.0 근처라
+    // 여기 걸리지 않는다. 뚜렷하게 벌리거나 모았을 때만 단계를 옮긴다.
+    if (_pinchScale > 1.15) {
+      _jumpZoom(-1);
+    } else if (_pinchScale < 0.87) {
+      _jumpZoom(1);
+    }
+    _pinchScale = 1.0;
+  }
+
+  void _jumpZoom(int delta) {
+    final next = (_zoomIndex + delta).clamp(0, _zoomLevels.length - 1);
+    if (next == _zoomIndex) return;
+    final (range, scale) = _zoomLevels[next];
+    setState(() {
+      _currentTimeRange = range;
+      _currentScale = scale;
+    });
+    _fetchChartData();
+  }
+
   // 2. 조회 대상 호실 상태
   List<dynamic> _rooms = [];
   int? _selectedRoomId;
@@ -311,10 +353,18 @@ class _FacilityChartPageState extends State<FacilityChartPage> {
             // 보는 것 하나인데, 항목 고르기와 기준선 스위치가 그 앞을 막고
             // 있어서 들어오자마자 스크롤부터 해야 했다. 둘 다 한 번 맞춰 두면
             // 그대로 두는 것들이라 그래프 아래로 내린다.
-            ChartCanvasBox(
-              chartData: _chartData,
-              isLoading: _isLoading,
-              showTargetLines: _showTargetLines,
+            // 두 손가락으로 집으면 조회 기간이 바뀐다 — 확대하면 더 짧고
+            // 촘촘한 기간으로, 축소하면 더 길고 거친 기간으로. fl_chart 자체는
+            // 확대 제스처를 보지 않으므로 캔버스 위에 한 겹 더 얹어서 본다.
+            GestureDetector(
+              onScaleStart: (_) => _pinchScale = 1.0,
+              onScaleUpdate: (details) => _pinchScale = details.scale,
+              onScaleEnd: (_) => _handlePinchZoom(),
+              child: ChartCanvasBox(
+                chartData: _chartData,
+                isLoading: _isLoading,
+                showTargetLines: _showTargetLines,
+              ),
             ),
             const SizedBox(height: 16),
 

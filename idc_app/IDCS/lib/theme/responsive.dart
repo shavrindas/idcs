@@ -23,17 +23,23 @@ extension ResponsiveContext on BuildContext {
 
   bool get isTablet => screenSize != ScreenSize.phone;
 
-  /// 카드 그리드 한 줄의 칸 수. 칸을 너무 늘리면 카드 하나하나가 좁아져
-  /// 오히려 더 작아 보인다 — 태블릿은 폰보다 한 칸만 더 둔다.
-  int gridColumns({int phone = 2, int tablet = 2, int desktop = 3}) {
-    switch (screenSize) {
-      case ScreenSize.phone:
-        return phone;
-      case ScreenSize.tablet:
-        return tablet;
-      case ScreenSize.desktop:
-        return desktop;
-    }
+  bool get _isLandscape => MediaQuery.orientationOf(this) == Orientation.landscape;
+
+  /// 카드 그리드 한 줄의 칸 수.
+  ///
+  /// 폰은 눕히면 호실 한 칸을 보는 화면(RoomWatchPager)으로 바뀌는 자리가
+  /// 따로 있어 격자를 눕혀 볼 일이 없다 — 방향과 무관하게 그대로 둔다.
+  ///
+  /// 태블릿·큰 화면은 눕혔을 때 폭이 남는데도 세로와 같은 칸 수만 채우면
+  /// 카드가 쓸데없이 커지고 줄마다 빈자리만 늘어난다. 세로/가로를 따로
+  /// 두고, [extended](설정 → 그리드 보기 → 확장)를 켜면 한 칸씩 더 늘려
+  /// 카드를 줄이고 한 화면에 더 담는다.
+  int gridColumns({int phone = 2, bool extended = false}) {
+    if (screenSize == ScreenSize.phone) return phone;
+
+    final portrait = extended ? 3 : 2;
+    final landscape = extended ? 4 : 3;
+    return _isLandscape ? landscape : portrait;
   }
 
   /// 칸 수를 늘리는 것만으로는 카드 하나하나가 그대로 작게 남는다. 글자·숫자·

@@ -224,6 +224,30 @@ abstract class AppLocalizations {
   /// **'호실 카드의 현재 온도 위아래에 선을 그어 다른 숫자와 구분합니다.'**
   String get panelTempDividersNote;
 
+  /// No description provided for @gridDensity.
+  ///
+  /// In ko, this message translates to:
+  /// **'그리드 보기'**
+  String get gridDensity;
+
+  /// No description provided for @gridDensityNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'호실 카드 격자의 칸 수입니다. 태블릿에서 세로/가로로 각각 적용됩니다.'**
+  String get gridDensityNote;
+
+  /// No description provided for @gridDensityDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 (세로 2 · 가로 3)'**
+  String get gridDensityDefault;
+
+  /// No description provided for @gridDensityExtended.
+  ///
+  /// In ko, this message translates to:
+  /// **'확장 (세로 3 · 가로 4)'**
+  String get gridDensityExtended;
+
   /// No description provided for @settingsHomeWidget.
   ///
   /// In ko, this message translates to:

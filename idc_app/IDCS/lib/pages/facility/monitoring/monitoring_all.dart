@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
@@ -23,6 +24,7 @@ import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/services/common/user_api_service.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/motion.dart';
 import 'package:idcs/theme/responsive.dart';
 
 /// 맡은 시설이 여럿인 사람을 위한 화면.
@@ -75,6 +77,12 @@ class _MonitoringAllState extends State<MonitoringAll> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
+  /// 아래로 미는 동안 검색창을 접어 둔다. 카드가 늘어서는 화면이라 검색창이
+  /// 늘 떠 있으면 그만큼 카드 자리를 영영 차지한다 — 핀으로 박아 두지 않고,
+  /// 위로 다시 밀면 그때만 돌아온다.
+  final ScrollController _listController = ScrollController();
+  bool _searchVisible = true;
+
   final WebSocketService _webSocketService = WebSocketService();
   StreamSubscription<String>? _wsSubscription;
 
@@ -82,6 +90,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
   void initState() {
     super.initState();
     _load();
+    _listController.addListener(_handleScroll);
 
     final liveUrl = '${AppConfig.basewsUrl}/facilities/data/outget/${widget.userId}';
     _webSocketService.connect(liveUrl);
@@ -93,9 +102,23 @@ class _MonitoringAllState extends State<MonitoringAll> {
   @override
   void dispose() {
     _searchController.dispose();
+    _listController.dispose();
     _wsSubscription?.cancel();
     _webSocketService.disconnect();
     super.dispose();
+  }
+
+  /// 내려가면(reverse) 접고, 올라가면(forward) 편다. userScrollDirection은
+  /// 손가락이 미는 방향이라, 당겨서 새로고침할 때처럼 튕겨 돌아오는 동안은
+  /// 건드리지 않는다.
+  void _handleScroll() {
+    if (!_listController.hasClients) return;
+    final direction = _listController.position.userScrollDirection;
+    if (direction == ScrollDirection.reverse && _searchVisible) {
+      setState(() => _searchVisible = false);
+    } else if (direction == ScrollDirection.forward && !_searchVisible) {
+      setState(() => _searchVisible = true);
+    }
   }
 
   Future<void> _load() async {
@@ -296,27 +319,36 @@ class _MonitoringAllState extends State<MonitoringAll> {
             : Column(
                 children: [
                   if (statuses.isNotEmpty) _OverviewSummaryBand(statuses: statuses.values.toList()),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (v) => setState(() => _query = v),
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        hintText: context.l10n.overviewSearchHint,
-                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                        suffixIcon: _query.isEmpty
-                            ? null
-                            : IconButton(
-                                tooltip: context.l10n.boardSearchClear,
-                                icon: const Icon(Icons.clear_rounded, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _query = '');
-                                },
+                  ClipRect(
+                    child: AnimatedSize(
+                      duration: Motion.of(context, Motion.normal),
+                      curve: Motion.enter,
+                      alignment: Alignment.topCenter,
+                      child: !_searchVisible
+                          ? const SizedBox(width: double.infinity)
+                          : Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+                              child: TextField(
+                                controller: _searchController,
+                                onChanged: (v) => setState(() => _query = v),
+                                textInputAction: TextInputAction.search,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  hintText: context.l10n.overviewSearchHint,
+                                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                                  suffixIcon: _query.isEmpty
+                                      ? null
+                                      : IconButton(
+                                          tooltip: context.l10n.boardSearchClear,
+                                          icon: const Icon(Icons.clear_rounded, size: 18),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            setState(() => _query = '');
+                                          },
+                                        ),
+                                ),
                               ),
-                      ),
+                            ),
                     ),
                   ),
                   Expanded(
@@ -352,6 +384,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
                             onRefresh: _load,
                             // 시설이 늘어나면 아래로 이어진다.
                             child: ListView.builder(
+                              controller: _listController,
                               physics: const AlwaysScrollableScrollPhysics(),
                             // 아래 탭 줄이 없는 화면이라 제스처 바가 마지막
                             // 카드 위에 겹친다. 그만큼을 바닥에 더 둔다.
@@ -374,6 +407,7 @@ class _MonitoringAllState extends State<MonitoringAll> {
                                   statuses: statuses,
                                   ledDigits: view.ledDigits,
                                   dividers: view.tempDividers,
+                                  extendedGrid: view.extendedGrid,
                                   onRoomPressed: (roomId) => context.push(
                                     '/facility_monitoring/${widget.userId}/$facilityId/$roomId',
                                   ),
@@ -525,6 +559,7 @@ class _FacilitySection extends StatefulWidget {
   final Map<int, RoomStatus> statuses;
   final bool ledDigits;
   final bool dividers;
+  final bool extendedGrid;
   final Function(int) onRoomPressed;
 
   /// 시설 이름 줄을 누르면 그 시설 안(차트·기록·알람)으로 들어간다.
@@ -538,6 +573,7 @@ class _FacilitySection extends StatefulWidget {
     required this.statuses,
     required this.ledDigits,
     required this.dividers,
+    required this.extendedGrid,
     required this.onRoomPressed,
     required this.onFacilityPressed,
   });
@@ -554,8 +590,9 @@ class _FacilitySectionState extends State<_FacilitySection> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           // 태블릿에서는 폰처럼 2칸만 채우면 카드가 쓸데없이 커지고 줄마다
-          // 빈자리만 늘어난다.
-          crossAxisCount: context.gridColumns(),
+          // 빈자리만 늘어난다. 세로/가로로 각각 칸 수를 두고, 설정의 '확장'을
+          // 켜면 한 칸씩 더 늘려 카드를 줄인다(설정 → 그리드 보기).
+          crossAxisCount: context.gridColumns(extended: widget.extendedGrid),
           crossAxisSpacing: context.scale(10),
           mainAxisSpacing: context.scale(10),
           // 표시등 두 줄까지 들어가는 높이. 더 납작하게 두면 잘린다. 태블릿은
@@ -764,7 +801,7 @@ class _OverviewRoomCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(context.scale(10), context.scale(8), context.scale(10), context.scale(6)),
+                  padding: EdgeInsets.fromLTRB(context.scale(10), context.scale(6), context.scale(10), context.scale(4)),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

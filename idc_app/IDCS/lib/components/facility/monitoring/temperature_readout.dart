@@ -42,9 +42,9 @@ class TemperatureReadout extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (dividers) ...[const SizedBox(height: 2), rule, const SizedBox(height: 2)] else const SizedBox(height: 4),
+        if (dividers) ...[const SizedBox(height: 1), rule, const SizedBox(height: 1)] else const SizedBox(height: 2),
         _reading(context),
-        if (dividers) ...[const SizedBox(height: 2), rule, const SizedBox(height: 1)] else const SizedBox(height: 3),
+        if (dividers) ...[const SizedBox(height: 1), rule, const SizedBox(height: 1)] else const SizedBox(height: 2),
       ],
     );
   }

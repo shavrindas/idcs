@@ -310,6 +310,22 @@ class _PanelAppearanceCard extends StatelessWidget {
           value: view.tempDividers,
           onChanged: (val) => _update(view.copyWith(tempDividers: val)),
         ),
+        const SizedBox(height: 8),
+
+        _Label(text: l10n.gridDensity),
+        const SizedBox(height: 4),
+        Text(
+          l10n.gridDensityNote,
+          style: TextStyle(fontSize: 13, color: colors.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        _Choices<bool>(
+          options: const [false, true],
+          selected: view.extendedGrid,
+          labelOf: (extended) =>
+              extended ? l10n.gridDensityExtended : l10n.gridDensityDefault,
+          onSelected: (extended) => _update(view.copyWith(extendedGrid: extended)),
+        ),
       ],
     );
   }
