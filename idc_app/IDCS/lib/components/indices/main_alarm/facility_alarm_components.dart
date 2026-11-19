@@ -64,6 +64,9 @@ class FacilityAlarmBox extends StatelessWidget {
                   group: group,
                   title: alarmDisplayName(context, group.alarm['alarm_name']),
                   subtitle: group.alarm['room_name'] ?? context.l10n.roomNameMissing,
+                  // 이 목록은 '진행중'이 비어 있을 때 보여주는 최근 종료 건이라,
+                  // 전부 이미 끝난 알람이다 — ×N을 보여주면 안 된다.
+                  showCountBadge: false,
                 ),
                 const SizedBox(height: 8),
               ],
@@ -82,7 +85,7 @@ class FacilityAlarmBox extends StatelessWidget {
       itemCount: roomGroups.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        return RoomGroupedAlarmTile(room: roomGroups[index]);
+        return RoomGroupedAlarmTile(room: roomGroups[index], showTypeCountBadge: showingActiveOnly);
       },
     );
   }

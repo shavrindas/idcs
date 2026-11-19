@@ -1027,6 +1027,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatFavoriteRemove => 'Remove from favorites';
 
   @override
+  String get chatPinnedImageLabel => 'Photo';
+
+  @override
+  String get chatUnpin => 'Unpin';
+
+  @override
   String get chatMessageEdited => '(edited)';
 
   @override

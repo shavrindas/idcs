@@ -58,3 +58,6 @@ merge.txt
 
 # 게시글 첨부 이미지 (로컬 저장, 사용자 업로드 파일이라 커밋하지 않는다)
 idc_server_v2/uploads/
+
+# SMTP 앱 비밀번호 등 실제 자격 증명이 들어가므로 커밋하지 않는다 (.env.example 참고)
+idc_server_v2/.env

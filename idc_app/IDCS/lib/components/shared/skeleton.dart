@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/motion.dart';
+import 'package:idcs/theme/responsive.dart';
 
 /// 반짝임을 한 번만 돌리고 아래로 내려 준다.
 ///
@@ -132,7 +133,7 @@ class RoomGridSkeleton extends StatelessWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+          crossAxisCount: context.gridColumns(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           childAspectRatio: aspectRatio,

@@ -185,6 +185,28 @@ async def leave_or_delete_room(room_id: int, user_id: int, action: str = "delete
         await db.commit()
         return {"status": "success", "message": "채팅방에서 나갔습니다."}
 
+@router.get("/room/{room_id}/pinned")
+async def get_pinned_messages(room_id: int, db: AsyncSession = Depends(get_db)):
+    """상단 고정 배너용 — 이 방에서 고정된 메시지 전체 (최신 고정순)."""
+    query = text("""
+        SELECT m.message_id, m.user_id, m.message_type, m.content, m.created_at
+        FROM messages_pin p
+        JOIN messages m ON p.message_id = m.message_id
+        WHERE p.room_id = :room_id
+        ORDER BY p.created_at DESC
+    """)
+    result = await db.execute(query, {"room_id": room_id})
+    rows = result.fetchall()
+    return {
+        "status": "success",
+        "pinned": [{
+            "message_id": r.message_id, "user_id": r.user_id,
+            "message_type": r.message_type.value if hasattr(r.message_type, 'value') else r.message_type,
+            "content": r.content,
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "",
+        } for r in rows]
+    }
+
 @router.post("/room/{room_id}/pin/{message_id}")
 async def toggle_pin_message(room_id: int, message_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
     """메시지 고정 토글 (관리자는 타인 메시지 고정 해제 가능)"""

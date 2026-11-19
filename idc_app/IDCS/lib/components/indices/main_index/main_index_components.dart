@@ -9,6 +9,7 @@ import 'package:idcs/components/facility/monitoring/room_status.dart';
 import 'package:idcs/components/facility/monitoring/temperature_readout.dart';
 import 'package:idcs/services/common/monitoring_view_settings.dart';
 import 'package:idcs/theme/app_theme.dart';
+import 'package:idcs/theme/responsive.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 
 
@@ -95,12 +96,14 @@ class RoomGrid extends StatelessWidget {
       builder: (context, view, _) => GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          // 표시등 한 줄까지 들어가는 높이. 더 납작하게 두면 잘린다.
-          childAspectRatio: 1.62,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: context.gridColumns(),
+          crossAxisSpacing: context.scale(10),
+          mainAxisSpacing: context.scale(10),
+          // 표시등 한 줄까지 들어가는 높이. 더 납작하게 두면 잘린다. 태블릿은
+          // 칸이 넓어진 만큼 세로도 더 줘야 큰 글자·숫자가 들어갈 자리가
+          // 생긴다 — 그대로 두면 카드만 넓어지고 속은 그대로라 허전해 보인다.
+          childAspectRatio: context.isTablet ? 1.3 : 1.62,
         ),
         itemCount: rooms.length,
         itemBuilder: (context, index) {
@@ -140,7 +143,7 @@ class RoomGrid extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+                        padding: EdgeInsets.fromLTRB(context.scale(10), context.scale(8), context.scale(10), context.scale(6)),
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -154,13 +157,13 @@ class RoomGrid extends StatelessWidget {
                                       style: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         color: colors.textPrimary,
-                                        fontSize: 13,
+                                        fontSize: context.scale(13),
                                       ),
                                     ),
                                   ),
                                   if (count > 0)
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                      padding: EdgeInsets.symmetric(horizontal: context.scale(6), vertical: context.scale(1)),
                                       decoration: BoxDecoration(
                                         color: colors.error.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(5),
@@ -168,7 +171,7 @@ class RoomGrid extends StatelessWidget {
                                       child: Text(
                                         '$count',
                                         style: TextStyle(
-                                          fontSize: 11,
+                                          fontSize: context.scale(11),
                                           fontWeight: FontWeight.w800,
                                           color: colors.error,
                                         ),
@@ -193,17 +196,17 @@ class RoomGrid extends StatelessWidget {
                                     Text(
                                       '${context.l10n.roomSetpointShort} ${status.setpoint!.toStringAsFixed(1)}',
                                       style: TextStyle(
-                                        fontSize: 10.5,
+                                        fontSize: context.scale(10.5),
                                         fontWeight: FontWeight.w600,
                                         color: colors.textSecondary,
                                       ),
                                     ),
                                   if (deviation != null) ...[
-                                    const SizedBox(width: 6),
+                                    SizedBox(width: context.scale(6)),
                                     Text(
                                       'Δ ${deviation >= 0 ? '+' : ''}${deviation.toStringAsFixed(1)}',
                                       style: TextStyle(
-                                        fontSize: 10.5,
+                                        fontSize: context.scale(10.5),
                                         fontWeight: FontWeight.w800,
                                         color: status.condition == RoomCondition.drifting
                                             ? colors.warning

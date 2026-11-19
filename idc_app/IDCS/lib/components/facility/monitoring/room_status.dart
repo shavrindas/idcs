@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/theme/motion.dart';
+import 'package:idcs/theme/responsive.dart';
 
 /// 호실 하나의 지금 상태.
 ///
@@ -171,7 +172,7 @@ class StateLamp extends StatelessWidget {
     final accent = danger ? colors.error : colors.primary;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: context.scale(6), vertical: context.scale(3)),
       decoration: BoxDecoration(
         color: on ? accent.withValues(alpha: 0.12) : colors.background,
         borderRadius: BorderRadius.circular(5),
@@ -183,13 +184,14 @@ class StateLamp extends StatelessWidget {
           PulsingDot(
             on: on,
             color: accent,
+            size: context.scale(6),
             offBorder: colors.textSecondary.withValues(alpha: 0.5),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: context.scale(4)),
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: context.scale(10),
               height: 1.1,
               fontWeight: FontWeight.w700,
               color: on ? accent : colors.textSecondary,
