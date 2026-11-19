@@ -18,6 +18,8 @@ NODE_CODE = os.getenv("NODE_CODE", "NODE_001")
 API_KEY = os.getenv("API_KEY", "dummy_api_key_123")
 IS_FACILITY_SERVER = os.getenv("ENABLE_FACILITY_SERVER", "false")
 
+RD = None
+
 if IS_FACILITY_SERVER == "true":
     Writemapmodule = f"src.module.Mapper.{NODE_CODE}.WriteList"
 
@@ -121,11 +123,12 @@ class FacilityConnectionManager:
                 packet = json.loads(message)
 
                 if RD and packet.get("type") == "WR":
+                    print(RD.DataLists)
                     req_id = packet.get("req_id")
                     req_val = packet.get("req_val")
                     print(f"📩 사용자 요청 들어옴! [ID: {req_id}, Val: {req_val}]")
 
-                    cmd_text = f"Wr\xFF{RD[req_id]}^{req_val}\n"
+                    cmd_text = f"Wr\xFF{RD.DataLists[req_id]}^{req_val}\n"
                     cmd_bytes = cmd_text.encode('utf-8', errors='ignore')
 
                     await facilityconn.send_to_facility(cmd_bytes, req_id, req_val)
