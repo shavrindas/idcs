@@ -247,75 +247,78 @@ class Ethernet:
         print("⏰ 통계 타이머 스레드가 동기화를 시작합니다.")
         
         while True:
-            next_minute = datetime.now() + timedelta(minutes=1)
-            remaining_seconds = (next_minute - datetime.now()).total_seconds()
-            
-            await asyncio.sleep(remaining_seconds)
-            
-            with self.data_lock:
-                current_time_str = datetime.now().strftime("%H:%M:%S")
-                #print(f"\n📊 [{current_time_str} - 통계 집계 시작]")
-                json_ready_data = {}
+            try:
+                next_minute = datetime.now() + timedelta(minutes=1)
+                remaining_seconds = (next_minute - datetime.now()).total_seconds()
                 
-                for cate, lab_dict in self.categorizedpayload.items():
-                    json_ready_data[cate] = {}
-                    if cate == CT.bool_logs or cate == CT.real_static_logs:
-                        for lab, fmt in lab_dict.items():
-                            if fmt.vals: # 데이터가 있을 때만 처리
-                                #print(f"[{cate} > {lab}] 값: {fmt.vals[-1]}")
-                                tmpval = fmt.to_dict(is_bool=True)
-    
-                                # 기존 캐시된 값 확인 (없으면 None)
-                                cached_val = self.cashed_data.get(cate, {}).get(lab)
+                await asyncio.sleep(remaining_seconds)
+                
+                with self.data_lock:
+                    current_time_str = datetime.now().strftime("%H:%M:%S")
+                    #print(f"\n📊 [{current_time_str} - 통계 집계 시작]")
+                    json_ready_data = {}
+                    
+                    for cate, lab_dict in self.categorizedpayload.items():
+                        json_ready_data[cate] = {}
+                        if cate == CT.bool_logs or cate == CT.real_static_logs:
+                            for lab, fmt in lab_dict.items():
+                                if fmt.vals: # 데이터가 있을 때만 처리
+                                    #print(f"[{cate} > {lab}] 값: {fmt.vals[-1]}")
+                                    tmpval = fmt.to_dict(is_bool=True)
+        
+                                    # 기존 캐시된 값 확인 (없으면 None)
+                                    cached_val = self.cashed_data.get(cate, {}).get(lab)
 
-                                # 값이 다를 경우에만(또는 데이터가 아예 없을 경우에만) 업데이트
-                                if cached_val != tmpval:
-                                    # json_ready_data에 안전하게 키 생성 및 값 할당
-                                    if cate not in json_ready_data:
-                                        json_ready_data[cate] = {}
-                                    json_ready_data[cate][lab] = tmpval
+                                    # 값이 다를 경우에만(또는 데이터가 아예 없을 경우에만) 업데이트
+                                    if cached_val != tmpval:
+                                        # json_ready_data에 안전하게 키 생성 및 값 할당
+                                        if cate not in json_ready_data:
+                                            json_ready_data[cate] = {}
+                                        json_ready_data[cate][lab] = tmpval
 
-                                    # cashed_data에 안전하게 키 생성 및 값 할당
-                                    if cate not in self.cashed_data:
-                                        self.cashed_data[cate] = {}
-                                    self.cashed_data[cate][lab] = tmpval
+                                        # cashed_data에 안전하게 키 생성 및 값 할당
+                                        if cate not in self.cashed_data:
+                                            self.cashed_data[cate] = {}
+                                        self.cashed_data[cate][lab] = tmpval
+                                    
+                                    fmt.vals.clear()
+                                else:
+        
+                                    fmt.vals.clear()
+                        else:
+                            for lab, fmt in lab_dict.items():
+                                n = fmt.count
+                                if n > 0:
+                                    mean_val = fmt.val_sum / n
+                                    variance = sum((x - mean_val) ** 2 for x in fmt.vals) / n
                                 
-                                fmt.vals.clear()
-                            else:
-    
-                                fmt.vals.clear()
-                    else:
-                        for lab, fmt in lab_dict.items():
-                            n = fmt.count
-                            if n > 0:
-                                mean_val = fmt.val_sum / n
-                                variance = sum((x - mean_val) ** 2 for x in fmt.vals) / n
-                            
-                                fmt.val_mean = round(mean_val, 2)
-                                fmt.val_var = round(variance, 4)
-                            
-                                fmt.val_std = round(math.sqrt(variance), 4)
-    
-                                #print(f"[{cate} > {lab}] 개수:{n} | 평균:{fmt.val_mean} | 분산:{fmt.val_var} | 최소:{fmt.val_min} | 최대:{fmt.val_max}")
-    
-                                json_ready_data[cate][lab] = fmt.to_dict(is_bool=False)
-    
-                                fmt.vals.clear()
-                                fmt.val_sum = 0.0
-                                fmt.count = 0
-                                fmt.val_max = float('-inf')
-                                fmt.val_min = float('inf')
-    
-                print(f"✅ [{current_time_str} - 1분 통계 집계 완료]\n")
-    
-                # UTC 기준으로 찍는다. 로컬(KST) 시각을 그대로 보내면, 받는 쪽에서
-                # 이 문자열을 timezone-aware 컬럼에 그대로 저장할 때 "UTC 19:30"으로
-                # 잘못 기록되어(실제 UTC보다 9시간 앞섬) 방금 들어온 값이 9시간
-                # 전 값처럼 보이는 원인이 된다.
-                json_ready_data["time"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-    
-                json_string = json.dumps(json_ready_data, ensure_ascii=False)
+                                    fmt.val_mean = round(mean_val, 2)
+                                    fmt.val_var = round(variance, 4)
+                                
+                                    fmt.val_std = round(math.sqrt(variance), 4)
+        
+                                    #print(f"[{cate} > {lab}] 개수:{n} | 평균:{fmt.val_mean} | 분산:{fmt.val_var} | 최소:{fmt.val_min} | 최대:{fmt.val_max}")
+        
+                                    json_ready_data[cate][lab] = fmt.to_dict(is_bool=False)
+        
+                                    fmt.vals.clear()
+                                    fmt.val_sum = 0.0
+                                    fmt.count = 0
+                                    fmt.val_max = float('-inf')
+                                    fmt.val_min = float('inf')
+        
+                    print(f"✅ [{current_time_str} - 1분 통계 집계 완료]\n")
+        
+                    # UTC 기준으로 찍는다. 로컬(KST) 시각을 그대로 보내면, 받는 쪽에서
+                    # 이 문자열을 timezone-aware 컬럼에 그대로 저장할 때 "UTC 19:30"으로
+                    # 잘못 기록되어(실제 UTC보다 9시간 앞섬) 방금 들어온 값이 9시간
+                    # 전 값처럼 보이는 원인이 된다.
+                    json_ready_data["time"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        
+                    json_string = json.dumps(json_ready_data, ensure_ascii=False)
 
-                self.payload_queue.put(json_string)
+                    self.payload_queue.put(json_string)
+            except Exception as e:
+                print(f"❌ 1분 통계 집계 에러: {e}")
 
 facility_ethernet = Ethernet()
