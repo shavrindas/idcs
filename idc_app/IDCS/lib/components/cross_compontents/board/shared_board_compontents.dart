@@ -3,6 +3,7 @@
 // 명세: 통합/시설 게시판 공통 UI 컴포넌트 (검색, 필터, 리스트, 페이징)
 // ===============================================================
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:idcs/l10n/l10n_context.dart';
 import 'package:idcs/models/post_model.dart';
 import 'package:idcs/theme/app_theme.dart';
@@ -48,6 +49,9 @@ class BoardSearchBox extends StatelessWidget {
         children: [
           TextField(
             controller: searchController,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(200),
+            ],
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => onSearch(),
             decoration: InputDecoration(

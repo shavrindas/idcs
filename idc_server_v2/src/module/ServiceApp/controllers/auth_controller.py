@@ -172,7 +172,13 @@ async def check_account_existence(req: CheckAccountRequest, db: AsyncSession = D
     if providers:
         provider_names = ", ".join([p.provider for p in providers])
         return {"exists": True, "message": f"해당 이메일은 {provider_names} 소셜 계정으로 연동되어 있습니다."}
-    return {"exists": True, "message": "해당 이메일은 일반 계정으로 가입되어 있습니다."}
+
+    msg = ""
+    if user.role == UserRole.ADMIN:
+        msg = "해당 이메일은 관리자 계정으로 가입되어 있습니다."
+    else:
+        msg = "해당 이메일은 일반 계정으로 가입되어 있습니다."
+    return {"exists": True, "message": msg}
 
 @router.post("/password/request-code", status_code=status.HTTP_200_OK)
 async def request_password_code(req: PasswordRequestCode, db: AsyncSession = Depends(get_db)):
@@ -308,3 +314,44 @@ async def withdraw(req: WithdrawRequest, db: AsyncSession = Depends(get_db)):
     await db.delete(user)
     await db.commit()
     return {"message": "회원 탈퇴가 완료되었습니다."}
+
+@router.put("/{user_id}/name", status_code=status.HTTP_200_OK)
+async def update_user_name(user_id: int, req: UpdateNameRequest, db: AsyncSession = Depends(get_db)):
+    """Box #2: 이름(username) 수정"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    user.name = req.name
+    await db.commit()
+    return {"message": "아이디(이름)가 성공적으로 변경되었습니다."}
+
+@router.put("/{user_id}/phone", status_code=status.HTTP_200_OK)
+async def update_user_phone(user_id: int, req: UpdatePhoneRequest, db: AsyncSession = Depends(get_db)):
+    """Box #3: 전화번호 등록 및 수정"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    user.phone_number = req.phone_number
+    await db.commit()
+    return {"message": "전화번호가 성공적으로 변경되었습니다."}
+
+@router.put("/{user_id}/password", status_code=status.HTTP_200_OK)
+async def update_user_password(user_id: int, req: UpdatePasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Box #4: 비밀번호 수정"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    # TODO: 실제로는 해시된 비밀번호를 비교(verify)해야 합니다.
+    if user.password != req.current_password:
+        raise HTTPException(status_code=400, detail="현재 비밀번호가 일치하지 않습니다.")
+    
+    # TODO: req.new_password를 해싱하여 저장해야 합니다.
+    user.password = req.new_password
+    await db.commit()
+    return {"message": "비밀번호가 성공적으로 변경되었습니다."}

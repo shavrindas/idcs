@@ -1,6 +1,7 @@
 // 경로: lib/pages/facility/chat/chat_room_page.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:idcs/main.dart';
 import 'package:idcs/services/common/web_socket_service.dart';
@@ -231,6 +232,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         title: _isSearchMode
             ? TextField(
           controller: _searchController,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(4096),
+          ],
           decoration: InputDecoration(hintText: context.l10n.chatSearchHint, border: InputBorder.none, filled: false),
           style: TextStyle(color: context.colors.textPrimary),
           onSubmitted: (val) => _loadMessages(keyword: val),

@@ -8,6 +8,7 @@ import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:flutter/services.dart';
 
 /// Box #1: 제목 입력 및 이미지 첨부 제어 박스
 class PostInputBox extends StatelessWidget {
@@ -34,6 +35,9 @@ class PostInputBox extends StatelessWidget {
         children: [
           TextField(
             controller: titleController,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(200),
+            ],
             decoration: InputDecoration(labelText: context.l10n.boardTitle),
           ),
           const SizedBox(height: 12),

@@ -3,6 +3,7 @@
 // 명세: 게시글 상세 페이지를 위한 UI 박스 컴포넌트
 // ===============================================================
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:idcs/components/shared/time_format.dart';
@@ -199,6 +200,9 @@ class CommentBox extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: commentController,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(4096),
+                  ],
                   decoration: InputDecoration(
                     hintText: context.l10n.commentHint,
                     isDense: true,

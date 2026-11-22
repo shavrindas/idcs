@@ -1,5 +1,6 @@
 // 경로: lib/components/cross_compontents/chat/chat_room_components.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:idcs/components/shared/time_format.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
@@ -312,6 +313,9 @@ class ChatInputBox extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: controller,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(4096),
+                    ],
                     decoration: InputDecoration(
                       hintText: context.l10n.chatInputHint,
                       border: InputBorder.none,
