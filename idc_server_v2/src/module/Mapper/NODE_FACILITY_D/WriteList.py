@@ -6,7 +6,7 @@ DataLists:Dict[str, str] = {}
 def MappingData(adr: tuple):
     DataLists[adr[0]] = adr[1]
 
-for room in range(0, config.room3_count - 1):
+for room in range(0, config.room3_count):
     MappingData((f"{config.room3_start_id + room:02d}.control_runsw", f"03%MX40{room}0/1"))
     MappingData((f"{config.room3_start_id + room:02d}.control_efa", f"03%MX40{room}2/1"))
     MappingData((f"{config.room3_start_id + room:02d}.control_tica", f"03%MX40{room}3/1"))

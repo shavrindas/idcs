@@ -90,6 +90,11 @@ class _PersonalPageState extends State<PersonalPage> {
   Future<void> _handleSaveProfile(String name, String phone) async {
     var changed = 0;
 
+    if(name == '') {
+      AppToast.warning(context, context.l10n.signupMissingFields);
+      return;
+    }
+
     if (name != _name) {
       await UserApiService.updateName(widget.userId, name);
       changed++;

@@ -1,5 +1,6 @@
 // 경로: lib/pages/facility/chat/facility_chat_list_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:idcs/components/cross_compontents/chat/chat_list_components.dart';
@@ -305,6 +306,9 @@ class _CreateGroupDialogState extends State<_CreateGroupDialog> {
           children: [
             TextField(
               controller: _nameCtrl,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(100),
+              ],
               autofocus: true,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(labelText: l10n.chatRoomName),

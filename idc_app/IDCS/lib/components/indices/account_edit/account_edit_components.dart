@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:idcs/components/shared/async_action_button.dart';
 import 'package:idcs/theme/app_theme.dart';
 import 'package:idcs/l10n/l10n_context.dart';
+import 'package:flutter/services.dart';
 
 /// 내 정보 카드.
 ///
@@ -153,11 +154,17 @@ class _ProfileInfoBoxState extends State<ProfileInfoBox> {
       children: [
         TextField(
           controller: _nameController,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(50),
+          ],
           decoration: InputDecoration(labelText: context.l10n.fieldName, prefixIcon: Icon(Icons.badge_outlined)),
         ),
         const SizedBox(height: 10),
         TextField(
           controller: _phoneController,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(50),
+          ],
           keyboardType: TextInputType.phone,
           decoration: InputDecoration(labelText: context.l10n.fieldPhone, prefixIcon: Icon(Icons.phone_outlined)),
         ),
@@ -273,6 +280,9 @@ class _PasswordChangeBoxState extends State<PasswordChangeBox> {
             const SizedBox(height: 10),
             TextField(
               controller: widget.currentPwController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(200),
+              ],
               obscureText: _obscureCurrent,
               decoration: InputDecoration(
                 labelText: context.l10n.fieldCurrentPassword,
@@ -287,6 +297,9 @@ class _PasswordChangeBoxState extends State<PasswordChangeBox> {
             const SizedBox(height: 10),
             TextField(
               controller: widget.newPwController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(200),
+              ],
               obscureText: _obscureNew,
               decoration: InputDecoration(
                 labelText: context.l10n.fieldNewPassword,
